@@ -240,7 +240,7 @@
       items: [
         {
           id: "repair",
-          title: "Repair (Hull full / +1 life)",
+          title: "Repair Hull+Shield",
           cost: 130
         },
         {
@@ -254,7 +254,6 @@
           cost: 150
         }
       ],
-      maxLives: 6,
       maxFireRateLevel: 8,
       maxMagazineLevel: 6,
       fireRateFactorPerLevel: 0.91,

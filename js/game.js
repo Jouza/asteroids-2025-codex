@@ -57,7 +57,6 @@
         gameState: GAME_STATE.START,
         score: 0,
         credits: 0,
-        lives: 3,
         wave: 1,
         ship: null,
         bullets: [],
@@ -191,7 +190,6 @@
       const telemetryEnabled = this.model.telemetry.enabled;
       this.model.score = 0;
       this.model.credits = 0;
-      this.model.lives = 3;
       this.model.wave = 1;
       this.model.ship = createShip(this.config);
       this.model.bullets = [];
@@ -439,16 +437,10 @@
       const ship = this.model.ship;
       if (!ship) return;
 
-      this.model.lives -= 1;
       this.model.flashMs = Math.max(this.model.flashMs, 220);
       this.emitImpactParticles(ship.x, ship.y, 30, "255,98,121");
       this.model.dotEffects = [];
-
-      if (this.model.lives <= 0) {
-        this.endGame();
-      } else {
-        this.respawnShipSafely();
-      }
+      this.endGame();
     }
 
     applyDamageToMiniBoss(baseDamage, damageType = "kinetic", critChance = this.config.damage.player.critChance) {
