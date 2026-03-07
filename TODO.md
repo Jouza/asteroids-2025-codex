@@ -1,6 +1,7 @@
 # STARFANG Drift Hunters - TODO
 
-Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupne.
+Prubezny checklist pro realizaci noveho smeru.
+Poradi je serazene podle aktualni priority (nejvyssi nahore).
 
 - [x] Ekonomika a loot 2.0
   - [x] Dropy modulu (rarity + affixy)
@@ -17,6 +18,16 @@ Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupn
   - [x] Sekundarky + utility s vyraznou roli
   - [x] Lepsi telegraphy efektu
 
+- [ ] Tech zaklad pro skalovani
+  - [ ] Save/load profilu a progrese
+  - [ ] Data-driven balancing tabulky
+  - [ ] Combat tuning harness + regression checklist
+
+- [ ] Content pipeline a tooling (nove)
+  - [ ] Mise/nepratele/moduly definovane data-driven (JSON-like konfigurace)
+  - [ ] Validacni skript pro herni data (schema + sanity check)
+  - [ ] Balancing presety a rychly tuning workflow
+
 - [ ] Enemy roster a AI rozsirovani
   - [ ] Nove archetypy (swarm/kamikaze/support/mine-layer)
   - [ ] Elite prefix system (Phase/Berserker/Armored/Volatile)
@@ -31,6 +42,11 @@ Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupn
   - [ ] Kombinace cil + modifikator + biome
   - [ ] Lepsi pacing krivka mezi sektory
 
+- [ ] Game feel / juice / UX
+  - [ ] Lepsi hit feedback + exploze + debris + warning cues
+  - [ ] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
+  - [ ] Audio vrstva (zakladni SFX + mix priority)
+
 - [ ] Pilot RPG layer
   - [ ] XP + levely pilota
   - [ ] Atributy (Reflex/Systems/Grit/Instinct)
@@ -44,16 +60,6 @@ Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupn
 - [ ] Content a biomy
   - [ ] Min. 2 nove areny (vrakoviste/tezebni komplex)
   - [ ] Hazardy prostredi jako gameplay prvek
-
-- [ ] Game feel / juice / UX
-  - [ ] Lepsi hit feedback + exploze + debris + warning cues
-  - [ ] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
-  - [ ] Audio vrstva (zakladni SFX + mix priority)
-
-- [ ] Tech zaklad pro skalovani
-  - [ ] Save/load profilu a progrese
-  - [ ] Data-driven balancing tabulky
-  - [ ] Combat tuning harness + regression checklist
 
 - [ ] Endgame / replayability
   - [ ] Bounty board
