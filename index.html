@@ -16,42 +16,42 @@
       <aside class="status-column">
         <header class="hud">
           <div class="hud-item tip" data-tip="Hull/Shield. Odolnost lodi.">
-            <span class="hud-icon">🛡️</span><span id="hullShield" class="hud-value">125/100</span>
+            <span class="hud-icon" title="Hull/Shield: aktualni odolnost lodi." aria-label="Hull and Shield">🛡️</span><span id="hullShield" class="hud-value">125/100</span>
           </div>
           <div class="hud-item tip" data-tip="Energy/Heat. Spotreba zbrani a systemu.">
-            <span class="hud-icon">⚡</span><span id="energyHeat" class="hud-value">100/0</span>
+            <span class="hud-icon" title="Energy/Heat: energie a prehrati systemu." aria-label="Energy and Heat">⚡</span><span id="energyHeat" class="hud-value">100/0</span>
           </div>
           <div class="hud-item tip" data-tip="Primary. Space strili, V dash.">
-            <span class="hud-icon">🎯</span><span id="primaryStatus" class="hud-value">Auto</span>
+            <span class="hud-icon" title="Primary: hlavni zbran a dash cooldown." aria-label="Primary Weapon">🎯</span><span id="primaryStatus" class="hud-value">Auto</span>
           </div>
           <div class="hud-item tip" data-tip="Secondary. Hotkey X.">
-            <span class="hud-icon">🚀</span><span id="secondaryStatus" class="hud-value">Ready</span>
+            <span class="hud-icon" title="Secondary: sekundarni schopnost (X)." aria-label="Secondary Ability">🚀</span><span id="secondaryStatus" class="hud-value">Ready</span>
           </div>
           <div class="hud-item tip" data-tip="Utility. Hotkey C.">
-            <span class="hud-icon">✨</span><span id="utilityStatus" class="hud-value">Ready</span>
+            <span class="hud-icon" title="Utility: takticka schopnost (C)." aria-label="Utility Ability">✨</span><span id="utilityStatus" class="hud-value">Ready</span>
           </div>
           <div class="hud-item tip" data-tip="Mission. Aktivni cil sektoru.">
-            <span class="hud-icon">📜</span><span id="mission" class="hud-value">-</span>
+            <span class="hud-icon" title="Mission: aktualni cil mise." aria-label="Mission">📜</span><span id="mission" class="hud-value">-</span>
           </div>
           <div class="hud-item tip" data-tip="Sector. Aktualni uroven runu.">
-            <span class="hud-icon">🪐</span><span id="sector" class="hud-value">1</span>
+            <span class="hud-icon" title="Sector: cislo aktualniho sektoru." aria-label="Sector">🪐</span><span id="sector" class="hud-value">1</span>
           </div>
           <div class="hud-item tip" data-tip="Credits. Mena pro nakupy v hangaru.">
-            <span class="hud-icon">💳</span><span id="credits" class="hud-value">0</span>
+            <span class="hud-icon" title="Credits: mena pro shop v hangaru." aria-label="Credits">💳</span><span id="credits" class="hud-value">0</span>
           </div>
           <div class="hud-item tip" data-tip="Score. Body za run.">
-            <span class="hud-icon">🏆</span><span id="score" class="hud-value">0</span>
+            <span class="hud-icon" title="Score: body v aktualnim runu." aria-label="Score">🏆</span><span id="score" class="hud-value">0</span>
           </div>
           <div class="hud-item tip" data-tip="Set status. Aktivni set bonusy vybavy.">
-            <span class="hud-icon">🧩</span><span id="setStatus" class="hud-value">No active set</span>
+            <span class="hud-icon" title="Set status: aktivni bonusy vybavy." aria-label="Set Status">🧩</span><span id="setStatus" class="hud-value">No active set</span>
           </div>
           <div class="hud-item tip volume-control" data-tip="Hlasitost efektu.">
-            <span class="hud-icon">🔊</span>
+            <span class="hud-icon" title="Audio: hlasitost zvukovych efektu." aria-label="Audio Volume">🔊</span>
             <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Hlasitost zvuku">
             <span id="volumeValue" class="hud-value">60%</span>
           </div>
           <div class="hud-item tip" data-tip="Flight mode. Arcade nebo Sim Lite.">
-            <span class="hud-icon">🧭</span><span id="flightMode" class="hud-value">ARCADE</span>
+            <span class="hud-icon" title="Flight mode: Arcade nebo Sim Lite." aria-label="Flight Mode">🧭</span><span id="flightMode" class="hud-value">ARCADE</span>
           </div>
           <div class="hud-item state tip" id="stateLabel" data-tip="Stav hry.">START</div>
           <div class="hud-item version tip" id="versionBadge" data-tip="Build verze.">NEW BUILD</div>
