@@ -26,10 +26,12 @@
       respawnMaxAttempts: 42
     },
     bullet: {
-      maxActive: 6,
+      maxActive: 3,
+      waveBonusEveryWaves: 4,
+      waveBonusMax: 2,
       speed: 560,
       ttlSeconds: 1.05,
-      cooldownSeconds: 0.14,
+      cooldownSeconds: 0.165,
       radius: 2,
       inheritVelocityFactor: 0.35
     },
@@ -37,7 +39,7 @@
       primary: {
         auto_cannon: {
           label: "Auto",
-          cooldownSeconds: 0.14
+          cooldownSeconds: 0.165
         }
       },
       secondary: {
@@ -192,6 +194,12 @@
       spawnDelayMaxSeconds: 28,
       speedHunter: 88,
       speedSniper: 72,
+      speedScalePerWave: 0.022,
+      speedScaleMaxBonus: 0.32,
+      fireRateScalePerWave: 0.05,
+      fireRateScaleMaxBonus: 0.7,
+      bulletSpeedScalePerWave: 0.024,
+      bulletSpeedScaleMaxBonus: 0.45,
       radius: 20,
       scoreHunter: 220,
       scoreSniper: 320,
@@ -206,26 +214,37 @@
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
       survive: {
-        baseDurationSeconds: 22,
-        durationStepSeconds: 2.1,
-        asteroidSpawnIntervalSeconds: 2.55
+        baseDurationSeconds: 19,
+        durationStepSeconds: 2.3,
+        asteroidSpawnIntervalSeconds: 3.35,
+        minSpawnIntervalSeconds: 1.5,
+        spawnRateRampPerWave: 0.065,
+        extraLargeEveryWaves: 5
       },
       ufoHunt: {
-        baseKills: 2,
+        baseKills: 1,
         killStep: 1,
-        maxConcurrentUfos: 2,
-        spawnIntervalSeconds: 3.1
+        maxConcurrentUfos: 1,
+        maxConcurrentRampEveryWaves: 4,
+        maxConcurrentCap: 3,
+        spawnIntervalSeconds: 3.8,
+        minSpawnIntervalSeconds: 1.7,
+        spawnRateRampPerWave: 0.08
       },
       asteroidStorm: {
-        baseTarget: 14,
+        baseTarget: 10,
         targetStep: 2,
-        initialLargeCount: 5,
-        initialMediumCount: 4,
-        extraSpawnIntervalSeconds: 4.2
+        initialLargeCount: 3,
+        initialMediumCount: 1,
+        extraSpawnIntervalSeconds: 5.1,
+        minExtraSpawnIntervalSeconds: 2.2,
+        spawnRateRampPerWave: 0.085,
+        extraMediumChance: 0.32,
+        mediumChanceRampPerWave: 0.03
       },
       miniBoss: {
-        hpBase: 410,
-        hpStep: 72,
+        hpBase: 360,
+        hpStep: 78,
         radius: 34,
         speed: 82,
         shootCooldownSeconds: 1.25,

@@ -368,7 +368,11 @@
     }
 
     getCurrentMaxBullets() {
-      return this.config.bullet.maxActive + this.model.upgrades.magazineLevel;
+      const waveBonus = Math.min(
+        this.config.bullet.waveBonusMax,
+        Math.floor((this.model.wave - 1) / this.config.bullet.waveBonusEveryWaves)
+      );
+      return this.config.bullet.maxActive + this.model.upgrades.magazineLevel + waveBonus;
     }
 
     getSecondarySpec() {
