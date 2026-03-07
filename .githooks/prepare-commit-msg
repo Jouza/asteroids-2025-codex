@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+set -eu
+
+MSG_FILE="$1"
+SOURCE="${2:-}"
+
+if [ "${SOURCE}" = "merge" ] || [ "${SOURCE}" = "squash" ]; then
+  exit 0
+fi
+
+VERSION="$(sed -n 's/.*version: "\([^"]*\)".*/\1/p' js/version.js | head -n 1)"
+if [ -z "${VERSION}" ]; then
+  exit 0
+fi
+
+if grep -q "build:${VERSION}" "${MSG_FILE}"; then
+  exit 0
+fi
+
+CURRENT_MSG="$(cat "${MSG_FILE}")"
+printf "%s [build:%s]\n" "${CURRENT_MSG}" "${VERSION}" > "${MSG_FILE}"

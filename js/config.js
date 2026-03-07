@@ -1,4 +1,5 @@
 (() => {
+  const buildVersion = window.Asteroids?.APP_BUILD_META?.version || "UNKNOWN";
   const GAME_STATE = {
     START: "start",
     PLAYING: "playing",
@@ -265,6 +266,10 @@
   };
 
   window.Asteroids = window.Asteroids || {};
+  window.Asteroids.APP_META = {
+    version: buildVersion,
+    channel: "NEW BUILD"
+  };
   window.Asteroids.GAME_STATE = GAME_STATE;
   window.Asteroids.GAME_CONFIG = GAME_CONFIG;
   window.Asteroids.ASTEROID_DEFS = ASTEROID_DEFS;

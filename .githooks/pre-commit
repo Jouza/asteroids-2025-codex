@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+set -eu
+
+STAMP="$(date +"%Y%m.%d.%H%M")"
+
+cat > js/version.js <<EOF
+(() => {
+  window.Asteroids = window.Asteroids || {};
+  window.Asteroids.APP_BUILD_META = {
+    version: "${STAMP}"
+  };
+})();
+EOF
+
+git add js/version.js

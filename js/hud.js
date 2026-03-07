@@ -1,5 +1,5 @@
 (() => {
-  const { GAME_STATE } = window.Asteroids;
+  const { APP_META, GAME_STATE } = window.Asteroids;
 
   const STATE_LABELS = {
     [GAME_STATE.START]: "START",
@@ -20,7 +20,12 @@
       this.primaryStatusEl = document.getElementById("primaryStatus");
       this.secondaryStatusEl = document.getElementById("secondaryStatus");
       this.utilityStatusEl = document.getElementById("utilityStatus");
+      this.versionBadgeEl = document.getElementById("versionBadge");
       this.stateEl = document.getElementById("stateLabel");
+
+      if (this.versionBadgeEl) {
+        this.versionBadgeEl.textContent = `${APP_META.channel} ${APP_META.version}`;
+      }
     }
 
     formatCooldown(seconds) {
