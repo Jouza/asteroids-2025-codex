@@ -26,7 +26,8 @@
       this.stateEl = document.getElementById("stateLabel");
 
       if (this.versionBadgeEl) {
-        this.versionBadgeEl.textContent = `${APP_META.channel} ${APP_META.version}`;
+        const presetSuffix = APP_META.preset && APP_META.preset !== "baseline" ? ` [${APP_META.preset}]` : "";
+        this.versionBadgeEl.textContent = `${APP_META.channel} ${APP_META.version}${presetSuffix}`;
       }
     }
 

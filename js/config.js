@@ -1,6 +1,8 @@
 (() => {
   const buildVersion = window.Asteroids?.APP_BUILD_META?.version || "UNKNOWN";
+  const CONTENT_DATA = window.Asteroids?.CONTENT_DATA || {};
   const BALANCE_DATA = window.Asteroids?.BALANCE_DATA || {};
+  const BALANCE_PRESET_DATA = window.Asteroids?.BALANCE_PRESET_DATA || {};
   const GAME_STATE = {
     START: "start",
     PLAYING: "playing",
@@ -598,6 +600,27 @@
     }
   }
 
+  function applyContentDataOverrides(config, overrides) {
+    const allowlist = ["mission", "ufo", "loot"];
+    for (const key of allowlist) {
+      if (!(key in overrides)) continue;
+      if (!isObject(overrides[key])) continue;
+      if (!isObject(config[key])) continue;
+      deepMerge(config[key], overrides[key]);
+    }
+  }
+
+  function resolvePresetName() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      const preset = params.get("preset");
+      if (preset && BALANCE_PRESET_DATA[preset]) return preset;
+    } catch (error) {
+      // Ignore URL parsing errors in non-browser contexts.
+    }
+    return "baseline";
+  }
+
   function validateGameConfig(config) {
     const checks = [
       { ok: config.economy.creditsPerScore > 0, msg: "economy.creditsPerScore must be > 0" },
@@ -615,7 +638,11 @@
     return issues;
   }
 
-  applyBalanceOverrides(GAME_CONFIG, BALANCE_DATA);
+  applyContentDataOverrides(GAME_CONFIG, CONTENT_DATA);
+  const activePreset = resolvePresetName();
+  const presetOverrides = BALANCE_PRESET_DATA[activePreset]?.overrides || {};
+  const resolvedBalanceData = deepMerge(deepMerge({}, BALANCE_DATA), presetOverrides);
+  applyBalanceOverrides(GAME_CONFIG, resolvedBalanceData);
 
   const ASTEROID_DEFS = {
     large: { radius: 56, score: 20, next: "medium" },
@@ -632,7 +659,8 @@
   window.Asteroids = window.Asteroids || {};
   window.Asteroids.APP_META = {
     version: buildVersion,
-    channel: "NEW BUILD"
+    channel: "NEW BUILD",
+    preset: activePreset
   };
   window.Asteroids.GAME_STATE = GAME_STATE;
   window.Asteroids.GAME_CONFIG = GAME_CONFIG;

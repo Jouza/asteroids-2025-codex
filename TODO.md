@@ -23,10 +23,10 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Data-driven balancing tabulky
   - [x] Combat tuning harness + regression checklist
 
-- [ ] Content pipeline a tooling (nove)
-  - [ ] Mise/nepratele/moduly definovane data-driven (JSON-like konfigurace)
-  - [ ] Validacni skript pro herni data (schema + sanity check)
-  - [ ] Balancing presety a rychly tuning workflow
+- [x] Content pipeline a tooling (nove)
+  - [x] Mise/nepratele/moduly definovane data-driven (JSON-like konfigurace)
+  - [x] Validacni skript pro herni data (schema + sanity check)
+  - [x] Balancing presety a rychly tuning workflow
 
 - [x] Enemy roster a AI rozsirovani
   - [x] Nove archetypy (swarm/kamikaze/support/mine-layer)

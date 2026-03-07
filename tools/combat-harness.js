@@ -53,7 +53,9 @@ function createRuntime(sharedStorage) {
 
   const scripts = [
     "js/version.js",
+    "js/content-data.js",
     "js/balance-data.js",
+    "js/balance-presets.js",
     "js/config.js",
     "js/rng.js",
     "js/entities.js",

@@ -8,12 +8,14 @@ Spust:
 
 ```powershell
 node tools/combat-harness.js
+node tools/validate-content-data.js
 ```
 
 Ocekavany vysledek:
 
 - vsechny testy `PASS`
 - finalni radek `Combat harness passed: X/X`
+- finalni radek `Content validation passed.`
 
 Kontrolovane oblasti:
 
@@ -39,6 +41,9 @@ Kontrolovane oblasti:
 ## 3) Balancing sanity check
 
 - Zmeny cisel delat primarne v `js/balance-data.js`.
+- Obsah mise/UFO/loot upravovat v `js/content-data.js`.
+- Preset tuning delat v `js/balance-presets.js` a spoustet build s URL parametrem `?preset=arcade_fast` nebo `?preset=survival_hard`.
 - Po zmene spustit:
   - `node tools/combat-harness.js`
+  - `node tools/validate-content-data.js`
   - kratky manualni smoke check
