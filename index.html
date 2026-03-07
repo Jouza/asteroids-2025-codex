@@ -8,58 +8,64 @@
 </head>
 <body>
   <main class="game-shell">
-    <header class="hud">
-      <div class="hud-item tip" data-tip="Score. Body za run.">
-        <span class="hud-icon">#</span><span id="score" class="hud-value">0</span>
-      </div>
-      <div class="hud-item tip" data-tip="Credits. Mena pro nakupy v hangaru.">
-        <span class="hud-icon">$</span><span id="credits" class="hud-value">0</span>
-      </div>
-      <div class="hud-item tip" data-tip="Hull/Shield. Odolnost lodi.">
-        <span class="hud-icon">H</span><span id="hullShield" class="hud-value">125/100</span>
-      </div>
-      <div class="hud-item tip" data-tip="Energy/Heat. Spotreba zbrani a systemu.">
-        <span class="hud-icon">E</span><span id="energyHeat" class="hud-value">100/0</span>
-      </div>
-      <div class="hud-item tip" data-tip="Sector. Aktualni uroven runu.">
-        <span class="hud-icon">O</span><span id="sector" class="hud-value">1</span>
-      </div>
-      <div class="hud-item tip" data-tip="Mission. Aktivni cil sektoru.">
-        <span class="hud-icon">M</span><span id="mission" class="hud-value">-</span>
-      </div>
-      <div class="hud-item tip" data-tip="Set status. Aktivni set bonusy vybavy.">
-        <span class="hud-icon">S</span><span id="setStatus" class="hud-value">No active set</span>
-      </div>
-      <div class="hud-item tip" data-tip="Flight mode. Arcade nebo Sim Lite.">
-        <span class="hud-icon">F</span><span id="flightMode" class="hud-value">ARCADE</span>
-      </div>
-      <div class="hud-item tip" data-tip="Primary. Space strili, V dash.">
-        <span class="hud-icon">P</span><span id="primaryStatus" class="hud-value">Auto</span>
-      </div>
-      <div class="hud-item tip" data-tip="Secondary. Hotkey X.">
-        <span class="hud-icon">X</span><span id="secondaryStatus" class="hud-value">Ready</span>
-      </div>
-      <div class="hud-item tip" data-tip="Utility. Hotkey C.">
-        <span class="hud-icon">C</span><span id="utilityStatus" class="hud-value">Ready</span>
-      </div>
-      <div class="hud-item tip volume-control" data-tip="Hlasitost efektu.">
-        <span class="hud-icon">A</span>
-        <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Hlasitost zvuku">
-        <span id="volumeValue" class="hud-value">60%</span>
-      </div>
-      <div class="hud-item version tip" id="versionBadge" data-tip="Build verze.">NEW BUILD</div>
-      <div class="hud-item state tip" id="stateLabel" data-tip="Stav hry.">START</div>
-    </header>
+    <section class="layout">
+      <section class="play-column">
+        <canvas id="gameCanvas" width="960" height="720" aria-label="Asteroids hra"></canvas>
+      </section>
 
-    <canvas id="gameCanvas" width="960" height="720" aria-label="Asteroids hra"></canvas>
+      <aside class="status-column">
+        <header class="hud">
+          <div class="hud-item tip" data-tip="Score. Body za run.">
+            <span class="hud-icon">#</span><span id="score" class="hud-value">0</span>
+          </div>
+          <div class="hud-item tip" data-tip="Credits. Mena pro nakupy v hangaru.">
+            <span class="hud-icon">$</span><span id="credits" class="hud-value">0</span>
+          </div>
+          <div class="hud-item tip" data-tip="Hull/Shield. Odolnost lodi.">
+            <span class="hud-icon">H</span><span id="hullShield" class="hud-value">125/100</span>
+          </div>
+          <div class="hud-item tip" data-tip="Energy/Heat. Spotreba zbrani a systemu.">
+            <span class="hud-icon">E</span><span id="energyHeat" class="hud-value">100/0</span>
+          </div>
+          <div class="hud-item tip" data-tip="Sector. Aktualni uroven runu.">
+            <span class="hud-icon">O</span><span id="sector" class="hud-value">1</span>
+          </div>
+          <div class="hud-item tip" data-tip="Mission. Aktivni cil sektoru.">
+            <span class="hud-icon">M</span><span id="mission" class="hud-value">-</span>
+          </div>
+          <div class="hud-item tip" data-tip="Set status. Aktivni set bonusy vybavy.">
+            <span class="hud-icon">S</span><span id="setStatus" class="hud-value">No active set</span>
+          </div>
+          <div class="hud-item tip" data-tip="Flight mode. Arcade nebo Sim Lite.">
+            <span class="hud-icon">F</span><span id="flightMode" class="hud-value">ARCADE</span>
+          </div>
+          <div class="hud-item tip" data-tip="Primary. Space strili, V dash.">
+            <span class="hud-icon">P</span><span id="primaryStatus" class="hud-value">Auto</span>
+          </div>
+          <div class="hud-item tip" data-tip="Secondary. Hotkey X.">
+            <span class="hud-icon">X</span><span id="secondaryStatus" class="hud-value">Ready</span>
+          </div>
+          <div class="hud-item tip" data-tip="Utility. Hotkey C.">
+            <span class="hud-icon">C</span><span id="utilityStatus" class="hud-value">Ready</span>
+          </div>
+          <div class="hud-item tip volume-control" data-tip="Hlasitost efektu.">
+            <span class="hud-icon">A</span>
+            <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Hlasitost zvuku">
+            <span id="volumeValue" class="hud-value">60%</span>
+          </div>
+          <div class="hud-item version tip" id="versionBadge" data-tip="Build verze.">NEW BUILD</div>
+          <div class="hud-item state tip" id="stateLabel" data-tip="Stav hry.">START</div>
+        </header>
 
-    <footer class="help">
-      Ovladani: <strong>&larr;/&rarr;</strong> rotace, <strong>&uarr;</strong> tah, <strong>Mezernik</strong> strelba,
-      <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> prepnout letovy model,
-      <strong>X</strong> sekundarni, <strong>C</strong> utilita, <strong>M</strong> mute, <strong>P</strong> pauza, <strong>Enter</strong> start/restart.
-      Hangar: <strong>1/2/3</strong> upgrade, <strong>4</strong> primary, <strong>5</strong> secondary, <strong>R</strong> utility, <strong>6/7</strong> vyber modulu,
-      <strong>8</strong> vzit/equip, <strong>9</strong> prodat, <strong>0</strong> salvage, <strong>Enter</strong> pokracovat
-    </footer>
+        <footer class="help">
+          Ovladani: <strong>&larr;/&rarr;</strong> rotace, <strong>&uarr;</strong> tah, <strong>Mezernik</strong> strelba,
+          <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> prepnout letovy model,
+          <strong>X</strong> sekundarni, <strong>C</strong> utilita, <strong>M</strong> mute, <strong>P</strong> pauza, <strong>Enter</strong> start/restart.
+          Hangar: <strong>1/2/3</strong> upgrade, <strong>4</strong> primary, <strong>5</strong> secondary, <strong>R</strong> utility, <strong>6/7</strong> vyber modulu,
+          <strong>8</strong> vzit/equip, <strong>9</strong> prodat, <strong>0</strong> salvage, <strong>Enter</strong> pokracovat
+        </footer>
+      </aside>
+    </section>
   </main>
 
   <script src="js/version.js"></script>
