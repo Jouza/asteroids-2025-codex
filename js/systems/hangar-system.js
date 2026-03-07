@@ -33,6 +33,7 @@
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
       g.missionSystem.startMission(g.model.sector);
       g.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      g.saveProfile("sector_start");
     }
 
     enterHangarPhase() {
@@ -50,6 +51,7 @@
       g.model.utilityEffects = [];
       g.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
       this.clampSelection();
+      g.saveProfile("sector_complete");
     }
 
     purchaseHangarItem(index) {
@@ -95,6 +97,7 @@
       if (item.id === "magazine") g.model.upgrades.magazineLevel += 1;
 
       g.model.hangar.message = `Nakoupeno: ${item.title}`;
+      g.saveProfile("hangar_purchase");
     }
 
     getSelectedEntry() {
@@ -171,7 +174,7 @@
       this.clampSelection();
       const selected = this.getSelectedEntry();
       if (selected) {
-        h.message = `${selected.source === "crate" ? "Crate" : "Inventory"}: ${selected.item.name}`;
+        g.model.hangar.message = `${selected.source === "crate" ? "Crate" : "Inventory"}: ${selected.item.name}`;
       }
     }
 
@@ -194,6 +197,7 @@
         g.model.hangar.selectionIndex = g.model.inventory.length - 1;
         this.clampSelection();
         g.model.hangar.message = `Vzato do inventory: ${entry.item.name}`;
+        g.saveProfile("hangar_take");
         return;
       }
 
@@ -207,6 +211,7 @@
       g.initializeShipResources(g.model.ship);
       this.clampSelection();
       g.model.hangar.message = `Equip ${slot}: ${module.name}`;
+      g.saveProfile("hangar_equip");
     }
 
     removeEntry(entry) {
@@ -231,6 +236,7 @@
       g.model.credits += gain;
       this.clampSelection();
       g.model.hangar.message = `Prodano: ${removed.name} (+${gain} cr)`;
+      g.saveProfile("hangar_sell");
     }
 
     salvageSelected() {
@@ -248,6 +254,7 @@
       g.model.credits += parts * g.config.economy.salvageToCredits;
       this.clampSelection();
       g.model.hangar.message = `Rozebrano: ${removed.name} (+${parts} parts)`;
+      g.saveProfile("hangar_salvage");
     }
 
     cycleLoadoutSlot(slotName) {
@@ -273,6 +280,7 @@
             ? g.model.loadout.secondaryLabel
             : g.model.loadout.utilityLabel;
       g.model.hangar.message = `Aktivni ${slotName}: ${label}`;
+      g.saveProfile("hangar_loadout");
     }
 
   }

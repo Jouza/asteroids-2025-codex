@@ -42,6 +42,65 @@
     };
   }
 
+  const PROFILE_STORAGE_KEY = "starfang_profile_v1";
+  const PROFILE_SCHEMA_VERSION = 1;
+
+  function deepClone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function createDefaultProfile() {
+    return {
+      schemaVersion: PROFILE_SCHEMA_VERSION,
+      updatedAt: Date.now(),
+      progression: {
+        loadout: {
+          primaryId: "auto_cannon",
+          secondaryId: "missile_burst",
+          utilityId: "pulse_bomb"
+        },
+        unlocks: {
+          primary: {
+            auto_cannon: true,
+            spread_cannon: true,
+            rail_lance: true,
+            plasma_chain: true
+          },
+          secondary: {
+            missile_burst: true,
+            rail_shot: true,
+            cluster_rockets: true
+          },
+          utility: {
+            pulse_bomb: true,
+            emp_pulse: true,
+            shield_dome: true
+          }
+        },
+        upgrades: {
+          fireRateLevel: 0,
+          magazineLevel: 0
+        },
+        inventory: [],
+        equipment: {
+          hull: null,
+          shield: null,
+          generator: null,
+          engine: null,
+          chipset: null
+        },
+        salvageParts: 0
+      },
+      stats: {
+        runsPlayed: 0,
+        totalPlaySeconds: 0,
+        bestScore: 0,
+        bestSector: 1,
+        lifetimeScore: 0
+      }
+    };
+  }
+
   class Game {
     constructor(canvas, renderer, hud, input, config = GAME_CONFIG) {
       this.canvas = canvas;
@@ -135,7 +194,8 @@
         activeSets: [],
         setStatusText: "No active set",
         salvageParts: 0,
-        telemetry: createTelemetryState(false)
+        telemetry: createTelemetryState(false),
+        profile: createDefaultProfile()
       };
 
       this.missionSystem = new MissionSystem(this);
@@ -148,15 +208,186 @@
       return clamp(value, min, max);
     }
 
+    getDefaultProfile() {
+      return createDefaultProfile();
+    }
+
+    sanitizeModule(module) {
+      if (!module || typeof module !== "object") return null;
+      const slot = module.slot;
+      if (!this.config.loot.slots.includes(slot)) return null;
+      return {
+        uid: String(module.uid || `${Date.now().toString(36)}-${Math.floor(this.rng() * 1e6).toString(36)}`),
+        slot,
+        rarity: String(module.rarity || "common"),
+        rarityLabel: String(module.rarityLabel || "Common"),
+        color: String(module.color || "#d8f5ff"),
+        name: String(module.name || "Recovered Module"),
+        baseName: String(module.baseName || "Module"),
+        setTag: module.setTag ? String(module.setTag) : null,
+        affixes: Array.isArray(module.affixes)
+          ? module.affixes.map((affix) => ({
+              id: String(affix.id || "affix"),
+              name: String(affix.name || "Affix"),
+              setTag: affix.setTag ? String(affix.setTag) : null
+            }))
+          : [],
+        modifiers: module.modifiers && typeof module.modifiers === "object" ? { ...module.modifiers } : {},
+        sellValue: Math.max(0, Math.floor(Number(module.sellValue) || 0)),
+        salvageValue: Math.max(0, Math.floor(Number(module.salvageValue) || 0)),
+        level: Math.max(1, Math.floor(Number(module.level) || 1))
+      };
+    }
+
+    sanitizeProfile(rawProfile) {
+      const defaults = this.getDefaultProfile();
+      if (!rawProfile || typeof rawProfile !== "object") return defaults;
+
+      const safe = deepClone(defaults);
+      const progression = rawProfile.progression || {};
+      const stats = rawProfile.stats || {};
+
+      const validPrimary = this.config.loadout.primary[progression.loadout?.primaryId];
+      const validSecondary = this.config.loadout.secondary[progression.loadout?.secondaryId];
+      const validUtility = this.config.loadout.utility[progression.loadout?.utilityId];
+      safe.progression.loadout.primaryId = validPrimary ? progression.loadout.primaryId : defaults.progression.loadout.primaryId;
+      safe.progression.loadout.secondaryId = validSecondary
+        ? progression.loadout.secondaryId
+        : defaults.progression.loadout.secondaryId;
+      safe.progression.loadout.utilityId = validUtility ? progression.loadout.utilityId : defaults.progression.loadout.utilityId;
+
+      const mergeUnlockMap = (target, source) => {
+        const merged = { ...target };
+        if (source && typeof source === "object") {
+          for (const key of Object.keys(merged)) {
+            if (key in source) merged[key] = Boolean(source[key]);
+          }
+        }
+        return merged;
+      };
+      safe.progression.unlocks.primary = mergeUnlockMap(defaults.progression.unlocks.primary, progression.unlocks?.primary);
+      safe.progression.unlocks.secondary = mergeUnlockMap(
+        defaults.progression.unlocks.secondary,
+        progression.unlocks?.secondary
+      );
+      safe.progression.unlocks.utility = mergeUnlockMap(defaults.progression.unlocks.utility, progression.unlocks?.utility);
+
+      safe.progression.upgrades.fireRateLevel = this.clamp(
+        Math.floor(Number(progression.upgrades?.fireRateLevel) || 0),
+        0,
+        this.config.hangar.maxFireRateLevel
+      );
+      safe.progression.upgrades.magazineLevel = this.clamp(
+        Math.floor(Number(progression.upgrades?.magazineLevel) || 0),
+        0,
+        this.config.hangar.maxMagazineLevel
+      );
+
+      const inventoryRaw = Array.isArray(progression.inventory) ? progression.inventory : [];
+      safe.progression.inventory = inventoryRaw
+        .map((module) => this.sanitizeModule(module))
+        .filter(Boolean)
+        .slice(0, this.config.loot.maxInventoryItems);
+
+      const equipmentRaw = progression.equipment && typeof progression.equipment === "object" ? progression.equipment : {};
+      for (const slot of this.config.loot.slots) {
+        safe.progression.equipment[slot] = this.sanitizeModule(equipmentRaw[slot]);
+      }
+
+      safe.progression.salvageParts = Math.max(0, Math.floor(Number(progression.salvageParts) || 0));
+
+      safe.stats.runsPlayed = Math.max(0, Math.floor(Number(stats.runsPlayed) || 0));
+      safe.stats.totalPlaySeconds = Math.max(0, Number(stats.totalPlaySeconds) || 0);
+      safe.stats.bestScore = Math.max(0, Math.floor(Number(stats.bestScore) || 0));
+      safe.stats.bestSector = Math.max(1, Math.floor(Number(stats.bestSector) || 1));
+      safe.stats.lifetimeScore = Math.max(0, Math.floor(Number(stats.lifetimeScore) || 0));
+
+      safe.schemaVersion = PROFILE_SCHEMA_VERSION;
+      safe.updatedAt = Date.now();
+      return safe;
+    }
+
+    loadProfile() {
+      const defaults = this.getDefaultProfile();
+      try {
+        const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+        if (!raw) return defaults;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return defaults;
+        if (parsed.schemaVersion !== PROFILE_SCHEMA_VERSION) return this.sanitizeProfile(parsed);
+        return this.sanitizeProfile(parsed);
+      } catch (error) {
+        console.warn("Profile load failed, using defaults.", error);
+        return defaults;
+      }
+    }
+
+    captureProgressionSnapshot() {
+      return {
+        loadout: {
+          primaryId: this.model.loadout.primaryId,
+          secondaryId: this.model.loadout.secondaryId,
+          utilityId: this.model.loadout.utilityId
+        },
+        unlocks: deepClone(this.model.unlocks),
+        upgrades: deepClone(this.model.upgrades),
+        inventory: deepClone(this.model.inventory),
+        equipment: deepClone(this.model.equipment),
+        salvageParts: this.model.salvageParts
+      };
+    }
+
+    applyProfileToModel(profile) {
+      const progression = profile.progression;
+      this.model.loadout.primaryId = progression.loadout.primaryId;
+      this.model.loadout.secondaryId = progression.loadout.secondaryId;
+      this.model.loadout.utilityId = progression.loadout.utilityId;
+      this.model.unlocks = deepClone(progression.unlocks);
+      this.model.upgrades = deepClone(progression.upgrades);
+      this.model.inventory = deepClone(progression.inventory);
+      this.model.equipment = deepClone(progression.equipment);
+      this.model.salvageParts = progression.salvageParts;
+      this.syncLoadoutLabels();
+      this.refreshSetState();
+    }
+
+    syncModelToProfile() {
+      this.model.profile.progression = this.captureProgressionSnapshot();
+      this.model.profile.updatedAt = Date.now();
+    }
+
+    saveProfile(reason = "manual") {
+      this.syncModelToProfile();
+      try {
+        window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(this.model.profile));
+      } catch (error) {
+        console.warn(`Profile save failed (${reason}).`, error);
+      }
+    }
+
+    updateProfileStatsOnRunStart() {
+      this.model.profile.stats.runsPlayed += 1;
+      this.model.profile.updatedAt = Date.now();
+    }
+
+    updateProfileStatsOnRunEnd() {
+      const stats = this.model.profile.stats;
+      stats.totalPlaySeconds += this.model.runtimeSeconds;
+      stats.bestScore = Math.max(stats.bestScore, this.model.score);
+      stats.bestSector = Math.max(stats.bestSector, this.model.sector);
+      stats.lifetimeScore += this.model.score;
+      this.model.profile.updatedAt = Date.now();
+    }
+
     initGame() {
       this.canvas.width = this.config.canvas.width;
       this.canvas.height = this.config.canvas.height;
       this.model.ship = createShip(this.config);
+      this.model.profile = this.loadProfile();
+      this.applyProfileToModel(this.model.profile);
       this.initializeShipResources(this.model.ship);
       this.model.runSeed = generateRunSeed();
-      this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
-      this.refreshSetState();
       this.hud.sync(this.model);
     }
 
@@ -197,12 +428,16 @@
 
     startGame(seed = this.model.runSeed ?? generateRunSeed()) {
       this.resetGame(seed);
+      this.updateProfileStatsOnRunStart();
+      this.saveProfile("run_start");
       this.input.reset();
       this.model.gameState = GAME_STATE.PLAYING;
       this.hud.sync(this.model);
     }
 
     endGame() {
+      this.updateProfileStatsOnRunEnd();
+      this.saveProfile("game_over");
       this.input.reset();
       this.model.gameState = GAME_STATE.GAME_OVER;
       this.hud.sync(this.model);
@@ -245,32 +480,13 @@
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;
-      this.model.upgrades.fireRateLevel = 0;
-      this.model.upgrades.magazineLevel = 0;
-      this.model.loadout.secondaryId = "missile_burst";
-      this.model.loadout.utilityId = "pulse_bomb";
-      this.model.loadout.primaryId = "auto_cannon";
-      this.model.unlocks.primary = {
-        auto_cannon: true,
-        spread_cannon: true,
-        rail_lance: true,
-        plasma_chain: true
-      };
-      this.model.unlocks.secondary = { missile_burst: true, rail_shot: true, cluster_rockets: true };
-      this.model.unlocks.utility = { pulse_bomb: true, emp_pulse: true, shield_dome: true };
-      this.model.inventory = [];
-      this.model.equipment = { hull: null, shield: null, generator: null, engine: null, chipset: null };
-      this.model.activeSets = [];
-      this.model.setStatusText = "No active set";
-      this.model.salvageParts = 0;
+      this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
       this.rng = createSeededRng(this.model.runSeed);
       this.initializeShipResources(this.model.ship);
-      this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
       this.missionSystem.startMission(this.model.sector);
-      this.refreshSetState();
       this.hud.sync(this.model);
     }
 

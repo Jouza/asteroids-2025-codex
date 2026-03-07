@@ -19,7 +19,7 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Lepsi telegraphy efektu
 
 - [ ] Tech zaklad pro skalovani
-  - [ ] Save/load profilu a progrese
+  - [x] Save/load profilu a progrese
   - [ ] Data-driven balancing tabulky
   - [ ] Combat tuning harness + regression checklist
 
