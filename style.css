@@ -33,12 +33,18 @@ body {
 }
 
 .hud {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(132px, 1fr));
+  display: flex;
   gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 2px;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 0.045em;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(83, 247, 255, 0.35) transparent;
 }
 
 .hud-item {
@@ -49,10 +55,50 @@ body {
   font-size: 0.88rem;
   display: flex;
   align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: inset 0 0 0 1px rgba(83, 247, 255, 0.08);
+  position: relative;
+}
+
+.hud-icon {
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(83, 247, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: #9cefff;
+  background: rgba(14, 24, 38, 0.9);
+}
+
+.hud-value {
+  font-weight: 700;
+  letter-spacing: 0.035em;
+}
+
+.tip:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 15;
+  max-width: 260px;
+  padding: 6px 8px;
+  background: rgba(4, 10, 18, 0.95);
+  border: 1px solid rgba(83, 247, 255, 0.45);
+  color: #c7f6ff;
+  font-size: 0.74rem;
+  line-height: 1.25;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 .state {
@@ -105,13 +151,14 @@ strong {
 }
 
 @media (max-width: 1080px) {
-  .hud {
-    grid-template-columns: repeat(4, minmax(130px, 1fr));
+  .hud-item {
+    font-size: 0.82rem;
   }
 }
 
 @media (max-width: 760px) {
-  .hud {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  .hud-item {
+    font-size: 0.76rem;
+    min-height: 28px;
   }
 }

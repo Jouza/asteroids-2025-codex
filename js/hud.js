@@ -48,15 +48,15 @@
 
       this.scoreEl.textContent = String(model.score);
       this.creditsEl.textContent = String(model.credits);
-      this.hullShieldEl.textContent = `${hull} | ${shield}`;
-      this.energyHeatEl.textContent = `${energy} | ${heat}`;
+      this.hullShieldEl.textContent = `${hull}|${shield}`;
+      this.energyHeatEl.textContent = `${energy}|${heat}`;
       this.sectorEl.textContent = String(model.sector);
-      this.missionEl.textContent = model.currentMission?.label || "-";
+      this.missionEl.textContent = this.truncate(model.currentMission?.label || "-", 14);
       this.setStatusEl.textContent = this.truncate(model.setStatusText || "No active set", 24);
       this.flightModeEl.textContent = model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE";
-      this.primaryStatusEl.textContent = `P ${model.loadout.primaryLabel} | Dash ${this.formatCooldown(model.dashCooldown)}`;
-      this.secondaryStatusEl.textContent = `S ${model.loadout.secondaryLabel} ${this.formatCooldown(model.secondaryCooldown)}`;
-      this.utilityStatusEl.textContent = `U ${model.loadout.utilityLabel} ${this.formatCooldown(model.utilityCooldown)}`;
+      this.primaryStatusEl.textContent = `${model.loadout.primaryLabel} D:${this.formatCooldown(model.dashCooldown)}`;
+      this.secondaryStatusEl.textContent = `${model.loadout.secondaryLabel} ${this.formatCooldown(model.secondaryCooldown)}`;
+      this.utilityStatusEl.textContent = `${model.loadout.utilityLabel} ${this.formatCooldown(model.utilityCooldown)}`;
       this.stateEl.textContent = STATE_LABELS[model.gameState] || "UNKNOWN";
     }
   }
