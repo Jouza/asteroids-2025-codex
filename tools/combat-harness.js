@@ -310,6 +310,55 @@ function runTests() {
     assert(gameA.model.uiAlerts.utilityReady, "Utility ready alert should activate");
   });
 
+  tests.push(() => {
+    gameA.startGame(11111);
+    const ship = gameA.model.ship;
+    ship.invulnMs = 0;
+    ship.hull = ship.hullMax;
+    ship.heat = 0;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      biomeId: "refinery",
+      biomeLabel: "Refinery Complex",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          type: "debris_field",
+          x: ship.x,
+          y: ship.y,
+          radius: 100,
+          tickSeconds: 0.2,
+          tickDamage: 8,
+          slowMul: 0.985,
+          tickTimer: 0,
+          phase: 0,
+          active: false
+        },
+        {
+          type: "plasma_vent",
+          x: ship.x,
+          y: ship.y,
+          radius: 110,
+          tickSeconds: 0.2,
+          tickDamage: 6,
+          heatPerSecond: 20,
+          tickTimer: 0,
+          phase: 0,
+          active: false
+        }
+      ]
+    };
+    gameA.missionSystem.applyMissionEnvironmentalEffects(0.25);
+    assert(
+      ship.shield < ship.shieldMax || ship.hull < ship.hullMax,
+      "Biome hazards should damage ship in hazard radius"
+    );
+    assert(ship.heat > 0, "Plasma vent should increase heat");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     tests[i]();

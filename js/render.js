@@ -513,6 +513,13 @@
       if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
       const { ctx, config } = this;
       const effects = mission.modifierEffects || {};
+      if (mission.biomeId === "graveyard") {
+        ctx.fillStyle = "rgba(118,142,170,0.05)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      } else if (mission.biomeId === "refinery") {
+        ctx.fillStyle = "rgba(158,112,74,0.05)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      }
 
       if ((effects.fogAlpha ?? 0) > 0) {
         const alpha = Math.min(0.5, effects.fogAlpha);
@@ -545,9 +552,39 @@
         ctx.restore();
       }
 
+      const biomeHazards = mission.biomeHazards || [];
+      for (const hazard of biomeHazards) {
+        const pulseRadius =
+          hazard.type === "plasma_vent"
+            ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16)
+            : hazard.radius;
+        ctx.save();
+        if (hazard.type === "debris_field") {
+          ctx.strokeStyle = "rgba(140,205,255,0.38)";
+          ctx.fillStyle = "rgba(96,146,198,0.09)";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else if (hazard.type === "plasma_vent") {
+          const alpha = 0.38 + Math.sin((hazard.phase ?? 0) * 3.3) * 0.14;
+          ctx.strokeStyle = `rgba(255,166,108,${alpha})`;
+          ctx.fillStyle = `rgba(255,126,74,${Math.max(0.08, alpha * 0.3)})`;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
       const warnings = [];
       if ((effects.shieldDrainPerSecond ?? 0) > 0) warnings.push("ION STORM");
       if (mission.gravityAnomaly) warnings.push("GRAVITY ANOMALY");
+      if (biomeHazards.some((hazard) => hazard.active && hazard.type === "debris_field")) warnings.push("DEBRIS FIELD");
+      if (biomeHazards.some((hazard) => hazard.active && hazard.type === "plasma_vent")) warnings.push("PLASMA VENT");
       if (model.miniBoss?.phaseAnnounceTimer > 0) warnings.push(`BOSS PHASE ${model.miniBoss.phaseIndex + 1}`);
       if (model.uiAlerts?.lowHull) warnings.push("HULL CRITICAL");
       if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");

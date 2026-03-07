@@ -33,6 +33,35 @@
       return this.pickWeighted(biomes, biomes[0]);
     }
 
+    createBiomeHazardsForMission(biome) {
+      const g = this.game;
+      const hazardDef = biome?.hazards;
+      if (!hazardDef) return [];
+      const minCount = Math.max(0, Math.floor(hazardDef.minCount ?? 0));
+      const maxCount = Math.max(minCount, Math.floor(hazardDef.maxCount ?? minCount));
+      const count = minCount + Math.floor(g.rng() * (maxCount - minCount + 1));
+      const hazards = [];
+      for (let i = 0; i < count; i += 1) {
+        const radiusMin = hazardDef.radiusMin ?? 70;
+        const radiusMax = hazardDef.radiusMax ?? radiusMin;
+        hazards.push({
+          id: `${biome.id}-${i}-${Math.floor(g.rng() * 1e6)}`,
+          type: hazardDef.type,
+          x: g.config.canvas.width * (0.15 + g.rng() * 0.7),
+          y: g.config.canvas.height * (0.15 + g.rng() * 0.7),
+          radius: radiusMin + g.rng() * (radiusMax - radiusMin),
+          tickSeconds: hazardDef.tickSeconds ?? 0.8,
+          tickDamage: hazardDef.tickDamage ?? 8,
+          slowMul: hazardDef.slowMul ?? 0.9,
+          heatPerSecond: hazardDef.heatPerSecond ?? 0,
+          tickTimer: 0,
+          phase: g.rng() * Math.PI * 2,
+          active: false
+        });
+      }
+      return hazards;
+    }
+
     rollMissionModifier(level) {
       const g = this.game;
       const modifierMap = g.config.missionDirector.modifiers || {};
@@ -61,6 +90,7 @@
       return {
         biomeId: biome.id,
         biomeLabel: biome.label,
+        biomeHazards: this.createBiomeHazardsForMission(biome),
         modifierId: modifier.id,
         modifierLabel: modifier.label,
         modifierDescription: modifier.description,
@@ -265,20 +295,63 @@
       }
 
       const anomaly = mission.gravityAnomaly;
-      if (!anomaly) return;
-      const applyPull = (entity, scalar = 1) => {
-        const dx = anomaly.x - entity.x;
-        const dy = anomaly.y - entity.y;
-        const dist = Math.max(12, Math.hypot(dx, dy));
-        if (dist > anomaly.radius) return;
-        const falloff = 1 - dist / anomaly.radius;
-        const force = ((anomaly.pullStrength * falloff) / dist) * dt * scalar;
-        entity.vx += dx * force;
-        entity.vy += dy * force;
-      };
+      if (anomaly) {
+        const applyPull = (entity, scalar = 1) => {
+          const dx = anomaly.x - entity.x;
+          const dy = anomaly.y - entity.y;
+          const dist = Math.max(12, Math.hypot(dx, dy));
+          if (dist > anomaly.radius) return;
+          const falloff = 1 - dist / anomaly.radius;
+          const force = ((anomaly.pullStrength * falloff) / dist) * dt * scalar;
+          entity.vx += dx * force;
+          entity.vy += dy * force;
+        };
 
-      applyPull(ship, 1);
-      for (const asteroid of g.model.asteroids) applyPull(asteroid, 0.42);
+        applyPull(ship, 1);
+        for (const asteroid of g.model.asteroids) applyPull(asteroid, 0.42);
+      }
+
+      const hazards = mission.biomeHazards || [];
+      for (const hazard of hazards) {
+        hazard.phase += dt;
+        const pulseRadius =
+          hazard.type === "plasma_vent"
+            ? hazard.radius * (0.84 + Math.sin(hazard.phase * 2.8) * 0.16)
+            : hazard.radius;
+        const dist = Math.hypot(ship.x - hazard.x, ship.y - hazard.y);
+        const inside = dist <= pulseRadius + ship.radius;
+        if (inside && !hazard.active) g.emitImpactParticles(ship.x, ship.y, 6, "255,198,140");
+        hazard.active = inside;
+        hazard.tickTimer = Math.max(0, (hazard.tickTimer ?? 0) - dt);
+        if (!inside) continue;
+
+        if (hazard.type === "debris_field") {
+          const slowFactor = Math.pow(hazard.slowMul, dt * 60);
+          ship.vx *= slowFactor;
+          ship.vy *= slowFactor;
+          if (hazard.tickTimer <= 0) {
+            g.applyDamageToShip("asteroid_collision", {
+              baseDamage: hazard.tickDamage,
+              critChance: 0,
+              critMultiplier: 1.0
+            });
+            hazard.tickTimer = hazard.tickSeconds;
+          }
+        } else if (hazard.type === "plasma_vent") {
+          ship.heat = Math.min(ship.heatMax, ship.heat + hazard.heatPerSecond * dt);
+          if (hazard.tickTimer <= 0) {
+            g.applyDamageToShip("enemy_mine", {
+              baseDamage: hazard.tickDamage,
+              damageType: "dot_thermal",
+              critChance: 0,
+              bypassInvulnerability: true,
+              applyHitInvulnerability: false,
+              countAsHit: false
+            });
+            hazard.tickTimer = hazard.tickSeconds;
+          }
+        }
+      }
     }
 
     updateMission(dt) {

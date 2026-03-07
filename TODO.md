@@ -57,12 +57,19 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [ ] Reputation gain/loss
   - [ ] Frakcni rewardy + odlisne nabidky shopu
 
-- [ ] Content a biomy
-  - [ ] Min. 2 nove areny (vrakoviste/tezebni komplex)
-  - [ ] Hazardy prostredi jako gameplay prvek
+- [x] Content a biomy
+  - [x] Min. 2 nove areny (vrakoviste/tezebni komplex)
+  - [x] Hazardy prostredi jako gameplay prvek
 
 - [ ] Endgame / replayability
   - [ ] Bounty board
   - [ ] Mutatory
   - [ ] Endless sektor
   - [ ] Boss rush
+
+## Wishlist / Nice to have
+
+- [ ] High score (server-side, file-based bez DB)
+  - [ ] Zapis pouze pri novem high score (top N)
+  - [ ] Inicialy pouze 3 znaky (A-Z) + score + datum
+  - [ ] Bezpecnost: strict server validace, rate limit, atomicky zapis souboru

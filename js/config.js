@@ -576,10 +576,46 @@
         { maxSector: 999, difficulty: 1.34 }
       ],
       biomes: [
-        { id: "belt", label: "Belt Fringe", weight: 0.34 },
-        { id: "graveyard", label: "Wreck Graveyard", weight: 0.28 },
-        { id: "refinery", label: "Refinery Orbit", weight: 0.22 },
-        { id: "ion_field", label: "Ion Field", weight: 0.16 }
+        {
+          id: "belt",
+          label: "Belt Fringe",
+          weight: 0.3
+        },
+        {
+          id: "graveyard",
+          label: "Wreck Graveyard",
+          weight: 0.28,
+          hazards: {
+            type: "debris_field",
+            minCount: 2,
+            maxCount: 3,
+            radiusMin: 70,
+            radiusMax: 110,
+            tickSeconds: 0.85,
+            tickDamage: 10,
+            slowMul: 0.985
+          }
+        },
+        {
+          id: "refinery",
+          label: "Refinery Complex",
+          weight: 0.24,
+          hazards: {
+            type: "plasma_vent",
+            minCount: 1,
+            maxCount: 2,
+            radiusMin: 85,
+            radiusMax: 125,
+            tickSeconds: 0.5,
+            tickDamage: 12,
+            heatPerSecond: 14
+          }
+        },
+        {
+          id: "ion_field",
+          label: "Ion Field",
+          weight: 0.18
+        }
       ],
       modifiers: {
         ion_storm: {

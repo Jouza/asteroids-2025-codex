@@ -92,6 +92,22 @@ function validateContentData(contentData, issues) {
       assert(typeof biome.id === "string" && biome.id.length > 0, `biome[${index}] id is required`, issues);
       assert(typeof biome.label === "string" && biome.label.length > 0, `biome[${index}] label is required`, issues);
       assert(Number.isFinite(biome.weight) && biome.weight >= 0, `biome[${index}] weight must be >= 0`, issues);
+      if (!biome.hazards) continue;
+      const hazard = biome.hazards;
+      assert(typeof hazard.type === "string" && hazard.type.length > 0, `biome[${index}] hazard type is required`, issues);
+      assert(
+        Number.isFinite(hazard.minCount) && Number.isFinite(hazard.maxCount) && hazard.maxCount >= hazard.minCount,
+        `biome[${index}] hazard count range is invalid`,
+        issues
+      );
+      assert(
+        Number.isFinite(hazard.radiusMin) &&
+          Number.isFinite(hazard.radiusMax) &&
+          hazard.radiusMin > 0 &&
+          hazard.radiusMax >= hazard.radiusMin,
+        `biome[${index}] hazard radius range is invalid`,
+        issues
+      );
     }
     const modifiers = director.modifiers || {};
     assert(Object.keys(modifiers).length > 0, "missionDirector.modifiers must be non-empty", issues);
