@@ -242,6 +242,29 @@
     drawEnemyBullets(bullets) {
       const { ctx } = this;
       for (const bullet of bullets) {
+        if (bullet.isMine) {
+          const pulse = 0.55 + Math.sin((bullet.ttl ?? 0) * 10) * 0.18;
+          const glow = ctx.createRadialGradient(
+            bullet.x,
+            bullet.y,
+            0,
+            bullet.x,
+            bullet.y,
+            bullet.radius * 7
+          );
+          glow.addColorStop(0, `rgba(255,188,118,${0.85 * pulse})`);
+          glow.addColorStop(1, "rgba(255,188,118,0)");
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius * 7, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = "#ffe3c6";
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius * 0.95, 0, Math.PI * 2);
+          ctx.fill();
+          continue;
+        }
         const glow = ctx.createRadialGradient(
           bullet.x,
           bullet.y,
@@ -324,13 +347,21 @@
     drawUfos(ufos) {
       const { ctx } = this;
       for (const ufo of ufos) {
-        const isHunter = ufo.mode === "hunter";
-        const bodyColor = isHunter ? "rgba(208,109,255,0.36)" : "rgba(255,92,183,0.34)";
-        const lineColor = isHunter ? "rgba(240,177,255,0.95)" : "rgba(255,167,220,0.95)";
+        const paletteByMode = {
+          hunter: { body: "rgba(208,109,255,0.36)", line: "rgba(240,177,255,0.95)", glow: "rgba(215,132,255,0.7)" },
+          sniper: { body: "rgba(255,92,183,0.34)", line: "rgba(255,167,220,0.95)", glow: "rgba(255,120,203,0.7)" },
+          swarm: { body: "rgba(118,232,255,0.33)", line: "rgba(178,244,255,0.96)", glow: "rgba(124,228,255,0.74)" },
+          kamikaze: { body: "rgba(255,116,116,0.36)", line: "rgba(255,183,183,0.97)", glow: "rgba(255,128,128,0.78)" },
+          support: { body: "rgba(124,255,180,0.32)", line: "rgba(188,255,217,0.95)", glow: "rgba(143,255,200,0.75)" },
+          mine_layer: { body: "rgba(255,194,118,0.33)", line: "rgba(255,226,176,0.97)", glow: "rgba(255,210,145,0.75)" }
+        };
+        const palette = paletteByMode[ufo.mode] || paletteByMode.hunter;
+        const bodyColor = palette.body;
+        const lineColor = palette.line;
 
         ctx.save();
         ctx.translate(ufo.x, ufo.y);
-        ctx.shadowColor = isHunter ? "rgba(215,132,255,0.7)" : "rgba(255,120,203,0.7)";
+        ctx.shadowColor = palette.glow;
         ctx.shadowBlur = 16;
 
         ctx.fillStyle = bodyColor;
@@ -353,6 +384,21 @@
           ctx.arc(0, 0, ufo.radius * 1.26, 0, Math.PI * 2);
           ctx.stroke();
         }
+
+        if (ufo.elitePrefix) {
+          ctx.strokeStyle = "rgba(255,228,160,0.95)";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, ufo.radius * 1.42, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        const hpRatio = Math.max(0, Math.min(1, (ufo.hp ?? 1) / (ufo.maxHp ?? 1)));
+        const barWidth = ufo.radius * 1.8;
+        ctx.fillStyle = "rgba(0,0,0,0.48)";
+        ctx.fillRect(-barWidth / 2, ufo.radius + 8, barWidth, 4);
+        ctx.fillStyle = "rgba(178,255,213,0.95)";
+        ctx.fillRect(-barWidth / 2, ufo.radius + 8, barWidth * hpRatio, 4);
 
         ctx.restore();
       }
