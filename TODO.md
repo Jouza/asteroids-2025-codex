@@ -1,0 +1,62 @@
+# STARFANG Drift Hunters - TODO
+
+Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupne.
+
+- [ ] Ekonomika a loot 2.0
+  - [ ] Dropy modulu (rarity + affixy)
+  - [ ] Inventory/equip flow v hangaru
+  - [ ] Salvage rozhodovani (vzit/prodat/rozebrat)
+
+- [ ] Ship buildcraft (modularni lod)
+  - [ ] Sloty trupu/motoru/generatoru/stitu/chipsetu
+  - [ ] Stat dopady modulu na flight/combat
+  - [ ] Set bonusy/synergie (Prospector/Corsair/Warden)
+
+- [ ] Zbrane s jasnou identitou (dalsi tier)
+  - [ ] Nove primary archetypy (spread/rail/chain)
+  - [ ] Sekundarky + utility s vyraznou roli
+  - [ ] Lepsi telegraphy efektu
+
+- [ ] Enemy roster a AI rozsirovani
+  - [ ] Nove archetypy (swarm/kamikaze/support/mine-layer)
+  - [ ] Elite prefix system (Phase/Berserker/Armored/Volatile)
+  - [ ] Lepsi behavior model (distance/flank/pressure windows)
+
+- [ ] Boss framework
+  - [ ] 1 plnohodnotny boss encounter (faze + weakpointy + zmena areny)
+  - [ ] Warning + phase transitions + reward table
+
+- [ ] Mission director 2.0
+  - [ ] Mission modifikatory (ion storm/low visibility/gravity anomaly)
+  - [ ] Kombinace cil + modifikator + biome
+  - [ ] Lepsi pacing krivka mezi sektory
+
+- [ ] Pilot RPG layer
+  - [ ] XP + levely pilota
+  - [ ] Atributy (Reflex/Systems/Grit/Instinct)
+  - [ ] Prvni skill tree (10-12 perku)
+
+- [ ] Frakce a reputace (MVP)
+  - [ ] 2 frakce na start
+  - [ ] Reputation gain/loss
+  - [ ] Frakcni rewardy + odlisne nabidky shopu
+
+- [ ] Content a biomy
+  - [ ] Min. 2 nove areny (vrakoviste/tezebni komplex)
+  - [ ] Hazardy prostredi jako gameplay prvek
+
+- [ ] Game feel / juice / UX
+  - [ ] Lepsi hit feedback + exploze + debris + warning cues
+  - [ ] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
+  - [ ] Audio vrstva (zakladni SFX + mix priority)
+
+- [ ] Tech zaklad pro skalovani
+  - [ ] Save/load profilu a progrese
+  - [ ] Data-driven balancing tabulky
+  - [ ] Combat tuning harness + regression checklist
+
+- [ ] Endgame / replayability
+  - [ ] Bounty board
+  - [ ] Mutatory
+  - [ ] Endless sektor
+  - [ ] Boss rush
