@@ -23,6 +23,7 @@ Prubezny checklist pro realizaci noveho smeru.
 - [ ] Help / codex vrstva
   - [x] Samostatna help stranka s objekty, hazardy, chovanim a dopadem
   - [x] Odkaz z hlavni hry na help stranku
+  - [x] Sekce zbrani s parametry a ingame vizualizaci vystrelu (data-driven z GAME_CONFIG)
   - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
 
 - [ ] UI / HUD polish
