@@ -456,6 +456,24 @@
       const { ctx } = this;
       for (const p of particles) {
         const alpha = Math.max(0, p.life / p.ttl);
+        if (p.kind === "ring") {
+          ctx.strokeStyle = `rgba(${p.color},${alpha * 0.85})`;
+          ctx.lineWidth = Math.max(1, p.radius * 0.07);
+          ctx.shadowColor = `rgba(${p.color},${Math.min(1, alpha)})`;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.stroke();
+          continue;
+        }
+        if (p.kind === "debris") {
+          ctx.fillStyle = `rgba(${p.color},${alpha})`;
+          ctx.shadowColor = `rgba(${p.color},${Math.min(1, alpha + 0.12)})`;
+          ctx.shadowBlur = 6;
+          const size = p.radius * (0.42 + alpha * 0.65);
+          ctx.fillRect(p.x - size * 0.5, p.y - size * 0.5, size, size);
+          continue;
+        }
         ctx.fillStyle = `rgba(${p.color},${alpha})`;
         ctx.shadowColor = `rgba(${p.color},${Math.min(1, alpha + 0.2)})`;
         ctx.shadowBlur = 8;
@@ -526,6 +544,23 @@
         ctx.fill();
         ctx.restore();
       }
+
+      const warnings = [];
+      if ((effects.shieldDrainPerSecond ?? 0) > 0) warnings.push("ION STORM");
+      if (mission.gravityAnomaly) warnings.push("GRAVITY ANOMALY");
+      if (model.miniBoss?.phaseAnnounceTimer > 0) warnings.push(`BOSS PHASE ${model.miniBoss.phaseIndex + 1}`);
+      if (model.uiAlerts?.lowHull) warnings.push("HULL CRITICAL");
+      if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");
+      if (!warnings.length) return;
+
+      const warningText = warnings.join(" | ");
+      const alpha = 0.58 + Math.sin(performance.now() / 120) * 0.22;
+      ctx.save();
+      ctx.textAlign = "right";
+      ctx.font = "700 14px Trebuchet MS";
+      ctx.fillStyle = `rgba(255,188,116,${Math.max(0.28, alpha)})`;
+      ctx.fillText(warningText, config.canvas.width - 16, config.canvas.height - 16);
+      ctx.restore();
     }
 
     drawMissionStatus(model) {

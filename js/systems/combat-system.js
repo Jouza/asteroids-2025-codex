@@ -309,8 +309,14 @@
       const g = this.game;
       for (let i = g.model.particles.length - 1; i >= 0; i -= 1) {
         const p = g.model.particles[i];
+        if ((p.drag ?? 0) > 0) {
+          const dragFactor = Math.max(0, 1 - p.drag * dt);
+          p.vx *= dragFactor;
+          p.vy *= dragFactor;
+        }
         p.x += p.vx * dt;
         p.y += p.vy * dt;
+        if ((p.growth ?? 0) !== 0) p.radius += p.growth * dt;
         p.ttl -= dt;
         p.life -= dt;
         if (p.life <= 0) g.model.particles.splice(i, 1);

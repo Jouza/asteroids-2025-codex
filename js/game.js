@@ -127,6 +127,7 @@
         particles: [],
         utilityEffects: [],
         flashMs: 0,
+        hitstopSeconds: 0,
         shootTimer: 0,
         secondaryCooldown: 0,
         utilityCooldown: 0,
@@ -196,7 +197,16 @@
         setStatusText: "No active set",
         salvageParts: 0,
         telemetry: createTelemetryState(false),
-        profile: createDefaultProfile()
+        profile: createDefaultProfile(),
+        uiAlerts: {
+          lowHull: false,
+          lowEnergy: false,
+          highHeat: false,
+          shieldBroken: false,
+          dashReady: true,
+          secondaryReady: true,
+          utilityReady: true
+        }
       };
 
       this.missionSystem = new MissionSystem(this);
@@ -459,6 +469,7 @@
       this.model.particles = [];
       this.model.utilityEffects = [];
       this.model.flashMs = 0;
+      this.model.hitstopSeconds = 0;
       this.model.shootTimer = 0;
       this.model.secondaryCooldown = 0;
       this.model.utilityCooldown = 0;
@@ -485,6 +496,15 @@
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
+      this.model.uiAlerts = {
+        lowHull: false,
+        lowEnergy: false,
+        highHeat: false,
+        shieldBroken: false,
+        dashReady: true,
+        secondaryReady: true,
+        utilityReady: true
+      };
       this.rng = createSeededRng(this.model.runSeed);
       this.initializeShipResources(this.model.ship);
       this.enemySystem.scheduleNextUfoSpawn();
@@ -727,6 +747,14 @@
       this.model.utilityCooldown = Math.max(0, this.model.utilityCooldown - dt);
       this.model.dashCooldown = Math.max(0, this.model.dashCooldown - dt);
 
+      if (this.model.hitstopSeconds > 0) {
+        this.model.hitstopSeconds = Math.max(0, this.model.hitstopSeconds - dt);
+        this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
+        this.updateUiAlerts();
+        this.hud.sync(this.model);
+        return;
+      }
+
       if (this.input.isDown("Space") && this.model.shootTimer <= 0) {
         const didFire = this.combatSystem.fireBullet();
         if (didFire) this.model.shootTimer = this.getCurrentBulletCooldown();
@@ -754,6 +782,7 @@
       this.combatSystem.updateUtilityEffects(dt);
       this.missionSystem.updateMission(dt);
       this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
+      this.updateUiAlerts();
 
       this.hud.sync(this.model);
     }
@@ -877,6 +906,7 @@
 
         if (overrides.countAsHit !== false) this.recordPlayerHit();
         this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 210 : 160);
+        this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, resolved.isCrit ? 0.028 : 0.016);
       }
 
       if (event.dotDuration && event.dotDps) {
@@ -935,7 +965,8 @@
       if (!ship) return;
 
       this.model.flashMs = Math.max(this.model.flashMs, 220);
-      this.emitImpactParticles(ship.x, ship.y, 30, "255,98,121");
+      this.emitExplosionFx(ship.x, ship.y, 150, "255,98,121", "255,222,192");
+      this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.05);
       this.model.dotEffects = [];
       this.endGame();
     }
@@ -952,6 +983,7 @@
       this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 95 : 70);
       const hitColor = boss.weakpointOpen ? "126,237,255" : "255,118,188";
       this.emitImpactParticles(boss.x, boss.y, resolved.isCrit ? 14 : 10, hitColor);
+      this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, resolved.isCrit ? 0.026 : 0.012);
       if (boss.hp <= 0) {
         this.destroyMiniBoss();
         return true;
@@ -1132,7 +1164,51 @@
     }
 
     addParticle(x, y, vx, vy, life, radius, color) {
-      this.model.particles.push({ x, y, vx, vy, ttl: life, life, radius, color });
+      this.model.particles.push({
+        x,
+        y,
+        vx,
+        vy,
+        ttl: life,
+        life,
+        radius,
+        color,
+        kind: "spark",
+        growth: 0,
+        drag: 0
+      });
+    }
+
+    addRingParticle(x, y, life, radius, color, growth = 120) {
+      this.model.particles.push({
+        x,
+        y,
+        vx: 0,
+        vy: 0,
+        ttl: life,
+        life,
+        radius,
+        color,
+        kind: "ring",
+        growth,
+        drag: 0
+      });
+    }
+
+    addDebrisParticle(x, y, vx, vy, life, radius, color) {
+      this.model.particles.push({
+        x,
+        y,
+        vx,
+        vy,
+        ttl: life,
+        life,
+        radius,
+        color,
+        kind: "debris",
+        growth: 0,
+        drag: 0.9
+      });
     }
 
     emitThrusterParticle(ship) {
@@ -1169,6 +1245,45 @@
       }
     }
 
+    emitExplosionFx(x, y, intensity, baseColor, debrisColor = "255,236,184") {
+      const sparkCount = Math.max(8, Math.round(10 + intensity * 0.32));
+      const debrisCount = Math.max(4, Math.round(4 + intensity * 0.18));
+      this.emitImpactParticles(x, y, sparkCount, baseColor);
+      this.addRingParticle(x, y, 0.22 + intensity * 0.0022, 10 + intensity * 0.06, baseColor, 140 + intensity * 0.9);
+      this.addRingParticle(x, y, 0.16 + intensity * 0.0016, 4 + intensity * 0.04, debrisColor, 110 + intensity * 0.5);
+      for (let i = 0; i < debrisCount; i += 1) {
+        const angle = this.rng() * Math.PI * 2;
+        const speed = 70 + this.rng() * (65 + intensity * 2.1);
+        this.addDebrisParticle(
+          x,
+          y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          0.35 + this.rng() * 0.4,
+          1.4 + this.rng() * 2.2,
+          debrisColor
+        );
+      }
+    }
+
+    updateUiAlerts() {
+      const ship = this.model.ship;
+      if (!ship) return;
+      const hullRatio = ship.hullMax > 0 ? ship.hull / ship.hullMax : 1;
+      const energyRatio = ship.energyMax > 0 ? ship.energy / ship.energyMax : 1;
+      const heatRatio = ship.heatMax > 0 ? ship.heat / ship.heatMax : 0;
+      const shieldRatio = ship.shieldMax > 0 ? ship.shield / ship.shieldMax : 1;
+      this.model.uiAlerts = {
+        lowHull: hullRatio <= 0.33,
+        lowEnergy: energyRatio <= 0.24,
+        highHeat: heatRatio >= 0.82,
+        shieldBroken: shieldRatio <= 0.02,
+        dashReady: this.model.dashCooldown <= 0,
+        secondaryReady: this.model.secondaryCooldown <= 0,
+        utilityReady: this.model.utilityCooldown <= 0
+      };
+    }
+
     getAsteroidScore(asteroid) {
       const sizeScore = this.asteroidDefs[asteroid.size].score;
       const typeScore = this.asteroidTypes[asteroid.asteroidType]?.scoreBonus ?? 0;
@@ -1182,7 +1297,8 @@
       this.registerScore(this.getAsteroidScore(asteroid), true);
       this.model.telemetry.kills.asteroids += 1;
       this.model.flashMs = Math.max(this.model.flashMs, 80);
-      this.emitImpactParticles(asteroid.x, asteroid.y, 16, "89,245,255");
+      this.emitExplosionFx(asteroid.x, asteroid.y, asteroid.radius, "89,245,255", "196,240,255");
+      this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.01);
       this.combatSystem.splitAsteroid(asteroid);
       this.model.asteroids.splice(index, 1);
       this.model.missionAsteroidKills += 1;
@@ -1196,7 +1312,8 @@
     triggerVolatileBlast(x, y, radius) {
       const blastRadius = radius * this.config.asteroid.volatileBlastRadiusFactor;
       this.model.flashMs = Math.max(this.model.flashMs, 120);
-      this.emitImpactParticles(x, y, 22, "255,133,100");
+      this.emitExplosionFx(x, y, blastRadius * 0.7, "255,133,100", "255,208,140");
+      this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.018);
 
       for (let i = this.model.asteroids.length - 1; i >= 0; i -= 1) {
         const target = this.model.asteroids[i];
@@ -1223,7 +1340,8 @@
       this.registerScore(Math.round(baseScore * eliteScoreMul), true);
       this.model.telemetry.kills.ufos += 1;
       this.model.flashMs = Math.max(this.model.flashMs, 130);
-      this.emitImpactParticles(ufo.x, ufo.y, 28, "255,91,186");
+      this.emitExplosionFx(ufo.x, ufo.y, 58, "255,91,186", "255,226,190");
+      this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.018);
       if (ufo.elitePrefix === "Volatile") {
         for (let i = 0; i < 6; i += 1) {
           const angle = (i / 6) * Math.PI * 2;
@@ -1262,8 +1380,9 @@
       this.model.credits += creditsGain;
       this.model.telemetry.creditsEarned += creditsGain;
       this.model.telemetry.kills.miniBosses += 1;
-      this.emitImpactParticles(boss.x, boss.y, 42, "255,114,210");
+      this.emitExplosionFx(boss.x, boss.y, 180, "255,114,210", "255,245,189");
       this.model.flashMs = Math.max(this.model.flashMs, 230);
+      this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.04);
       this.model.miniBoss = null;
       for (let i = 0; i < rewards.guaranteedDrops; i += 1) {
         const drop = this.createModuleDrop();

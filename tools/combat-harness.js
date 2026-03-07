@@ -282,6 +282,32 @@ function runTests() {
     assert(gameA.model.ship.shield < gameA.model.ship.shieldMax, "Ion storm should drain shield over time");
   });
 
+  tests.push(() => {
+    gameA.startGame(9191);
+    gameA.model.ship.invulnMs = 0;
+    const before = gameA.model.hitstopSeconds;
+    gameA.applyDamageToShip("enemy_bullet_hunter");
+    assert(gameA.model.hitstopSeconds > before, "Player hit should trigger hitstop feedback");
+  });
+
+  tests.push(() => {
+    gameA.startGame(10101);
+    const ship = gameA.model.ship;
+    ship.hull = ship.hullMax * 0.2;
+    ship.energy = ship.energyMax * 0.1;
+    ship.heat = ship.heatMax * 0.9;
+    ship.shield = 0;
+    gameA.model.secondaryCooldown = 0.8;
+    gameA.model.utilityCooldown = 0;
+    gameA.model.dashCooldown = 0;
+    gameA.updateUiAlerts();
+    assert(gameA.model.uiAlerts.lowHull, "Low hull alert should activate");
+    assert(gameA.model.uiAlerts.lowEnergy, "Low energy alert should activate");
+    assert(gameA.model.uiAlerts.highHeat, "High heat alert should activate");
+    assert(gameA.model.uiAlerts.shieldBroken, "Shield broken alert should activate");
+    assert(gameA.model.uiAlerts.utilityReady, "Utility ready alert should activate");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     tests[i]();

@@ -43,8 +43,8 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Lepsi pacing krivka mezi sektory
 
 - [ ] Game feel / juice / UX
-  - [ ] Lepsi hit feedback + exploze + debris + warning cues
-  - [ ] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
+  - [x] Lepsi hit feedback + exploze + debris + warning cues
+  - [x] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
   - [ ] Audio vrstva (zakladni SFX + mix priority)
 
 - [ ] Pilot RPG layer
