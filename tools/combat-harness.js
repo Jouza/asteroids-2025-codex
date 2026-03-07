@@ -212,6 +212,39 @@ function runTests() {
     assert(input.wasPressed("KeyR"), "KeyR should be tracked");
   });
 
+  tests.push(() => {
+    gameA.startGame(5151);
+    gameA.model.sector = 5;
+    gameA.model.enemyBullets = [];
+    gameA.model.asteroids = [];
+    gameA.enemySystem.spawnMiniBoss(500);
+    const boss = gameA.model.miniBoss;
+    boss.hp = Math.floor(boss.maxHp * 0.39);
+    boss.phaseIndex = 0;
+    gameA.enemySystem.updateMiniBoss(1 / 60);
+    assert(boss.phaseIndex >= 2, "Mini boss should transition to phase 3 at low HP threshold");
+    assert(gameA.model.enemyBullets.length >= 6, "Mini boss phase transition should trigger arena mine ring");
+  });
+
+  tests.push(() => {
+    gameA.startGame(6161);
+    gameA.model.sector = 4;
+    gameA.model.credits = 0;
+    gameA.model.hangar.lootCrate = [];
+    gameA.enemySystem.spawnMiniBoss(420);
+    const guaranteedDrops = gameA.config.mission.miniBoss.rewards.guaranteedDrops;
+    const expectedCredits =
+      gameA.config.mission.miniBoss.rewards.creditsBase +
+      (gameA.model.sector - 1) * gameA.config.mission.miniBoss.rewards.creditsStep;
+    gameA.destroyMiniBoss();
+    assert(gameA.model.miniBoss === null, "Mini boss should be removed after destroy");
+    assert(gameA.model.credits >= expectedCredits, "Mini boss reward credits should be granted");
+    assert(
+      gameA.model.hangar.lootCrate.length >= guaranteedDrops,
+      "Mini boss should grant guaranteed module drops"
+    );
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     tests[i]();

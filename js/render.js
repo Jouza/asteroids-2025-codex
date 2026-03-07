@@ -407,12 +407,13 @@
     drawMiniBoss(boss) {
       if (!boss) return;
       const { ctx } = this;
+      const weakpointColor = boss.weakpointOpen ? "rgba(138,240,255,0.98)" : "rgba(255,180,235,0.95)";
       ctx.save();
       ctx.translate(boss.x, boss.y);
       ctx.shadowColor = "rgba(255,120,210,0.85)";
       ctx.shadowBlur = 20;
       ctx.fillStyle = "rgba(174,72,145,0.42)";
-      ctx.strokeStyle = "rgba(255,180,235,0.95)";
+      ctx.strokeStyle = weakpointColor;
       ctx.lineWidth = 2.5;
 
       ctx.beginPath();
@@ -423,6 +424,23 @@
       ctx.beginPath();
       ctx.ellipse(0, -boss.radius * 0.38, boss.radius * 0.72, boss.radius * 0.35, 0, Math.PI, 0);
       ctx.stroke();
+
+      const weakpointPulse = boss.weakpointOpen
+        ? 0.75 + Math.sin((boss.phase ?? 0) * 8) * 0.25
+        : 0.4 + Math.sin((boss.phase ?? 0) * 4) * 0.1;
+      ctx.fillStyle = boss.weakpointOpen
+        ? `rgba(142,243,255,${weakpointPulse})`
+        : "rgba(255,166,219,0.52)";
+      ctx.beginPath();
+      ctx.arc(0, -boss.radius * 0.16, boss.radius * 0.23, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (boss.phaseAnnounceTimer > 0) {
+        ctx.textAlign = "center";
+        ctx.font = "700 14px Trebuchet MS";
+        ctx.fillStyle = "rgba(255,223,146,0.96)";
+        ctx.fillText(`PHASE ${boss.phaseIndex + 1}`, 0, -boss.radius * 1.55);
+      }
 
       const hpRatio = Math.max(0, boss.hp / boss.maxHp);
       const barWidth = boss.radius * 2.2;
@@ -646,7 +664,7 @@
 
         const truncate = (value, maxLen = 36) => {
           if (!value) return "-";
-          return value.length > maxLen ? `${value.slice(0, maxLen - 1)}…` : value;
+          return value.length > maxLen ? `${value.slice(0, maxLen - 3)}...` : value;
         };
 
         const formatModuleShort = (module) => {

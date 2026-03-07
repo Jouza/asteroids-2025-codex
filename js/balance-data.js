@@ -56,8 +56,12 @@
         hpBase: 360,
         hpStep: 78,
         speed: 82,
-        shootCooldownSeconds: 1.25,
-        scoreReward: 840
+        rewards: {
+          scoreReward: 840,
+          creditsBase: 95,
+          creditsStep: 28,
+          guaranteedDrops: 1
+        }
       }
     }
   };

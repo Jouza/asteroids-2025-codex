@@ -33,9 +33,9 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Elite prefix system (Phase/Berserker/Armored/Volatile)
   - [x] Lepsi behavior model (distance/flank/pressure windows)
 
-- [ ] Boss framework
-  - [ ] 1 plnohodnotny boss encounter (faze + weakpointy + zmena areny)
-  - [ ] Warning + phase transitions + reward table
+- [x] Boss framework
+  - [x] 1 plnohodnotny boss encounter (faze + weakpointy + zmena areny)
+  - [x] Warning + phase transitions + reward table
 
 - [ ] Mission director 2.0
   - [ ] Mission modifikatory (ion storm/low visibility/gravity anomaly)

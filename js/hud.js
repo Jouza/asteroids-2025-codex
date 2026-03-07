@@ -36,7 +36,7 @@
 
     truncate(value, maxLen = 22) {
       if (!value) return "-";
-      return value.length > maxLen ? `${value.slice(0, maxLen - 1)}…` : value;
+      return value.length > maxLen ? `${value.slice(0, maxLen - 3)}...` : value;
     }
 
     sync(model) {

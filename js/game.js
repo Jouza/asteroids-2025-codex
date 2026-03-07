@@ -940,10 +940,15 @@
     applyDamageToMiniBoss(baseDamage, damageType = "kinetic", critChance = this.getPlayerCritChance()) {
       const boss = this.model.miniBoss;
       if (!boss) return false;
-      const resolved = this.resolvePlayerDamage(baseDamage, damageType, critChance);
+      const bossCfg = this.config.mission.miniBoss;
+      const weakpointMultiplier = boss.weakpointOpen
+        ? bossCfg.weakpointDamageMultiplier
+        : bossCfg.weakpointClosedMultiplier;
+      const resolved = this.resolvePlayerDamage(baseDamage * weakpointMultiplier, damageType, critChance);
       boss.hp -= resolved.damage;
       this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 95 : 70);
-      this.emitImpactParticles(boss.x, boss.y, resolved.isCrit ? 14 : 10, "255,118,188");
+      const hitColor = boss.weakpointOpen ? "126,237,255" : "255,118,188";
+      this.emitImpactParticles(boss.x, boss.y, resolved.isCrit ? 14 : 10, hitColor);
       if (boss.hp <= 0) {
         this.destroyMiniBoss();
         return true;
@@ -1246,14 +1251,22 @@
     }
 
     destroyMiniBoss() {
-      if (!this.model.miniBoss) return;
-      this.registerScore(this.config.mission.miniBoss.scoreReward, true);
+      const boss = this.model.miniBoss;
+      if (!boss) return;
+      const rewards = this.config.mission.miniBoss.rewards;
+      const creditsGain = rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep;
+      this.registerScore(rewards.scoreReward, true);
+      this.model.credits += creditsGain;
+      this.model.telemetry.creditsEarned += creditsGain;
       this.model.telemetry.kills.miniBosses += 1;
-      this.emitImpactParticles(this.model.miniBoss.x, this.model.miniBoss.y, 42, "255,114,210");
+      this.emitImpactParticles(boss.x, boss.y, 42, "255,114,210");
       this.model.flashMs = Math.max(this.model.flashMs, 230);
       this.model.miniBoss = null;
-      this.tryDropModule("miniBoss");
-      this.tryDropModule("miniBoss");
+      for (let i = 0; i < rewards.guaranteedDrops; i += 1) {
+        const drop = this.createModuleDrop();
+        this.model.hangar.lootCrate.push(drop);
+      }
+      this.model.hangar.message = `Boss down: +${creditsGain} credits, ${rewards.guaranteedDrops} guaranteed module`;
     }
 
     findClosestChainTarget(fromX, fromY, radius) {

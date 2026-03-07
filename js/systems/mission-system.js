@@ -236,9 +236,14 @@
 
       if (type === "mini_boss") {
         const boss = g.model.miniBoss;
-        mission.objectiveText = boss
-          ? `Destroy boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`
-          : "Destroy boss";
+        if (boss) {
+          const weakpointText = boss.weakpointOpen
+            ? `Weakpoint OPEN ${Math.max(0, boss.weakpointOpenFor).toFixed(1)}s`
+            : `Weakpoint in ${Math.max(0, boss.weakpointTimer).toFixed(1)}s`;
+          mission.objectiveText = `Phase ${boss.phaseIndex + 1} | HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp} | ${weakpointText}`;
+        } else {
+          mission.objectiveText = "Destroy boss";
+        }
         if (!boss && threatsRemaining === 0) mission.completed = true;
       }
 

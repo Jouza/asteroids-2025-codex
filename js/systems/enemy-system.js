@@ -257,15 +257,83 @@
 
     spawnMiniBoss(hp) {
       const g = this.game;
+      const cfg = g.config.mission.miniBoss;
       g.model.miniBoss = {
         x: g.config.canvas.width * 0.5,
         y: 120,
-        radius: g.config.mission.miniBoss.radius,
+        radius: cfg.radius,
         hp,
         maxHp: hp,
         phase: 0,
-        shootTimer: 0
+        phaseIndex: 0,
+        phaseAnnounceTimer: 0.9,
+        shootTimer: 0,
+        weakpointTimer: cfg.weakpointCycleSeconds[0],
+        weakpointOpenFor: 0,
+        weakpointOpen: false
       };
+    }
+
+    triggerMiniBossPhaseEvent(boss) {
+      const g = this.game;
+      const cfg = g.config.mission.miniBoss.phaseEvent;
+      if (!cfg) return;
+
+      for (let i = 0; i < cfg.mineRingCount; i += 1) {
+        const angle = (i / cfg.mineRingCount) * Math.PI * 2;
+        const bullet = createEnemyBullet(boss.x, boss.y, angle, g.config);
+        bullet.vx *= cfg.mineSpeedFactor;
+        bullet.vy *= cfg.mineSpeedFactor;
+        bullet.ttl = cfg.mineTtlSeconds;
+        bullet.radius = g.config.ufo.mineRadius;
+        bullet.isMine = true;
+        bullet.damageProfile = "enemy_mine";
+        g.model.enemyBullets.push(bullet);
+      }
+
+      for (const asteroid of g.model.asteroids) {
+        const dx = asteroid.x - boss.x;
+        const dy = asteroid.y - boss.y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        asteroid.vx += (dx / dist) * cfg.asteroidPushImpulse;
+        asteroid.vy += (dy / dist) * cfg.asteroidPushImpulse;
+      }
+
+      g.missionSystem.spawnAsteroidPack(g.model.sector, cfg.asteroidSpawnLarge, cfg.asteroidSpawnMedium);
+      g.emitImpactParticles(boss.x, boss.y, 24, "255,132,211");
+      g.model.flashMs = Math.max(g.model.flashMs, 190);
+    }
+
+    updateMiniBossWeakpoint(boss, dt) {
+      const g = this.game;
+      const cfg = g.config.mission.miniBoss;
+      const phase = boss.phaseIndex;
+      if (boss.weakpointOpenFor > 0) {
+        boss.weakpointOpenFor = Math.max(0, boss.weakpointOpenFor - dt);
+        boss.weakpointOpen = boss.weakpointOpenFor > 0;
+        return;
+      }
+      boss.weakpointOpen = false;
+      boss.weakpointTimer = Math.max(0, boss.weakpointTimer - dt);
+      if (boss.weakpointTimer > 0) return;
+      boss.weakpointOpen = true;
+      boss.weakpointOpenFor = cfg.weakpointWindowSeconds[phase];
+      boss.weakpointTimer = cfg.weakpointCycleSeconds[phase];
+      g.emitImpactParticles(boss.x, boss.y, 9, "126,237,255");
+    }
+
+    updateMiniBossPhaseState(boss) {
+      const g = this.game;
+      const cfg = g.config.mission.miniBoss;
+      const ratio = boss.hp / boss.maxHp;
+      const thresholds = cfg.phaseThresholds;
+      const nextPhase =
+        ratio <= thresholds[1] ? 2 : ratio <= thresholds[0] ? 1 : 0;
+      if (nextPhase <= boss.phaseIndex) return;
+      boss.phaseIndex = nextPhase;
+      boss.phaseAnnounceTimer = 1.4;
+      boss.weakpointTimer = Math.min(boss.weakpointTimer, cfg.weakpointCycleSeconds[nextPhase] * 0.55);
+      this.triggerMiniBossPhaseEvent(boss);
     }
 
     updateMiniBoss(dt) {
@@ -276,8 +344,15 @@
 
       const cfg = g.config.mission.miniBoss;
       boss.phase += dt;
-      boss.x = g.config.canvas.width * 0.5 + Math.sin(boss.phase * 0.8) * 260;
-      boss.y = 120 + Math.sin(boss.phase * 1.4) * 36;
+      boss.phaseAnnounceTimer = Math.max(0, (boss.phaseAnnounceTimer ?? 0) - dt);
+      this.updateMiniBossPhaseState(boss);
+      this.updateMiniBossWeakpoint(boss, dt);
+
+      const phase = boss.phaseIndex;
+      boss.x =
+        g.config.canvas.width * 0.5 +
+        Math.sin(boss.phase * cfg.movementFreqX[phase]) * cfg.movementAmplitudeX[phase];
+      boss.y = 120 + Math.sin(boss.phase * cfg.movementFreqY[phase]) * cfg.movementAmplitudeY[phase];
 
       boss.shootTimer = Math.max(0, boss.shootTimer - dt);
       if (boss.shootTimer <= 0) {
@@ -288,17 +363,22 @@
           g.config.ufo.bulletSpeedScalePerSector,
           g.config.ufo.bulletSpeedScaleMaxBonus
         );
-        const bullet = createEnemyBullet(boss.x, boss.y, aim + (g.rng() - 0.5) * 0.14, g.config);
-        bullet.vx *= speedScale;
-        bullet.vy *= speedScale;
-        bullet.damageProfile = "mini_boss_bullet";
-        g.model.enemyBullets.push(bullet);
-        g.recordEnemyShot();
+        const volleyCount = cfg.volleyCount[phase];
+        const spread = cfg.spreadRadians[phase];
+        for (let i = 0; i < volleyCount; i += 1) {
+          const t = volleyCount === 1 ? 0 : i / (volleyCount - 1) - 0.5;
+          const bullet = createEnemyBullet(boss.x, boss.y, aim + t * spread + (g.rng() - 0.5) * 0.06, g.config);
+          bullet.vx *= speedScale;
+          bullet.vy *= speedScale;
+          bullet.damageProfile = "mini_boss_bullet";
+          g.model.enemyBullets.push(bullet);
+          g.recordEnemyShot();
+        }
         const fireRateScale = this.getSectorScale(
           g.config.ufo.fireRateScalePerSector,
           g.config.ufo.fireRateScaleMaxBonus
         );
-        boss.shootTimer = cfg.shootCooldownSeconds / fireRateScale;
+        boss.shootTimer = cfg.shootCooldownSeconds[phase] / fireRateScale;
       }
     }
   }

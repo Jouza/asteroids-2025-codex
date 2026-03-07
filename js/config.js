@@ -524,8 +524,32 @@
         hpStep: 78,
         radius: 34,
         speed: 82,
-        shootCooldownSeconds: 1.25,
-        scoreReward: 840
+        phaseThresholds: [0.72, 0.42],
+        movementAmplitudeX: [220, 270, 320],
+        movementAmplitudeY: [26, 38, 52],
+        movementFreqX: [0.72, 0.92, 1.16],
+        movementFreqY: [1.18, 1.42, 1.68],
+        shootCooldownSeconds: [1.28, 0.98, 0.72],
+        volleyCount: [1, 2, 3],
+        spreadRadians: [0.1, 0.2, 0.32],
+        weakpointCycleSeconds: [4.8, 4.0, 3.4],
+        weakpointWindowSeconds: [1.2, 1.35, 1.5],
+        weakpointDamageMultiplier: 2.3,
+        weakpointClosedMultiplier: 0.36,
+        phaseEvent: {
+          mineRingCount: 8,
+          mineSpeedFactor: 0.62,
+          mineTtlSeconds: 5.8,
+          asteroidPushImpulse: 120,
+          asteroidSpawnLarge: 1,
+          asteroidSpawnMedium: 1
+        },
+        rewards: {
+          scoreReward: 840,
+          creditsBase: 95,
+          creditsStep: 28,
+          guaranteedDrops: 1
+        }
       },
       rewards: {
         scoreByType: {
