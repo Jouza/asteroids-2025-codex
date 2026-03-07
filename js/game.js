@@ -57,7 +57,7 @@
         gameState: GAME_STATE.START,
         score: 0,
         credits: 0,
-        wave: 1,
+        sector: 1,
         ship: null,
         bullets: [],
         enemyBullets: [],
@@ -71,7 +71,7 @@
         secondaryCooldown: 0,
         utilityCooldown: 0,
         dashCooldown: 0,
-        waveTimerMs: 0,
+        sectorTimerMs: 0,
         runSeed: null,
         runtimeSeconds: 0,
         nextUfoSpawnSeconds: 0,
@@ -79,7 +79,7 @@
         comboMultiplier: 1,
         comboTimer: 0,
         comboScoringEnabled: config.arcadeMutators.comboScoringEnabled,
-        waveCompletionHandled: false,
+        sectorCompletionHandled: false,
         missionTimer: 0,
         missionSpawnTimer: 0,
         missionSpawnBudget: 0,
@@ -191,7 +191,7 @@
       const telemetryEnabled = this.model.telemetry.enabled;
       this.model.score = 0;
       this.model.credits = 0;
-      this.model.wave = 1;
+      this.model.sector = 1;
       this.model.ship = createShip(this.config);
       this.model.bullets = [];
       this.model.enemyBullets = [];
@@ -205,13 +205,13 @@
       this.model.secondaryCooldown = 0;
       this.model.utilityCooldown = 0;
       this.model.dashCooldown = 0;
-      this.model.waveTimerMs = 0;
+      this.model.sectorTimerMs = 0;
       this.model.runtimeSeconds = 0;
       this.model.comboCount = 0;
       this.model.comboMultiplier = 1;
       this.model.comboTimer = 0;
       this.model.comboScoringEnabled = this.config.arcadeMutators.comboScoringEnabled;
-      this.model.waveCompletionHandled = false;
+      this.model.sectorCompletionHandled = false;
       this.model.missionTimer = 0;
       this.model.missionSpawnTimer = 0;
       this.model.missionSpawnBudget = 0;
@@ -233,7 +233,7 @@
       this.initializeShipResources(this.model.ship);
       this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
-      this.missionSystem.startMission(this.model.wave);
+      this.missionSystem.startMission(this.model.sector);
       this.hud.sync(this.model);
     }
 
@@ -527,7 +527,7 @@
       if (!mission) return;
 
       this.model.telemetry.activeMission = {
-        wave: this.model.wave,
+        sector: this.model.sector,
         type: mission.type,
         label: mission.label,
         startScore: this.model.score,
@@ -548,7 +548,7 @@
 
       this.model.telemetry.completedMissions += 1;
       this.model.telemetry.lastMission = {
-        wave: active.wave,
+        sector: active.sector,
         type: active.type,
         label: active.label,
         durationSeconds: Math.max(0, this.model.telemetry.runTimeSeconds - active.startRunTimeSeconds),
@@ -602,11 +602,11 @@
     }
 
     getCurrentMaxBullets() {
-      const waveBonus = Math.min(
-        this.config.bullet.waveBonusMax,
-        Math.floor((this.model.wave - 1) / this.config.bullet.waveBonusEveryWaves)
+      const sectorBonus = Math.min(
+        this.config.bullet.sectorBonusMax,
+        Math.floor((this.model.sector - 1) / this.config.bullet.sectorBonusEverySectors)
       );
-      return this.config.bullet.maxActive + this.model.upgrades.magazineLevel + waveBonus;
+      return this.config.bullet.maxActive + this.model.upgrades.magazineLevel + sectorBonus;
     }
 
     getSecondarySpec() {

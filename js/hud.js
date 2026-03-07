@@ -13,10 +13,9 @@
     constructor() {
       this.scoreEl = document.getElementById("score");
       this.creditsEl = document.getElementById("credits");
-      this.comboEl = document.getElementById("combo");
       this.hullShieldEl = document.getElementById("hullShield");
       this.energyHeatEl = document.getElementById("energyHeat");
-      this.waveEl = document.getElementById("wave");
+      this.sectorEl = document.getElementById("sector");
       this.missionEl = document.getElementById("mission");
       this.flightModeEl = document.getElementById("flightMode");
       this.primaryStatusEl = document.getElementById("primaryStatus");
@@ -43,10 +42,9 @@
 
       this.scoreEl.textContent = String(model.score);
       this.creditsEl.textContent = String(model.credits);
-      this.comboEl.textContent = model.comboScoringEnabled ? `x${model.comboMultiplier.toFixed(2)}` : "Mutator OFF";
       this.hullShieldEl.textContent = `${hull} | ${shield}`;
       this.energyHeatEl.textContent = `${energy} | ${heat}`;
-      this.waveEl.textContent = String(model.wave);
+      this.sectorEl.textContent = String(model.sector);
       this.missionEl.textContent = model.currentMission?.label || "-";
       this.flightModeEl.textContent = model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE";
       this.primaryStatusEl.textContent = `Space ${model.loadout.primaryLabel} | V Dash: ${this.formatCooldown(

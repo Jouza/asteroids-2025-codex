@@ -332,7 +332,7 @@
       const nextSize = g.asteroidDefs[asteroid.size].next;
       if (!nextSize) return;
 
-      const speedScale = 1 + g.model.wave * g.config.wave.splitScalePerWave;
+      const speedScale = 1 + g.model.sector * g.config.sector.splitScalePerSector;
       const childType = asteroid.asteroidType === "volatile" ? "normal" : asteroid.asteroidType;
 
       for (let i = 0; i < g.config.asteroid.splitCount; i += 1) {

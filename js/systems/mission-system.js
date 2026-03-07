@@ -4,9 +4,9 @@
       this.game = game;
     }
 
-    getSpawnInterval(baseInterval, perWaveRamp, minInterval, level) {
-      const waveIndex = Math.max(0, level - 1);
-      const scale = 1 + waveIndex * perWaveRamp;
+    getSpawnInterval(baseInterval, perSectorRamp, minInterval, level) {
+      const sectorIndex = Math.max(0, level - 1);
+      const scale = 1 + sectorIndex * perSectorRamp;
       return Math.max(minInterval, baseInterval / scale);
     }
 
@@ -16,7 +16,7 @@
       return value * factor;
     }
 
-    chooseAsteroidTypeForWave(level) {
+    chooseAsteroidTypeForSector(level) {
       const g = this.game;
       const roll = g.rng();
       if (level >= 3 && roll < 0.18) return "volatile";
@@ -26,10 +26,10 @@
 
     spawnAsteroidPack(level, largeCount, mediumCount = 0) {
       const g = this.game;
-      const speedScale = 1 + (level - 1) * g.config.wave.speedScaleStep;
+      const speedScale = 1 + (level - 1) * g.config.sector.speedScaleStep;
 
       for (let i = 0; i < largeCount; i += 1) {
-        const asteroidType = this.chooseAsteroidTypeForWave(level);
+        const asteroidType = this.chooseAsteroidTypeForSector(level);
         g.model.asteroids.push(
           window.Asteroids.spawnAsteroidAwayFromShip(
             "large",
@@ -44,7 +44,7 @@
       }
 
       for (let i = 0; i < mediumCount; i += 1) {
-        const asteroidType = this.chooseAsteroidTypeForWave(level);
+        const asteroidType = this.chooseAsteroidTypeForSector(level);
         g.model.asteroids.push(
           window.Asteroids.spawnAsteroidAwayFromShip(
             "medium",
@@ -79,7 +79,7 @@
       g.model.missionSpawnBudget = 0;
       g.model.missionUfoKills = 0;
       g.model.missionAsteroidKills = 0;
-      g.model.waveCompletionHandled = false;
+      g.model.sectorCompletionHandled = false;
       g.model.bullets = [];
       g.model.enemyBullets = [];
       g.model.ufos = [];
@@ -88,7 +88,7 @@
       g.model.utilityEffects = [];
 
       const missionCfg = g.config.mission;
-      const level = g.model.wave;
+      const level = g.model.sector;
 
       if (type === "survive") {
         const baseDuration =
@@ -96,12 +96,12 @@
         g.model.missionTimer = Math.max(10, this.applyMissionVariance(baseDuration, 0.08));
         g.model.missionSpawnTimer = 0.1;
         g.enemySystem.scheduleNextUfoSpawn();
-        const spawnLargeBase = level >= missionCfg.survive.extraLargeEveryWaves ? 2 : 1;
+        const spawnLargeBase = level >= missionCfg.survive.extraLargeEverySectors ? 2 : 1;
         g.model.currentMission.spawnLargeCount = spawnLargeBase;
-        g.model.currentMission.spawnMediumCount = level >= missionCfg.survive.extraLargeEveryWaves + 2 ? 1 : 0;
+        g.model.currentMission.spawnMediumCount = level >= missionCfg.survive.extraLargeEverySectors + 2 ? 1 : 0;
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.survive.asteroidSpawnIntervalSeconds,
-          missionCfg.survive.spawnRateRampPerWave,
+          missionCfg.survive.spawnRateRampPerSector,
           missionCfg.survive.minSpawnIntervalSeconds,
           level
         );
@@ -117,11 +117,11 @@
         g.model.currentMission.maxConcurrentUfos = Math.min(
           missionCfg.ufoHunt.maxConcurrentCap,
           missionCfg.ufoHunt.maxConcurrentUfos +
-            Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEveryWaves)
+            Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEverySectors)
         );
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.ufoHunt.spawnIntervalSeconds,
-          missionCfg.ufoHunt.spawnRateRampPerWave,
+          missionCfg.ufoHunt.spawnRateRampPerSector,
           missionCfg.ufoHunt.minSpawnIntervalSeconds,
           level
         );
@@ -138,11 +138,11 @@
         g.model.currentMission.extraMediumChance = Math.min(
           0.88,
           missionCfg.asteroidStorm.extraMediumChance +
-            (level - 1) * missionCfg.asteroidStorm.mediumChanceRampPerWave
+            (level - 1) * missionCfg.asteroidStorm.mediumChanceRampPerSector
         );
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.asteroidStorm.extraSpawnIntervalSeconds,
-          missionCfg.asteroidStorm.spawnRateRampPerWave,
+          missionCfg.asteroidStorm.spawnRateRampPerSector,
           missionCfg.asteroidStorm.minExtraSpawnIntervalSeconds,
           level
         );
@@ -176,9 +176,9 @@
         (g.model.miniBoss ? 1 : 0);
 
       if (mission.completed) {
-        if (g.model.waveCompletionHandled) {
-          g.model.waveTimerMs += dt * 1000;
-          if (g.model.waveTimerMs >= g.config.wave.graceMs) {
+        if (g.model.sectorCompletionHandled) {
+          g.model.sectorTimerMs += dt * 1000;
+          if (g.model.sectorTimerMs >= g.config.sector.graceMs) {
             g.hangarSystem.enterHangarPhase();
           }
         }
@@ -190,7 +190,7 @@
         g.model.missionSpawnTimer -= dt;
         if (g.model.missionSpawnTimer <= 0 && g.model.missionTimer > 0) {
           this.spawnAsteroidPack(
-            g.model.wave,
+            g.model.sector,
             mission.spawnLargeCount ?? 1,
             mission.spawnMediumCount ?? 0
           );
@@ -218,7 +218,7 @@
         g.model.missionSpawnTimer -= dt;
         const target = g.model.missionSpawnBudget;
         if (g.model.missionAsteroidKills < target && g.model.missionSpawnTimer <= 0) {
-          this.spawnAsteroidPack(g.model.wave, 1, g.rng() < (mission.extraMediumChance ?? 0.5) ? 1 : 0);
+          this.spawnAsteroidPack(g.model.sector, 1, g.rng() < (mission.extraMediumChance ?? 0.5) ? 1 : 0);
           g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.asteroidStorm.extraSpawnIntervalSeconds;
         }
         mission.objectiveText = `Break asteroids: ${g.model.missionAsteroidKills}/${target}`;
@@ -233,10 +233,10 @@
         if (!boss && threatsRemaining === 0) mission.completed = true;
       }
 
-      if (mission.completed && !g.model.waveCompletionHandled) {
+      if (mission.completed && !g.model.sectorCompletionHandled) {
         g.onMissionCompleted();
-        g.model.waveCompletionHandled = true;
-        g.model.waveTimerMs = 0;
+        g.model.sectorCompletionHandled = true;
+        g.model.sectorTimerMs = 0;
       }
     }
   }
