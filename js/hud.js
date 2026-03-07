@@ -14,7 +14,6 @@
       this.scoreEl = document.getElementById("score");
       this.creditsEl = document.getElementById("credits");
       this.comboEl = document.getElementById("combo");
-      this.livesEl = document.getElementById("lives");
       this.hullShieldEl = document.getElementById("hullShield");
       this.energyHeatEl = document.getElementById("energyHeat");
       this.waveEl = document.getElementById("wave");
@@ -45,7 +44,6 @@
       this.scoreEl.textContent = String(model.score);
       this.creditsEl.textContent = String(model.credits);
       this.comboEl.textContent = `x${model.comboMultiplier.toFixed(2)}`;
-      this.livesEl.textContent = String(model.lives);
       this.hullShieldEl.textContent = `${hull} | ${shield}`;
       this.energyHeatEl.textContent = `${energy} | ${heat}`;
       this.waveEl.textContent = String(model.wave);

@@ -61,10 +61,9 @@
 
       if (item.id === "repair") {
         const ship = g.model.ship;
-        const canRepairHull = ship && ship.hull < ship.hullMax;
-        const canAddLife = g.model.lives < g.config.shop.maxLives;
-        if (!canRepairHull && !canAddLife) {
-          g.model.shop.message = "Mas plny hull i zivoty.";
+        const canRepairHullShield = ship && (ship.hull < ship.hullMax || ship.shield < ship.shieldMax);
+        if (!canRepairHullShield) {
+          g.model.shop.message = "Hull i shield jsou plne.";
           return;
         }
       }
@@ -79,13 +78,15 @@
 
       g.model.credits -= item.cost;
       if (item.id === "repair") {
-        if (g.model.ship && g.model.ship.hull < g.model.ship.hullMax) {
+        if (
+          g.model.ship &&
+          (g.model.ship.hull < g.model.ship.hullMax || g.model.ship.shield < g.model.ship.shieldMax)
+        ) {
           g.model.ship.hull = g.model.ship.hullMax;
           g.model.ship.shield = g.model.ship.shieldMax;
-          g.model.shop.message = "Hull opraven na maximum.";
+          g.model.shop.message = "Hull i shield opraveny na maximum.";
           return;
         }
-        g.model.lives += 1;
       }
       if (item.id === "fire_rate") g.model.upgrades.fireRateLevel += 1;
       if (item.id === "magazine") g.model.upgrades.magazineLevel += 1;
