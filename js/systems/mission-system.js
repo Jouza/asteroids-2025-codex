@@ -179,7 +179,7 @@
         if (g.model.waveCompletionHandled) {
           g.model.waveTimerMs += dt * 1000;
           if (g.model.waveTimerMs >= g.config.wave.graceMs) {
-            g.shopSystem.enterShopPhase();
+            g.hangarSystem.enterHangarPhase();
           }
         }
         return;

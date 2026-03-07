@@ -8,7 +8,7 @@
     createShip,
     generateRunSeed,
     MissionSystem,
-    ShopSystem,
+    HangarSystem,
     CombatSystem,
     EnemySystem,
     randomRange
@@ -87,8 +87,8 @@
         currentMission: null,
         flightModel: "arcade",
         dotEffects: [],
-        shop: {
-          message: "Shop: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start."
+        hangar: {
+          message: "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start."
         },
         loadout: {
           primaryId: "auto_cannon",
@@ -118,7 +118,7 @@
       };
 
       this.missionSystem = new MissionSystem(this);
-      this.shopSystem = new ShopSystem(this);
+      this.hangarSystem = new HangarSystem(this);
       this.combatSystem = new CombatSystem(this);
       this.enemySystem = new EnemySystem(this);
     }
@@ -146,8 +146,8 @@
         this.toggleFlightModel();
       }
 
-      if (this.model.gameState === GAME_STATE.SHOP) {
-        this.shopSystem.handleShopInput();
+      if (this.model.gameState === GAME_STATE.HANGAR) {
+        this.hangarSystem.handleHangarInput();
         this.hud.sync(this.model);
         return;
       }
@@ -218,7 +218,7 @@
       this.model.currentMission = null;
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
-      this.model.shop.message = "Shop: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
+      this.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
       this.model.upgrades.fireRateLevel = 0;
       this.model.upgrades.magazineLevel = 0;
       this.model.loadout.secondaryId = "missile_burst";
@@ -555,7 +555,7 @@
 
     getCurrentBulletCooldown() {
       const primary = this.config.loadout.primary[this.model.loadout.primaryId];
-      const factor = Math.pow(this.config.shop.fireRateFactorPerLevel, this.model.upgrades.fireRateLevel);
+      const factor = Math.pow(this.config.hangar.fireRateFactorPerLevel, this.model.upgrades.fireRateLevel);
       const ship = this.model.ship;
       const softThreshold = this.config.ship.overheatSoftThreshold;
       const overheatRatio =
