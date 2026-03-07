@@ -1,5 +1,5 @@
 (() => {
-  const { circleCollision, createAsteroid, createBullet, createShip, wrapPosition } = window.Asteroids;
+  const { circleCollision, createAsteroid, createShip, wrapPosition } = window.Asteroids;
 
   class CombatSystem {
     constructor(game) {
@@ -11,7 +11,29 @@
       if (!g.model.ship) return false;
       if (!g.canFirePrimary()) return false;
       if (g.model.bullets.length >= g.getCurrentMaxBullets()) return false;
-      g.model.bullets.push(createBullet(g.model.ship, g.config));
+      const ship = g.model.ship;
+      const spec = g.getPrimarySpec();
+      const count = spec.count ?? 1;
+      for (let i = 0; i < count; i += 1) {
+        const t = count === 1 ? 0 : i / (count - 1) - 0.5;
+        const angle = ship.angle + t * (spec.spread ?? 0);
+        const dirX = Math.cos(angle);
+        const dirY = Math.sin(angle);
+        g.model.bullets.push({
+          x: ship.x + dirX * (ship.radius + 8),
+          y: ship.y + dirY * (ship.radius + 8),
+          vx: ship.vx * g.config.bullet.inheritVelocityFactor + dirX * (spec.projectileSpeed ?? g.config.bullet.speed),
+          vy: ship.vy * g.config.bullet.inheritVelocityFactor + dirY * (spec.projectileSpeed ?? g.config.bullet.speed),
+          radius: spec.radius ?? g.config.bullet.radius,
+          ttl: spec.ttlSeconds ?? g.config.bullet.ttlSeconds,
+          kind: `primary_${spec.kind || "auto"}`,
+          pierce: spec.pierce ?? 0,
+          bossDamage: spec.bossDamage ?? 28,
+          chainTargets: spec.chainTargets ?? 0,
+          chainRadius: spec.chainRadius ?? 0,
+          chainBossDamage: spec.chainBossDamage ?? 12
+        });
+      }
       g.consumePrimaryShotResources();
       g.recordPrimaryShot();
       return true;
@@ -322,7 +344,13 @@
           }
         }
         if (hitIndex === -1) continue;
+        const bullet = g.model.bullets[b];
+        const impactX = g.model.asteroids[hitIndex].x;
+        const impactY = g.model.asteroids[hitIndex].y;
         g.destroyAsteroidByIndex(hitIndex, true);
+        if (bullet?.chainTargets > 0) {
+          g.triggerPrimaryChain(impactX, impactY, bullet.chainTargets, bullet.chainRadius, bullet.chainBossDamage);
+        }
         g.consumePlayerProjectileHit(b);
       }
     }
@@ -363,7 +391,13 @@
           }
         }
         if (hitIndex === -1) continue;
+        const bullet = g.model.bullets[b];
+        const impactX = g.model.ufos[hitIndex].x;
+        const impactY = g.model.ufos[hitIndex].y;
         g.destroyUfoByIndex(hitIndex);
+        if (bullet?.chainTargets > 0) {
+          g.triggerPrimaryChain(impactX, impactY, bullet.chainTargets, bullet.chainRadius, bullet.chainBossDamage);
+        }
         g.consumePlayerProjectileHit(b);
       }
     }
@@ -377,9 +411,18 @@
         if (!circleCollision(g.model.bullets[b], boss)) continue;
         const bullet = g.model.bullets[b];
         const baseDamage = bullet.bossDamage ?? 28;
-        const damageType = bullet.kind === "secondary_rail" ? "plasma" : "kinetic";
+        const damageType = bullet.kind === "secondary_rail" || bullet.kind === "primary_rail" ? "plasma" : "kinetic";
         g.consumePlayerProjectileHit(b);
         const destroyed = g.applyDamageToMiniBoss(baseDamage, damageType, bullet.kind ? 0.11 : 0.08);
+        if (!destroyed && bullet?.chainTargets > 0) {
+          g.triggerPrimaryChain(
+            boss.x,
+            boss.y,
+            bullet.chainTargets,
+            bullet.chainRadius,
+            bullet.chainBossDamage
+          );
+        }
         if (destroyed) return;
       }
     }

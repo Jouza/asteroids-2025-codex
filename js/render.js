@@ -148,9 +148,29 @@
       const { ctx } = this;
       for (const bullet of bullets) {
         const isSecondary = bullet.kind && bullet.kind.startsWith("secondary");
-        const coreColor = isSecondary ? "#ffe8bf" : "#f5ffff";
-        const glowInner = isSecondary ? "rgba(255,214,140,0.95)" : "rgba(255,255,255,0.9)";
-        const glowOuter = isSecondary ? "rgba(255,182,104,0)" : "rgba(110,220,255,0)";
+        const isPrimaryRail = bullet.kind === "primary_rail";
+        const isPrimarySpread = bullet.kind === "primary_spread";
+        const isPrimaryChain = bullet.kind === "primary_chain";
+        let coreColor = "#f5ffff";
+        let glowInner = "rgba(255,255,255,0.9)";
+        let glowOuter = "rgba(110,220,255,0)";
+        if (isSecondary) {
+          coreColor = "#ffe8bf";
+          glowInner = "rgba(255,214,140,0.95)";
+          glowOuter = "rgba(255,182,104,0)";
+        } else if (isPrimaryRail) {
+          coreColor = "#f4dcff";
+          glowInner = "rgba(232,186,255,0.95)";
+          glowOuter = "rgba(186,116,255,0)";
+        } else if (isPrimarySpread) {
+          coreColor = "#d4fff1";
+          glowInner = "rgba(156,255,214,0.92)";
+          glowOuter = "rgba(91,222,170,0)";
+        } else if (isPrimaryChain) {
+          coreColor = "#e7fbff";
+          glowInner = "rgba(167,240,255,0.96)";
+          glowOuter = "rgba(109,196,255,0)";
+        }
 
         const trail = ctx.createRadialGradient(
           bullet.x,
@@ -167,12 +187,27 @@
         ctx.arc(bullet.x, bullet.y, bullet.radius * (isSecondary ? 7 : 5.5), 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.shadowColor = isSecondary ? "rgba(255,202,120,0.95)" : "rgba(170,245,255,0.9)";
-        ctx.shadowBlur = isSecondary ? 18 : 14;
+        ctx.shadowColor = isSecondary
+          ? "rgba(255,202,120,0.95)"
+          : isPrimaryRail
+            ? "rgba(229,160,255,0.95)"
+            : isPrimaryChain
+              ? "rgba(145,220,255,0.95)"
+              : "rgba(170,245,255,0.9)";
+        ctx.shadowBlur = isSecondary || isPrimaryRail ? 18 : 14;
         ctx.fillStyle = coreColor;
         ctx.beginPath();
         ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
         ctx.fill();
+
+        if (isPrimaryChain) {
+          ctx.strokeStyle = "rgba(145,224,255,0.7)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(bullet.x - bullet.radius * 3, bullet.y);
+          ctx.lineTo(bullet.x + bullet.radius * 3, bullet.y);
+          ctx.stroke();
+        }
       }
       ctx.shadowBlur = 0;
     }
@@ -529,7 +564,7 @@
 
       if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
-        const startY = config.canvas.height / 2 - 230;
+        const startY = config.canvas.height / 2 - 250;
         const hangar = model.hangar;
         const lootCrate = hangar.lootCrate || [];
         const inventory = model.inventory || [];
@@ -586,29 +621,36 @@
           ctx.fillText(`${i + 1}. ${item.title} - ${item.cost} cr`, centerX, y);
         }
 
+        const primaryDefs = config.loadout.primary;
         const secondaryDefs = config.loadout.secondary;
         const utilityDefs = config.loadout.utility;
-        const secondaryLineY = startY + 230;
-        const utilityLineY = startY + 260;
+        const primaryLineY = startY + 220;
+        const secondaryLineY = startY + 244;
+        const utilityLineY = startY + 268;
 
         ctx.fillStyle = "#ffd785";
         ctx.fillText(
-          `4. Secondary swap (${model.loadout.secondaryLabel})`,
+          `4. Primary swap (${model.loadout.primaryLabel})`,
+          centerX,
+          primaryLineY
+        );
+        ctx.fillText(
+          `5. Secondary swap (${model.loadout.secondaryLabel})`,
           centerX,
           secondaryLineY
         );
         ctx.fillText(
-          `5. Utility swap (${model.loadout.utilityLabel})`,
+          `R. Utility swap (${model.loadout.utilityLabel})`,
           centerX,
           utilityLineY
         );
         ctx.fillStyle = "#d8f5ff";
         ctx.font = "500 16px Trebuchet MS";
-        ctx.fillText("6/7 Select item | 8 Take/Equip | 9 Sell | 0 Salvage", centerX, startY + 292);
+        ctx.fillText("6/7 Select item | 8 Take/Equip | 9 Sell | 0 Salvage", centerX, startY + 296);
 
         ctx.fillStyle = "#a7f2ff";
         ctx.font = "600 18px Trebuchet MS";
-        ctx.fillText(`Salvage Crate (${lootCrate.length})`, centerX, startY + 320);
+        ctx.fillText(`Salvage Crate (${lootCrate.length})`, centerX, startY + 324);
         ctx.font = "500 15px Trebuchet MS";
         const crateRows = 4;
         const crateStart =
@@ -616,7 +658,7 @@
         for (let i = 0; i < crateRows; i += 1) {
           const itemIndex = crateStart + i;
           const module = lootCrate[itemIndex];
-          const y = startY + 342 + i * 20;
+          const y = startY + 346 + i * 20;
           if (!module) {
             drawListItem("-", y, false, "rgba(216,245,255,0.4)");
             continue;
@@ -632,7 +674,7 @@
 
         ctx.fillStyle = "#a7f2ff";
         ctx.font = "600 18px Trebuchet MS";
-        ctx.fillText(`Inventory (${inventory.length}/${config.loot.maxInventoryItems})`, centerX, startY + 390);
+        ctx.fillText(`Inventory (${inventory.length}/${config.loot.maxInventoryItems})`, centerX, startY + 396);
         ctx.font = "500 15px Trebuchet MS";
         const invRows = 6;
         const invStart =
@@ -640,7 +682,7 @@
         for (let i = 0; i < invRows; i += 1) {
           const itemIndex = invStart + i;
           const module = inventory[itemIndex];
-          const y = startY + 412 + i * 20;
+          const y = startY + 418 + i * 20;
           if (!module) {
             drawListItem("-", y, false, "rgba(216,245,255,0.4)");
             continue;
@@ -660,7 +702,7 @@
         });
         ctx.fillStyle = "#ffd785";
         ctx.font = "600 16px Trebuchet MS";
-        ctx.fillText(`Equipped: ${equippedRows.join(" | ")}`, centerX, startY + 484);
+        ctx.fillText(`Equipped: ${equippedRows.join(" | ")}`, centerX, startY + 390);
 
         const activeSets = model.activeSets || [];
         const setText = activeSets.length
@@ -668,7 +710,7 @@
           : "No active set";
         ctx.fillStyle = "#b8f6ff";
         ctx.font = "600 15px Trebuchet MS";
-        ctx.fillText(`Set bonuses: ${setText}`, centerX, startY + 506);
+        ctx.fillText(`Set bonuses: ${setText}`, centerX, startY + 410);
 
         if (selectedModule) {
           const equippedSameSlot = equipment[selectedModule.slot] || null;
@@ -694,35 +736,41 @@
           ctx.fillText(
             `Selected ${selectedModule.name} vs equipped ${equippedSameSlot?.name || "-"}`,
             centerX,
-            startY + 526
+            startY + 430
           );
           ctx.fillStyle = deltaHull.color;
-          ctx.fillText(`Hull ${deltaHull.text}`, centerX - 300, startY + 546);
+          ctx.fillText(`Hull ${deltaHull.text}`, centerX - 300, startY + 450);
           ctx.fillStyle = deltaShield.color;
-          ctx.fillText(`Shield ${deltaShield.text}`, centerX - 120, startY + 546);
+          ctx.fillText(`Shield ${deltaShield.text}`, centerX - 120, startY + 450);
           ctx.fillStyle = deltaDmg.color;
-          ctx.fillText(`Damage ${deltaDmg.text}`, centerX + 80, startY + 546);
+          ctx.fillText(`Damage ${deltaDmg.text}`, centerX + 80, startY + 450);
           ctx.fillStyle = deltaCd.color;
-          ctx.fillText(`CD ${deltaCd.text}`, centerX + 255, startY + 546);
+          ctx.fillText(`CD ${deltaCd.text}`, centerX + 255, startY + 450);
           ctx.fillStyle = "#ffd9a7";
-          ctx.fillText(deltaSet, centerX, startY + 566);
+          ctx.fillText(deltaSet, centerX, startY + 470);
         }
 
+        const activePrimary = primaryDefs[model.loadout.primaryId];
         const activeSecondary = secondaryDefs[model.loadout.secondaryId];
         const activeUtility = utilityDefs[model.loadout.utilityId];
         ctx.fillStyle = "#a7f2ff";
         ctx.font = "600 17px Trebuchet MS";
-        ctx.fillText("Active Weapon Stats", centerX, startY + 448);
+        ctx.fillText("Active Weapon Stats", centerX, startY + 500);
         ctx.font = "500 15px Trebuchet MS";
+        ctx.fillText(
+          `Primary (${activePrimary.label}) | CD ${activePrimary.cooldownSeconds.toFixed(2)}s | ${activePrimary.role} | ${activePrimary.effectText}`,
+          centerX,
+          startY + 520
+        );
         ctx.fillText(
           `Secondary (${activeSecondary.label}) | CD ${activeSecondary.cooldownSeconds.toFixed(1)}s | ${activeSecondary.role} | ${activeSecondary.effectText}`,
           centerX,
-          startY + 468
+          startY + 538
         );
         ctx.fillText(
           `Utility (${activeUtility.label}) | CD ${activeUtility.cooldownSeconds.toFixed(1)}s | ${activeUtility.role} | ${activeUtility.effectText}`,
           centerX,
-          startY + 486
+          startY + 556
         );
 
         ctx.fillStyle = "#ffd785";
@@ -730,14 +778,14 @@
         ctx.fillText(
           `Levels: FireRate ${model.upgrades.fireRateLevel} | Magazine ${model.upgrades.magazineLevel}`,
           centerX,
-          startY + 504
+          startY + 574
         );
 
         ctx.fillStyle = "#b9f8c3";
-        ctx.fillText(model.hangar.message, centerX, startY + 522);
+        ctx.fillText(model.hangar.message, centerX, startY + 592);
 
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 540);
+        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 610);
       }
 
       ctx.restore();

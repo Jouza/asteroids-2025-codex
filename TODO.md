@@ -12,10 +12,10 @@ Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupn
   - [x] Stat dopady modulu na flight/combat
   - [x] Set bonusy/synergie (Prospector/Corsair/Warden)
 
-- [ ] Zbrane s jasnou identitou (dalsi tier)
-  - [ ] Nove primary archetypy (spread/rail/chain)
-  - [ ] Sekundarky + utility s vyraznou roli
-  - [ ] Lepsi telegraphy efektu
+- [x] Zbrane s jasnou identitou (dalsi tier)
+  - [x] Nove primary archetypy (spread/rail/chain)
+  - [x] Sekundarky + utility s vyraznou roli
+  - [x] Lepsi telegraphy efektu
 
 - [ ] Enemy roster a AI rozsirovani
   - [ ] Nove archetypy (swarm/kamikaze/support/mine-layer)
