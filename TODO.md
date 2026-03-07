@@ -18,10 +18,10 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Sekundarky + utility s vyraznou roli
   - [x] Lepsi telegraphy efektu
 
-- [ ] Tech zaklad pro skalovani
+- [x] Tech zaklad pro skalovani
   - [x] Save/load profilu a progrese
   - [x] Data-driven balancing tabulky
-  - [ ] Combat tuning harness + regression checklist
+  - [x] Combat tuning harness + regression checklist
 
 - [ ] Content pipeline a tooling (nove)
   - [ ] Mise/nepratele/moduly definovane data-driven (JSON-like konfigurace)
