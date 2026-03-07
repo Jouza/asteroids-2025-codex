@@ -225,7 +225,12 @@
           this.spawnAsteroidPack(g.model.sector, 1, g.rng() < (mission.extraMediumChance ?? 0.5) ? 1 : 0);
           g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.asteroidStorm.extraSpawnIntervalSeconds;
         }
-        mission.objectiveText = `Break asteroids: ${g.model.missionAsteroidKills}/${target}`;
+        const shownKills = Math.min(target, g.model.missionAsteroidKills);
+        if (g.model.missionAsteroidKills < target) {
+          mission.objectiveText = `Break asteroids: ${shownKills}/${target}`;
+        } else {
+          mission.objectiveText = `Target reached. Clear remaining threats: ${threatsRemaining}`;
+        }
         if (g.model.missionAsteroidKills >= target && threatsRemaining === 0) mission.completed = true;
       }
 
