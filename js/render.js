@@ -91,6 +91,17 @@
       ctx.fill();
       ctx.stroke();
 
+      if (ship.shield > 0) {
+        const shieldRatio = ship.shield / ship.shieldMax;
+        ctx.strokeStyle = `rgba(128,229,255,${0.22 + shieldRatio * 0.5})`;
+        ctx.lineWidth = 1.2 + shieldRatio * 1.8;
+        ctx.shadowColor = "rgba(128,229,255,0.75)";
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, 0, ship.radius * 1.24, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowUp")) {
         const jetGradient = ctx.createLinearGradient(-ship.radius * 1.6, 0, -ship.radius * 0.8, 0);
         jetGradient.addColorStop(0, "rgba(255,120,86,0.9)");
@@ -401,7 +412,7 @@
       const panelX = 18;
       const panelY = 72;
       const panelW = 410;
-      const panelH = 220;
+      const panelH = 268;
       const lineStep = 18;
       let lineY = panelY + 26;
 
@@ -433,6 +444,17 @@
       drawLine(
         `Shots P:${telemetry.shots.primary}  S:${telemetry.shots.secondary}  U:${telemetry.shots.utility}  Enemy:${telemetry.shots.enemy}`
       );
+      const ship = model.ship;
+      if (ship) {
+        drawLine(
+          `Flight:${model.flightModel.toUpperCase()}  Hull:${Math.ceil(ship.hull)}/${ship.hullMax} Shield:${Math.ceil(ship.shield)}/${ship.shieldMax}`,
+          "rgba(170,214,255,0.92)"
+        );
+        drawLine(
+          `Energy:${Math.ceil(ship.energy)}/${ship.energyMax} Heat:${Math.ceil(ship.heat)}/${ship.heatMax} Dash:${model.dashCooldown.toFixed(1)}s`,
+          "rgba(170,214,255,0.92)"
+        );
+      }
 
       const currentMission = model.currentMission;
       if (currentMission) {

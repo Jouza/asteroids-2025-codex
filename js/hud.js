@@ -15,8 +15,11 @@
       this.creditsEl = document.getElementById("credits");
       this.comboEl = document.getElementById("combo");
       this.livesEl = document.getElementById("lives");
+      this.hullShieldEl = document.getElementById("hullShield");
+      this.energyHeatEl = document.getElementById("energyHeat");
       this.waveEl = document.getElementById("wave");
       this.missionEl = document.getElementById("mission");
+      this.flightModeEl = document.getElementById("flightMode");
       this.primaryStatusEl = document.getElementById("primaryStatus");
       this.secondaryStatusEl = document.getElementById("secondaryStatus");
       this.utilityStatusEl = document.getElementById("utilityStatus");
@@ -33,13 +36,24 @@
     }
 
     sync(model) {
+      const ship = model.ship;
+      const hull = ship ? `${Math.ceil(ship.hull)}/${ship.hullMax}` : "-/-";
+      const shield = ship ? `${Math.ceil(ship.shield)}/${ship.shieldMax}` : "-/-";
+      const energy = ship ? `${Math.ceil(ship.energy)}/${ship.energyMax}` : "-/-";
+      const heat = ship ? `${Math.ceil(ship.heat)}/${ship.heatMax}` : "-/-";
+
       this.scoreEl.textContent = String(model.score);
       this.creditsEl.textContent = String(model.credits);
       this.comboEl.textContent = `x${model.comboMultiplier.toFixed(2)}`;
       this.livesEl.textContent = String(model.lives);
+      this.hullShieldEl.textContent = `${hull} | ${shield}`;
+      this.energyHeatEl.textContent = `${energy} | ${heat}`;
       this.waveEl.textContent = String(model.wave);
       this.missionEl.textContent = model.currentMission?.label || "-";
-      this.primaryStatusEl.textContent = `Space ${model.loadout.primaryLabel}`;
+      this.flightModeEl.textContent = model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE";
+      this.primaryStatusEl.textContent = `Space ${model.loadout.primaryLabel} | V Dash: ${this.formatCooldown(
+        model.dashCooldown
+      )}`;
       this.secondaryStatusEl.textContent = `X ${model.loadout.secondaryLabel}: ${this.formatCooldown(
         model.secondaryCooldown
       )}`;

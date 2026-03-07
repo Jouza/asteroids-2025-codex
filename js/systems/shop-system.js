@@ -20,6 +20,11 @@
 
     beginNextWaveFromShop() {
       const g = this.game;
+      if (g.model.ship) {
+        g.model.ship.shield = g.model.ship.shieldMax;
+        g.model.ship.energy = g.model.ship.energyMax;
+        g.model.ship.heat = 0;
+      }
       g.model.wave += 1;
       g.model.waveTimerMs = 0;
       g.model.waveCompletionHandled = false;
@@ -54,9 +59,14 @@
         return;
       }
 
-      if (item.id === "repair" && g.model.lives >= g.config.shop.maxLives) {
-        g.model.shop.message = "Mas plne zivoty.";
-        return;
+      if (item.id === "repair") {
+        const ship = g.model.ship;
+        const canRepairHull = ship && ship.hull < ship.hullMax;
+        const canAddLife = g.model.lives < g.config.shop.maxLives;
+        if (!canRepairHull && !canAddLife) {
+          g.model.shop.message = "Mas plny hull i zivoty.";
+          return;
+        }
       }
       if (item.id === "fire_rate" && g.model.upgrades.fireRateLevel >= g.config.shop.maxFireRateLevel) {
         g.model.shop.message = "Fire rate je na maximu.";
@@ -68,7 +78,15 @@
       }
 
       g.model.credits -= item.cost;
-      if (item.id === "repair") g.model.lives += 1;
+      if (item.id === "repair") {
+        if (g.model.ship && g.model.ship.hull < g.model.ship.hullMax) {
+          g.model.ship.hull = g.model.ship.hullMax;
+          g.model.ship.shield = g.model.ship.shieldMax;
+          g.model.shop.message = "Hull opraven na maximum.";
+          return;
+        }
+        g.model.lives += 1;
+      }
       if (item.id === "fire_rate") g.model.upgrades.fireRateLevel += 1;
       if (item.id === "magazine") g.model.upgrades.magazineLevel += 1;
 
