@@ -1512,6 +1512,8 @@
       for (const ufo of this.model.ufos) checkThreat(ufo.x, ufo.y, ufo.radius);
       if (this.model.miniBoss) checkThreat(this.model.miniBoss.x, this.model.miniBoss.y, this.model.miniBoss.radius);
       for (const enemyBullet of this.model.enemyBullets) checkThreat(enemyBullet.x, enemyBullet.y, enemyBullet.radius + 10);
+      const hazards = this.model.currentMission?.biomeHazards || [];
+      for (const hazard of hazards) checkThreat(hazard.x, hazard.y, hazard.radius + 12);
       return minClearance;
     }
 

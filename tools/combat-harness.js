@@ -374,6 +374,24 @@ function runTests() {
     assert(ship.heat > 0, "Plasma vent should increase heat");
   });
 
+  tests.push(() => {
+    gameA.startGame(12121);
+    const ship = gameA.model.ship;
+    gameA.model.sector = 6;
+    for (let missionIndex = 1; missionIndex <= 8; missionIndex += 1) {
+      gameA.missionSystem.startMission(missionIndex);
+      const hazards = gameA.model.currentMission?.biomeHazards || [];
+      for (const hazard of hazards) {
+        const dist = Math.hypot(hazard.x - ship.x, hazard.y - ship.y);
+        const minDist = hazard.radius + ship.radius + 20;
+        assert(
+          dist >= minDist,
+          `Hazard zone spawned too close to ship start (d=${dist.toFixed(1)}, min=${minDist.toFixed(1)})`
+        );
+      }
+    }
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     tests[i]();

@@ -44,12 +44,27 @@
       for (let i = 0; i < count; i += 1) {
         const radiusMin = hazardDef.radiusMin ?? 70;
         const radiusMax = hazardDef.radiusMax ?? radiusMin;
+        const hazardRadius = radiusMin + g.rng() * (radiusMax - radiusMin);
+        const ship = g.model.ship;
+        const minShipClearance = (g.config.ship.radius ?? 16) + hazardRadius + 80;
+        let hx = g.config.canvas.width * (0.15 + g.rng() * 0.7);
+        let hy = g.config.canvas.height * (0.15 + g.rng() * 0.7);
+        let tries = 0;
+        while (
+          ship &&
+          Math.hypot(hx - ship.x, hy - ship.y) < minShipClearance &&
+          tries < 40
+        ) {
+          hx = g.config.canvas.width * (0.15 + g.rng() * 0.7);
+          hy = g.config.canvas.height * (0.15 + g.rng() * 0.7);
+          tries += 1;
+        }
         hazards.push({
           id: `${biome.id}-${i}-${Math.floor(g.rng() * 1e6)}`,
           type: hazardDef.type,
-          x: g.config.canvas.width * (0.15 + g.rng() * 0.7),
-          y: g.config.canvas.height * (0.15 + g.rng() * 0.7),
-          radius: radiusMin + g.rng() * (radiusMax - radiusMin),
+          x: hx,
+          y: hy,
+          radius: hazardRadius,
           tickSeconds: hazardDef.tickSeconds ?? 0.8,
           tickDamage: hazardDef.tickDamage ?? 8,
           slowMul: hazardDef.slowMul ?? 0.9,
