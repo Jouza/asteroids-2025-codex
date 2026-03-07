@@ -3,7 +3,7 @@
   const GAME_STATE = {
     START: "start",
     PLAYING: "playing",
-    SHOP: "shop",
+    HANGAR: "hangar",
     PAUSED: "paused",
     GAME_OVER: "game_over"
   };
@@ -236,7 +236,7 @@
       creditsPerScore: 0.062,
       minCreditsPerKill: 1
     },
-    shop: {
+    hangar: {
       items: [
         {
           id: "repair",

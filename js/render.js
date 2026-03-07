@@ -397,7 +397,7 @@
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(215,246,255,0.95)";
       ctx.font = "600 18px Trebuchet MS";
-      ctx.fillText(`Mission ${model.wave}: ${model.currentMission.label}`, config.canvas.width / 2, 28);
+      ctx.fillText(`Sector ${model.wave}: ${model.currentMission.label}`, config.canvas.width / 2, 28);
       ctx.font = "500 16px Trebuchet MS";
       ctx.fillStyle = "rgba(186,232,255,0.92)";
       ctx.fillText(model.currentMission.objectiveText || "", config.canvas.width / 2, 50);
@@ -459,7 +459,7 @@
       const currentMission = model.currentMission;
       if (currentMission) {
         drawLine(
-          `Mission ${model.wave}: ${currentMission.label} (${currentMission.type})`,
+          `Sector ${model.wave}: ${currentMission.label} (${currentMission.type})`,
           "rgba(189,255,208,0.96)"
         );
         drawLine(currentMission.objectiveText || "-", "rgba(189,255,208,0.9)");
@@ -470,7 +470,7 @@
       const last = telemetry.lastMission;
       if (last) {
         drawLine(
-          `Last W${last.wave} ${last.label}: +${last.scoreGained} score, +${last.creditsGained} cr, ${last.durationSeconds.toFixed(1)}s`,
+          `Last Sector ${last.wave} ${last.label}: +${last.scoreGained} score, +${last.creditsGained} cr, ${last.durationSeconds.toFixed(1)}s`,
           "rgba(255,224,170,0.96)"
         );
         drawLine(
@@ -523,18 +523,18 @@
         ctx.fillText("Stiskni P pro pokracovani", config.canvas.width / 2, config.canvas.height / 2 + 22);
       }
 
-      if (model.gameState === GAME_STATE.SHOP) {
+      if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
         const startY = config.canvas.height / 2 - 170;
 
-        ctx.fillText("UPGRADE SHOP", centerX, startY);
+        ctx.fillText("HANGAR", centerX, startY);
         ctx.font = "600 20px Trebuchet MS";
         ctx.fillText(`Credits: ${model.credits}`, centerX, startY + 34);
         const missionOrder = config.mission.order;
         const nextMissionType = missionOrder[model.wave % missionOrder.length];
-        ctx.fillText(`Next mission: ${nextMissionType.toUpperCase()}`, centerX, startY + 58);
+        ctx.fillText(`Next sector mission: ${nextMissionType.toUpperCase()}`, centerX, startY + 58);
 
-        const items = config.shop.items;
+        const items = config.hangar.items;
         for (let i = 0; i < items.length; i += 1) {
           const item = items[i];
           const y = startY + 102 + i * 38;
@@ -545,7 +545,7 @@
 
         const secondaryDefs = config.loadout.secondary;
         const utilityDefs = config.loadout.utility;
-        const unlockCosts = config.shop.unlockCosts;
+        const unlockCosts = config.hangar.unlockCosts;
         const secondaryLineY = startY + 230;
         const utilityLineY = startY + 260;
 
@@ -647,10 +647,10 @@
         );
 
         ctx.fillStyle = "#b9f8c3";
-        ctx.fillText(model.shop.message, centerX, startY + 482);
+        ctx.fillText(model.hangar.message, centerX, startY + 482);
 
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Enter = start dalsi vlnu", centerX, startY + 508);
+        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 508);
       }
 
       ctx.restore();
