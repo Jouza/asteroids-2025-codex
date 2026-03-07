@@ -4,6 +4,18 @@
       this.game = game;
     }
 
+    getSpawnInterval(baseInterval, perWaveRamp, minInterval, level) {
+      const waveIndex = Math.max(0, level - 1);
+      const scale = 1 + waveIndex * perWaveRamp;
+      return Math.max(minInterval, baseInterval / scale);
+    }
+
+    applyMissionVariance(value, variance = 0.14) {
+      const g = this.game;
+      const factor = 1 + (g.rng() * 2 - 1) * variance;
+      return value * factor;
+    }
+
     chooseAsteroidTypeForWave(level) {
       const g = this.game;
       const roll = g.rng();
@@ -79,33 +91,65 @@
       const level = g.model.wave;
 
       if (type === "survive") {
-        g.model.missionTimer =
+        const baseDuration =
           missionCfg.survive.baseDurationSeconds + (level - 1) * missionCfg.survive.durationStepSeconds;
+        g.model.missionTimer = Math.max(10, this.applyMissionVariance(baseDuration, 0.08));
         g.model.missionSpawnTimer = 0.1;
         g.enemySystem.scheduleNextUfoSpawn();
+        const spawnLargeBase = level >= missionCfg.survive.extraLargeEveryWaves ? 2 : 1;
+        g.model.currentMission.spawnLargeCount = spawnLargeBase;
+        g.model.currentMission.spawnMediumCount = level >= missionCfg.survive.extraLargeEveryWaves + 2 ? 1 : 0;
+        g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
+          missionCfg.survive.asteroidSpawnIntervalSeconds,
+          missionCfg.survive.spawnRateRampPerWave,
+          missionCfg.survive.minSpawnIntervalSeconds,
+          level
+        );
         g.model.currentMission.label = "SURVIVE";
         g.model.currentMission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(0)}s`;
       }
 
       if (type === "ufo_hunt") {
-        g.model.missionSpawnBudget =
+        const baseKills =
           missionCfg.ufoHunt.baseKills + Math.floor((level - 1) / 2) * missionCfg.ufoHunt.killStep;
+        g.model.missionSpawnBudget = Math.max(1, Math.round(this.applyMissionVariance(baseKills, 0.1)));
         g.model.missionSpawnTimer = 0.2;
+        g.model.currentMission.maxConcurrentUfos = Math.min(
+          missionCfg.ufoHunt.maxConcurrentCap,
+          missionCfg.ufoHunt.maxConcurrentUfos +
+            Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEveryWaves)
+        );
+        g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
+          missionCfg.ufoHunt.spawnIntervalSeconds,
+          missionCfg.ufoHunt.spawnRateRampPerWave,
+          missionCfg.ufoHunt.minSpawnIntervalSeconds,
+          level
+        );
         g.model.currentMission.label = "UFO HUNT";
         g.model.currentMission.objectiveText = `Destroy UFOs: 0/${g.model.missionSpawnBudget}`;
       }
 
       if (type === "asteroid_storm") {
-        g.model.missionSpawnBudget =
+        const baseTarget =
           missionCfg.asteroidStorm.baseTarget + (level - 1) * missionCfg.asteroidStorm.targetStep;
+        g.model.missionSpawnBudget = Math.max(6, Math.round(this.applyMissionVariance(baseTarget, 0.1)));
+        const initialLarge = missionCfg.asteroidStorm.initialLargeCount + Math.floor((level - 1) / 4);
+        const initialMedium = missionCfg.asteroidStorm.initialMediumCount + Math.floor((level - 1) / 3);
+        g.model.currentMission.extraMediumChance = Math.min(
+          0.88,
+          missionCfg.asteroidStorm.extraMediumChance +
+            (level - 1) * missionCfg.asteroidStorm.mediumChanceRampPerWave
+        );
+        g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
+          missionCfg.asteroidStorm.extraSpawnIntervalSeconds,
+          missionCfg.asteroidStorm.spawnRateRampPerWave,
+          missionCfg.asteroidStorm.minExtraSpawnIntervalSeconds,
+          level
+        );
         g.model.currentMission.label = "ASTEROID STORM";
         g.model.currentMission.objectiveText = `Break asteroids: 0/${g.model.missionSpawnBudget}`;
-        this.spawnAsteroidPack(
-          level,
-          missionCfg.asteroidStorm.initialLargeCount,
-          missionCfg.asteroidStorm.initialMediumCount
-        );
-        g.model.missionSpawnTimer = missionCfg.asteroidStorm.extraSpawnIntervalSeconds;
+        this.spawnAsteroidPack(level, initialLarge, initialMedium);
+        g.model.missionSpawnTimer = g.model.currentMission.spawnIntervalSeconds;
       }
 
       if (type === "mini_boss") {
@@ -113,7 +157,7 @@
         g.model.currentMission.label = "MINI BOSS";
         g.model.currentMission.objectiveText = `Destroy boss (${hp} HP)`;
         g.enemySystem.spawnMiniBoss(hp);
-        this.spawnAsteroidPack(level, 2, 2);
+        this.spawnAsteroidPack(level, 1 + Math.floor((level - 1) / 5), 1 + Math.floor((level - 1) / 4));
       }
 
       g.onMissionStarted();
@@ -145,8 +189,12 @@
         g.model.missionTimer = Math.max(0, g.model.missionTimer - dt);
         g.model.missionSpawnTimer -= dt;
         if (g.model.missionSpawnTimer <= 0 && g.model.missionTimer > 0) {
-          this.spawnAsteroidPack(g.model.wave, 1, 0);
-          g.model.missionSpawnTimer = g.config.mission.survive.asteroidSpawnIntervalSeconds;
+          this.spawnAsteroidPack(
+            g.model.wave,
+            mission.spawnLargeCount ?? 1,
+            mission.spawnMediumCount ?? 0
+          );
+          g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.survive.asteroidSpawnIntervalSeconds;
         }
         g.enemySystem.maybeSpawnAmbientUfo(dt);
         mission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(1)}s`;
@@ -157,10 +205,10 @@
         g.model.missionSpawnTimer -= dt;
         const target = g.model.missionSpawnBudget;
         const remainingKills = target - g.model.missionUfoKills;
-        const desiredConcurrent = Math.min(g.config.mission.ufoHunt.maxConcurrentUfos, remainingKills);
+        const desiredConcurrent = Math.min(mission.maxConcurrentUfos ?? g.config.mission.ufoHunt.maxConcurrentUfos, remainingKills);
         if (remainingKills > 0 && g.model.ufos.length < desiredConcurrent && g.model.missionSpawnTimer <= 0) {
           g.enemySystem.spawnMissionUfo();
-          g.model.missionSpawnTimer = g.config.mission.ufoHunt.spawnIntervalSeconds;
+          g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.ufoHunt.spawnIntervalSeconds;
         }
         mission.objectiveText = `Destroy UFOs: ${g.model.missionUfoKills}/${target}`;
         if (g.model.missionUfoKills >= target && threatsRemaining === 0) mission.completed = true;
@@ -170,8 +218,8 @@
         g.model.missionSpawnTimer -= dt;
         const target = g.model.missionSpawnBudget;
         if (g.model.missionAsteroidKills < target && g.model.missionSpawnTimer <= 0) {
-          this.spawnAsteroidPack(g.model.wave, 1, g.rng() < 0.5 ? 1 : 0);
-          g.model.missionSpawnTimer = g.config.mission.asteroidStorm.extraSpawnIntervalSeconds;
+          this.spawnAsteroidPack(g.model.wave, 1, g.rng() < (mission.extraMediumChance ?? 0.5) ? 1 : 0);
+          g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.asteroidStorm.extraSpawnIntervalSeconds;
         }
         mission.objectiveText = `Break asteroids: ${g.model.missionAsteroidKills}/${target}`;
         if (g.model.missionAsteroidKills >= target && threatsRemaining === 0) mission.completed = true;

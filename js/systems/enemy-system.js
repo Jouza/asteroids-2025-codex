@@ -6,6 +6,12 @@
       this.game = game;
     }
 
+    getWaveScale(perWave, maxBonus) {
+      const g = this.game;
+      const waveIndex = Math.max(0, g.model.wave - 1);
+      return 1 + Math.min(maxBonus, waveIndex * perWave);
+    }
+
     scheduleNextUfoSpawn() {
       const g = this.game;
       g.model.nextUfoSpawnSeconds = randomRange(
@@ -37,6 +43,8 @@
       const ship = g.model.ship;
       const c = g.config;
       if (!ship) return;
+      const speedScale = this.getWaveScale(c.ufo.speedScalePerWave, c.ufo.speedScaleMaxBonus);
+      const fireRateScale = this.getWaveScale(c.ufo.fireRateScalePerWave, c.ufo.fireRateScaleMaxBonus);
 
       for (const ufo of g.model.ufos) {
         const dx = ship.x - ufo.x;
@@ -44,7 +52,7 @@
         const dist = Math.max(1, Math.hypot(dx, dy));
 
         if (ufo.mode === "hunter") {
-          const speed = c.ufo.speedHunter;
+          const speed = c.ufo.speedHunter * speedScale;
           ufo.vx = (dx / dist) * speed;
           ufo.vy = (dy / dist) * speed;
         } else {
@@ -54,8 +62,9 @@
           const normalY = dy / dist;
           const tangentX = -normalY;
           const tangentY = normalX;
-          const radial = g.clamp(distanceError * 0.65, -c.ufo.speedSniper, c.ufo.speedSniper);
-          const tangential = c.ufo.speedSniper * 0.72;
+          const sniperSpeed = c.ufo.speedSniper * speedScale;
+          const radial = g.clamp(distanceError * 0.65, -sniperSpeed, sniperSpeed);
+          const tangential = sniperSpeed * 0.72;
           ufo.vx = normalX * radial + tangentX * tangential;
           ufo.vy = normalY * radial + tangentY * tangential;
         }
@@ -70,8 +79,8 @@
           this.fireEnemyBullet(ufo, ship);
           ufo.shootTimer =
             ufo.mode === "hunter"
-              ? c.enemyBullet.cooldownHunterSeconds
-              : c.enemyBullet.cooldownSniperSeconds;
+              ? c.enemyBullet.cooldownHunterSeconds / fireRateScale
+              : c.enemyBullet.cooldownSniperSeconds / fireRateScale;
         }
       }
     }
@@ -88,7 +97,14 @@
       const shotAngle = baseAngle + (g.rng() - 0.5) * spread;
       const muzzleX = ufo.x + Math.cos(shotAngle) * (ufo.radius + 4);
       const muzzleY = ufo.y + Math.sin(shotAngle) * (ufo.radius + 4);
-      g.model.enemyBullets.push(createEnemyBullet(muzzleX, muzzleY, shotAngle, g.config));
+      const speedScale = this.getWaveScale(
+        g.config.ufo.bulletSpeedScalePerWave,
+        g.config.ufo.bulletSpeedScaleMaxBonus
+      );
+      const bullet = createEnemyBullet(muzzleX, muzzleY, shotAngle, g.config);
+      bullet.vx *= speedScale;
+      bullet.vy *= speedScale;
+      g.model.enemyBullets.push(bullet);
       g.recordEnemyShot();
       g.emitImpactParticles(muzzleX, muzzleY, 2, "255,123,196");
     }
@@ -122,11 +138,20 @@
         const dx = ship.x - boss.x;
         const dy = ship.y - boss.y;
         const aim = Math.atan2(dy, dx);
-        g.model.enemyBullets.push(
-          createEnemyBullet(boss.x, boss.y, aim + (g.rng() - 0.5) * 0.14, g.config)
+        const speedScale = this.getWaveScale(
+          g.config.ufo.bulletSpeedScalePerWave,
+          g.config.ufo.bulletSpeedScaleMaxBonus
         );
+        const bullet = createEnemyBullet(boss.x, boss.y, aim + (g.rng() - 0.5) * 0.14, g.config);
+        bullet.vx *= speedScale;
+        bullet.vy *= speedScale;
+        g.model.enemyBullets.push(bullet);
         g.recordEnemyShot();
-        boss.shootTimer = cfg.shootCooldownSeconds;
+        const fireRateScale = this.getWaveScale(
+          g.config.ufo.fireRateScalePerWave,
+          g.config.ufo.fireRateScaleMaxBonus
+        );
+        boss.shootTimer = cfg.shootCooldownSeconds / fireRateScale;
       }
     }
   }
