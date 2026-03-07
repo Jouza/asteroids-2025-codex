@@ -23,6 +23,7 @@
       this.drawVignette();
       this.drawFlash(model.flashMs);
       this.drawMissionStatus(model);
+      this.drawTelemetry(model);
 
       if (model.gameState !== GAME_STATE.PLAYING) {
         this.drawOverlay(model);
@@ -389,6 +390,83 @@
       ctx.font = "500 16px Trebuchet MS";
       ctx.fillStyle = "rgba(186,232,255,0.92)";
       ctx.fillText(model.currentMission.objectiveText || "", config.canvas.width / 2, 50);
+      ctx.restore();
+    }
+
+    drawTelemetry(model) {
+      if (!model.telemetry?.enabled) return;
+
+      const { ctx, config } = this;
+      const telemetry = model.telemetry;
+      const panelX = 18;
+      const panelY = 72;
+      const panelW = 410;
+      const panelH = 220;
+      const lineStep = 18;
+      let lineY = panelY + 26;
+
+      const drawLine = (text, color = "rgba(216,245,255,0.95)") => {
+        ctx.fillStyle = color;
+        ctx.fillText(text, panelX + 14, lineY);
+        lineY += lineStep;
+      };
+
+      ctx.save();
+      ctx.fillStyle = "rgba(4,12,22,0.78)";
+      ctx.fillRect(panelX, panelY, panelW, panelH);
+      ctx.strokeStyle = "rgba(132,220,255,0.55)";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(panelX, panelY, panelW, panelH);
+      ctx.textAlign = "left";
+      ctx.font = "600 14px Trebuchet MS";
+
+      drawLine(
+        `TELEMETRY [F3]  State:${model.gameState.toUpperCase()}  Run:${telemetry.runTimeSeconds.toFixed(1)}s`,
+        "rgba(162,233,255,1)"
+      );
+      drawLine(
+        `Score:${telemetry.scoreEarned}  Credits:${telemetry.creditsEarned}  Missions:${telemetry.completedMissions}`
+      );
+      drawLine(
+        `Kills A:${telemetry.kills.asteroids}  U:${telemetry.kills.ufos}  B:${telemetry.kills.miniBosses}  Hits:${telemetry.playerHitsTaken}`
+      );
+      drawLine(
+        `Shots P:${telemetry.shots.primary}  S:${telemetry.shots.secondary}  U:${telemetry.shots.utility}  Enemy:${telemetry.shots.enemy}`
+      );
+
+      const currentMission = model.currentMission;
+      if (currentMission) {
+        drawLine(
+          `Mission ${model.wave}: ${currentMission.label} (${currentMission.type})`,
+          "rgba(189,255,208,0.96)"
+        );
+        drawLine(currentMission.objectiveText || "-", "rgba(189,255,208,0.9)");
+      } else {
+        drawLine("Mission: -", "rgba(189,255,208,0.9)");
+      }
+
+      const last = telemetry.lastMission;
+      if (last) {
+        drawLine(
+          `Last W${last.wave} ${last.label}: +${last.scoreGained} score, +${last.creditsGained} cr, ${last.durationSeconds.toFixed(1)}s`,
+          "rgba(255,224,170,0.96)"
+        );
+        drawLine(
+          `Last Kills A:${last.asteroidKills} U:${last.ufoKills} B:${last.miniBossKills} | Uses S:${last.secondaryUses} U:${last.utilityUses}`,
+          "rgba(255,224,170,0.9)"
+        );
+      } else {
+        drawLine("Last mission summary: -", "rgba(255,224,170,0.9)");
+      }
+
+      drawLine(
+        `Objects Ast:${model.asteroids.length} UFO:${model.ufos.length} Bullets:${model.bullets.length}/${model.enemyBullets.length} Part:${model.particles.length}`,
+        "rgba(170,214,255,0.9)"
+      );
+
+      ctx.font = "500 12px Trebuchet MS";
+      ctx.fillStyle = "rgba(183,221,247,0.85)";
+      ctx.fillText(`Canvas ${config.canvas.width}x${config.canvas.height}`, panelX + 14, panelY + panelH - 12);
       ctx.restore();
     }
 

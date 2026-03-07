@@ -11,6 +11,7 @@
       if (!g.model.ship) return false;
       if (g.model.bullets.length >= g.getCurrentMaxBullets()) return false;
       g.model.bullets.push(createBullet(g.model.ship, g.config));
+      g.recordPrimaryShot();
       return true;
     }
 
@@ -56,6 +57,7 @@
 
       g.model.secondaryCooldown = spec.cooldownSeconds;
       g.emitImpactParticles(ship.x, ship.y, 6, "255,198,132");
+      g.recordSecondaryUse();
     }
 
     tryUseUtility() {
@@ -144,6 +146,7 @@
       }
 
       g.emitImpactParticles(ship.x, ship.y, spec.particleCount, "125,232,255");
+      g.recordUtilityUse();
     }
 
     updateShip(dt) {
@@ -374,7 +377,9 @@
     hitShip() {
       const g = this.game;
       const ship = g.model.ship;
+      if (!ship) return;
       g.model.lives -= 1;
+      g.recordPlayerHit();
       g.model.flashMs = Math.max(g.model.flashMs, 180);
       g.emitImpactParticles(ship.x, ship.y, 30, "255,98,121");
       if (g.model.lives <= 0) g.endGame();

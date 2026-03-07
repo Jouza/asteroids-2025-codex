@@ -115,6 +115,8 @@
         g.enemySystem.spawnMiniBoss(hp);
         this.spawnAsteroidPack(level, 2, 2);
       }
+
+      g.onMissionStarted();
     }
 
     updateMission(dt) {
@@ -184,6 +186,7 @@
       }
 
       if (mission.completed && !g.model.waveCompletionHandled) {
+        g.onMissionCompleted();
         g.model.waveCompletionHandled = true;
         g.model.waveTimerMs = 0;
       }
