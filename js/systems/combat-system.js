@@ -23,17 +23,18 @@
       if (spec.kind === "rail") {
         const dirX = Math.cos(ship.angle);
         const dirY = Math.sin(ship.angle);
-        g.model.bullets.push({
-          x: ship.x + dirX * (ship.radius + 12),
-          y: ship.y + dirY * (ship.radius + 12),
-          vx: dirX * spec.projectileSpeed + ship.vx * 0.15,
-          vy: dirY * spec.projectileSpeed + ship.vy * 0.15,
-          radius: spec.radius,
-          ttl: spec.ttlSeconds,
-          kind: "secondary_rail",
-          pierce: spec.pierce
-        });
-      } else {
+          g.model.bullets.push({
+            x: ship.x + dirX * (ship.radius + 12),
+            y: ship.y + dirY * (ship.radius + 12),
+            vx: dirX * spec.projectileSpeed + ship.vx * 0.15,
+            vy: dirY * spec.projectileSpeed + ship.vy * 0.15,
+            radius: spec.radius,
+            ttl: spec.ttlSeconds,
+            kind: "secondary_rail",
+            pierce: spec.pierce,
+            bossDamage: spec.bossDamage
+          });
+        } else {
         for (let i = 0; i < spec.count; i += 1) {
           const t = spec.count === 1 ? 0 : i / (spec.count - 1) - 0.5;
           const angle = ship.angle + t * spec.spread;
@@ -47,7 +48,8 @@
             radius: spec.radius,
             ttl: spec.ttlSeconds,
             kind: spec.kind === "cluster" ? "secondary_cluster" : "secondary",
-            pierce: 0
+            pierce: 0,
+            bossDamage: spec.bossDamage
           });
         }
       }
@@ -101,7 +103,7 @@
         if (g.model.miniBoss) {
           const bossDist = Math.hypot(g.model.miniBoss.x - ship.x, g.model.miniBoss.y - ship.y);
           if (bossDist <= pulseRadius + g.model.miniBoss.radius) {
-            g.model.miniBoss.hp -= 95;
+            g.model.miniBoss.hp -= spec.bossDamage;
             g.emitImpactParticles(g.model.miniBoss.x, g.model.miniBoss.y, 20, "255,120,201");
             if (g.model.miniBoss.hp <= 0) g.destroyMiniBoss();
           }
@@ -337,7 +339,7 @@
 
       for (let b = g.model.bullets.length - 1; b >= 0; b -= 1) {
         if (!circleCollision(g.model.bullets[b], boss)) continue;
-        const damage = g.model.bullets[b].kind === "secondary_rail" ? 45 : 28;
+        const damage = g.model.bullets[b].bossDamage ?? 28;
         boss.hp -= damage;
         g.model.flashMs = Math.max(g.model.flashMs, 70);
         g.emitImpactParticles(boss.x, boss.y, 10, "255,118,188");

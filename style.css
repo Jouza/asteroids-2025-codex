@@ -55,6 +55,12 @@ body {
   text-align: right;
 }
 
+.version {
+  color: #b9ffc8;
+  border-color: rgba(126, 255, 161, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(126, 255, 161, 0.2);
+}
+
 #combo {
   color: #ffe484;
   font-weight: 700;
