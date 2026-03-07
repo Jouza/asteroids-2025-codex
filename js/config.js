@@ -58,16 +58,16 @@
       },
       sharedPool: {
         enabled: true,
-        primaryShieldCostFactor: 0.34,
-        secondaryShieldCostFactor: 0.46,
-        utilityShieldCostFactor: 0.55,
-        dashShieldCostFactor: 0.28
+        primaryShieldCostFactor: 0.26,
+        secondaryShieldCostFactor: 0.38,
+        utilityShieldCostFactor: 0.46,
+        dashShieldCostFactor: 0.2
       },
       dash: {
         cooldownSeconds: 1.1,
         impulse: 360,
-        energyCost: 28,
-        heatGain: 15,
+        energyCost: 24,
+        heatGain: 12,
         invulnerabilityMs: 220
       }
     },
@@ -89,8 +89,8 @@
           role: "General",
           effectText: "Reliable single-shot",
           cooldownSeconds: 0.165,
-          energyCost: 3.4,
-          heatGain: 4.8,
+          energyCost: 3.1,
+          heatGain: 4.4,
           projectileSpeed: 560,
           ttlSeconds: 1.05,
           radius: 2,
@@ -107,8 +107,8 @@
           role: "Close Control",
           effectText: "3-shot cone burst",
           cooldownSeconds: 0.24,
-          energyCost: 4.6,
-          heatGain: 6.6,
+          energyCost: 4.3,
+          heatGain: 6.0,
           projectileSpeed: 520,
           ttlSeconds: 0.9,
           radius: 2,
@@ -125,8 +125,8 @@
           role: "Precision",
           effectText: "Piercing high-velocity shot",
           cooldownSeconds: 0.285,
-          energyCost: 5.8,
-          heatGain: 8.4,
+          energyCost: 5.4,
+          heatGain: 7.6,
           projectileSpeed: 760,
           ttlSeconds: 1.15,
           radius: 2.4,
@@ -143,8 +143,8 @@
           role: "Pack Melter",
           effectText: "Hit chains to nearby targets",
           cooldownSeconds: 0.235,
-          energyCost: 5.1,
-          heatGain: 7.2,
+          energyCost: 4.8,
+          heatGain: 6.5,
           projectileSpeed: 545,
           ttlSeconds: 1.0,
           radius: 2.2,
@@ -171,8 +171,8 @@
           spread: 0.16,
           count: 2,
           bossDamage: 26,
-          energyCost: 18,
-          heatGain: 14
+          energyCost: 16,
+          heatGain: 12
         },
         rail_shot: {
           kind: "rail",
@@ -186,8 +186,8 @@
           radius: 4,
           pierce: 4,
           bossDamage: 42,
-          energyCost: 24,
-          heatGain: 20
+          energyCost: 21,
+          heatGain: 18
         },
         cluster_rockets: {
           kind: "cluster",
@@ -202,8 +202,8 @@
           spread: 0.42,
           count: 4,
           bossDamage: 20,
-          energyCost: 28,
-          heatGain: 24
+          energyCost: 24,
+          heatGain: 20
         }
       },
       utility: {
@@ -218,8 +218,8 @@
           flashMs: 240,
           particleCount: 30,
           bossDamage: 78,
-          energyCost: 38,
-          heatGain: 20
+          energyCost: 32,
+          heatGain: 17
         },
         emp_pulse: {
           kind: "emp",
@@ -231,8 +231,8 @@
           disableSeconds: 5.2,
           flashMs: 210,
           particleCount: 24,
-          energyCost: 34,
-          heatGain: 18
+          energyCost: 30,
+          heatGain: 15
         },
         shield_dome: {
           kind: "shield",
@@ -244,8 +244,8 @@
           shieldSeconds: 3.5,
           flashMs: 180,
           particleCount: 20,
-          energyCost: 30,
-          heatGain: 14
+          energyCost: 26,
+          heatGain: 12
         }
       }
     },

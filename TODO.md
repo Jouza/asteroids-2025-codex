@@ -61,10 +61,6 @@ Prubezny checklist pro realizaci noveho smeru.
   - [ ] Verzovani/changelog rezim nad build timestampem
   - [ ] Smoke gate pravidla pred release (harness + manual sanity)
 
-- [ ] Combat economy tuning
-  - [x] MVP: sdileny zdroj energie (strelba/ability snizuje i stit)
-  - [ ] Balancing pass drain hodnot pro primary/secondary/utility/dash
-
 ## Wish list
 
 - [ ] High score (server-side, file-based bez DB)
@@ -126,3 +122,7 @@ Prubezny checklist pro realizaci noveho smeru.
   - [x] Strelba spotrebovava energy i shield pool
   - [x] Ruzne tridy akci maji odlisny shield drain factor (primary/secondary/utility/dash)
   - [x] Resource gate: bez stitu nelze strilet
+
+- [x] Combat economy tuning
+  - [x] MVP: sdileny zdroj energie (strelba/ability snizuje i stit)
+  - [x] Balancing pass drain hodnot pro primary/secondary/utility/dash
