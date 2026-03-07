@@ -38,6 +38,51 @@
           creditsPerScore: 0.055
         }
       }
+    },
+    dev_fasttrack: {
+      label: "Dev Fasttrack",
+      overrides: {
+        mission: {
+          survive: {
+            baseDurationSeconds: 6,
+            durationStepSeconds: 0.3,
+            asteroidSpawnIntervalSeconds: 6.8,
+            minSpawnIntervalSeconds: 4.2,
+            spawnRateRampPerSector: 0.02
+          },
+          ufoHunt: {
+            baseKills: 1,
+            killStep: 0,
+            maxConcurrentUfos: 1,
+            maxConcurrentCap: 1,
+            spawnIntervalSeconds: 5.2,
+            minSpawnIntervalSeconds: 3.3,
+            spawnRateRampPerSector: 0.03
+          },
+          asteroidStorm: {
+            baseTarget: 2,
+            targetStep: 0,
+            initialLargeCount: 1,
+            initialMediumCount: 0,
+            extraSpawnIntervalSeconds: 9.4,
+            minExtraSpawnIntervalSeconds: 6.2,
+            spawnRateRampPerSector: 0.02,
+            extraMediumChance: 0.1
+          },
+          miniBoss: {
+            hpBase: 140,
+            hpStep: 20
+          }
+        },
+        sector: {
+          graceMs: 260
+        },
+        ufo: {
+          speedScalePerSector: 0.01,
+          fireRateScalePerSector: 0.015,
+          bulletSpeedScalePerSector: 0.01
+        }
+      }
     }
   };
 })();

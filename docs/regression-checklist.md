@@ -44,7 +44,7 @@ Kontrolovane oblasti:
 
 - Zmeny cisel delat primarne v `js/balance-data.js`.
 - Obsah mise/UFO/loot upravovat v `js/content-data.js`.
-- Preset tuning delat v `js/balance-presets.js` a spoustet build s URL parametrem `?preset=arcade_fast` nebo `?preset=survival_hard`.
+- Preset tuning delat v `js/balance-presets.js` a spoustet build s URL parametrem `?preset=arcade_fast`, `?preset=survival_hard` nebo `?preset=dev_fasttrack` (rychly debug pruchod).
 - Po zmene spustit:
   - `node tools/combat-harness.js`
   - `node tools/validate-content-data.js`
