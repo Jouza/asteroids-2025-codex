@@ -7,8 +7,41 @@
   const hud = new Hud();
   const input = new InputController();
   const audio = new AudioSystem();
+  const AUDIO_SETTINGS_KEY = "starfang_audio_settings_v1";
   const renderer = new Renderer(canvas, ctx, GAME_CONFIG);
   const game = new Game(canvas, renderer, hud, input, GAME_CONFIG, audio);
+  const volumeSlider = document.getElementById("volumeSlider");
+  const volumeValue = document.getElementById("volumeValue");
+
+  function loadAudioSettings() {
+    try {
+      const raw = window.localStorage.getItem(AUDIO_SETTINGS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.volume === "number") audio.setVolume(parsed.volume);
+      if (typeof parsed?.muted === "boolean") audio.setMuted(parsed.muted);
+    } catch (error) {
+      // Ignore invalid persisted settings.
+    }
+  }
+
+  function saveAudioSettings() {
+    try {
+      window.localStorage.setItem(
+        AUDIO_SETTINGS_KEY,
+        JSON.stringify({ volume: audio.getVolume(), muted: audio.isMuted() })
+      );
+    } catch (error) {
+      // Ignore storage write issues.
+    }
+  }
+
+  function syncVolumeUi() {
+    if (!volumeSlider || !volumeValue) return;
+    const percent = Math.round(audio.getVolume() * 100);
+    volumeSlider.value = String(percent);
+    volumeValue.textContent = `${percent}%`;
+  }
 
   const unlockAudio = () => {
     audio.unlock();
@@ -17,6 +50,17 @@
   };
   window.addEventListener("keydown", unlockAudio);
   window.addEventListener("pointerdown", unlockAudio);
+  loadAudioSettings();
+  syncVolumeUi();
+  let lastAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
+  if (volumeSlider) {
+    volumeSlider.addEventListener("input", () => {
+      audio.setVolume(Number(volumeSlider.value) / 100);
+      syncVolumeUi();
+      saveAudioSettings();
+      lastAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
+    });
+  }
 
   input.attach();
   game.initGame();
@@ -34,6 +78,12 @@
     const frameDelta = game.applyFrameDelta(rawDelta);
 
     game.handleMetaInput();
+    const currentAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
+    if (currentAudioState !== lastAudioState) {
+      saveAudioSettings();
+      syncVolumeUi();
+      lastAudioState = currentAudioState;
+    }
     accumulator += frameDelta;
 
     const fixedStep = GAME_CONFIG.simulation.fixedStepSeconds;

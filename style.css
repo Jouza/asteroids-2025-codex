@@ -83,6 +83,16 @@ body {
   letter-spacing: 0.035em;
 }
 
+.volume-control {
+  gap: 8px;
+}
+
+.volume-slider {
+  width: 92px;
+  accent-color: #7cefff;
+  cursor: pointer;
+}
+
 .tip:hover::after {
   content: attr(data-tip);
   position: absolute;

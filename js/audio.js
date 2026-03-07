@@ -4,6 +4,7 @@
       this.context = null;
       this.masterGain = null;
       this.muted = false;
+      this.volume = 0.6;
       this.maxVoices = 18;
       this.activeVoices = [];
       this.lastPlayedAt = {};
@@ -36,10 +37,14 @@
         const Ctor = window.AudioContext || window.webkitAudioContext;
         this.context = new Ctor();
         this.masterGain = this.context.createGain();
-        this.masterGain.gain.value = 0.11;
+        this.masterGain.gain.value = this.getEffectiveGain();
         this.masterGain.connect(this.context.destination);
       }
       return true;
+    }
+
+    getEffectiveGain() {
+      return this.muted ? 0 : this.volume * 0.22;
     }
 
     unlock() {
@@ -55,12 +60,21 @@
 
     setMuted(value) {
       this.muted = Boolean(value);
-      if (this.masterGain) this.masterGain.gain.value = this.muted ? 0 : 0.11;
+      if (this.masterGain) this.masterGain.gain.value = this.getEffectiveGain();
     }
 
     toggleMuted() {
       this.setMuted(!this.muted);
       return this.muted;
+    }
+
+    setVolume(value) {
+      this.volume = Math.max(0, Math.min(1, Number(value) || 0));
+      if (this.masterGain) this.masterGain.gain.value = this.getEffectiveGain();
+    }
+
+    getVolume() {
+      return this.volume;
     }
 
     cleanupVoices(now = this.nowMs()) {

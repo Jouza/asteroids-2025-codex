@@ -42,6 +42,11 @@
       <div class="hud-item tip" data-tip="Utility. Hotkey C.">
         <span class="hud-icon">C</span><span id="utilityStatus" class="hud-value">Ready</span>
       </div>
+      <div class="hud-item tip volume-control" data-tip="Hlasitost efektu.">
+        <span class="hud-icon">A</span>
+        <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Hlasitost zvuku">
+        <span id="volumeValue" class="hud-value">60%</span>
+      </div>
       <div class="hud-item version tip" id="versionBadge" data-tip="Build verze.">NEW BUILD</div>
       <div class="hud-item state tip" id="stateLabel" data-tip="Stav hry.">START</div>
     </header>
