@@ -197,7 +197,11 @@
           g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.survive.asteroidSpawnIntervalSeconds;
         }
         g.enemySystem.maybeSpawnAmbientUfo(dt);
-        mission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(1)}s`;
+        if (g.model.missionTimer > 0) {
+          mission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(1)}s`;
+        } else {
+          mission.objectiveText = `Clear remaining threats: ${threatsRemaining}`;
+        }
         if (g.model.missionTimer <= 0 && threatsRemaining === 0) mission.completed = true;
       }
 
