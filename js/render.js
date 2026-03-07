@@ -529,7 +529,7 @@
 
       if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
-        const startY = config.canvas.height / 2 - 170;
+        const startY = config.canvas.height / 2 - 230;
         const hangar = model.hangar;
         const lootCrate = hangar.lootCrate || [];
         const inventory = model.inventory || [];
@@ -554,6 +554,21 @@
           ctx.fillStyle = isSelected ? "#ffe7a8" : color;
           ctx.fillText(isSelected ? `> ${text}` : text, centerX, y);
         };
+        const selectedModule =
+          selectedSource === "crate" ? lootCrate[selectedIndex] ?? null : inventory[selectedIndex] ?? null;
+        const formatDelta = (nextValue, currentValue, unit = "", invert = false) => {
+          const delta = nextValue - currentValue;
+          const abs = Math.abs(delta);
+          const displayAbs = unit === "%" ? abs * 100 : abs;
+          const valueText = `${delta > 0 ? "+" : delta < 0 ? "-" : ""}${displayAbs.toFixed(displayAbs < 10 ? 1 : 0)}${unit}`;
+          const good = invert ? delta < 0 : delta > 0;
+          const bad = invert ? delta > 0 : delta < 0;
+          return {
+            text: valueText,
+            color: good ? "#9bf5bb" : bad ? "#ff9ea5" : "rgba(216,245,255,0.7)"
+          };
+        };
+        const readMod = (module, key) => module?.modifiers?.[key] ?? 0;
 
         ctx.fillText("HANGAR", centerX, startY);
         ctx.font = "600 20px Trebuchet MS";
@@ -645,23 +660,69 @@
         });
         ctx.fillStyle = "#ffd785";
         ctx.font = "600 16px Trebuchet MS";
-        ctx.fillText(`Equipped: ${equippedRows.join(" | ")}`, centerX, startY + 488);
+        ctx.fillText(`Equipped: ${equippedRows.join(" | ")}`, centerX, startY + 484);
+
+        const activeSets = model.activeSets || [];
+        const setText = activeSets.length
+          ? activeSets.map((set) => `${set.label} ${set.count}/3 T${set.tier}`).join(" | ")
+          : "No active set";
+        ctx.fillStyle = "#b8f6ff";
+        ctx.font = "600 15px Trebuchet MS";
+        ctx.fillText(`Set bonuses: ${setText}`, centerX, startY + 506);
+
+        if (selectedModule) {
+          const equippedSameSlot = equipment[selectedModule.slot] || null;
+          const deltaHull = formatDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"), "%");
+          const deltaShield = formatDelta(readMod(selectedModule, "shieldPct"), readMod(equippedSameSlot, "shieldPct"), "%");
+          const deltaDmg = formatDelta(
+            readMod(selectedModule, "primaryDamagePct"),
+            readMod(equippedSameSlot, "primaryDamagePct"),
+            "%"
+          );
+          const deltaCd = formatDelta(
+            readMod(selectedModule, "primaryCooldownPct"),
+            readMod(equippedSameSlot, "primaryCooldownPct"),
+            "%",
+            true
+          );
+          const deltaSet = selectedModule.setTag
+            ? `Set tag: ${selectedModule.setTag.toUpperCase()}`
+            : "Set tag: -";
+
+          ctx.font = "500 14px Trebuchet MS";
+          ctx.fillStyle = "#d8f5ff";
+          ctx.fillText(
+            `Selected ${selectedModule.name} vs equipped ${equippedSameSlot?.name || "-"}`,
+            centerX,
+            startY + 526
+          );
+          ctx.fillStyle = deltaHull.color;
+          ctx.fillText(`Hull ${deltaHull.text}`, centerX - 300, startY + 546);
+          ctx.fillStyle = deltaShield.color;
+          ctx.fillText(`Shield ${deltaShield.text}`, centerX - 120, startY + 546);
+          ctx.fillStyle = deltaDmg.color;
+          ctx.fillText(`Damage ${deltaDmg.text}`, centerX + 80, startY + 546);
+          ctx.fillStyle = deltaCd.color;
+          ctx.fillText(`CD ${deltaCd.text}`, centerX + 255, startY + 546);
+          ctx.fillStyle = "#ffd9a7";
+          ctx.fillText(deltaSet, centerX, startY + 566);
+        }
 
         const activeSecondary = secondaryDefs[model.loadout.secondaryId];
         const activeUtility = utilityDefs[model.loadout.utilityId];
         ctx.fillStyle = "#a7f2ff";
         ctx.font = "600 17px Trebuchet MS";
-        ctx.fillText("Active Weapon Stats", centerX, startY + 514);
+        ctx.fillText("Active Weapon Stats", centerX, startY + 448);
         ctx.font = "500 15px Trebuchet MS";
         ctx.fillText(
           `Secondary (${activeSecondary.label}) | CD ${activeSecondary.cooldownSeconds.toFixed(1)}s | ${activeSecondary.role} | ${activeSecondary.effectText}`,
           centerX,
-          startY + 536
+          startY + 468
         );
         ctx.fillText(
           `Utility (${activeUtility.label}) | CD ${activeUtility.cooldownSeconds.toFixed(1)}s | ${activeUtility.role} | ${activeUtility.effectText}`,
           centerX,
-          startY + 556
+          startY + 486
         );
 
         ctx.fillStyle = "#ffd785";
@@ -669,14 +730,14 @@
         ctx.fillText(
           `Levels: FireRate ${model.upgrades.fireRateLevel} | Magazine ${model.upgrades.magazineLevel}`,
           centerX,
-          startY + 578
+          startY + 504
         );
 
         ctx.fillStyle = "#b9f8c3";
-        ctx.fillText(model.hangar.message, centerX, startY + 600);
+        ctx.fillText(model.hangar.message, centerX, startY + 522);
 
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 622);
+        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 540);
       }
 
       ctx.restore();

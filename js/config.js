@@ -296,8 +296,34 @@
         { id: "efficient", name: "Efficient", slots: ["generator", "chipset"], modifiers: { primaryCooldownPct: 0.05, secondaryCooldownPct: 0.07 } },
         { id: "tactical", name: "Tactical", slots: ["chipset"], modifiers: { utilityCooldownPct: 0.1, critChanceFlat: 0.01 } },
         { id: "reactive", name: "Reactive", slots: ["shield", "hull"], modifiers: { shieldRegenPct: 0.12 } },
-        { id: "overclocked", name: "Overclocked", slots: ["chipset", "generator"], modifiers: { primaryDamagePct: 0.12, heatDissipationPct: -0.06 } }
-      ]
+        { id: "overclocked", name: "Overclocked", slots: ["chipset", "generator"], modifiers: { primaryDamagePct: 0.12, heatDissipationPct: -0.06 } },
+        { id: "prospector_mark", name: "Prospector Mark", slots: ["hull", "shield", "generator", "engine", "chipset"], setTag: "prospector", modifiers: { salvageYieldPct: 0.08 } },
+        { id: "corsair_mark", name: "Corsair Mark", slots: ["hull", "shield", "generator", "engine", "chipset"], setTag: "corsair", modifiers: { critChanceFlat: 0.01 } },
+        { id: "warden_mark", name: "Warden Mark", slots: ["hull", "shield", "generator", "engine", "chipset"], setTag: "warden", modifiers: { collisionResist: 0.02 } }
+      ],
+      setBonuses: {
+        prospector: {
+          label: "Prospector",
+          tiers: {
+            2: { energyRegenPct: 0.1, salvageYieldPct: 0.15 },
+            3: { energyRegenPct: 0.18, salvageYieldPct: 0.3, primaryCooldownPct: 0.06 }
+          }
+        },
+        corsair: {
+          label: "Corsair",
+          tiers: {
+            2: { primaryDamagePct: 0.1, critChanceFlat: 0.02 },
+            3: { primaryDamagePct: 0.18, critChanceFlat: 0.04, maxSpeedPct: 0.08 }
+          }
+        },
+        warden: {
+          label: "Warden",
+          tiers: {
+            2: { hullPct: 0.1, shieldPct: 0.1 },
+            3: { hullPct: 0.18, shieldPct: 0.16, collisionResist: 0.08, plasmaResist: 0.08 }
+          }
+        }
+      }
     },
     hangar: {
       items: [
