@@ -1202,14 +1202,47 @@
     destroyUfoByIndex(index) {
       const ufo = this.model.ufos[index];
       if (!ufo) return;
-      const ufoScore = ufo.mode === "hunter" ? this.config.ufo.scoreHunter : this.config.ufo.scoreSniper;
-      this.registerScore(ufoScore, true);
+      const modeScoreMap = {
+        hunter: this.config.ufo.scoreHunter,
+        sniper: this.config.ufo.scoreSniper,
+        swarm: this.config.ufo.scoreSwarm,
+        kamikaze: this.config.ufo.scoreKamikaze,
+        support: this.config.ufo.scoreSupport,
+        mine_layer: this.config.ufo.scoreMineLayer
+      };
+      const baseScore = modeScoreMap[ufo.mode] ?? this.config.ufo.scoreHunter;
+      const eliteScoreMul = ufo.eliteStats?.scoreMul ?? 1;
+      this.registerScore(Math.round(baseScore * eliteScoreMul), true);
       this.model.telemetry.kills.ufos += 1;
       this.model.flashMs = Math.max(this.model.flashMs, 130);
       this.emitImpactParticles(ufo.x, ufo.y, 28, "255,91,186");
+      if (ufo.elitePrefix === "Volatile") {
+        for (let i = 0; i < 6; i += 1) {
+          const angle = (i / 6) * Math.PI * 2;
+          const bullet = window.Asteroids.createEnemyBullet(ufo.x, ufo.y, angle, this.config);
+          bullet.vx *= 0.85;
+          bullet.vy *= 0.85;
+          bullet.ttl = 1.3;
+          bullet.damageProfile = "enemy_mine";
+          this.model.enemyBullets.push(bullet);
+        }
+      }
       this.model.ufos.splice(index, 1);
       this.model.missionUfoKills += 1;
       this.tryDropModule("ufo", ufo.mode);
+    }
+
+    applyDamageToUfoByIndex(index, baseDamage, damageType = "kinetic", critChance = this.getPlayerCritChance()) {
+      const ufo = this.model.ufos[index];
+      if (!ufo) return false;
+      const resolved = this.resolvePlayerDamage(baseDamage, damageType, critChance);
+      ufo.hp -= resolved.damage;
+      this.emitImpactParticles(ufo.x, ufo.y, resolved.isCrit ? 8 : 5, "255,122,198");
+      if (ufo.hp <= 0) {
+        this.destroyUfoByIndex(index);
+        return true;
+      }
+      return false;
     }
 
     destroyMiniBoss() {

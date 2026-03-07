@@ -28,10 +28,10 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [ ] Validacni skript pro herni data (schema + sanity check)
   - [ ] Balancing presety a rychly tuning workflow
 
-- [ ] Enemy roster a AI rozsirovani
-  - [ ] Nove archetypy (swarm/kamikaze/support/mine-layer)
-  - [ ] Elite prefix system (Phase/Berserker/Armored/Volatile)
-  - [ ] Lepsi behavior model (distance/flank/pressure windows)
+- [x] Enemy roster a AI rozsirovani
+  - [x] Nove archetypy (swarm/kamikaze/support/mine-layer)
+  - [x] Elite prefix system (Phase/Berserker/Armored/Volatile)
+  - [x] Lepsi behavior model (distance/flank/pressure windows)
 
 - [ ] Boss framework
   - [ ] 1 plnohodnotny boss encounter (faze + weakpointy + zmena areny)

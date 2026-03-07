@@ -265,8 +265,12 @@
       enemyHitProfiles: {
         enemy_bullet_hunter: { damageType: "kinetic", baseDamage: 18, critChance: 0.04, critMultiplier: 1.5 },
         enemy_bullet_sniper: { damageType: "plasma", baseDamage: 25, critChance: 0.12, critMultiplier: 1.7 },
+        enemy_bullet_swarm: { damageType: "kinetic", baseDamage: 14, critChance: 0.03, critMultiplier: 1.4 },
+        enemy_bullet_support: { damageType: "plasma", baseDamage: 16, critChance: 0.05, critMultiplier: 1.5 },
+        enemy_mine: { damageType: "explosive", baseDamage: 24, critChance: 0.05, critMultiplier: 1.6 },
         asteroid_collision: { damageType: "collision", baseDamage: 34, critChance: 0.0 },
         ufo_collision: { damageType: "collision", baseDamage: 30, critChance: 0.0 },
+        kamikaze_collision: { damageType: "collision", baseDamage: 48, critChance: 0.0 },
         mini_boss_collision: { damageType: "collision", baseDamage: 42, critChance: 0.0 },
         mini_boss_bullet: { damageType: "explosive", baseDamage: 26, critChance: 0.08, critMultiplier: 1.6 },
         volatile_burn: { damageType: "dot_thermal", baseDamage: 8, critChance: 0.0 }
@@ -418,8 +422,36 @@
     ufo: {
       spawnDelayMinSeconds: 16,
       spawnDelayMaxSeconds: 28,
+      modeWeights: {
+        hunter: 0.36,
+        sniper: 0.26,
+        swarm: 0.16,
+        kamikaze: 0.1,
+        support: 0.07,
+        mine_layer: 0.05
+      },
+      unlockSectorByMode: {
+        hunter: 1,
+        sniper: 1,
+        swarm: 2,
+        kamikaze: 3,
+        support: 4,
+        mine_layer: 5
+      },
+      hpByMode: {
+        hunter: 44,
+        sniper: 52,
+        swarm: 28,
+        kamikaze: 34,
+        support: 48,
+        mine_layer: 56
+      },
       speedHunter: 88,
       speedSniper: 72,
+      speedSwarm: 108,
+      speedKamikaze: 126,
+      speedSupport: 74,
+      speedMineLayer: 64,
       speedScalePerSector: 0.022,
       speedScaleMaxBonus: 0.32,
       fireRateScalePerSector: 0.05,
@@ -429,7 +461,26 @@
       radius: 20,
       scoreHunter: 220,
       scoreSniper: 320,
-      desiredSniperDistance: 260
+      scoreSwarm: 170,
+      scoreKamikaze: 210,
+      scoreSupport: 290,
+      scoreMineLayer: 360,
+      desiredSniperDistance: 260,
+      desiredSupportDistance: 300,
+      supportHealPerTick: 7,
+      supportHealIntervalSeconds: 1.8,
+      mineDeployIntervalSeconds: 2.4,
+      mineTtlSeconds: 8.2,
+      mineRadius: 6,
+      elitePrefixChanceBase: 0.05,
+      elitePrefixChancePerSector: 0.03,
+      elitePrefixChanceMax: 0.32,
+      elitePrefixStats: {
+        Phase: { speedMul: 1.08, fireRateMul: 1.12, hpMul: 1.15, scoreMul: 1.28 },
+        Berserker: { speedMul: 1.22, fireRateMul: 1.28, hpMul: 1.05, scoreMul: 1.35 },
+        Armored: { speedMul: 0.82, fireRateMul: 0.92, hpMul: 1.8, scoreMul: 1.45 },
+        Volatile: { speedMul: 1.04, fireRateMul: 1.0, hpMul: 1.2, scoreMul: 1.32 }
+      }
     },
     sector: {
       baseAsteroids: 4,

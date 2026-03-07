@@ -394,7 +394,9 @@
         const bullet = g.model.bullets[b];
         const impactX = g.model.ufos[hitIndex].x;
         const impactY = g.model.ufos[hitIndex].y;
-        g.destroyUfoByIndex(hitIndex);
+        const baseDamage = bullet.bossDamage ?? 26;
+        const damageType = bullet.kind === "secondary_rail" || bullet.kind === "primary_rail" ? "plasma" : "kinetic";
+        g.applyDamageToUfoByIndex(hitIndex, baseDamage, damageType, bullet.kind ? 0.11 : 0.08);
         if (bullet?.chainTargets > 0) {
           g.triggerPrimaryChain(impactX, impactY, bullet.chainTargets, bullet.chainRadius, bullet.chainBossDamage);
         }
@@ -450,7 +452,8 @@
       }
       for (const ufo of g.model.ufos) {
         if (circleCollision(ship, ufo)) {
-          g.applyDamageToShip("ufo_collision");
+          const profileId = ufo.mode === "kamikaze" ? "kamikaze_collision" : "ufo_collision";
+          g.applyDamageToShip(profileId);
           return;
         }
       }

@@ -118,6 +118,7 @@
   }
 
   function createUfo(mode, x, y, config) {
+    const hp = config.ufo.hpByMode?.[mode] ?? 40;
     return {
       mode,
       x,
@@ -125,8 +126,14 @@
       vx: 0,
       vy: 0,
       radius: config.ufo.radius,
+      hp,
+      maxHp: hp,
       shootTimer: 0,
-      disabledTimer: 0
+      disabledTimer: 0,
+      supportHealTimer: config.ufo.supportHealIntervalSeconds,
+      mineDeployTimer: config.ufo.mineDeployIntervalSeconds,
+      elitePrefix: null,
+      eliteStats: null
     };
   }
 
