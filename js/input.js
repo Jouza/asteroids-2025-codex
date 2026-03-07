@@ -39,6 +39,12 @@
         event.code === "Digit9" ||
         event.code === "Digit0" ||
         event.code === "KeyR" ||
+        event.code === "KeyT" ||
+        event.code === "KeyY" ||
+        event.code === "KeyU" ||
+        event.code === "KeyI" ||
+        event.code === "KeyO" ||
+        event.code === "KeyK" ||
         event.code === "KeyP" ||
         event.code === "KeyM" ||
         event.code === "F3" ||

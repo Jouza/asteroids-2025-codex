@@ -4,9 +4,10 @@ Prubezny checklist pro realizaci noveho smeru.
 ## Veci k realizaci
 
 - [ ] Pilot RPG layer
-  - [ ] XP + levely pilota
-  - [ ] Atributy (Reflex/Systems/Grit/Instinct)
-  - [ ] Prvni skill tree (10-12 perku)
+  - [x] MVP: XP + levely pilota
+  - [x] MVP: Atributy (Reflex/Systems/Grit/Instinct)
+  - [x] MVP: Skill perky + unlock flow v hangaru
+  - [ ] Rozsireni tree na 10-12+ perku + branch synergie
 
 - [ ] Frakce a reputace (MVP)
   - [ ] 2 frakce na start

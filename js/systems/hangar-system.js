@@ -17,6 +17,12 @@
       if (g.input.wasPressed("Digit8")) this.takeOrEquipSelected();
       if (g.input.wasPressed("Digit9")) this.sellSelected();
       if (g.input.wasPressed("Digit0")) this.salvageSelected();
+      if (g.input.wasPressed("KeyT")) this.changePilotAttributeSelection(-1);
+      if (g.input.wasPressed("KeyY")) this.changePilotAttributeSelection(1);
+      if (g.input.wasPressed("KeyU")) this.spendSelectedPilotAttribute();
+      if (g.input.wasPressed("KeyI")) this.changePilotPerkSelection(-1);
+      if (g.input.wasPressed("KeyO")) this.changePilotPerkSelection(1);
+      if (g.input.wasPressed("KeyK")) this.unlockSelectedPilotPerk();
       if (g.input.wasPressed("Enter")) this.beginNextSectorFromHangar();
     }
 
@@ -32,7 +38,8 @@
       g.model.sectorCompletionHandled = false;
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
       g.missionSystem.startMission(g.model.sector);
-      g.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      g.model.hangar.message =
+        "Hangar: 1-3 upgrade, 4/5/R loadout, 6/7 select, 8 equip, 9 sell, 0 salvage, T/Y attr, U spend, I/O perk, K unlock, Enter start.";
       g.saveProfile("sector_start");
     }
 
@@ -49,7 +56,8 @@
       g.model.enemyBullets = [];
       g.model.bullets = [];
       g.model.utilityEffects = [];
-      g.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      g.model.hangar.message =
+        "Hangar: 1-3 upgrade, 4/5/R loadout, 6/7 select, 8 equip, 9 sell, 0 salvage, T/Y attr, U spend, I/O perk, K unlock, Enter start.";
       this.clampSelection();
       g.saveProfile("sector_complete");
     }
@@ -281,6 +289,47 @@
             : g.model.loadout.utilityLabel;
       g.model.hangar.message = `Aktivni ${slotName}: ${label}`;
       g.saveProfile("hangar_loadout");
+    }
+
+    changePilotAttributeSelection(step) {
+      const g = this.game;
+      const order = g.getPilotAttributeOrder();
+      const size = order.length;
+      if (!size) return;
+      const next = (g.model.hangar.pilotAttrIndex + step + size) % size;
+      g.model.hangar.pilotAttrIndex = next;
+      const key = order[next];
+      const value = g.model.pilot.attributes[key] ?? 0;
+      g.model.hangar.message = `Pilot attr selected: ${key.toUpperCase()} (${value})`;
+    }
+
+    spendSelectedPilotAttribute() {
+      const g = this.game;
+      const order = g.getPilotAttributeOrder();
+      const key = order[g.model.hangar.pilotAttrIndex] ?? "reflex";
+      const ok = g.spendPilotAttributePoint(key);
+      if (!ok) {
+        g.model.hangar.message = `Cannot upgrade ${key.toUpperCase()} (need attr point or cap reached).`;
+      }
+    }
+
+    changePilotPerkSelection(step) {
+      const g = this.game;
+      const perks = g.getPilotPerkDefs();
+      if (!perks.length) return;
+      const size = perks.length;
+      const next = (g.model.hangar.pilotPerkIndex + step + size) % size;
+      g.model.hangar.pilotPerkIndex = next;
+      const perk = perks[next];
+      g.model.hangar.message = `Perk selected: ${perk.label} (${perk.branch})`;
+    }
+
+    unlockSelectedPilotPerk() {
+      const g = this.game;
+      const perk = g.getPilotSelectedPerk();
+      if (!perk) return;
+      const ok = g.unlockPilotPerk(perk.id);
+      if (!ok) g.model.hangar.message = `Cannot unlock perk: ${perk.label}`;
     }
 
   }

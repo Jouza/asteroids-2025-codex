@@ -777,6 +777,20 @@
 
         const selectedModule =
           selectedSource === "crate" ? lootCrate[selectedIndex] ?? null : inventory[selectedIndex] ?? null;
+        const pilot = model.pilot || {};
+        const pilotAttrs = pilot.attributes || {};
+        const pilotAttrOrder = ["reflex", "systems", "grit", "instinct"];
+        const pilotAttrLabels = {
+          reflex: "Reflex",
+          systems: "Systems",
+          grit: "Grit",
+          instinct: "Instinct"
+        };
+        const pilotPerks = config.pilot?.perks || [];
+        const selectedPerkIndex =
+          pilotPerks.length > 0 ? Math.max(0, Math.min(hangar.pilotPerkIndex || 0, pilotPerks.length - 1)) : 0;
+        const selectedPerk = pilotPerks[selectedPerkIndex] || null;
+        const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
 
         const truncate = (value, maxLen = 36) => {
           if (!value) return "-";
@@ -786,6 +800,18 @@
         const formatModuleShort = (module) => {
           if (!module) return "-";
           return `${truncate(module.name, 22)} | ${slotLabels[module.slot] || module.slot} | ${module.sellValue}cr`;
+        };
+
+        const formatPerkRequirements = (perk) => {
+          if (!perk) return "-";
+          const req = [];
+          req.push(`L${perk.levelReq ?? 1}`);
+          if (perk.requires) {
+            for (const key of Object.keys(perk.requires)) {
+              req.push(`${pilotAttrLabels[key] || key}:${perk.requires[key]}`);
+            }
+          }
+          return req.join(" ");
         };
 
         const drawPanel = (x, y, w, h, title) => {
@@ -902,6 +928,50 @@
         drawRow(midX, midY, `Sets: ${truncate(setText, 30)}`, "#b8f6ff", "600 13px Trebuchet MS");
         midY += 24;
 
+        const pilotLevel = pilot.level || 1;
+        const pilotXp = Math.floor(pilot.xp || 0);
+        const pilotXpToNext = Math.max(1, Math.floor(pilot.xpToNext || 1));
+        drawRow(
+          midX,
+          midY,
+          `Pilot L${pilotLevel}  XP ${pilotXp}/${pilotXpToNext}  A:${pilot.attributePoints || 0} S:${pilot.skillPoints || 0}`,
+          "#ffd785",
+          "600 13px Trebuchet MS"
+        );
+        midY += 19;
+        for (let i = 0; i < pilotAttrOrder.length; i += 1) {
+          const key = pilotAttrOrder[i];
+          const selected = (hangar.pilotAttrIndex || 0) === i;
+          const value = Math.floor(pilotAttrs[key] || 0);
+          drawRow(
+            midX + i * 68,
+            midY,
+            `${selected ? ">" : ""}${pilotAttrLabels[key]}:${value}`,
+            selected ? "#ffe7a8" : "#d8f5ff",
+            "500 12px Trebuchet MS"
+          );
+        }
+        midY += 18;
+        if (selectedPerk) {
+          const perkUnlocked = unlockedPerkIds.has(selectedPerk.id);
+          drawRow(
+            midX,
+            midY,
+            `Perk ${selectedPerkIndex + 1}/${pilotPerks.length}: ${selectedPerk.label} (${selectedPerk.branch})`,
+            perkUnlocked ? "#9bf5bb" : "#d8f5ff",
+            "600 12px Trebuchet MS"
+          );
+          midY += 16;
+          drawRow(
+            midX,
+            midY,
+            `Req ${formatPerkRequirements(selectedPerk)}  [${perkUnlocked ? "Unlocked" : "Lock"}]`,
+            perkUnlocked ? "#9bf5bb" : "rgba(216,245,255,0.78)",
+            "500 12px Trebuchet MS"
+          );
+          midY += 18;
+        }
+
         if (selectedModule) {
           const equippedSameSlot = equipment[selectedModule.slot] || null;
           const dHull = formatPctDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"));
@@ -985,7 +1055,7 @@
         ctx.textAlign = "center";
         ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("6/7 Select | 8 Take/Equip | 9 Sell | 0 Salvage | Enter Start Sector", centerX, actionBarY + 16);
+        ctx.fillText("6/7 Select | 8 Take/Equip | 9 Sell | 0 Salvage | T/Y/U attrs | I/O/K perks | Enter Start", centerX, actionBarY + 16);
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";

@@ -50,6 +50,23 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function createDefaultPilotProgression() {
+    return {
+      level: 1,
+      xp: 0,
+      xpToNext: 120,
+      attributePoints: 0,
+      skillPoints: 0,
+      attributes: {
+        reflex: 0,
+        systems: 0,
+        grit: 0,
+        instinct: 0
+      },
+      unlockedPerks: []
+    };
+  }
+
   function createDefaultProfile() {
     return {
       schemaVersion: PROFILE_SCHEMA_VERSION,
@@ -90,7 +107,8 @@
           engine: null,
           chipset: null
         },
-        salvageParts: 0
+        salvageParts: 0,
+        pilot: createDefaultPilotProgression()
       },
       stats: {
         runsPlayed: 0,
@@ -165,7 +183,9 @@
           message: "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.",
           lootCrate: [],
           selectionSource: "crate",
-          selectionIndex: 0
+          selectionIndex: 0,
+          pilotAttrIndex: 0,
+          pilotPerkIndex: 0
         },
         loadout: {
           primaryId: "auto_cannon",
@@ -207,6 +227,7 @@
         },
         activeSets: [],
         setStatusText: "No active set",
+        pilot: createDefaultPilotProgression(),
         salvageParts: 0,
         telemetry: createTelemetryState(false),
         profile: createDefaultProfile(),
@@ -319,6 +340,36 @@
 
       safe.progression.salvageParts = Math.max(0, Math.floor(Number(progression.salvageParts) || 0));
 
+      const defaultPilot = createDefaultPilotProgression();
+      const pilotRaw = progression.pilot && typeof progression.pilot === "object" ? progression.pilot : {};
+      safe.progression.pilot = deepClone(defaultPilot);
+      safe.progression.pilot.level = this.clamp(
+        Math.floor(Number(pilotRaw.level) || defaultPilot.level),
+        1,
+        this.config.pilot.maxLevel
+      );
+      safe.progression.pilot.xpToNext = Math.max(1, Math.floor(Number(pilotRaw.xpToNext) || defaultPilot.xpToNext));
+      safe.progression.pilot.xp = this.clamp(
+        Math.floor(Number(pilotRaw.xp) || 0),
+        0,
+        safe.progression.pilot.xpToNext
+      );
+      safe.progression.pilot.attributePoints = Math.max(0, Math.floor(Number(pilotRaw.attributePoints) || 0));
+      safe.progression.pilot.skillPoints = Math.max(0, Math.floor(Number(pilotRaw.skillPoints) || 0));
+      const attributeCaps = this.config.pilot.attributeCaps;
+      for (const key of Object.keys(defaultPilot.attributes)) {
+        const cap = attributeCaps[key] ?? 25;
+        safe.progression.pilot.attributes[key] = this.clamp(
+          Math.floor(Number(pilotRaw.attributes?.[key]) || 0),
+          0,
+          cap
+        );
+      }
+      const validPerkIds = new Set((this.config.pilot.perks || []).map((perk) => perk.id));
+      safe.progression.pilot.unlockedPerks = Array.isArray(pilotRaw.unlockedPerks)
+        ? pilotRaw.unlockedPerks.filter((id) => validPerkIds.has(id))
+        : [];
+
       safe.stats.runsPlayed = Math.max(0, Math.floor(Number(stats.runsPlayed) || 0));
       safe.stats.totalPlaySeconds = Math.max(0, Number(stats.totalPlaySeconds) || 0);
       safe.stats.bestScore = Math.max(0, Math.floor(Number(stats.bestScore) || 0));
@@ -356,7 +407,8 @@
         upgrades: deepClone(this.model.upgrades),
         inventory: deepClone(this.model.inventory),
         equipment: deepClone(this.model.equipment),
-        salvageParts: this.model.salvageParts
+        salvageParts: this.model.salvageParts,
+        pilot: deepClone(this.model.pilot)
       };
     }
 
@@ -370,6 +422,7 @@
       this.model.inventory = deepClone(progression.inventory);
       this.model.equipment = deepClone(progression.equipment);
       this.model.salvageParts = progression.salvageParts;
+      this.model.pilot = deepClone(progression.pilot || createDefaultPilotProgression());
       this.syncLoadoutLabels();
       this.refreshSetState();
     }
@@ -507,10 +560,13 @@
       this.model.currentMission = null;
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
-      this.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      this.model.hangar.message =
+        "Hangar: 1-3 upgrade, 4/5/R loadout, 6/7 select, 8 equip, 9 sell, 0 salvage, T/Y attr, U spend, I/O perk, K unlock, Enter start.";
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;
+      this.model.hangar.pilotAttrIndex = 0;
+      this.model.hangar.pilotPerkIndex = 0;
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
@@ -583,6 +639,121 @@
       this.model.setStatusText = this.getSetStatusText();
     }
 
+    getPilotAttributeOrder() {
+      return ["reflex", "systems", "grit", "instinct"];
+    }
+
+    getPilotPerkDefs() {
+      return this.config.pilot.perks || [];
+    }
+
+    getPilotSelectedPerk() {
+      const perks = this.getPilotPerkDefs();
+      if (!perks.length) return null;
+      const index = this.clamp(this.model.hangar.pilotPerkIndex ?? 0, 0, perks.length - 1);
+      return perks[index];
+    }
+
+    getPilotAttributeBonuses() {
+      const effects = this.config.pilot.attributeEffects;
+      const attrs = this.model.pilot.attributes;
+      const totals = {};
+      const addScaled = (source, points) => {
+        for (const key of Object.keys(source || {})) {
+          totals[key] = (totals[key] ?? 0) + source[key] * points;
+        }
+      };
+      addScaled(effects.reflex, attrs.reflex);
+      addScaled(effects.systems, attrs.systems);
+      addScaled(effects.grit, attrs.grit);
+      addScaled(effects.instinct, attrs.instinct);
+      return totals;
+    }
+
+    getPilotPerkBonuses() {
+      const unlocked = new Set(this.model.pilot.unlockedPerks || []);
+      const totals = {};
+      for (const perk of this.getPilotPerkDefs()) {
+        if (!unlocked.has(perk.id)) continue;
+        for (const key of Object.keys(perk.modifiers || {})) {
+          totals[key] = (totals[key] ?? 0) + perk.modifiers[key];
+        }
+      }
+      return totals;
+    }
+
+    getPilotXpToNext(level = this.model.pilot.level) {
+      const xpCfg = this.config.pilot.xp;
+      const curve = Math.round(xpCfg.base * Math.pow(xpCfg.growth, Math.max(0, level - 1)));
+      return this.clamp(curve, 50, 50000);
+    }
+
+    grantPilotXp(amount, reason = "generic") {
+      if (amount <= 0) return;
+      const pilot = this.model.pilot;
+      const maxLevel = this.config.pilot.maxLevel;
+      if (pilot.level >= maxLevel) return;
+      pilot.xp += Math.floor(amount);
+      let leveled = false;
+      while (pilot.level < maxLevel && pilot.xp >= pilot.xpToNext) {
+        pilot.xp -= pilot.xpToNext;
+        pilot.level += 1;
+        pilot.attributePoints += 1;
+        if (pilot.level % this.config.pilot.xp.skillPointEveryLevels === 0) {
+          pilot.skillPoints += 1;
+        }
+        pilot.xpToNext = this.getPilotXpToNext(pilot.level);
+        leveled = true;
+      }
+      if (pilot.level >= maxLevel) {
+        pilot.level = maxLevel;
+        pilot.xp = 0;
+        pilot.xpToNext = this.getPilotXpToNext(maxLevel);
+      }
+      if (leveled) {
+        this.model.hangar.message = `Pilot level ${pilot.level}. +${pilot.attributePoints} attr / +${pilot.skillPoints} skill points available.`;
+        this.saveProfile(`pilot_level_${reason}`);
+      }
+    }
+
+    canUnlockPilotPerk(perk) {
+      if (!perk) return false;
+      const pilot = this.model.pilot;
+      if (pilot.skillPoints <= 0) return false;
+      if ((pilot.unlockedPerks || []).includes(perk.id)) return false;
+      if (pilot.level < (perk.levelReq ?? 1)) return false;
+      for (const key of Object.keys(perk.requires || {})) {
+        if ((pilot.attributes[key] ?? 0) < perk.requires[key]) return false;
+      }
+      return true;
+    }
+
+    unlockPilotPerk(perkId) {
+      const perk = this.getPilotPerkDefs().find((entry) => entry.id === perkId);
+      if (!this.canUnlockPilotPerk(perk)) return false;
+      this.model.pilot.skillPoints -= 1;
+      this.model.pilot.unlockedPerks.push(perk.id);
+      this.initializeShipResources(this.model.ship);
+      this.model.hangar.message = `Perk unlocked: ${perk.label}`;
+      this.saveProfile("pilot_perk_unlock");
+      return true;
+    }
+
+    spendPilotAttributePoint(attributeKey) {
+      const pilot = this.model.pilot;
+      const caps = this.config.pilot.attributeCaps;
+      if (pilot.attributePoints <= 0) return false;
+      if (!(attributeKey in pilot.attributes)) return false;
+      const cap = caps[attributeKey] ?? 25;
+      if (pilot.attributes[attributeKey] >= cap) return false;
+      pilot.attributePoints -= 1;
+      pilot.attributes[attributeKey] += 1;
+      this.initializeShipResources(this.model.ship);
+      this.model.hangar.message = `Attribute upgraded: ${attributeKey} (${pilot.attributes[attributeKey]})`;
+      this.saveProfile("pilot_attr_upgrade");
+      return true;
+    }
+
     getModuleModifiers() {
       const totals = {
         hullPct: 0,
@@ -623,6 +794,18 @@
           if (!(key in totals)) totals[key] = 0;
           totals[key] += setModifiers[key];
         }
+      }
+
+      const pilotAttrBonuses = this.getPilotAttributeBonuses();
+      for (const key of Object.keys(pilotAttrBonuses)) {
+        if (!(key in totals)) totals[key] = 0;
+        totals[key] += pilotAttrBonuses[key];
+      }
+
+      const pilotPerkBonuses = this.getPilotPerkBonuses();
+      for (const key of Object.keys(pilotPerkBonuses)) {
+        if (!(key in totals)) totals[key] = 0;
+        totals[key] += pilotPerkBonuses[key];
       }
 
       return totals;
@@ -1052,6 +1235,7 @@
       );
       this.model.credits += creditsGain;
       this.model.telemetry.creditsEarned += creditsGain;
+      this.grantPilotXp(basePoints * this.config.pilot.xp.perScore, "score");
     }
 
     recordPrimaryShot() {
@@ -1116,6 +1300,9 @@
         playerHitsTaken: this.model.telemetry.playerHitsTaken - active.playerHitsStart
       };
       this.model.telemetry.activeMission = null;
+      const missionType = this.model.currentMission?.type ?? active.type;
+      const xpBonus = this.config.pilot.xp.missionBonusByType[missionType] ?? 0;
+      this.grantPilotXp(xpBonus, "mission");
     }
 
     getCurrentBulletCooldown() {

@@ -324,6 +324,116 @@
       moduleSellValueMultiplier: 1,
       salvageToCredits: 9
     },
+    pilot: {
+      maxLevel: 40,
+      xp: {
+        base: 120,
+        growth: 1.22,
+        perScore: 0.12,
+        missionBonusByType: {
+          survive: 26,
+          ufo_hunt: 32,
+          asteroid_storm: 30,
+          mini_boss: 55
+        },
+        skillPointEveryLevels: 2
+      },
+      attributeCaps: {
+        reflex: 25,
+        systems: 25,
+        grit: 25,
+        instinct: 25
+      },
+      attributeEffects: {
+        reflex: {
+          rotationAccelPct: 0.012,
+          rotationSpeedPct: 0.01,
+          primaryCooldownPct: 0.006
+        },
+        systems: {
+          energyRegenPct: 0.015,
+          heatDissipationPct: 0.014,
+          utilityCooldownPct: 0.01,
+          shieldRegenPct: 0.008
+        },
+        grit: {
+          hullPct: 0.015,
+          shieldPct: 0.012,
+          collisionResist: 0.006
+        },
+        instinct: {
+          critChanceFlat: 0.002,
+          primaryDamagePct: 0.006,
+          creditsGainPct: 0.005
+        }
+      },
+      perks: [
+        {
+          id: "vanguard_breach",
+          branch: "vanguard",
+          label: "Breach",
+          levelReq: 3,
+          requires: { grit: 4 },
+          modifiers: { primaryDamagePct: 0.08, collisionResist: 0.06 }
+        },
+        {
+          id: "vanguard_bastion",
+          branch: "vanguard",
+          label: "Bastion",
+          levelReq: 8,
+          requires: { grit: 8 },
+          modifiers: { hullPct: 0.12, shieldPct: 0.12 }
+        },
+        {
+          id: "ghost_focus",
+          branch: "ghost",
+          label: "Focus",
+          levelReq: 4,
+          requires: { reflex: 4 },
+          modifiers: { primaryCooldownPct: 0.1, critChanceFlat: 0.03 }
+        },
+        {
+          id: "ghost_vector",
+          branch: "ghost",
+          label: "Vector",
+          levelReq: 10,
+          requires: { reflex: 8 },
+          modifiers: { thrustPct: 0.1, maxSpeedPct: 0.08 }
+        },
+        {
+          id: "engineer_flux",
+          branch: "engineer",
+          label: "Flux",
+          levelReq: 5,
+          requires: { systems: 4 },
+          modifiers: { energyRegenPct: 0.16, heatDissipationPct: 0.14 }
+        },
+        {
+          id: "engineer_overclock",
+          branch: "engineer",
+          label: "Overclock",
+          levelReq: 12,
+          requires: { systems: 8 },
+          modifiers: { utilityCooldownPct: 0.18, secondaryCooldownPct: 0.1 }
+        },
+        {
+          id: "instinct_hunter",
+          branch: "instinct",
+          label: "Hunter",
+          levelReq: 6,
+          requires: { instinct: 4 },
+          modifiers: { critChanceFlat: 0.04, creditsGainPct: 0.12 }
+        },
+        {
+          id: "instinct_apex",
+          branch: "instinct",
+          label: "Apex",
+          levelReq: 14,
+          requires: { instinct: 8 },
+          modifiers: { primaryDamagePct: 0.14, critChanceFlat: 0.03 }
+        }
+      ]
+    },
     loot: {
       maxInventoryItems: 24,
       dropChance: {

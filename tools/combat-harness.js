@@ -392,6 +392,40 @@ function runTests() {
     }
   });
 
+  tests.push(() => {
+    gameA.startGame(13131);
+    gameA.model.pilot.level = 1;
+    gameA.model.pilot.xp = 0;
+    gameA.model.pilot.xpToNext = gameA.getPilotXpToNext(1);
+    gameA.model.pilot.attributePoints = 0;
+    gameA.model.pilot.skillPoints = 0;
+    const gain = gameA.model.pilot.xpToNext + 25;
+    gameA.grantPilotXp(gain, "harness_xp");
+    assert(gameA.model.pilot.level >= 2, "Pilot XP gain should level up pilot");
+    assert(gameA.model.pilot.attributePoints >= 1, "Pilot level up should grant attribute point");
+  });
+
+  tests.push(() => {
+    gameA.startGame(14141);
+    gameA.model.pilot.attributePoints = 8;
+    gameA.model.pilot.attributes.reflex = 4;
+    gameA.model.pilot.attributes.systems = 4;
+    gameA.model.pilot.attributes.grit = 4;
+    gameA.model.pilot.attributes.instinct = 4;
+    const beforeReflex = gameA.model.pilot.attributes.reflex;
+    const spent = gameA.spendPilotAttributePoint("reflex");
+    assert(spent, "Pilot attribute point spend should succeed with available points");
+    assert(gameA.model.pilot.attributes.reflex === beforeReflex + 1, "Reflex attribute should increase by 1");
+
+    gameA.model.pilot.level = 10;
+    gameA.model.pilot.skillPoints = 1;
+    gameA.model.pilot.unlockedPerks = [];
+    const unlock = gameA.unlockPilotPerk("ghost_focus");
+    assert(unlock, "Pilot perk unlock should succeed when requirements are met");
+    assert(gameA.model.pilot.unlockedPerks.includes("ghost_focus"), "Unlocked perk should be recorded");
+    assert(gameA.model.pilot.skillPoints === 0, "Unlocking perk should spend one skill point");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     tests[i]();
