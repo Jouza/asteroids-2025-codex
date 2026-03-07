@@ -252,11 +252,14 @@
       if (incrementCombo) this.bumpCombo();
       else if (this.model.comboCount > 0) this.model.comboTimer = this.config.combo.resetSeconds;
 
-      const scored = Math.round(basePoints * this.model.comboMultiplier);
+      const missionType = this.model.currentMission?.type;
+      const scoreMissionMult = this.config.mission.rewards.scoreByType[missionType] ?? 1;
+      const creditsMissionMult = this.config.mission.rewards.creditsByType[missionType] ?? 1;
+      const scored = Math.round(basePoints * this.model.comboMultiplier * scoreMissionMult);
       this.model.score += scored;
       const creditsGain = Math.max(
         this.config.economy.minCreditsPerKill,
-        Math.floor(basePoints * this.config.economy.creditsPerScore)
+        Math.floor(basePoints * this.config.economy.creditsPerScore * creditsMissionMult)
       );
       this.model.credits += creditsGain;
     }

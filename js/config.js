@@ -46,12 +46,13 @@
           role: "General DPS",
           effectText: "2-shot burst",
           impactText: "Reliable hit pressure",
-          cooldownSeconds: 2.7,
+          cooldownSeconds: 2.5,
           projectileSpeed: 430,
           ttlSeconds: 1.35,
           radius: 4,
           spread: 0.16,
-          count: 2
+          count: 2,
+          bossDamage: 26
         },
         rail_shot: {
           kind: "rail",
@@ -59,11 +60,12 @@
           role: "Precision",
           effectText: "High velocity pierce",
           impactText: "Pierces up to 4 targets",
-          cooldownSeconds: 3.3,
+          cooldownSeconds: 3.7,
           projectileSpeed: 760,
           ttlSeconds: 1.1,
           radius: 4,
-          pierce: 4
+          pierce: 4,
+          bossDamage: 42
         },
         cluster_rockets: {
           kind: "cluster",
@@ -71,12 +73,13 @@
           role: "Area control",
           effectText: "Wide 4-shot cone",
           impactText: "Best at close packs",
-          cooldownSeconds: 4.2,
+          cooldownSeconds: 4.4,
           projectileSpeed: 370,
           ttlSeconds: 1.45,
           radius: 4,
           spread: 0.42,
-          count: 4
+          count: 4,
+          bossDamage: 20
         }
       },
       utility: {
@@ -86,10 +89,11 @@
           role: "Emergency clear",
           effectText: "AOE wave destruction",
           impactText: "Deletes nearby threats",
-          cooldownSeconds: 8.5,
-          pulseRadius: 210,
+          cooldownSeconds: 9.8,
+          pulseRadius: 190,
           flashMs: 240,
-          particleCount: 30
+          particleCount: 30,
+          bossDamage: 78
         },
         emp_pulse: {
           kind: "emp",
@@ -97,8 +101,8 @@
           role: "Control",
           effectText: "Disables UFO weapons",
           impactText: "Clears enemy bullets",
-          cooldownSeconds: 11.5,
-          disableSeconds: 6.5,
+          cooldownSeconds: 12.4,
+          disableSeconds: 5.2,
           flashMs: 210,
           particleCount: 24
         },
@@ -108,15 +112,15 @@
           role: "Survival",
           effectText: "Temporary invulnerability",
           impactText: "Great for risky positioning",
-          cooldownSeconds: 13,
-          shieldSeconds: 4.25,
+          cooldownSeconds: 12.8,
+          shieldSeconds: 3.5,
           flashMs: 180,
           particleCount: 20
         }
       }
     },
     enemyBullet: {
-      speed: 230,
+      speed: 215,
       ttlSeconds: 2.4,
       radius: 3,
       cooldownHunterSeconds: 1.25,
@@ -150,7 +154,7 @@
       nearMissCooldownSeconds: 1.35
     },
     economy: {
-      creditsPerScore: 0.075,
+      creditsPerScore: 0.062,
       minCreditsPerKill: 1
     },
     shop: {
@@ -176,10 +180,10 @@
       maxMagazineLevel: 6,
       fireRateFactorPerLevel: 0.91,
       unlockCosts: {
-        rail_shot: 220,
-        cluster_rockets: 250,
-        emp_pulse: 260,
-        shield_dome: 280
+        rail_shot: 210,
+        cluster_rockets: 245,
+        emp_pulse: 250,
+        shield_dome: 275
       }
     },
     ufo: {
@@ -201,30 +205,44 @@
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
       survive: {
-        baseDurationSeconds: 24,
-        durationStepSeconds: 2.4,
-        asteroidSpawnIntervalSeconds: 2.2
+        baseDurationSeconds: 22,
+        durationStepSeconds: 2.1,
+        asteroidSpawnIntervalSeconds: 2.55
       },
       ufoHunt: {
-        baseKills: 3,
+        baseKills: 2,
         killStep: 1,
         maxConcurrentUfos: 2,
-        spawnIntervalSeconds: 2.6
+        spawnIntervalSeconds: 3.1
       },
       asteroidStorm: {
-        baseTarget: 16,
-        targetStep: 3,
-        initialLargeCount: 6,
-        initialMediumCount: 6,
-        extraSpawnIntervalSeconds: 3.8
+        baseTarget: 14,
+        targetStep: 2,
+        initialLargeCount: 5,
+        initialMediumCount: 4,
+        extraSpawnIntervalSeconds: 4.2
       },
       miniBoss: {
-        hpBase: 460,
-        hpStep: 80,
+        hpBase: 410,
+        hpStep: 72,
         radius: 34,
         speed: 82,
-        shootCooldownSeconds: 1.05,
-        scoreReward: 950
+        shootCooldownSeconds: 1.25,
+        scoreReward: 840
+      },
+      rewards: {
+        scoreByType: {
+          survive: 1.0,
+          ufo_hunt: 1.08,
+          asteroid_storm: 1.05,
+          mini_boss: 1.12
+        },
+        creditsByType: {
+          survive: 1.0,
+          ufo_hunt: 1.1,
+          asteroid_storm: 1.06,
+          mini_boss: 1.16
+        }
       }
     },
     simulation: {
