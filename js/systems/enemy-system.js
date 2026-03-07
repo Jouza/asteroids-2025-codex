@@ -104,6 +104,7 @@
       const bullet = createEnemyBullet(muzzleX, muzzleY, shotAngle, g.config);
       bullet.vx *= speedScale;
       bullet.vy *= speedScale;
+      bullet.damageProfile = ufo.mode === "sniper" ? "enemy_bullet_sniper" : "enemy_bullet_hunter";
       g.model.enemyBullets.push(bullet);
       g.recordEnemyShot();
       g.emitImpactParticles(muzzleX, muzzleY, 2, "255,123,196");
@@ -145,6 +146,7 @@
         const bullet = createEnemyBullet(boss.x, boss.y, aim + (g.rng() - 0.5) * 0.14, g.config);
         bullet.vx *= speedScale;
         bullet.vy *= speedScale;
+        bullet.damageProfile = "mini_boss_bullet";
         g.model.enemyBullets.push(bullet);
         g.recordEnemyShot();
         const fireRateScale = this.getWaveScale(

@@ -15,15 +15,51 @@
     },
     ship: {
       radius: 16,
-      rotationSpeed: 2.5,
-      rotationAcceleration: 30,
-      rotationDamping: 0.86,
-      thrust: 320,
-      friction: 0.992,
-      maxSpeed: 460,
       invulnerabilityMs: 1600,
+      hitInvulnerabilityMs: 360,
       respawnSafetyPadding: 72,
-      respawnMaxAttempts: 42
+      respawnMaxAttempts: 42,
+      baseHull: 125,
+      baseShield: 100,
+      baseEnergy: 100,
+      baseHeat: 100,
+      shieldRegenPerSecond: 14,
+      shieldRegenDelaySeconds: 2.2,
+      energyRegenPerSecond: 26,
+      heatDissipationPerSecond: 32,
+      overheatSoftThreshold: 74,
+      overheatHardThreshold: 100,
+      overheatPenaltyFactor: 0.72,
+      flightModel: {
+        arcade: {
+          rotationSpeed: 3.1,
+          rotationAcceleration: 34,
+          rotationDamping: 0.84,
+          thrust: 342,
+          friction: 0.988,
+          maxSpeed: 430
+        },
+        sim_lite: {
+          rotationSpeed: 2.45,
+          rotationAcceleration: 27,
+          rotationDamping: 0.9,
+          thrust: 305,
+          friction: 0.994,
+          maxSpeed: 510
+        }
+      },
+      boost: {
+        thrustMultiplier: 1.65,
+        energyCostPerSecond: 38,
+        heatPerSecond: 26
+      },
+      dash: {
+        cooldownSeconds: 1.1,
+        impulse: 360,
+        energyCost: 28,
+        heatGain: 15,
+        invulnerabilityMs: 220
+      }
     },
     bullet: {
       maxActive: 3,
@@ -39,7 +75,9 @@
       primary: {
         auto_cannon: {
           label: "Auto",
-          cooldownSeconds: 0.165
+          cooldownSeconds: 0.165,
+          energyCost: 3.4,
+          heatGain: 4.8
         }
       },
       secondary: {
@@ -55,7 +93,9 @@
           radius: 4,
           spread: 0.16,
           count: 2,
-          bossDamage: 26
+          bossDamage: 26,
+          energyCost: 18,
+          heatGain: 14
         },
         rail_shot: {
           kind: "rail",
@@ -68,7 +108,9 @@
           ttlSeconds: 1.1,
           radius: 4,
           pierce: 4,
-          bossDamage: 42
+          bossDamage: 42,
+          energyCost: 24,
+          heatGain: 20
         },
         cluster_rockets: {
           kind: "cluster",
@@ -82,7 +124,9 @@
           radius: 4,
           spread: 0.42,
           count: 4,
-          bossDamage: 20
+          bossDamage: 20,
+          energyCost: 28,
+          heatGain: 24
         }
       },
       utility: {
@@ -96,7 +140,9 @@
           pulseRadius: 190,
           flashMs: 240,
           particleCount: 30,
-          bossDamage: 78
+          bossDamage: 78,
+          energyCost: 38,
+          heatGain: 20
         },
         emp_pulse: {
           kind: "emp",
@@ -107,7 +153,9 @@
           cooldownSeconds: 12.4,
           disableSeconds: 5.2,
           flashMs: 210,
-          particleCount: 24
+          particleCount: 24,
+          energyCost: 34,
+          heatGain: 18
         },
         shield_dome: {
           kind: "shield",
@@ -118,7 +166,9 @@
           cooldownSeconds: 12.8,
           shieldSeconds: 3.5,
           flashMs: 180,
-          particleCount: 20
+          particleCount: 20,
+          energyCost: 30,
+          heatGain: 14
         }
       }
     },
@@ -130,6 +180,32 @@
       cooldownSniperSeconds: 1.9,
       spreadHunter: 0.3,
       spreadSniper: 0.07
+    },
+    damage: {
+      critMultiplier: 1.65,
+      player: {
+        critChance: 0.09,
+        critMultiplier: 1.6
+      },
+      shipResist: {
+        kinetic: 0.08,
+        plasma: 0.04,
+        explosive: 0.12,
+        collision: 0.1,
+        dot_thermal: 0.0
+      },
+      enemyHitProfiles: {
+        enemy_bullet_hunter: { damageType: "kinetic", baseDamage: 18, critChance: 0.04, critMultiplier: 1.5 },
+        enemy_bullet_sniper: { damageType: "plasma", baseDamage: 25, critChance: 0.12, critMultiplier: 1.7 },
+        asteroid_collision: { damageType: "collision", baseDamage: 34, critChance: 0.0 },
+        ufo_collision: { damageType: "collision", baseDamage: 30, critChance: 0.0 },
+        mini_boss_collision: { damageType: "collision", baseDamage: 42, critChance: 0.0 },
+        mini_boss_bullet: { damageType: "explosive", baseDamage: 26, critChance: 0.08, critMultiplier: 1.6 },
+        volatile_burn: { damageType: "dot_thermal", baseDamage: 8, critChance: 0.0 }
+      },
+      dot: {
+        tickSeconds: 0.25
+      }
     },
     asteroid: {
       speedMin: 30,
@@ -164,7 +240,7 @@
       items: [
         {
           id: "repair",
-          title: "Repair Hull (+1 life)",
+          title: "Repair (Hull full / +1 life)",
           cost: 130
         },
         {

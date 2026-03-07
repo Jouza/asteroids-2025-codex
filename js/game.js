@@ -71,8 +71,10 @@
         shootTimer: 0,
         secondaryCooldown: 0,
         utilityCooldown: 0,
+        dashCooldown: 0,
         waveTimerMs: 0,
         runSeed: null,
+        runtimeSeconds: 0,
         nextUfoSpawnSeconds: 0,
         comboCount: 0,
         comboMultiplier: 1,
@@ -84,6 +86,8 @@
         missionUfoKills: 0,
         missionAsteroidKills: 0,
         currentMission: null,
+        flightModel: "arcade",
+        dotEffects: [],
         shop: {
           message: "Shop: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start."
         },
@@ -128,6 +132,7 @@
       this.canvas.width = this.config.canvas.width;
       this.canvas.height = this.config.canvas.height;
       this.model.ship = createShip(this.config);
+      this.initializeShipResources(this.model.ship);
       this.model.runSeed = generateRunSeed();
       this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
@@ -137,6 +142,9 @@
     handleMetaInput() {
       if (this.input.wasPressed("F3")) {
         this.model.telemetry.enabled = !this.model.telemetry.enabled;
+      }
+      if (this.input.wasPressed("KeyF")) {
+        this.toggleFlightModel();
       }
 
       if (this.model.gameState === GAME_STATE.SHOP) {
@@ -162,6 +170,7 @@
       if (this.model.gameState === GAME_STATE.PLAYING) {
         if (this.input.wasPressed("KeyX")) this.combatSystem.tryUseSecondary();
         if (this.input.wasPressed("KeyC")) this.combatSystem.tryUseUtility();
+        if (this.input.wasPressed("KeyV")) this.combatSystem.tryDash();
       }
     }
 
@@ -196,7 +205,9 @@
       this.model.shootTimer = 0;
       this.model.secondaryCooldown = 0;
       this.model.utilityCooldown = 0;
+      this.model.dashCooldown = 0;
       this.model.waveTimerMs = 0;
+      this.model.runtimeSeconds = 0;
       this.model.comboCount = 0;
       this.model.comboMultiplier = 1;
       this.model.comboTimer = 0;
@@ -207,6 +218,8 @@
       this.model.missionUfoKills = 0;
       this.model.missionAsteroidKills = 0;
       this.model.currentMission = null;
+      this.model.flightModel = "arcade";
+      this.model.dotEffects = [];
       this.model.shop.message = "Shop: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
       this.model.upgrades.fireRateLevel = 0;
       this.model.upgrades.magazineLevel = 0;
@@ -217,6 +230,7 @@
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
       this.rng = createSeededRng(this.model.runSeed);
+      this.initializeShipResources(this.model.ship);
       this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
       this.missionSystem.startMission(this.model.wave);
@@ -235,11 +249,13 @@
     update(dt) {
       if (this.model.gameState !== GAME_STATE.PLAYING) return;
 
+      this.model.runtimeSeconds += dt;
       this.model.telemetry.runTimeSeconds += dt;
 
       this.model.shootTimer = Math.max(0, this.model.shootTimer - dt);
       this.model.secondaryCooldown = Math.max(0, this.model.secondaryCooldown - dt);
       this.model.utilityCooldown = Math.max(0, this.model.utilityCooldown - dt);
+      this.model.dashCooldown = Math.max(0, this.model.dashCooldown - dt);
 
       if (this.input.isDown("Space") && this.model.shootTimer <= 0) {
         const didFire = this.combatSystem.fireBullet();
@@ -248,11 +264,17 @@
 
       this.updateComboTimer(dt);
       this.combatSystem.updateShip(dt);
+      this.updateShipResources(dt);
       this.combatSystem.updateBullets(dt);
       this.combatSystem.updateEnemyBullets(dt);
       this.combatSystem.updateAsteroids(dt);
       this.enemySystem.updateUfos(dt);
       this.enemySystem.updateMiniBoss(dt);
+      this.updateDotEffects(dt);
+      if (this.model.gameState !== GAME_STATE.PLAYING) {
+        this.hud.sync(this.model);
+        return;
+      }
       this.combatSystem.handleBulletAsteroidCollisions();
       this.combatSystem.handleBulletUfoCollisions();
       this.combatSystem.handleBulletMiniBossCollisions();
@@ -263,6 +285,184 @@
       this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
 
       this.hud.sync(this.model);
+    }
+
+    getCurrentFlightProfile() {
+      return this.config.ship.flightModel[this.model.flightModel] ?? this.config.ship.flightModel.arcade;
+    }
+
+    toggleFlightModel() {
+      this.model.flightModel = this.model.flightModel === "arcade" ? "sim_lite" : "arcade";
+    }
+
+    initializeShipResources(ship) {
+      if (!ship) return;
+      ship.hullMax = this.config.ship.baseHull;
+      ship.hull = ship.hullMax;
+      ship.shieldMax = this.config.ship.baseShield;
+      ship.shield = ship.shieldMax;
+      ship.energyMax = this.config.ship.baseEnergy;
+      ship.energy = ship.energyMax;
+      ship.heatMax = this.config.ship.baseHeat;
+      ship.heat = 0;
+      ship.lastDamageAt = -999;
+    }
+
+    updateShipResources(dt) {
+      const ship = this.model.ship;
+      if (!ship) return;
+
+      const cfg = this.config.ship;
+      ship.energy = Math.min(ship.energyMax, ship.energy + cfg.energyRegenPerSecond * dt);
+      ship.heat = Math.max(0, ship.heat - cfg.heatDissipationPerSecond * dt);
+
+      const sinceDamage = this.model.runtimeSeconds - ship.lastDamageAt;
+      if (sinceDamage >= cfg.shieldRegenDelaySeconds) {
+        ship.shield = Math.min(ship.shieldMax, ship.shield + cfg.shieldRegenPerSecond * dt);
+      }
+    }
+
+    createDamageEvent(profileId, overrides = {}) {
+      const baseProfile = this.config.damage.enemyHitProfiles[profileId];
+      if (!baseProfile) return null;
+      return { ...baseProfile, ...overrides };
+    }
+
+    resolveDamage(event, resistProfile = {}) {
+      if (!event) return null;
+
+      const resist = this.clamp(resistProfile[event.damageType] ?? 0, 0, 0.9);
+      const raw = Math.max(0, event.baseDamage ?? 0);
+      const reduced = raw * (1 - resist);
+      const critChance = this.clamp(event.critChance ?? 0, 0, 1);
+      const isCrit = this.rng() < critChance;
+      const critMultiplier = event.critMultiplier ?? this.config.damage.critMultiplier;
+      const finalDamage = Math.max(0, reduced * (isCrit ? critMultiplier : 1));
+
+      return {
+        damageType: event.damageType,
+        damage: finalDamage,
+        isCrit
+      };
+    }
+
+    resolvePlayerDamage(baseDamage, damageType = "kinetic", critChance = this.config.damage.player.critChance) {
+      const isCrit = this.rng() < this.clamp(critChance, 0, 1);
+      const critMultiplier = this.config.damage.player.critMultiplier ?? this.config.damage.critMultiplier;
+      return {
+        damageType,
+        damage: Math.max(0, baseDamage * (isCrit ? critMultiplier : 1)),
+        isCrit
+      };
+    }
+
+    applyDamageToShip(profileId, overrides = {}) {
+      const ship = this.model.ship;
+      if (!ship) return false;
+      if (!overrides.bypassInvulnerability && ship.invulnMs > 0) return false;
+
+      const event = this.createDamageEvent(profileId, overrides);
+      const resolved = this.resolveDamage(event, this.config.damage.shipResist);
+      if (!resolved) return false;
+      const hasDot = Boolean(event.dotDuration && event.dotDps);
+      if (resolved.damage <= 0 && !hasDot) return false;
+
+      if (resolved.damage > 0) {
+        ship.lastDamageAt = this.model.runtimeSeconds;
+        if (overrides.applyHitInvulnerability !== false) {
+          ship.invulnMs = Math.max(ship.invulnMs, this.config.ship.hitInvulnerabilityMs);
+        }
+        let remaining = resolved.damage;
+        const shieldAbsorb = Math.min(ship.shield, remaining);
+        ship.shield -= shieldAbsorb;
+        remaining -= shieldAbsorb;
+        if (remaining > 0) {
+          ship.hull = Math.max(0, ship.hull - remaining);
+        }
+
+        if (overrides.countAsHit !== false) this.recordPlayerHit();
+        this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 210 : 160);
+      }
+
+      if (event.dotDuration && event.dotDps) {
+        this.applyDotEffect({
+          profileId,
+          duration: event.dotDuration,
+          dps: event.dotDps
+        });
+      }
+
+      if (resolved.damage > 0 && ship.hull <= 0) {
+        this.handleShipDestroyed();
+      }
+
+      return true;
+    }
+
+    applyDotEffect(effect) {
+      this.model.dotEffects.push({
+        profileId: effect.profileId,
+        ttl: effect.duration,
+        tickTimer: 0,
+        dps: effect.dps
+      });
+    }
+
+    updateDotEffects(dt) {
+      const ship = this.model.ship;
+      if (!ship) return;
+
+      const tick = this.config.damage.dot.tickSeconds;
+      for (let i = this.model.dotEffects.length - 1; i >= 0; i -= 1) {
+        const effect = this.model.dotEffects[i];
+        if (!effect) continue;
+        effect.ttl -= dt;
+        effect.tickTimer -= dt;
+        if (effect.tickTimer <= 0) {
+          effect.tickTimer += tick;
+          const damage = effect.dps * tick;
+          this.applyDamageToShip(effect.profileId, {
+            baseDamage: damage,
+            critChance: 0,
+            bypassInvulnerability: true,
+            applyHitInvulnerability: false,
+            countAsHit: false
+          });
+        }
+        if (effect.ttl <= 0) {
+          this.model.dotEffects.splice(i, 1);
+        }
+      }
+    }
+
+    handleShipDestroyed() {
+      const ship = this.model.ship;
+      if (!ship) return;
+
+      this.model.lives -= 1;
+      this.model.flashMs = Math.max(this.model.flashMs, 220);
+      this.emitImpactParticles(ship.x, ship.y, 30, "255,98,121");
+      this.model.dotEffects = [];
+
+      if (this.model.lives <= 0) {
+        this.endGame();
+      } else {
+        this.respawnShipSafely();
+      }
+    }
+
+    applyDamageToMiniBoss(baseDamage, damageType = "kinetic", critChance = this.config.damage.player.critChance) {
+      const boss = this.model.miniBoss;
+      if (!boss) return false;
+      const resolved = this.resolvePlayerDamage(baseDamage, damageType, critChance);
+      boss.hp -= resolved.damage;
+      this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 95 : 70);
+      this.emitImpactParticles(boss.x, boss.y, resolved.isCrit ? 14 : 10, "255,118,188");
+      if (boss.hp <= 0) {
+        this.destroyMiniBoss();
+        return true;
+      }
+      return false;
     }
 
     updateComboTimer(dt) {
@@ -364,7 +564,38 @@
     getCurrentBulletCooldown() {
       const primary = this.config.loadout.primary[this.model.loadout.primaryId];
       const factor = Math.pow(this.config.shop.fireRateFactorPerLevel, this.model.upgrades.fireRateLevel);
-      return primary.cooldownSeconds * factor;
+      const ship = this.model.ship;
+      const softThreshold = this.config.ship.overheatSoftThreshold;
+      const overheatRatio =
+        ship && ship.heat > softThreshold ? (ship.heat - softThreshold) / (ship.heatMax - softThreshold) : 0;
+      const heatPenalty = 1 + overheatRatio * (1 / this.config.ship.overheatPenaltyFactor - 1);
+      return primary.cooldownSeconds * factor * heatPenalty;
+    }
+
+    canFirePrimary() {
+      const ship = this.model.ship;
+      if (!ship) return false;
+      const primary = this.config.loadout.primary[this.model.loadout.primaryId];
+      return this.canSpendShipResources(primary.energyCost, primary.heatGain);
+    }
+
+    consumePrimaryShotResources() {
+      const primary = this.config.loadout.primary[this.model.loadout.primaryId];
+      this.spendShipResources(primary.energyCost, primary.heatGain);
+    }
+
+    canSpendShipResources(energyCost, heatGain = 0) {
+      const ship = this.model.ship;
+      if (!ship) return false;
+      const hardThreshold = this.config.ship.overheatHardThreshold;
+      return ship.energy >= energyCost && ship.heat + heatGain < hardThreshold;
+    }
+
+    spendShipResources(energyCost, heatGain = 0) {
+      const ship = this.model.ship;
+      if (!ship) return;
+      ship.energy = Math.max(0, ship.energy - energyCost);
+      ship.heat = Math.min(ship.heatMax, ship.heat + heatGain);
     }
 
     getCurrentMaxBullets() {
@@ -543,6 +774,7 @@
       const ship = createShip(this.config);
       ship.x = respawn.x;
       ship.y = respawn.y;
+      this.initializeShipResources(ship);
       this.model.ship = ship;
     }
 

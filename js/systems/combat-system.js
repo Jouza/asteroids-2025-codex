@@ -9,9 +9,30 @@
     fireBullet() {
       const g = this.game;
       if (!g.model.ship) return false;
+      if (!g.canFirePrimary()) return false;
       if (g.model.bullets.length >= g.getCurrentMaxBullets()) return false;
       g.model.bullets.push(createBullet(g.model.ship, g.config));
+      g.consumePrimaryShotResources();
       g.recordPrimaryShot();
+      return true;
+    }
+
+    tryDash() {
+      const g = this.game;
+      const ship = g.model.ship;
+      if (!ship || g.model.dashCooldown > 0) return false;
+
+      const dashCfg = g.config.ship.dash;
+      if (!g.canSpendShipResources(dashCfg.energyCost, dashCfg.heatGain)) return false;
+
+      const impulseX = Math.cos(ship.angle) * dashCfg.impulse;
+      const impulseY = Math.sin(ship.angle) * dashCfg.impulse;
+      ship.vx += impulseX;
+      ship.vy += impulseY;
+      g.spendShipResources(dashCfg.energyCost, dashCfg.heatGain);
+      ship.invulnMs = Math.max(ship.invulnMs, dashCfg.invulnerabilityMs);
+      g.model.dashCooldown = dashCfg.cooldownSeconds;
+      g.emitImpactParticles(ship.x, ship.y, 10, "160,242,255");
       return true;
     }
 
@@ -21,21 +42,22 @@
 
       const ship = g.model.ship;
       const spec = g.getSecondarySpec();
+      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0)) return;
       if (spec.kind === "rail") {
         const dirX = Math.cos(ship.angle);
         const dirY = Math.sin(ship.angle);
-          g.model.bullets.push({
-            x: ship.x + dirX * (ship.radius + 12),
-            y: ship.y + dirY * (ship.radius + 12),
-            vx: dirX * spec.projectileSpeed + ship.vx * 0.15,
-            vy: dirY * spec.projectileSpeed + ship.vy * 0.15,
-            radius: spec.radius,
-            ttl: spec.ttlSeconds,
-            kind: "secondary_rail",
-            pierce: spec.pierce,
-            bossDamage: spec.bossDamage
-          });
-        } else {
+        g.model.bullets.push({
+          x: ship.x + dirX * (ship.radius + 12),
+          y: ship.y + dirY * (ship.radius + 12),
+          vx: dirX * spec.projectileSpeed + ship.vx * 0.15,
+          vy: dirY * spec.projectileSpeed + ship.vy * 0.15,
+          radius: spec.radius,
+          ttl: spec.ttlSeconds,
+          kind: "secondary_rail",
+          pierce: spec.pierce,
+          bossDamage: spec.bossDamage
+        });
+      } else {
         for (let i = 0; i < spec.count; i += 1) {
           const t = spec.count === 1 ? 0 : i / (spec.count - 1) - 0.5;
           const angle = ship.angle + t * spec.spread;
@@ -56,6 +78,7 @@
       }
 
       g.model.secondaryCooldown = spec.cooldownSeconds;
+      g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
       g.emitImpactParticles(ship.x, ship.y, 6, "255,198,132");
       g.recordSecondaryUse();
     }
@@ -66,7 +89,9 @@
 
       const ship = g.model.ship;
       const spec = g.getUtilitySpec();
+      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0)) return;
       g.model.utilityCooldown = spec.cooldownSeconds;
+      g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
       g.model.flashMs = Math.max(g.model.flashMs, spec.flashMs);
 
       if (spec.kind === "pulse") {
@@ -105,9 +130,7 @@
         if (g.model.miniBoss) {
           const bossDist = Math.hypot(g.model.miniBoss.x - ship.x, g.model.miniBoss.y - ship.y);
           if (bossDist <= pulseRadius + g.model.miniBoss.radius) {
-            g.model.miniBoss.hp -= spec.bossDamage;
-            g.emitImpactParticles(g.model.miniBoss.x, g.model.miniBoss.y, 20, "255,120,201");
-            if (g.model.miniBoss.hp <= 0) g.destroyMiniBoss();
+            g.applyDamageToMiniBoss(spec.bossDamage, "explosive", 0.06);
           }
         }
       }
@@ -155,29 +178,39 @@
       if (!ship) return;
 
       const c = g.config;
+      const profile = g.getCurrentFlightProfile();
       let turnInput = 0;
       if (g.input.isDown("ArrowLeft")) turnInput -= 1;
       if (g.input.isDown("ArrowRight")) turnInput += 1;
 
       if (turnInput !== 0) {
-        ship.angularVelocity += turnInput * c.ship.rotationAcceleration * dt;
+        ship.angularVelocity += turnInput * profile.rotationAcceleration * dt;
       }
-      ship.angularVelocity *= c.ship.rotationDamping;
-      ship.angularVelocity = g.clamp(ship.angularVelocity, -c.ship.rotationSpeed, c.ship.rotationSpeed);
+      ship.angularVelocity *= profile.rotationDamping;
+      ship.angularVelocity = g.clamp(ship.angularVelocity, -profile.rotationSpeed, profile.rotationSpeed);
       ship.angle += ship.angularVelocity * dt;
 
       if (g.input.isDown("ArrowUp")) {
-        ship.vx += Math.cos(ship.angle) * c.ship.thrust * dt;
-        ship.vy += Math.sin(ship.angle) * c.ship.thrust * dt;
+        let thrust = profile.thrust;
+        const boosting = g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight");
+        if (boosting && ship.energy > 0) {
+          const boostCfg = c.ship.boost;
+          const energySpend = Math.min(ship.energy, boostCfg.energyCostPerSecond * dt);
+          ship.energy -= energySpend;
+          ship.heat = Math.min(ship.heatMax, ship.heat + boostCfg.heatPerSecond * dt);
+          thrust *= boostCfg.thrustMultiplier;
+        }
+        ship.vx += Math.cos(ship.angle) * thrust * dt;
+        ship.vy += Math.sin(ship.angle) * thrust * dt;
         g.emitThrusterParticle(ship);
       }
 
-      ship.vx *= c.ship.friction;
-      ship.vy *= c.ship.friction;
+      ship.vx *= profile.friction;
+      ship.vy *= profile.friction;
 
       const speed = Math.hypot(ship.vx, ship.vy);
-      if (speed > c.ship.maxSpeed) {
-        const factor = c.ship.maxSpeed / speed;
+      if (speed > profile.maxSpeed) {
+        const factor = profile.maxSpeed / speed;
         ship.vx *= factor;
         ship.vy *= factor;
       }
@@ -342,15 +375,12 @@
 
       for (let b = g.model.bullets.length - 1; b >= 0; b -= 1) {
         if (!circleCollision(g.model.bullets[b], boss)) continue;
-        const damage = g.model.bullets[b].bossDamage ?? 28;
-        boss.hp -= damage;
-        g.model.flashMs = Math.max(g.model.flashMs, 70);
-        g.emitImpactParticles(boss.x, boss.y, 10, "255,118,188");
+        const bullet = g.model.bullets[b];
+        const baseDamage = bullet.bossDamage ?? 28;
+        const damageType = bullet.kind === "secondary_rail" ? "plasma" : "kinetic";
         g.consumePlayerProjectileHit(b);
-        if (boss.hp <= 0) {
-          g.destroyMiniBoss();
-          return;
-        }
+        const destroyed = g.applyDamageToMiniBoss(baseDamage, damageType, bullet.kind ? 0.11 : 0.08);
+        if (destroyed) return;
       }
     }
 
@@ -360,30 +390,39 @@
       if (!ship || ship.invulnMs > 0) return;
 
       for (const asteroid of g.model.asteroids) {
-        if (circleCollision(ship, asteroid)) return this.hitShip();
-      }
-      for (const ufo of g.model.ufos) {
-        if (circleCollision(ship, ufo)) return this.hitShip();
-      }
-      if (g.model.miniBoss && circleCollision(ship, g.model.miniBoss)) return this.hitShip();
-      for (let i = g.model.enemyBullets.length - 1; i >= 0; i -= 1) {
-        if (circleCollision(ship, g.model.enemyBullets[i])) {
-          g.model.enemyBullets.splice(i, 1);
-          return this.hitShip();
+        if (circleCollision(ship, asteroid)) {
+          const gotHit = g.applyDamageToShip("asteroid_collision");
+          if (gotHit && asteroid.asteroidType === "volatile") {
+            g.applyDamageToShip("volatile_burn", {
+              baseDamage: 0,
+              dotDuration: 2.2,
+              dotDps: 7.5,
+              bypassInvulnerability: true,
+              applyHitInvulnerability: false,
+              countAsHit: false
+            });
+          }
+          return;
         }
       }
-    }
-
-    hitShip() {
-      const g = this.game;
-      const ship = g.model.ship;
-      if (!ship) return;
-      g.model.lives -= 1;
-      g.recordPlayerHit();
-      g.model.flashMs = Math.max(g.model.flashMs, 180);
-      g.emitImpactParticles(ship.x, ship.y, 30, "255,98,121");
-      if (g.model.lives <= 0) g.endGame();
-      else g.respawnShipSafely();
+      for (const ufo of g.model.ufos) {
+        if (circleCollision(ship, ufo)) {
+          g.applyDamageToShip("ufo_collision");
+          return;
+        }
+      }
+      if (g.model.miniBoss && circleCollision(ship, g.model.miniBoss)) {
+        g.applyDamageToShip("mini_boss_collision");
+        return;
+      }
+      for (let i = g.model.enemyBullets.length - 1; i >= 0; i -= 1) {
+        if (circleCollision(ship, g.model.enemyBullets[i])) {
+          const profileId = g.model.enemyBullets[i].damageProfile || "enemy_bullet_hunter";
+          g.model.enemyBullets.splice(i, 1);
+          g.applyDamageToShip(profileId);
+          return;
+        }
+      }
     }
   }
 

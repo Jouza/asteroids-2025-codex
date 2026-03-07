@@ -38,7 +38,11 @@
         event.code === "Digit8" ||
         event.code === "Digit9" ||
         event.code === "KeyP" ||
-        event.code === "F3";
+        event.code === "F3" ||
+        event.code === "KeyF" ||
+        event.code === "KeyV" ||
+        event.code === "ShiftLeft" ||
+        event.code === "ShiftRight";
 
       if (!tracked) {
         return;
