@@ -37,6 +37,8 @@
         event.code === "Digit7" ||
         event.code === "Digit8" ||
         event.code === "Digit9" ||
+        event.code === "Digit0" ||
+        event.code === "KeyR" ||
         event.code === "KeyP" ||
         event.code === "F3" ||
         event.code === "KeyF" ||
