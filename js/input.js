@@ -40,6 +40,7 @@
         event.code === "Digit0" ||
         event.code === "KeyR" ||
         event.code === "KeyP" ||
+        event.code === "KeyM" ||
         event.code === "F3" ||
         event.code === "KeyF" ||
         event.code === "KeyV" ||

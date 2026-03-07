@@ -103,12 +103,24 @@
   }
 
   class Game {
-    constructor(canvas, renderer, hud, input, config = GAME_CONFIG) {
+    constructor(canvas, renderer, hud, input, config = GAME_CONFIG, audio = null) {
       this.canvas = canvas;
       this.renderer = renderer;
       this.hud = hud;
       this.input = input;
       this.config = config;
+      this.audio =
+        audio ||
+        {
+          play() {},
+          unlock() {},
+          toggleMuted() {
+            return false;
+          },
+          isMuted() {
+            return false;
+          }
+        };
       this.asteroidDefs = ASTEROID_DEFS;
       this.asteroidTypes = ASTEROID_TYPES;
       this.rng = () => Math.random();
@@ -410,6 +422,10 @@
       if (this.input.wasPressed("KeyF")) {
         this.toggleFlightModel();
       }
+      if (this.input.wasPressed("KeyM")) {
+        const muted = this.audio.toggleMuted();
+        this.model.hangar.message = muted ? "Audio: muted (M to unmute)." : "Audio: enabled (M to mute).";
+      }
 
       if (this.model.gameState === GAME_STATE.HANGAR) {
         this.hangarSystem.handleHangarInput();
@@ -444,6 +460,7 @@
       this.saveProfile("run_start");
       this.input.reset();
       this.model.gameState = GAME_STATE.PLAYING;
+      this.audio.play("ui_start");
       this.hud.sync(this.model);
     }
 
@@ -452,6 +469,7 @@
       this.saveProfile("game_over");
       this.input.reset();
       this.model.gameState = GAME_STATE.GAME_OVER;
+      this.audio.play("ui_game_over");
       this.hud.sync(this.model);
     }
 
@@ -907,6 +925,7 @@
         if (overrides.countAsHit !== false) this.recordPlayerHit();
         this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 210 : 160);
         this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, resolved.isCrit ? 0.028 : 0.016);
+        this.audio.play("player_hit");
       }
 
       if (event.dotDuration && event.dotDps) {
@@ -1058,6 +1077,7 @@
     onMissionStarted() {
       const mission = this.model.currentMission;
       if (!mission) return;
+      this.audio.play("mission_start");
 
       this.model.telemetry.activeMission = {
         sector: this.model.sector,
@@ -1078,6 +1098,7 @@
     onMissionCompleted() {
       const active = this.model.telemetry.activeMission;
       if (!active) return;
+      this.audio.play("mission_complete");
 
       this.model.telemetry.completedMissions += 1;
       this.model.telemetry.lastMission = {
@@ -1269,6 +1290,7 @@
     updateUiAlerts() {
       const ship = this.model.ship;
       if (!ship) return;
+      const prevAlerts = this.model.uiAlerts || {};
       const hullRatio = ship.hullMax > 0 ? ship.hull / ship.hullMax : 1;
       const energyRatio = ship.energyMax > 0 ? ship.energy / ship.energyMax : 1;
       const heatRatio = ship.heatMax > 0 ? ship.heat / ship.heatMax : 0;
@@ -1282,6 +1304,9 @@
         secondaryReady: this.model.secondaryCooldown <= 0,
         utilityReady: this.model.utilityCooldown <= 0
       };
+      if (this.model.uiAlerts.lowHull && !prevAlerts.lowHull) this.audio.play("warning");
+      if (this.model.uiAlerts.highHeat && !prevAlerts.highHeat) this.audio.play("warning");
+      if (this.model.uiAlerts.shieldBroken && !prevAlerts.shieldBroken) this.audio.play("warning");
     }
 
     getAsteroidScore(asteroid) {
@@ -1299,6 +1324,7 @@
       this.model.flashMs = Math.max(this.model.flashMs, 80);
       this.emitExplosionFx(asteroid.x, asteroid.y, asteroid.radius, "89,245,255", "196,240,255");
       this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.01);
+      this.audio.play("asteroid_pop");
       this.combatSystem.splitAsteroid(asteroid);
       this.model.asteroids.splice(index, 1);
       this.model.missionAsteroidKills += 1;
@@ -1342,6 +1368,7 @@
       this.model.flashMs = Math.max(this.model.flashMs, 130);
       this.emitExplosionFx(ufo.x, ufo.y, 58, "255,91,186", "255,226,190");
       this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.018);
+      this.audio.play("ufo_pop");
       if (ufo.elitePrefix === "Volatile") {
         for (let i = 0; i < 6; i += 1) {
           const angle = (i / 6) * Math.PI * 2;
@@ -1383,6 +1410,7 @@
       this.emitExplosionFx(boss.x, boss.y, 180, "255,114,210", "255,245,189");
       this.model.flashMs = Math.max(this.model.flashMs, 230);
       this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.04);
+      this.audio.play("boss_pop");
       this.model.miniBoss = null;
       for (let i = 0; i < rewards.guaranteedDrops; i += 1) {
         const drop = this.createModuleDrop();

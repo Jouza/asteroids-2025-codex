@@ -1,13 +1,22 @@
 (() => {
-  const { GAME_CONFIG, Game, Hud, InputController, Renderer } = window.Asteroids;
+  const { AudioSystem, GAME_CONFIG, Game, Hud, InputController, Renderer } = window.Asteroids;
 
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
   const hud = new Hud();
   const input = new InputController();
+  const audio = new AudioSystem();
   const renderer = new Renderer(canvas, ctx, GAME_CONFIG);
-  const game = new Game(canvas, renderer, hud, input, GAME_CONFIG);
+  const game = new Game(canvas, renderer, hud, input, GAME_CONFIG, audio);
+
+  const unlockAudio = () => {
+    audio.unlock();
+    window.removeEventListener("keydown", unlockAudio);
+    window.removeEventListener("pointerdown", unlockAudio);
+  };
+  window.addEventListener("keydown", unlockAudio);
+  window.addEventListener("pointerdown", unlockAudio);
 
   input.attach();
   game.initGame();

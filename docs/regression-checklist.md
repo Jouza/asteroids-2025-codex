@@ -31,6 +31,8 @@ Kontrolovane oblasti:
 - V hangaru:
   - `4` prepina primary, `5` secondary, `R` utility.
   - `8/9/0` funguje na vybrane polozce.
+- Bekom runu:
+  - `M` prepina mute/unmute bez erroru v konzoli.
 - Mise `SURVIVE`:
   - po dobehnuti casu se ukazuje `Clear remaining threats: N`.
 - Po game over + restart:

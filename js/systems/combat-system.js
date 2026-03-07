@@ -36,6 +36,7 @@
       }
       g.consumePrimaryShotResources();
       g.recordPrimaryShot();
+      g.audio.play("primary_fire");
       return true;
     }
 
@@ -55,6 +56,7 @@
       ship.invulnMs = Math.max(ship.invulnMs, dashCfg.invulnerabilityMs);
       g.model.dashCooldown = dashCfg.cooldownSeconds;
       g.emitImpactParticles(ship.x, ship.y, 10, "160,242,255");
+      g.audio.play("dash");
       return true;
     }
 
@@ -103,6 +105,7 @@
       g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
       g.emitImpactParticles(ship.x, ship.y, 6, "255,198,132");
       g.recordSecondaryUse();
+      g.audio.play("secondary_fire");
     }
 
     tryUseUtility() {
@@ -192,6 +195,7 @@
 
       g.emitImpactParticles(ship.x, ship.y, spec.particleCount, "125,232,255");
       g.recordUtilityUse();
+      g.audio.play("utility_use");
     }
 
     updateShip(dt) {

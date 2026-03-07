@@ -42,10 +42,10 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Kombinace cil + modifikator + biome
   - [x] Lepsi pacing krivka mezi sektory
 
-- [ ] Game feel / juice / UX
+- [x] Game feel / juice / UX
   - [x] Lepsi hit feedback + exploze + debris + warning cues
   - [x] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
-  - [ ] Audio vrstva (zakladni SFX + mix priority)
+  - [x] Audio vrstva (zakladni SFX + mix priority)
 
 - [ ] Pilot RPG layer
   - [ ] XP + levely pilota

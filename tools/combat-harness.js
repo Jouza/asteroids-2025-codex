@@ -210,8 +210,10 @@ function runTests() {
     });
     input.onKeyDown(mkEvt("Digit0"));
     input.onKeyDown(mkEvt("KeyR"));
+    input.onKeyDown(mkEvt("KeyM"));
     assert(input.wasPressed("Digit0"), "Digit0 should be tracked");
     assert(input.wasPressed("KeyR"), "KeyR should be tracked");
+    assert(input.wasPressed("KeyM"), "KeyM should be tracked");
   });
 
   tests.push(() => {

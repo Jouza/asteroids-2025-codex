@@ -253,6 +253,7 @@
       g.model.enemyBullets.push(bullet);
       g.recordEnemyShot();
       g.emitImpactParticles(muzzleX, muzzleY, 2, "255,123,196");
+      g.audio.play("enemy_fire");
     }
 
     spawnMiniBoss(hp) {
