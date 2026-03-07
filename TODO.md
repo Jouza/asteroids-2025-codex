@@ -37,10 +37,10 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] 1 plnohodnotny boss encounter (faze + weakpointy + zmena areny)
   - [x] Warning + phase transitions + reward table
 
-- [ ] Mission director 2.0
-  - [ ] Mission modifikatory (ion storm/low visibility/gravity anomaly)
-  - [ ] Kombinace cil + modifikator + biome
-  - [ ] Lepsi pacing krivka mezi sektory
+- [x] Mission director 2.0
+  - [x] Mission modifikatory (ion storm/low visibility/gravity anomaly)
+  - [x] Kombinace cil + modifikator + biome
+  - [x] Lepsi pacing krivka mezi sektory
 
 - [ ] Game feel / juice / UX
   - [ ] Lepsi hit feedback + exploze + debris + warning cues

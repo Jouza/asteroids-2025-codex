@@ -4,6 +4,78 @@
       this.game = game;
     }
 
+    getMissionDifficulty(level) {
+      const g = this.game;
+      const ramps = g.config.missionDirector.pacingBySector || [];
+      for (const entry of ramps) {
+        if (level <= entry.maxSector) return entry.difficulty;
+      }
+      return 1;
+    }
+
+    pickWeighted(entries, fallback) {
+      const g = this.game;
+      const valid = entries.filter((entry) => (entry.weight ?? 0) > 0);
+      const total = valid.reduce((sum, entry) => sum + entry.weight, 0);
+      if (total <= 0) return fallback;
+      let roll = g.rng() * total;
+      for (const entry of valid) {
+        roll -= entry.weight;
+        if (roll <= 0) return entry;
+      }
+      return valid[valid.length - 1] || fallback;
+    }
+
+    rollMissionBiome(level) {
+      const g = this.game;
+      const biomes = g.config.missionDirector.biomes || [];
+      if (!biomes.length) return { id: "void", label: "Outer Void" };
+      return this.pickWeighted(biomes, biomes[0]);
+    }
+
+    rollMissionModifier(level) {
+      const g = this.game;
+      const modifierMap = g.config.missionDirector.modifiers || {};
+      const entries = Object.keys(modifierMap).map((id) => ({
+        id,
+        ...modifierMap[id]
+      }));
+      const unlocked = entries.filter((entry) => level >= (entry.unlockSector ?? 1));
+      const picked = this.pickWeighted(unlocked, unlocked[0] || entries[0]);
+      return picked || { id: "clear_skies", label: "Clear Skies", description: "No global mission hazard." };
+    }
+
+    createGravityAnomaly(modifier) {
+      const g = this.game;
+      return {
+        x: g.config.canvas.width * (0.22 + g.rng() * 0.56),
+        y: g.config.canvas.height * (0.22 + g.rng() * 0.56),
+        radius: modifier.radius ?? 300,
+        pullStrength: modifier.pullStrength ?? 18000
+      };
+    }
+
+    buildMissionContext(level) {
+      const biome = this.rollMissionBiome(level);
+      const modifier = this.rollMissionModifier(level);
+      return {
+        biomeId: biome.id,
+        biomeLabel: biome.label,
+        modifierId: modifier.id,
+        modifierLabel: modifier.label,
+        modifierDescription: modifier.description,
+        modifierEffects: {
+          shieldRegenMul: modifier.shieldRegenMul ?? 1,
+          shieldDrainPerSecond: modifier.shieldDrainPerSecond ?? 0,
+          fogAlpha: modifier.fogAlpha ?? 0,
+          pullStrength: modifier.pullStrength ?? 0,
+          radius: modifier.radius ?? 0
+        },
+        gravityAnomaly:
+          modifier.id === "gravity_anomaly" ? this.createGravityAnomaly(modifier) : null
+      };
+    }
+
     getSpawnInterval(baseInterval, perSectorRamp, minInterval, level) {
       const sectorIndex = Math.max(0, level - 1);
       const scale = 1 + sectorIndex * perSectorRamp;
@@ -68,11 +140,16 @@
     startMission(missionIndex) {
       const g = this.game;
       const type = this.getMissionTypeByIndex(missionIndex);
+      const level = g.model.sector;
+      const difficulty = this.getMissionDifficulty(level);
+      const context = this.buildMissionContext(level);
       g.model.currentMission = {
         type,
         label: type.toUpperCase(),
         objectiveText: "",
-        completed: false
+        completed: false,
+        difficulty,
+        ...context
       };
       g.model.missionTimer = 0;
       g.model.missionSpawnTimer = 0;
@@ -88,23 +165,24 @@
       g.model.utilityEffects = [];
 
       const missionCfg = g.config.mission;
-      const level = g.model.sector;
 
       if (type === "survive") {
         const baseDuration =
           missionCfg.survive.baseDurationSeconds + (level - 1) * missionCfg.survive.durationStepSeconds;
-        g.model.missionTimer = Math.max(10, this.applyMissionVariance(baseDuration, 0.08));
+        g.model.missionTimer = Math.max(9, this.applyMissionVariance(baseDuration / difficulty, 0.08));
         g.model.missionSpawnTimer = 0.1;
         g.enemySystem.scheduleNextUfoSpawn();
-        const spawnLargeBase = level >= missionCfg.survive.extraLargeEverySectors ? 2 : 1;
+        const spawnLargeBase = level >= missionCfg.survive.extraLargeEverySectors ? 2 : 1 + (difficulty >= 1.2 ? 1 : 0);
         g.model.currentMission.spawnLargeCount = spawnLargeBase;
-        g.model.currentMission.spawnMediumCount = level >= missionCfg.survive.extraLargeEverySectors + 2 ? 1 : 0;
+        g.model.currentMission.spawnMediumCount =
+          level >= missionCfg.survive.extraLargeEverySectors + 2 ? 1 + (difficulty >= 1.25 ? 1 : 0) : 0;
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.survive.asteroidSpawnIntervalSeconds,
           missionCfg.survive.spawnRateRampPerSector,
           missionCfg.survive.minSpawnIntervalSeconds,
           level
         );
+        g.model.currentMission.spawnIntervalSeconds /= Math.max(0.72, difficulty);
         g.model.currentMission.label = "SURVIVE";
         g.model.currentMission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(0)}s`;
       }
@@ -112,12 +190,13 @@
       if (type === "ufo_hunt") {
         const baseKills =
           missionCfg.ufoHunt.baseKills + Math.floor((level - 1) / 2) * missionCfg.ufoHunt.killStep;
-        g.model.missionSpawnBudget = Math.max(1, Math.round(this.applyMissionVariance(baseKills, 0.1)));
+        g.model.missionSpawnBudget = Math.max(1, Math.round(this.applyMissionVariance(baseKills * difficulty, 0.1)));
         g.model.missionSpawnTimer = 0.2;
         g.model.currentMission.maxConcurrentUfos = Math.min(
           missionCfg.ufoHunt.maxConcurrentCap,
           missionCfg.ufoHunt.maxConcurrentUfos +
-            Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEverySectors)
+            Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEverySectors) +
+            (difficulty >= 1.25 ? 1 : 0)
         );
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.ufoHunt.spawnIntervalSeconds,
@@ -125,6 +204,7 @@
           missionCfg.ufoHunt.minSpawnIntervalSeconds,
           level
         );
+        g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
         g.model.currentMission.label = "UFO HUNT";
         g.model.currentMission.objectiveText = `Destroy UFOs: 0/${g.model.missionSpawnBudget}`;
       }
@@ -132,9 +212,11 @@
       if (type === "asteroid_storm") {
         const baseTarget =
           missionCfg.asteroidStorm.baseTarget + (level - 1) * missionCfg.asteroidStorm.targetStep;
-        g.model.missionSpawnBudget = Math.max(6, Math.round(this.applyMissionVariance(baseTarget, 0.1)));
-        const initialLarge = missionCfg.asteroidStorm.initialLargeCount + Math.floor((level - 1) / 4);
-        const initialMedium = missionCfg.asteroidStorm.initialMediumCount + Math.floor((level - 1) / 3);
+        g.model.missionSpawnBudget = Math.max(6, Math.round(this.applyMissionVariance(baseTarget * difficulty, 0.1)));
+        const initialLarge =
+          missionCfg.asteroidStorm.initialLargeCount + Math.floor((level - 1) / 4) + (difficulty >= 1.2 ? 1 : 0);
+        const initialMedium =
+          missionCfg.asteroidStorm.initialMediumCount + Math.floor((level - 1) / 3) + (difficulty >= 1.3 ? 1 : 0);
         g.model.currentMission.extraMediumChance = Math.min(
           0.88,
           missionCfg.asteroidStorm.extraMediumChance +
@@ -146,6 +228,7 @@
           missionCfg.asteroidStorm.minExtraSpawnIntervalSeconds,
           level
         );
+        g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
         g.model.currentMission.label = "ASTEROID STORM";
         g.model.currentMission.objectiveText = `Break asteroids: 0/${g.model.missionSpawnBudget}`;
         this.spawnAsteroidPack(level, initialLarge, initialMedium);
@@ -153,14 +236,49 @@
       }
 
       if (type === "mini_boss") {
-        const hp = missionCfg.miniBoss.hpBase + (level - 1) * missionCfg.miniBoss.hpStep;
+        const hp = Math.round(
+          (missionCfg.miniBoss.hpBase + (level - 1) * missionCfg.miniBoss.hpStep) * (0.95 + difficulty * 0.2)
+        );
         g.model.currentMission.label = "MINI BOSS";
         g.model.currentMission.objectiveText = `Destroy boss (${hp} HP)`;
         g.enemySystem.spawnMiniBoss(hp);
-        this.spawnAsteroidPack(level, 1 + Math.floor((level - 1) / 5), 1 + Math.floor((level - 1) / 4));
+        this.spawnAsteroidPack(
+          level,
+          1 + Math.floor((level - 1) / 5) + (difficulty >= 1.25 ? 1 : 0),
+          1 + Math.floor((level - 1) / 4)
+        );
       }
 
       g.onMissionStarted();
+    }
+
+    applyMissionEnvironmentalEffects(dt) {
+      const g = this.game;
+      if (g.model.gameState !== window.Asteroids.GAME_STATE.PLAYING) return;
+      const mission = g.model.currentMission;
+      const ship = g.model.ship;
+      if (!mission || !ship) return;
+      const effects = mission.modifierEffects || {};
+
+      if ((effects.shieldDrainPerSecond ?? 0) > 0) {
+        ship.shield = Math.max(0, ship.shield - effects.shieldDrainPerSecond * dt);
+      }
+
+      const anomaly = mission.gravityAnomaly;
+      if (!anomaly) return;
+      const applyPull = (entity, scalar = 1) => {
+        const dx = anomaly.x - entity.x;
+        const dy = anomaly.y - entity.y;
+        const dist = Math.max(12, Math.hypot(dx, dy));
+        if (dist > anomaly.radius) return;
+        const falloff = 1 - dist / anomaly.radius;
+        const force = ((anomaly.pullStrength * falloff) / dist) * dt * scalar;
+        entity.vx += dx * force;
+        entity.vy += dy * force;
+      };
+
+      applyPull(ship, 1);
+      for (const asteroid of g.model.asteroids) applyPull(asteroid, 0.42);
     }
 
     updateMission(dt) {
@@ -246,6 +364,8 @@
         }
         if (!boss && threatsRemaining === 0) mission.completed = true;
       }
+
+      mission.contextText = `${mission.biomeLabel || "Outer Void"} | ${mission.modifierLabel || "Clear Skies"}`;
 
       if (mission.completed && !g.model.sectorCompletionHandled) {
         g.onMissionCompleted();

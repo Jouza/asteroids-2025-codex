@@ -66,6 +66,50 @@ function validateContentData(contentData, issues) {
       assert(Number.isFinite(value) && value >= 0 && value <= 1, `${entry.key} must be in range <0,1>`, issues);
     }
   }
+
+  const director = contentData.missionDirector;
+  assert(director && typeof director === "object", "missionDirector must be defined", issues);
+  if (director && typeof director === "object") {
+    assert(
+      Array.isArray(director.pacingBySector) && director.pacingBySector.length > 0,
+      "missionDirector.pacingBySector must be non-empty",
+      issues
+    );
+    for (const [index, entry] of (director.pacingBySector || []).entries()) {
+      assert(
+        Number.isFinite(entry.maxSector) && entry.maxSector >= 1,
+        `missionDirector.pacingBySector[${index}].maxSector must be >= 1`,
+        issues
+      );
+      assert(
+        Number.isFinite(entry.difficulty) && entry.difficulty > 0,
+        `missionDirector.pacingBySector[${index}].difficulty must be > 0`,
+        issues
+      );
+    }
+    assert(Array.isArray(director.biomes) && director.biomes.length > 0, "missionDirector.biomes must be non-empty", issues);
+    for (const [index, biome] of (director.biomes || []).entries()) {
+      assert(typeof biome.id === "string" && biome.id.length > 0, `biome[${index}] id is required`, issues);
+      assert(typeof biome.label === "string" && biome.label.length > 0, `biome[${index}] label is required`, issues);
+      assert(Number.isFinite(biome.weight) && biome.weight >= 0, `biome[${index}] weight must be >= 0`, issues);
+    }
+    const modifiers = director.modifiers || {};
+    assert(Object.keys(modifiers).length > 0, "missionDirector.modifiers must be non-empty", issues);
+    for (const id of Object.keys(modifiers)) {
+      const mod = modifiers[id];
+      assert(typeof mod.label === "string" && mod.label.length > 0, `modifier ${id} must have label`, issues);
+      assert(
+        Number.isFinite(mod.weight) && mod.weight >= 0,
+        `modifier ${id} weight must be >= 0`,
+        issues
+      );
+      assert(
+        Number.isFinite(mod.unlockSector) && mod.unlockSector >= 1,
+        `modifier ${id} unlockSector must be >= 1`,
+        issues
+      );
+    }
+  }
 }
 
 function validateBalancePresets(presets, issues) {

@@ -4,6 +4,51 @@
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]
     },
+    missionDirector: {
+      pacingBySector: [
+        { maxSector: 2, difficulty: 0.86 },
+        { maxSector: 4, difficulty: 1.0 },
+        { maxSector: 7, difficulty: 1.18 },
+        { maxSector: 999, difficulty: 1.34 }
+      ],
+      biomes: [
+        { id: "belt", label: "Belt Fringe", weight: 0.34 },
+        { id: "graveyard", label: "Wreck Graveyard", weight: 0.28 },
+        { id: "refinery", label: "Refinery Orbit", weight: 0.22 },
+        { id: "ion_field", label: "Ion Field", weight: 0.16 }
+      ],
+      modifiers: {
+        ion_storm: {
+          label: "Ion Storm",
+          description: "Shields destabilize under ion surge.",
+          weight: 0.28,
+          unlockSector: 2,
+          shieldRegenMul: 0.25,
+          shieldDrainPerSecond: 4.5
+        },
+        low_visibility: {
+          label: "Low Visibility",
+          description: "Sensor fog reduces visual range.",
+          weight: 0.25,
+          unlockSector: 3,
+          fogAlpha: 0.28
+        },
+        gravity_anomaly: {
+          label: "Gravity Anomaly",
+          description: "Anomaly well bends nearby trajectories.",
+          weight: 0.18,
+          unlockSector: 4,
+          pullStrength: 19500,
+          radius: 300
+        },
+        clear_skies: {
+          label: "Clear Skies",
+          description: "No global mission hazard.",
+          weight: 0.29,
+          unlockSector: 1
+        }
+      }
+    },
     ufo: {
       modeWeights: {
         hunter: 0.36,

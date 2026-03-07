@@ -247,6 +247,41 @@ function runTests() {
     );
   });
 
+  tests.push(() => {
+    gameA.startGame(7171);
+    gameA.model.sector = 1;
+    gameA.missionSystem.startMission(2);
+    const earlyBudget = gameA.model.missionSpawnBudget;
+    const earlyInterval = gameA.model.currentMission.spawnIntervalSeconds;
+
+    gameA.model.sector = 7;
+    gameA.missionSystem.startMission(2);
+    const lateBudget = gameA.model.missionSpawnBudget;
+    const lateInterval = gameA.model.currentMission.spawnIntervalSeconds;
+
+    assert(lateBudget > earlyBudget, "Mission pacing should scale UFO hunt budget by sector");
+    assert(lateInterval < earlyInterval, "Mission pacing should reduce spawn interval at higher sectors");
+  });
+
+  tests.push(() => {
+    gameA.startGame(8181);
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "ion_storm",
+      modifierLabel: "Ion Storm",
+      modifierEffects: {
+        shieldRegenMul: 0.2,
+        shieldDrainPerSecond: 6.0
+      }
+    };
+    gameA.model.ship.shield = gameA.model.ship.shieldMax;
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1.0);
+    assert(gameA.model.ship.shield < gameA.model.ship.shieldMax, "Ion storm should drain shield over time");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     tests[i]();

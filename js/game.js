@@ -734,6 +734,7 @@
 
       this.updateComboTimer(dt);
       this.combatSystem.updateShip(dt);
+      this.missionSystem.applyMissionEnvironmentalEffects(dt);
       this.updateShipResources(dt);
       this.combatSystem.updateBullets(dt);
       this.combatSystem.updateEnemyBullets(dt);
@@ -793,6 +794,7 @@
 
       const cfg = this.config.ship;
       const modifiers = this.getModuleModifiers();
+      const missionEffects = this.model.currentMission?.modifierEffects || {};
       ship.energy = Math.min(
         ship.energyMax,
         ship.energy + this.applyPct(cfg.energyRegenPerSecond, modifiers.energyRegenPct) * dt
@@ -801,9 +803,10 @@
 
       const sinceDamage = this.model.runtimeSeconds - ship.lastDamageAt;
       if (sinceDamage >= cfg.shieldRegenDelaySeconds) {
+        const missionShieldMul = this.clamp(missionEffects.shieldRegenMul ?? 1, 0, 2);
         ship.shield = Math.min(
           ship.shieldMax,
-          ship.shield + this.applyPct(cfg.shieldRegenPerSecond, modifiers.shieldRegenPct) * dt
+          ship.shield + this.applyPct(cfg.shieldRegenPerSecond, modifiers.shieldRegenPct) * missionShieldMul * dt
         );
       }
     }

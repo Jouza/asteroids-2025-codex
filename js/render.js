@@ -21,6 +21,7 @@
       this.drawParticles(model.particles);
       this.drawShip(model, input);
       this.drawVignette();
+      this.drawMissionEnvironment(model);
       this.drawFlash(model.flashMs);
       this.drawMissionStatus(model);
       this.drawTelemetry(model);
@@ -489,6 +490,44 @@
       ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
     }
 
+    drawMissionEnvironment(model) {
+      const mission = model.currentMission;
+      if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
+      const { ctx, config } = this;
+      const effects = mission.modifierEffects || {};
+
+      if ((effects.fogAlpha ?? 0) > 0) {
+        const alpha = Math.min(0.5, effects.fogAlpha);
+        const fog = ctx.createRadialGradient(
+          config.canvas.width * 0.5,
+          config.canvas.height * 0.5,
+          config.canvas.height * 0.1,
+          config.canvas.width * 0.5,
+          config.canvas.height * 0.5,
+          config.canvas.height * 0.75
+        );
+        fog.addColorStop(0, `rgba(28,44,82,${alpha * 0.25})`);
+        fog.addColorStop(1, `rgba(10,16,30,${alpha})`);
+        ctx.fillStyle = fog;
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      }
+
+      if (mission.gravityAnomaly) {
+        const anomaly = mission.gravityAnomaly;
+        ctx.save();
+        ctx.strokeStyle = "rgba(146,186,255,0.38)";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(anomaly.x, anomaly.y, anomaly.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(132,174,255,0.12)";
+        ctx.beginPath();
+        ctx.arc(anomaly.x, anomaly.y, anomaly.radius * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
     drawMissionStatus(model) {
       if (model.gameState !== GAME_STATE.PLAYING || !model.currentMission) return;
       const { ctx, config } = this;
@@ -500,6 +539,11 @@
       ctx.font = "500 16px Trebuchet MS";
       ctx.fillStyle = "rgba(186,232,255,0.92)";
       ctx.fillText(model.currentMission.objectiveText || "", config.canvas.width / 2, 50);
+      if (model.currentMission.contextText) {
+        ctx.font = "500 13px Trebuchet MS";
+        ctx.fillStyle = "rgba(160,236,202,0.92)";
+        ctx.fillText(model.currentMission.contextText, config.canvas.width / 2, 68);
+      }
       ctx.restore();
     }
 
