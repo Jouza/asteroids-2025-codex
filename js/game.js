@@ -126,6 +126,8 @@
           engine: null,
           chipset: null
         },
+        activeSets: [],
+        setStatusText: "No active set",
         salvageParts: 0,
         telemetry: createTelemetryState(false)
       };
@@ -148,6 +150,7 @@
       this.model.runSeed = generateRunSeed();
       this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
+      this.refreshSetState();
       this.hud.sync(this.model);
     }
 
@@ -244,6 +247,8 @@
       this.model.unlocks.utility = { pulse_bomb: true, emp_pulse: true, shield_dome: true };
       this.model.inventory = [];
       this.model.equipment = { hull: null, shield: null, generator: null, engine: null, chipset: null };
+      this.model.activeSets = [];
+      this.model.setStatusText = "No active set";
       this.model.salvageParts = 0;
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
@@ -252,6 +257,7 @@
       this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
       this.missionSystem.startMission(this.model.sector);
+      this.refreshSetState();
       this.hud.sync(this.model);
     }
 
@@ -266,6 +272,46 @@
 
     getRarityDef(rarityId) {
       return this.config.loot.rarities.find((rarity) => rarity.id === rarityId) ?? this.config.loot.rarities[0];
+    }
+
+    getSetCountMap() {
+      const counts = {};
+      for (const slot of Object.keys(this.model.equipment)) {
+        const module = this.model.equipment[slot];
+        const setTag = module?.setTag;
+        if (!setTag) continue;
+        counts[setTag] = (counts[setTag] ?? 0) + 1;
+      }
+      return counts;
+    }
+
+    getActiveSets() {
+      const countMap = this.getSetCountMap();
+      const entries = [];
+      for (const setId of Object.keys(this.config.loot.setBonuses || {})) {
+        const count = countMap[setId] ?? 0;
+        if (count < 2) continue;
+        const tier = count >= 3 ? 3 : 2;
+        const setDef = this.config.loot.setBonuses[setId];
+        entries.push({
+          id: setId,
+          label: setDef.label,
+          count,
+          tier,
+          modifiers: { ...(setDef.tiers[tier] || {}) }
+        });
+      }
+      return entries;
+    }
+
+    getSetStatusText() {
+      if (!this.model.activeSets.length) return "No active set";
+      return this.model.activeSets.map((entry) => `${entry.label} ${entry.count}/3 (T${entry.tier})`).join(" | ");
+    }
+
+    refreshSetState() {
+      this.model.activeSets = this.getActiveSets();
+      this.model.setStatusText = this.getSetStatusText();
     }
 
     getModuleModifiers() {
@@ -286,7 +332,9 @@
         primaryDamagePct: 0,
         critChanceFlat: 0,
         collisionResist: 0,
-        plasmaResist: 0
+        plasmaResist: 0,
+        salvageYieldPct: 0,
+        creditsGainPct: 0
       };
 
       for (const slot of Object.keys(this.model.equipment)) {
@@ -296,6 +344,15 @@
         for (const key of Object.keys(modifiers)) {
           if (!(key in totals)) totals[key] = 0;
           totals[key] += modifiers[key];
+        }
+      }
+
+      this.refreshSetState();
+      for (const activeSet of this.model.activeSets) {
+        const setModifiers = activeSet.modifiers || {};
+        for (const key of Object.keys(setModifiers)) {
+          if (!(key in totals)) totals[key] = 0;
+          totals[key] += setModifiers[key];
         }
       }
 
@@ -374,6 +431,20 @@
         modifiers = this.mergeModifiers(modifiers, candidate.modifiers);
       }
 
+      if (targetAffixes > 0 && this.rng() < 0.45) {
+        const setAffixes = affixPool.filter((affix) => affix.setTag);
+        if (setAffixes.length > 0 && !affixes.some((affix) => affix.setTag)) {
+          const setAffix = setAffixes[Math.floor(this.rng() * setAffixes.length)];
+          const replaceIndex = affixes.length > 0 ? Math.floor(this.rng() * affixes.length) : -1;
+          if (replaceIndex >= 0) affixes[replaceIndex] = setAffix;
+          else affixes.push(setAffix);
+          modifiers = { ...(base.modifiers || {}) };
+          for (const affix of affixes) modifiers = this.mergeModifiers(modifiers, affix.modifiers);
+        }
+      }
+
+      const setTag = affixes.find((affix) => affix.setTag)?.setTag ?? null;
+
       const valueBase = 45 + this.model.sector * 8;
       const sellValue = Math.max(
         20,
@@ -389,7 +460,8 @@
         color: rarity.color,
         name: `${rarity.label} ${base.name}`,
         baseName: base.name,
-        affixes: affixes.map((affix) => ({ id: affix.id, name: affix.name })),
+        setTag,
+        affixes: affixes.map((affix) => ({ id: affix.id, name: affix.name, setTag: affix.setTag || null })),
         modifiers,
         sellValue,
         salvageValue,
@@ -679,13 +751,14 @@
       const missionType = this.model.currentMission?.type;
       const scoreMissionMult = this.config.mission.rewards.scoreByType[missionType] ?? 1;
       const creditsMissionMult = this.config.mission.rewards.creditsByType[missionType] ?? 1;
+      const modifiers = this.getModuleModifiers();
       const comboMultiplier = this.model.comboScoringEnabled ? this.model.comboMultiplier : 1;
       const scored = Math.round(basePoints * comboMultiplier * scoreMissionMult);
       this.model.score += scored;
       this.model.telemetry.scoreEarned += scored;
       const creditsGain = Math.max(
         this.config.economy.minCreditsPerKill,
-        Math.floor(basePoints * this.config.economy.creditsPerScore * creditsMissionMult)
+        Math.floor(basePoints * this.config.economy.creditsPerScore * creditsMissionMult * (1 + (modifiers.creditsGainPct ?? 0)))
       );
       this.model.credits += creditsGain;
       this.model.telemetry.creditsEarned += creditsGain;

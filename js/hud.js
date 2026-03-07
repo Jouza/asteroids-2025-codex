@@ -17,6 +17,7 @@
       this.energyHeatEl = document.getElementById("energyHeat");
       this.sectorEl = document.getElementById("sector");
       this.missionEl = document.getElementById("mission");
+      this.setStatusEl = document.getElementById("setStatus");
       this.flightModeEl = document.getElementById("flightMode");
       this.primaryStatusEl = document.getElementById("primaryStatus");
       this.secondaryStatusEl = document.getElementById("secondaryStatus");
@@ -46,6 +47,7 @@
       this.energyHeatEl.textContent = `${energy} | ${heat}`;
       this.sectorEl.textContent = String(model.sector);
       this.missionEl.textContent = model.currentMission?.label || "-";
+      this.setStatusEl.textContent = model.setStatusText || "No active set";
       this.flightModeEl.textContent = model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE";
       this.primaryStatusEl.textContent = `Space ${model.loadout.primaryLabel} | V Dash: ${this.formatCooldown(
         model.dashCooldown

@@ -202,6 +202,7 @@
       g.model.equipment[slot] = module;
       g.model.inventory.splice(entry.index, 1);
       if (previous) g.model.inventory.push(previous);
+      g.refreshSetState();
       g.initializeShipResources(g.model.ship);
       this.clampSelection();
       g.model.hangar.message = `Equip ${slot}: ${module.name}`;
@@ -240,7 +241,8 @@
       }
       const removed = this.removeEntry(entry);
       if (!removed) return;
-      const parts = removed.salvageValue ?? 0;
+      const modifiers = g.getModuleModifiers();
+      const parts = Math.max(1, Math.round((removed.salvageValue ?? 0) * (1 + (modifiers.salvageYieldPct ?? 0))));
       g.model.salvageParts += parts;
       g.model.credits += parts * g.config.economy.salvageToCredits;
       this.clampSelection();

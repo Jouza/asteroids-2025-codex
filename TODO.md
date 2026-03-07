@@ -7,10 +7,10 @@ Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupn
   - [x] Inventory/equip flow v hangaru
   - [x] Salvage rozhodovani (vzit/prodat/rozebrat)
 
-- [ ] Ship buildcraft (modularni lod)
-  - [ ] Sloty trupu/motoru/generatoru/stitu/chipsetu
-  - [ ] Stat dopady modulu na flight/combat
-  - [ ] Set bonusy/synergie (Prospector/Corsair/Warden)
+- [x] Ship buildcraft (modularni lod)
+  - [x] Sloty trupu/motoru/generatoru/stitu/chipsetu
+  - [x] Stat dopady modulu na flight/combat
+  - [x] Set bonusy/synergie (Prospector/Corsair/Warden)
 
 - [ ] Zbrane s jasnou identitou (dalsi tier)
   - [ ] Nove primary archetypy (spread/rail/chain)
