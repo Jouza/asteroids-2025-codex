@@ -530,10 +530,34 @@
       if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
         const startY = config.canvas.height / 2 - 170;
+        const hangar = model.hangar;
+        const lootCrate = hangar.lootCrate || [];
+        const inventory = model.inventory || [];
+        const equipment = model.equipment || {};
+        const selectedSource = hangar.selectionSource || "crate";
+        const selectedIndex = hangar.selectionIndex || 0;
+        const rarityById = {};
+        for (const rarity of config.loot.rarities) rarityById[rarity.id] = rarity;
+        const slotLabels = {
+          hull: "Hull",
+          shield: "Shield",
+          generator: "Generator",
+          engine: "Engine",
+          chipset: "Chipset"
+        };
+        const formatModule = (module) => {
+          if (!module) return "-";
+          const affixCount = module.affixes?.length ?? 0;
+          return `${module.name} [${slotLabels[module.slot] || module.slot}] Afx:${affixCount} Sell:${module.sellValue}`;
+        };
+        const drawListItem = (text, y, isSelected, color) => {
+          ctx.fillStyle = isSelected ? "#ffe7a8" : color;
+          ctx.fillText(isSelected ? `> ${text}` : text, centerX, y);
+        };
 
         ctx.fillText("HANGAR", centerX, startY);
         ctx.font = "600 20px Trebuchet MS";
-        ctx.fillText(`Credits: ${model.credits}`, centerX, startY + 34);
+        ctx.fillText(`Credits: ${model.credits} | Salvage parts: ${model.salvageParts}`, centerX, startY + 34);
         const missionOrder = config.mission.order;
         const nextMissionType = missionOrder[model.sector % missionOrder.length];
         ctx.fillText(`Next sector mission: ${nextMissionType.toUpperCase()}`, centerX, startY + 58);
@@ -549,7 +573,6 @@
 
         const secondaryDefs = config.loadout.secondary;
         const utilityDefs = config.loadout.utility;
-        const unlockCosts = config.hangar.unlockCosts;
         const secondaryLineY = startY + 230;
         const utilityLineY = startY + 260;
 
@@ -564,97 +587,96 @@
           centerX,
           utilityLineY
         );
+        ctx.fillStyle = "#d8f5ff";
+        ctx.font = "500 16px Trebuchet MS";
+        ctx.fillText("6/7 Select item | 8 Take/Equip | 9 Sell | 0 Salvage", centerX, startY + 292);
 
-        const unlockRows = [
-          {
-            key: 6,
-            id: "rail_shot",
-            label: secondaryDefs.rail_shot.label,
-            unlocked: model.unlocks.secondary.rail_shot,
-            cooldown: secondaryDefs.rail_shot.cooldownSeconds,
-            role: secondaryDefs.rail_shot.role,
-            effect: secondaryDefs.rail_shot.effectText
-          },
-          {
-            key: 7,
-            id: "cluster_rockets",
-            label: secondaryDefs.cluster_rockets.label,
-            unlocked: model.unlocks.secondary.cluster_rockets,
-            cooldown: secondaryDefs.cluster_rockets.cooldownSeconds,
-            role: secondaryDefs.cluster_rockets.role,
-            effect: secondaryDefs.cluster_rockets.effectText
-          },
-          {
-            key: 8,
-            id: "emp_pulse",
-            label: utilityDefs.emp_pulse.label,
-            unlocked: model.unlocks.utility.emp_pulse,
-            cooldown: utilityDefs.emp_pulse.cooldownSeconds,
-            role: utilityDefs.emp_pulse.role,
-            effect: utilityDefs.emp_pulse.effectText
-          },
-          {
-            key: 9,
-            id: "shield_dome",
-            label: utilityDefs.shield_dome.label,
-            unlocked: model.unlocks.utility.shield_dome,
-            cooldown: utilityDefs.shield_dome.cooldownSeconds,
-            role: utilityDefs.shield_dome.role,
-            effect: utilityDefs.shield_dome.effectText
+        ctx.fillStyle = "#a7f2ff";
+        ctx.font = "600 18px Trebuchet MS";
+        ctx.fillText(`Salvage Crate (${lootCrate.length})`, centerX, startY + 320);
+        ctx.font = "500 15px Trebuchet MS";
+        const crateRows = 4;
+        const crateStart =
+          selectedSource === "crate" ? Math.max(0, Math.min(selectedIndex - 2, Math.max(0, lootCrate.length - crateRows))) : 0;
+        for (let i = 0; i < crateRows; i += 1) {
+          const itemIndex = crateStart + i;
+          const module = lootCrate[itemIndex];
+          const y = startY + 342 + i * 20;
+          if (!module) {
+            drawListItem("-", y, false, "rgba(216,245,255,0.4)");
+            continue;
           }
-        ];
-
-        for (let i = 0; i < unlockRows.length; i += 1) {
-          const row = unlockRows[i];
-          const y = startY + 300 + i * 28;
-          if (row.unlocked) {
-            ctx.fillStyle = "#9bf5bb";
-            ctx.fillText(
-              `${row.key}. ${row.label} - unlocked | CD ${row.cooldown.toFixed(1)}s | ${row.role} | ${row.effect}`,
-              centerX,
-              y
-            );
-          } else {
-            const cost = unlockCosts[row.id] ?? 0;
-            const canAfford = model.credits >= cost;
-            ctx.fillStyle = canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)";
-            ctx.fillText(
-              `${row.key}. Unlock ${row.label} - ${cost} cr | CD ${row.cooldown.toFixed(1)}s | ${row.role} | ${row.effect}`,
-              centerX,
-              y
-            );
-          }
+          const rarity = rarityById[module.rarity];
+          drawListItem(
+            formatModule(module),
+            y,
+            selectedSource === "crate" && selectedIndex === itemIndex,
+            rarity?.color || "#d8f5ff"
+          );
         }
+
+        ctx.fillStyle = "#a7f2ff";
+        ctx.font = "600 18px Trebuchet MS";
+        ctx.fillText(`Inventory (${inventory.length}/${config.loot.maxInventoryItems})`, centerX, startY + 390);
+        ctx.font = "500 15px Trebuchet MS";
+        const invRows = 6;
+        const invStart =
+          selectedSource === "inventory" ? Math.max(0, Math.min(selectedIndex - 3, Math.max(0, inventory.length - invRows))) : 0;
+        for (let i = 0; i < invRows; i += 1) {
+          const itemIndex = invStart + i;
+          const module = inventory[itemIndex];
+          const y = startY + 412 + i * 20;
+          if (!module) {
+            drawListItem("-", y, false, "rgba(216,245,255,0.4)");
+            continue;
+          }
+          const rarity = rarityById[module.rarity];
+          drawListItem(
+            formatModule(module),
+            y,
+            selectedSource === "inventory" && selectedIndex === itemIndex,
+            rarity?.color || "#d8f5ff"
+          );
+        }
+
+        const equippedRows = Object.keys(slotLabels).map((slot) => {
+          const module = equipment[slot];
+          return `${slotLabels[slot]}: ${module ? module.name : "-"}`;
+        });
+        ctx.fillStyle = "#ffd785";
+        ctx.font = "600 16px Trebuchet MS";
+        ctx.fillText(`Equipped: ${equippedRows.join(" | ")}`, centerX, startY + 488);
 
         const activeSecondary = secondaryDefs[model.loadout.secondaryId];
         const activeUtility = utilityDefs[model.loadout.utilityId];
         ctx.fillStyle = "#a7f2ff";
-        ctx.font = "600 18px Trebuchet MS";
-        ctx.fillText("Active Weapon Stats", centerX, startY + 384);
-        ctx.font = "500 16px Trebuchet MS";
+        ctx.font = "600 17px Trebuchet MS";
+        ctx.fillText("Active Weapon Stats", centerX, startY + 514);
+        ctx.font = "500 15px Trebuchet MS";
         ctx.fillText(
           `Secondary (${activeSecondary.label}) | CD ${activeSecondary.cooldownSeconds.toFixed(1)}s | ${activeSecondary.role} | ${activeSecondary.effectText}`,
           centerX,
-          startY + 408
+          startY + 536
         );
         ctx.fillText(
           `Utility (${activeUtility.label}) | CD ${activeUtility.cooldownSeconds.toFixed(1)}s | ${activeUtility.role} | ${activeUtility.effectText}`,
           centerX,
-          startY + 430
+          startY + 556
         );
 
         ctx.fillStyle = "#ffd785";
+        ctx.font = "500 16px Trebuchet MS";
         ctx.fillText(
           `Levels: FireRate ${model.upgrades.fireRateLevel} | Magazine ${model.upgrades.magazineLevel}`,
           centerX,
-          startY + 456
+          startY + 578
         );
 
         ctx.fillStyle = "#b9f8c3";
-        ctx.fillText(model.hangar.message, centerX, startY + 482);
+        ctx.fillText(model.hangar.message, centerX, startY + 600);
 
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 508);
+        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 622);
       }
 
       ctx.restore();

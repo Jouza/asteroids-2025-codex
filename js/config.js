@@ -239,7 +239,65 @@
     },
     economy: {
       creditsPerScore: 0.062,
-      minCreditsPerKill: 1
+      minCreditsPerKill: 1,
+      moduleSellValueMultiplier: 1,
+      salvageToCredits: 9
+    },
+    loot: {
+      maxInventoryItems: 24,
+      dropChance: {
+        asteroid: {
+          large: 0.14,
+          medium: 0.08,
+          small: 0.04
+        },
+        ufo: {
+          hunter: 0.24,
+          sniper: 0.3
+        },
+        miniBoss: 1
+      },
+      rarities: [
+        { id: "common", label: "Common", color: "#d8f5ff", weight: 56, affixCount: 0, valueMult: 1, salvage: 3 },
+        { id: "uncommon", label: "Uncommon", color: "#9bf5bb", weight: 26, affixCount: 1, valueMult: 1.35, salvage: 6 },
+        { id: "rare", label: "Rare", color: "#76b7ff", weight: 12, affixCount: 2, valueMult: 1.9, salvage: 10 },
+        { id: "exotic", label: "Exotic", color: "#d79cff", weight: 4.5, affixCount: 3, valueMult: 2.7, salvage: 16 },
+        { id: "prototype", label: "Prototype", color: "#ffba7a", weight: 1.2, affixCount: 4, valueMult: 3.8, salvage: 24 },
+        { id: "relic", label: "Relic", color: "#ffe889", weight: 0.3, affixCount: 5, valueMult: 5.2, salvage: 36 }
+      ],
+      slots: ["hull", "shield", "generator", "engine", "chipset"],
+      basesBySlot: {
+        hull: [
+          { id: "reinforced_plating", name: "Reinforced Plating", modifiers: { hullPct: 0.1, collisionResist: 0.04 } },
+          { id: "light_plating", name: "Light Plating", modifiers: { hullPct: 0.06, maxSpeedPct: 0.03 } }
+        ],
+        shield: [
+          { id: "phase_barrier", name: "Phase Barrier", modifiers: { shieldPct: 0.11, shieldRegenPct: 0.08 } },
+          { id: "mirror_shield", name: "Mirror Shield", modifiers: { shieldPct: 0.08, plasmaResist: 0.06 } }
+        ],
+        generator: [
+          { id: "flux_core", name: "Flux Core", modifiers: { energyPct: 0.12, energyRegenPct: 0.12 } },
+          { id: "coolant_core", name: "Coolant Core", modifiers: { energyPct: 0.07, heatDissipationPct: 0.14 } }
+        ],
+        engine: [
+          { id: "vector_thrusters", name: "Vector Thrusters", modifiers: { thrustPct: 0.1, maxSpeedPct: 0.08 } },
+          { id: "gyro_drive", name: "Gyro Drive", modifiers: { rotationAccelPct: 0.12, rotationSpeedPct: 0.08 } }
+        ],
+        chipset: [
+          { id: "targeting_ai", name: "Targeting AI", modifiers: { primaryDamagePct: 0.1, critChanceFlat: 0.02 } },
+          { id: "cooldown_matrix", name: "Cooldown Matrix", modifiers: { primaryCooldownPct: 0.08, secondaryCooldownPct: 0.08, utilityCooldownPct: 0.08 } }
+        ]
+      },
+      affixes: [
+        { id: "hardened", name: "Hardened", slots: ["hull", "shield"], modifiers: { collisionResist: 0.03, hullPct: 0.04 } },
+        { id: "charged", name: "Charged", slots: ["generator", "shield"], modifiers: { energyPct: 0.07, shieldPct: 0.05 } },
+        { id: "quickspin", name: "Quickspin", slots: ["engine"], modifiers: { rotationAccelPct: 0.1, rotationSpeedPct: 0.06 } },
+        { id: "afterburn", name: "Afterburn", slots: ["engine", "generator"], modifiers: { thrustPct: 0.09, heatDissipationPct: -0.04 } },
+        { id: "efficient", name: "Efficient", slots: ["generator", "chipset"], modifiers: { primaryCooldownPct: 0.05, secondaryCooldownPct: 0.07 } },
+        { id: "tactical", name: "Tactical", slots: ["chipset"], modifiers: { utilityCooldownPct: 0.1, critChanceFlat: 0.01 } },
+        { id: "reactive", name: "Reactive", slots: ["shield", "hull"], modifiers: { shieldRegenPct: 0.12 } },
+        { id: "overclocked", name: "Overclocked", slots: ["chipset", "generator"], modifiers: { primaryDamagePct: 0.12, heatDissipationPct: -0.06 } }
+      ]
     },
     hangar: {
       items: [
@@ -261,13 +319,7 @@
       ],
       maxFireRateLevel: 8,
       maxMagazineLevel: 6,
-      fireRateFactorPerLevel: 0.91,
-      unlockCosts: {
-        rail_shot: 210,
-        cluster_rockets: 245,
-        emp_pulse: 250,
-        shield_dome: 275
-      }
+      fireRateFactorPerLevel: 0.91
     },
     ufo: {
       spawnDelayMinSeconds: 16,
