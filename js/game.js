@@ -89,7 +89,7 @@
         flightModel: "arcade",
         dotEffects: [],
         hangar: {
-          message: "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.",
+          message: "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.",
           lootCrate: [],
           selectionSource: "crate",
           selectionIndex: 0
@@ -103,6 +103,12 @@
           utilityLabel: "Pulse"
         },
         unlocks: {
+          primary: {
+            auto_cannon: true,
+            spread_cannon: true,
+            rail_lance: true,
+            plasma_chain: true
+          },
           secondary: {
             missile_burst: true,
             rail_shot: true,
@@ -235,7 +241,7 @@
       this.model.currentMission = null;
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
-      this.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      this.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;
@@ -243,6 +249,13 @@
       this.model.upgrades.magazineLevel = 0;
       this.model.loadout.secondaryId = "missile_burst";
       this.model.loadout.utilityId = "pulse_bomb";
+      this.model.loadout.primaryId = "auto_cannon";
+      this.model.unlocks.primary = {
+        auto_cannon: true,
+        spread_cannon: true,
+        rail_lance: true,
+        plasma_chain: true
+      };
       this.model.unlocks.secondary = { missile_burst: true, rail_shot: true, cluster_rockets: true };
       this.model.unlocks.utility = { pulse_bomb: true, emp_pulse: true, shield_dome: true };
       this.model.inventory = [];
@@ -827,7 +840,7 @@
     }
 
     getCurrentBulletCooldown() {
-      const primary = this.config.loadout.primary[this.model.loadout.primaryId];
+      const primary = this.getPrimarySpec();
       const factor = Math.pow(this.config.hangar.fireRateFactorPerLevel, this.model.upgrades.fireRateLevel);
       const ship = this.model.ship;
       const softThreshold = this.config.ship.overheatSoftThreshold;
@@ -840,12 +853,12 @@
     canFirePrimary() {
       const ship = this.model.ship;
       if (!ship) return false;
-      const primary = this.config.loadout.primary[this.model.loadout.primaryId];
+      const primary = this.getPrimarySpec();
       return this.canSpendShipResources(primary.energyCost, primary.heatGain);
     }
 
     consumePrimaryShotResources() {
-      const primary = this.config.loadout.primary[this.model.loadout.primaryId];
+      const primary = this.getPrimarySpec();
       this.spendShipResources(primary.energyCost, primary.heatGain);
     }
 
@@ -873,6 +886,10 @@
 
     getSecondarySpec() {
       return this.config.loadout.secondary[this.model.loadout.secondaryId];
+    }
+
+    getPrimarySpec() {
+      return this.config.loadout.primary[this.model.loadout.primaryId];
     }
 
     getUtilitySpec() {
@@ -986,6 +1003,57 @@
       this.model.miniBoss = null;
       this.tryDropModule("miniBoss");
       this.tryDropModule("miniBoss");
+    }
+
+    findClosestChainTarget(fromX, fromY, radius) {
+      let best = null;
+      let bestDist = Number.POSITIVE_INFINITY;
+
+      for (let i = 0; i < this.model.asteroids.length; i += 1) {
+        const asteroid = this.model.asteroids[i];
+        const dist = Math.hypot(asteroid.x - fromX, asteroid.y - fromY);
+        if (dist <= radius && dist < bestDist) {
+          bestDist = dist;
+          best = { type: "asteroid", index: i, x: asteroid.x, y: asteroid.y };
+        }
+      }
+
+      for (let i = 0; i < this.model.ufos.length; i += 1) {
+        const ufo = this.model.ufos[i];
+        const dist = Math.hypot(ufo.x - fromX, ufo.y - fromY);
+        if (dist <= radius && dist < bestDist) {
+          bestDist = dist;
+          best = { type: "ufo", index: i, x: ufo.x, y: ufo.y };
+        }
+      }
+
+      if (this.model.miniBoss) {
+        const boss = this.model.miniBoss;
+        const dist = Math.hypot(boss.x - fromX, boss.y - fromY);
+        if (dist <= radius && dist < bestDist) {
+          best = { type: "miniBoss", index: -1, x: boss.x, y: boss.y };
+        }
+      }
+
+      return best;
+    }
+
+    triggerPrimaryChain(fromX, fromY, chainTargets, chainRadius, chainBossDamage = 12) {
+      let originX = fromX;
+      let originY = fromY;
+
+      for (let step = 0; step < chainTargets; step += 1) {
+        const target = this.findClosestChainTarget(originX, originY, chainRadius);
+        if (!target) break;
+
+        if (target.type === "asteroid") this.destroyAsteroidByIndex(target.index, true);
+        else if (target.type === "ufo") this.destroyUfoByIndex(target.index);
+        else if (target.type === "miniBoss") this.applyDamageToMiniBoss(chainBossDamage, "plasma", 0.06);
+
+        this.emitImpactParticles(target.x, target.y, 8, "122,228,255");
+        originX = target.x;
+        originY = target.y;
+      }
     }
 
     consumePlayerProjectileHit(projectileIndex) {

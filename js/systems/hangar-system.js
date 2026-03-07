@@ -9,8 +9,9 @@
       if (g.input.wasPressed("Digit1")) this.purchaseHangarItem(0);
       if (g.input.wasPressed("Digit2")) this.purchaseHangarItem(1);
       if (g.input.wasPressed("Digit3")) this.purchaseHangarItem(2);
-      if (g.input.wasPressed("Digit4")) this.cycleLoadoutSlot("secondary");
-      if (g.input.wasPressed("Digit5")) this.cycleLoadoutSlot("utility");
+      if (g.input.wasPressed("Digit4")) this.cycleLoadoutSlot("primary");
+      if (g.input.wasPressed("Digit5")) this.cycleLoadoutSlot("secondary");
+      if (g.input.wasPressed("KeyR")) this.cycleLoadoutSlot("utility");
       if (g.input.wasPressed("Digit6")) this.changeSelection(-1);
       if (g.input.wasPressed("Digit7")) this.changeSelection(1);
       if (g.input.wasPressed("Digit8")) this.takeOrEquipSelected();
@@ -31,7 +32,7 @@
       g.model.sectorCompletionHandled = false;
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
       g.missionSystem.startMission(g.model.sector);
-      g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      g.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
     }
 
     enterHangarPhase() {
@@ -47,7 +48,7 @@
       g.model.enemyBullets = [];
       g.model.bullets = [];
       g.model.utilityEffects = [];
-      g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      g.model.hangar.message = "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
       this.clampSelection();
     }
 
@@ -252,7 +253,8 @@
     cycleLoadoutSlot(slotName) {
       const g = this.game;
       const unlockedMap = g.model.unlocks[slotName];
-      const currentIdKey = slotName === "secondary" ? "secondaryId" : "utilityId";
+      const currentIdKey =
+        slotName === "primary" ? "primaryId" : slotName === "secondary" ? "secondaryId" : "utilityId";
       const unlockedIds = Object.keys(unlockedMap).filter((id) => unlockedMap[id]);
       if (unlockedIds.length === 0) {
         g.model.hangar.message = "Neni odemcena zadna varianta.";
@@ -264,7 +266,12 @@
       const next = unlockedIds[(idx + 1 + unlockedIds.length) % unlockedIds.length];
       g.model.loadout[currentIdKey] = next;
       g.syncLoadoutLabels();
-      const label = slotName === "secondary" ? g.model.loadout.secondaryLabel : g.model.loadout.utilityLabel;
+      const label =
+        slotName === "primary"
+          ? g.model.loadout.primaryLabel
+          : slotName === "secondary"
+            ? g.model.loadout.secondaryLabel
+            : g.model.loadout.utilityLabel;
       g.model.hangar.message = `Aktivni ${slotName}: ${label}`;
     }
 
