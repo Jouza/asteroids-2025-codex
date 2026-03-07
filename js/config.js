@@ -1,5 +1,6 @@
 (() => {
   const buildVersion = window.Asteroids?.APP_BUILD_META?.version || "UNKNOWN";
+  const BALANCE_DATA = window.Asteroids?.BALANCE_DATA || {};
   const GAME_STATE = {
     START: "start",
     PLAYING: "playing",
@@ -497,6 +498,50 @@
     }
   };
 
+  function isObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function deepMerge(target, source) {
+    if (!isObject(source)) return target;
+    for (const key of Object.keys(source)) {
+      const srcValue = source[key];
+      const dstValue = target[key];
+      if (isObject(srcValue) && isObject(dstValue)) deepMerge(dstValue, srcValue);
+      else target[key] = srcValue;
+    }
+    return target;
+  }
+
+  function applyBalanceOverrides(config, overrides) {
+    const allowlist = ["economy", "bullet", "ufo", "sector", "mission"];
+    for (const key of allowlist) {
+      if (!(key in overrides)) continue;
+      if (!isObject(overrides[key])) continue;
+      if (!isObject(config[key])) continue;
+      deepMerge(config[key], overrides[key]);
+    }
+  }
+
+  function validateGameConfig(config) {
+    const checks = [
+      { ok: config.economy.creditsPerScore > 0, msg: "economy.creditsPerScore must be > 0" },
+      { ok: config.economy.minCreditsPerKill >= 0, msg: "economy.minCreditsPerKill must be >= 0" },
+      { ok: config.bullet.maxActive >= 1 && config.bullet.maxActive <= 30, msg: "bullet.maxActive out of expected range" },
+      { ok: config.mission.survive.baseDurationSeconds >= 5, msg: "mission.survive.baseDurationSeconds too low" },
+      { ok: config.mission.ufoHunt.maxConcurrentCap >= 1, msg: "mission.ufoHunt.maxConcurrentCap must be >= 1" },
+      { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
+      { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" }
+    ];
+    const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
+    if (issues.length > 0) {
+      console.warn("Balance validation issues:", issues);
+    }
+    return issues;
+  }
+
+  applyBalanceOverrides(GAME_CONFIG, BALANCE_DATA);
+
   const ASTEROID_DEFS = {
     large: { radius: 56, score: 20, next: "medium" },
     medium: { radius: 34, score: 50, next: "small" },
@@ -516,6 +561,7 @@
   };
   window.Asteroids.GAME_STATE = GAME_STATE;
   window.Asteroids.GAME_CONFIG = GAME_CONFIG;
+  window.Asteroids.validateGameConfig = validateGameConfig;
   window.Asteroids.ASTEROID_DEFS = ASTEROID_DEFS;
   window.Asteroids.ASTEROID_TYPES = ASTEROID_TYPES;
 })();
