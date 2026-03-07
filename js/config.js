@@ -228,9 +228,14 @@
       resetSeconds: 2.25,
       multiplierStep: 0.25,
       maxMultiplier: 4,
-      nearMissBonus: 15,
       nearMissDistance: 48,
-      nearMissCooldownSeconds: 1.35
+      nearMissCooldownSeconds: 1.35,
+      nearMissEnergyGain: 8,
+      nearMissHeatReduction: 6,
+      nearMissShieldGain: 4
+    },
+    arcadeMutators: {
+      comboScoringEnabled: false
     },
     economy: {
       creditsPerScore: 0.062,

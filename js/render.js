@@ -513,7 +513,11 @@
         ctx.fillText("GAME OVER", config.canvas.width / 2, config.canvas.height / 2 - 28);
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText(`Skore: ${model.score}`, config.canvas.width / 2, config.canvas.height / 2 + 8);
-        ctx.fillText(`Combo pri konci: x${model.comboMultiplier.toFixed(2)}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+        if (model.comboScoringEnabled) {
+          ctx.fillText(`Combo pri konci: x${model.comboMultiplier.toFixed(2)}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+        } else {
+          ctx.fillText(`Sektor dosazeny: ${model.wave}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+        }
         ctx.fillText("Enter pro restart", config.canvas.width / 2, config.canvas.height / 2 + 76);
       }
 

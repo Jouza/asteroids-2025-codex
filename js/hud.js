@@ -43,7 +43,7 @@
 
       this.scoreEl.textContent = String(model.score);
       this.creditsEl.textContent = String(model.credits);
-      this.comboEl.textContent = `x${model.comboMultiplier.toFixed(2)}`;
+      this.comboEl.textContent = model.comboScoringEnabled ? `x${model.comboMultiplier.toFixed(2)}` : "Mutator OFF";
       this.hullShieldEl.textContent = `${hull} | ${shield}`;
       this.energyHeatEl.textContent = `${energy} | ${heat}`;
       this.waveEl.textContent = String(model.wave);
