@@ -154,6 +154,41 @@
     .impact strong { color: var(--text); }
     .bad { color: var(--bad); }
     .ok { color: var(--ok); }
+    .small-hint {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    .weapon-card {
+      min-height: 230px;
+    }
+    .weapon-preview {
+      width: 100%;
+      height: 64px;
+      border: 1px solid rgba(83, 247, 255, 0.32);
+      background: linear-gradient(180deg, rgba(7, 13, 23, 0.9), rgba(5, 9, 16, 0.92));
+      margin: 6px 0 8px;
+      display: block;
+    }
+    .stats {
+      margin: 4px 0 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px 8px;
+      font-size: 0.78rem;
+      color: #ccefff;
+    }
+    .stat {
+      border-top: 1px solid rgba(83, 247, 255, 0.18);
+      padding-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat b {
+      color: #a7f3ff;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -192,6 +227,16 @@
           <p class="impact"><strong>Dopad:</strong> zachovana identita zbrani, ale s jasnym risk/reward tradeoff.</p>
         </article>
       </div>
+    </section>
+
+    <section class="section">
+      <h2>Zbrane a vystrely</h2>
+      <p class="small-hint">
+        Data jsou nacitana primo z herni konfigurace. Cisla proto odpovidaji aktualnimu balancu buildu.
+        <br>
+        Pozn.: "DMG" je bazova hodnota zasahu (pred crit/resist modifikatory), "Range" je orientacni dolet projektilu.
+      </p>
+      <div id="weaponCards" class="grid"></div>
     </section>
 
     <section class="section">
@@ -348,5 +393,219 @@
       </div>
     </section>
   </main>
+
+  <script src="./js/version.js"></script>
+  <script src="./js/content-data.js"></script>
+  <script src="./js/balance-data.js"></script>
+  <script src="./js/balance-presets.js"></script>
+  <script src="./js/config.js"></script>
+  <script>
+    (() => {
+      const cfg = window.Asteroids?.GAME_CONFIG;
+      const mount = document.getElementById("weaponCards");
+      if (!cfg?.loadout || !mount) return;
+
+      const slotDefs = [
+        { slot: "primary", label: "Primary", hotkey: "Space", action: "primary" },
+        { slot: "secondary", label: "Secondary", hotkey: "X", action: "secondary" },
+        { slot: "utility", label: "Utility", hotkey: "C", action: "utility" }
+      ];
+      const previews = [];
+
+      function toFixed(value, digits = 1) {
+        if (!Number.isFinite(value)) return "-";
+        return Number(value).toFixed(digits);
+      }
+
+      function calcShieldDrain(action, energyCost) {
+        const shared = cfg.ship.sharedPool || {};
+        if (!shared.enabled) return 0;
+        const factorByAction = {
+          primary: shared.primaryShieldCostFactor ?? 0,
+          secondary: shared.secondaryShieldCostFactor ?? 0,
+          utility: shared.utilityShieldCostFactor ?? 0,
+          dash: shared.dashShieldCostFactor ?? 0
+        };
+        return (energyCost || 0) * (factorByAction[action] || 0);
+      }
+
+      function calcRange(spec) {
+        const speed = spec.projectileSpeed;
+        const ttl = spec.ttlSeconds;
+        if (!Number.isFinite(speed) || !Number.isFinite(ttl)) return null;
+        return Math.round(speed * ttl);
+      }
+
+      function createStat(label, value) {
+        const div = document.createElement("div");
+        div.className = "stat";
+        div.innerHTML = "<b>" + label + "</b> " + value;
+        return div;
+      }
+
+      function colorForKind(kind) {
+        if (kind.includes("rail")) return "rgba(228,172,255,0.95)";
+        if (kind.includes("spread")) return "rgba(162,255,214,0.95)";
+        if (kind.includes("chain")) return "rgba(148,226,255,0.95)";
+        if (kind.includes("cluster")) return "rgba(255,202,136,0.95)";
+        if (kind.includes("emp")) return "rgba(187,142,255,0.95)";
+        if (kind.includes("shield")) return "rgba(132,255,194,0.95)";
+        return "rgba(180,238,255,0.95)";
+      }
+
+      function drawPreview(preview, timeMs) {
+        const { canvas, spec, slot } = preview;
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+        const t = (timeMs % 1300) / 1300;
+        const pulse = 0.68 + Math.sin(timeMs / 130) * 0.24;
+
+        ctx.clearRect(0, 0, w, h);
+        const bg = ctx.createLinearGradient(0, 0, 0, h);
+        bg.addColorStop(0, "rgba(8,16,30,0.95)");
+        bg.addColorStop(1, "rgba(3,8,18,0.98)");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.strokeStyle = "rgba(102,199,255,0.32)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(10, h / 2);
+        ctx.lineTo(w - 10, h / 2);
+        ctx.stroke();
+
+        const kind = spec.kind || "auto";
+        const color = colorForKind(kind);
+        const baseX = 24;
+        const travelX = baseX + t * (w - 50);
+        const count = spec.count || 1;
+
+        if (slot === "utility") {
+          const radius = kind === "pulse" ? 10 + 20 * t : kind === "emp" ? 8 + 18 * t : 10 + 8 * t;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.25 + 0.5 * (1 - t);
+          ctx.beginPath();
+          ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          if (kind === "shield") {
+            ctx.fillStyle = "rgba(138,255,201,0.25)";
+            ctx.beginPath();
+            ctx.arc(w / 2, h / 2, 8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          return;
+        }
+
+        for (let i = 0; i < count; i += 1) {
+          const spread = spec.spread || 0;
+          const rel = count === 1 ? 0 : i / (count - 1) - 0.5;
+          const y = h / 2 + rel * Math.sin(spread) * 48;
+          if (kind === "rail") {
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = 0.8;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(baseX, y);
+            ctx.lineTo(w - 12, y);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+
+          ctx.fillStyle = color;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(travelX, y, Math.max(2, spec.radius || 2), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        if (kind === "chain") {
+          ctx.strokeStyle = "rgba(151,232,255,0.85)";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(travelX, h / 2);
+          ctx.lineTo(travelX + 15, h / 2 - 8 * pulse);
+          ctx.lineTo(travelX + 28, h / 2 + 8 * pulse);
+          ctx.stroke();
+        }
+      }
+
+      function buildCard(slotDef, id, spec) {
+        const card = document.createElement("article");
+        card.className = "card weapon-card";
+
+        const head = document.createElement("div");
+        head.className = "head";
+        head.innerHTML =
+          '<div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-stroke" d="M6 16 L26 16 M18 10 L26 16 L18 22"/></svg></div>' +
+          "<div><p class=\"name\">" + spec.label + "</p><div class=\"tag\">" + slotDef.label + " | " + spec.role + " | " + slotDef.hotkey + "</div></div>";
+
+        const desc = document.createElement("p");
+        desc.className = "line";
+        desc.textContent = (spec.effectText || "") + (spec.impactText ? " | " + spec.impactText : "");
+
+        const preview = document.createElement("canvas");
+        preview.className = "weapon-preview";
+        preview.width = 320;
+        preview.height = 64;
+
+        const stats = document.createElement("div");
+        stats.className = "stats";
+
+        const cooldown = spec.cooldownSeconds;
+        const energy = spec.energyCost || 0;
+        const heat = spec.heatGain || 0;
+        const shieldDrain = calcShieldDrain(slotDef.action, energy);
+        const count = spec.count || 1;
+        const dmg = spec.bossDamage;
+        const ttl = spec.ttlSeconds;
+        const speed = spec.projectileSpeed;
+        const range = calcRange(spec);
+
+        stats.appendChild(createStat("ID", id));
+        stats.appendChild(createStat("CD", toFixed(cooldown, 2) + "s"));
+        stats.appendChild(createStat("Energy", toFixed(energy, 1)));
+        stats.appendChild(createStat("Shield drain", toFixed(shieldDrain, 1)));
+        stats.appendChild(createStat("Heat", toFixed(heat, 1)));
+
+        if (Number.isFinite(dmg)) stats.appendChild(createStat("DMG", toFixed(dmg, 1)));
+        if (count > 1) stats.appendChild(createStat("Shots/trigger", String(count)));
+        if (count > 1 && Number.isFinite(dmg)) stats.appendChild(createStat("Burst DMG", toFixed(dmg * count, 1)));
+        if (Number.isFinite(speed)) stats.appendChild(createStat("Proj speed", Math.round(speed).toString()));
+        if (Number.isFinite(ttl)) stats.appendChild(createStat("TTL", toFixed(ttl, 2) + "s"));
+        if (Number.isFinite(range)) stats.appendChild(createStat("Range", range.toString()));
+        if (Number.isFinite(spec.radius)) stats.appendChild(createStat("Radius", toFixed(spec.radius, 1)));
+        if ((spec.pierce || 0) > 0) stats.appendChild(createStat("Pierce", String(spec.pierce)));
+        if ((spec.chainTargets || 0) > 0) stats.appendChild(createStat("Chain targets", String(spec.chainTargets)));
+        if ((spec.pulseRadius || 0) > 0) stats.appendChild(createStat("AOE radius", String(Math.round(spec.pulseRadius))));
+        if ((spec.disableSeconds || 0) > 0) stats.appendChild(createStat("Disable", toFixed(spec.disableSeconds, 1) + "s"));
+        if ((spec.shieldSeconds || 0) > 0) stats.appendChild(createStat("Invuln", toFixed(spec.shieldSeconds, 1) + "s"));
+
+        card.appendChild(head);
+        card.appendChild(desc);
+        card.appendChild(preview);
+        card.appendChild(stats);
+        previews.push({ canvas: preview, spec, slot: slotDef.slot });
+        mount.appendChild(card);
+      }
+
+      for (const slotDef of slotDefs) {
+        const byId = cfg.loadout[slotDef.slot] || {};
+        for (const id of Object.keys(byId)) {
+          buildCard(slotDef, id, byId[id]);
+        }
+      }
+
+      function animate(timeMs) {
+        for (const preview of previews) drawPreview(preview, timeMs);
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    })();
+  </script>
 </body>
 </html>
