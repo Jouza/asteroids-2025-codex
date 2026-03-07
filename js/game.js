@@ -18,6 +18,30 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function createTelemetryState(enabled = false) {
+    return {
+      enabled,
+      runTimeSeconds: 0,
+      completedMissions: 0,
+      kills: {
+        asteroids: 0,
+        ufos: 0,
+        miniBosses: 0
+      },
+      shots: {
+        primary: 0,
+        secondary: 0,
+        utility: 0,
+        enemy: 0
+      },
+      scoreEarned: 0,
+      creditsEarned: 0,
+      playerHitsTaken: 0,
+      activeMission: null,
+      lastMission: null
+    };
+  }
+
   class Game {
     constructor(canvas, renderer, hud, input, config = GAME_CONFIG) {
       this.canvas = canvas;
@@ -86,7 +110,8 @@
         upgrades: {
           fireRateLevel: 0,
           magazineLevel: 0
-        }
+        },
+        telemetry: createTelemetryState(false)
       };
 
       this.missionSystem = new MissionSystem(this);
@@ -110,6 +135,10 @@
     }
 
     handleMetaInput() {
+      if (this.input.wasPressed("F3")) {
+        this.model.telemetry.enabled = !this.model.telemetry.enabled;
+      }
+
       if (this.model.gameState === GAME_STATE.SHOP) {
         this.shopSystem.handleShopInput();
         this.hud.sync(this.model);
@@ -150,6 +179,7 @@
     }
 
     resetGame(seed) {
+      const telemetryEnabled = this.model.telemetry.enabled;
       this.model.score = 0;
       this.model.credits = 0;
       this.model.lives = 3;
@@ -185,6 +215,7 @@
       this.model.unlocks.secondary = { missile_burst: true, rail_shot: false, cluster_rockets: false };
       this.model.unlocks.utility = { pulse_bomb: true, emp_pulse: false, shield_dome: false };
       this.model.runSeed = seed >>> 0;
+      this.model.telemetry = createTelemetryState(telemetryEnabled);
       this.rng = createSeededRng(this.model.runSeed);
       this.syncLoadoutLabels();
       this.enemySystem.scheduleNextUfoSpawn();
@@ -203,6 +234,8 @@
 
     update(dt) {
       if (this.model.gameState !== GAME_STATE.PLAYING) return;
+
+      this.model.telemetry.runTimeSeconds += dt;
 
       this.model.shootTimer = Math.max(0, this.model.shootTimer - dt);
       this.model.secondaryCooldown = Math.max(0, this.model.secondaryCooldown - dt);
@@ -257,11 +290,75 @@
       const creditsMissionMult = this.config.mission.rewards.creditsByType[missionType] ?? 1;
       const scored = Math.round(basePoints * this.model.comboMultiplier * scoreMissionMult);
       this.model.score += scored;
+      this.model.telemetry.scoreEarned += scored;
       const creditsGain = Math.max(
         this.config.economy.minCreditsPerKill,
         Math.floor(basePoints * this.config.economy.creditsPerScore * creditsMissionMult)
       );
       this.model.credits += creditsGain;
+      this.model.telemetry.creditsEarned += creditsGain;
+    }
+
+    recordPrimaryShot() {
+      this.model.telemetry.shots.primary += 1;
+    }
+
+    recordSecondaryUse() {
+      this.model.telemetry.shots.secondary += 1;
+    }
+
+    recordUtilityUse() {
+      this.model.telemetry.shots.utility += 1;
+    }
+
+    recordEnemyShot() {
+      this.model.telemetry.shots.enemy += 1;
+    }
+
+    recordPlayerHit() {
+      this.model.telemetry.playerHitsTaken += 1;
+    }
+
+    onMissionStarted() {
+      const mission = this.model.currentMission;
+      if (!mission) return;
+
+      this.model.telemetry.activeMission = {
+        wave: this.model.wave,
+        type: mission.type,
+        label: mission.label,
+        startScore: this.model.score,
+        startCredits: this.model.credits,
+        startRunTimeSeconds: this.model.telemetry.runTimeSeconds,
+        asteroidKillsStart: this.model.telemetry.kills.asteroids,
+        ufoKillsStart: this.model.telemetry.kills.ufos,
+        miniBossKillsStart: this.model.telemetry.kills.miniBosses,
+        secondaryUsesStart: this.model.telemetry.shots.secondary,
+        utilityUsesStart: this.model.telemetry.shots.utility,
+        playerHitsStart: this.model.telemetry.playerHitsTaken
+      };
+    }
+
+    onMissionCompleted() {
+      const active = this.model.telemetry.activeMission;
+      if (!active) return;
+
+      this.model.telemetry.completedMissions += 1;
+      this.model.telemetry.lastMission = {
+        wave: active.wave,
+        type: active.type,
+        label: active.label,
+        durationSeconds: Math.max(0, this.model.telemetry.runTimeSeconds - active.startRunTimeSeconds),
+        scoreGained: this.model.score - active.startScore,
+        creditsGained: this.model.credits - active.startCredits,
+        asteroidKills: this.model.telemetry.kills.asteroids - active.asteroidKillsStart,
+        ufoKills: this.model.telemetry.kills.ufos - active.ufoKillsStart,
+        miniBossKills: this.model.telemetry.kills.miniBosses - active.miniBossKillsStart,
+        secondaryUses: this.model.telemetry.shots.secondary - active.secondaryUsesStart,
+        utilityUses: this.model.telemetry.shots.utility - active.utilityUsesStart,
+        playerHitsTaken: this.model.telemetry.playerHitsTaken - active.playerHitsStart
+      };
+      this.model.telemetry.activeMission = null;
     }
 
     getCurrentBulletCooldown() {
@@ -336,6 +433,7 @@
       if (!asteroid) return;
 
       this.registerScore(this.getAsteroidScore(asteroid), true);
+      this.model.telemetry.kills.asteroids += 1;
       this.model.flashMs = Math.max(this.model.flashMs, 80);
       this.emitImpactParticles(asteroid.x, asteroid.y, 16, "89,245,255");
       this.combatSystem.splitAsteroid(asteroid);
@@ -366,6 +464,7 @@
       if (!ufo) return;
       const ufoScore = ufo.mode === "hunter" ? this.config.ufo.scoreHunter : this.config.ufo.scoreSniper;
       this.registerScore(ufoScore, true);
+      this.model.telemetry.kills.ufos += 1;
       this.model.flashMs = Math.max(this.model.flashMs, 130);
       this.emitImpactParticles(ufo.x, ufo.y, 28, "255,91,186");
       this.model.ufos.splice(index, 1);
@@ -375,6 +474,7 @@
     destroyMiniBoss() {
       if (!this.model.miniBoss) return;
       this.registerScore(this.config.mission.miniBoss.scoreReward, true);
+      this.model.telemetry.kills.miniBosses += 1;
       this.emitImpactParticles(this.model.miniBoss.x, this.model.miniBoss.y, 42, "255,114,210");
       this.model.flashMs = Math.max(this.model.flashMs, 230);
       this.model.miniBoss = null;

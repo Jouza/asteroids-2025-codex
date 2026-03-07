@@ -89,6 +89,7 @@
       const muzzleX = ufo.x + Math.cos(shotAngle) * (ufo.radius + 4);
       const muzzleY = ufo.y + Math.sin(shotAngle) * (ufo.radius + 4);
       g.model.enemyBullets.push(createEnemyBullet(muzzleX, muzzleY, shotAngle, g.config));
+      g.recordEnemyShot();
       g.emitImpactParticles(muzzleX, muzzleY, 2, "255,123,196");
     }
 
@@ -124,6 +125,7 @@
         g.model.enemyBullets.push(
           createEnemyBullet(boss.x, boss.y, aim + (g.rng() - 0.5) * 0.14, g.config)
         );
+        g.recordEnemyShot();
         boss.shootTimer = cfg.shootCooldownSeconds;
       }
     }
