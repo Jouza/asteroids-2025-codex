@@ -20,7 +20,7 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
 
 - [ ] Tech zaklad pro skalovani
   - [x] Save/load profilu a progrese
-  - [ ] Data-driven balancing tabulky
+  - [x] Data-driven balancing tabulky
   - [ ] Combat tuning harness + regression checklist
 
 - [ ] Content pipeline a tooling (nove)

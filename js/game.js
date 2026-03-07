@@ -11,7 +11,8 @@
     HangarSystem,
     CombatSystem,
     EnemySystem,
-    randomRange
+    randomRange,
+    validateGameConfig
   } = window.Asteroids;
 
   function clamp(value, min, max) {
@@ -382,6 +383,7 @@
     initGame() {
       this.canvas.width = this.config.canvas.width;
       this.canvas.height = this.config.canvas.height;
+      if (typeof validateGameConfig === "function") validateGameConfig(this.config);
       this.model.ship = createShip(this.config);
       this.model.profile = this.loadProfile();
       this.applyProfileToModel(this.model.profile);
