@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asteroids MVP</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="hud">
+      <div class="hud-item">Skore: <span id="score">0</span></div>
+      <div class="hud-item">Credits: <span id="credits">0</span></div>
+      <div class="hud-item">Combo: <span id="combo">x1.00</span></div>
+      <div class="hud-item">Zivoty: <span id="lives">3</span></div>
+      <div class="hud-item">Vlna: <span id="wave">1</span></div>
+      <div class="hud-item">Mise: <span id="mission">-</span></div>
+      <div class="hud-item">Primarni: <span id="primaryStatus">Auto</span></div>
+      <div class="hud-item">Sekundarni: <span id="secondaryStatus">Ready</span></div>
+      <div class="hud-item">Utilita: <span id="utilityStatus">Ready</span></div>
+      <div class="hud-item state" id="stateLabel">START</div>
+    </header>
+
+    <canvas id="gameCanvas" width="960" height="720" aria-label="Asteroids hra"></canvas>
+
+    <footer class="help">
+      Ovladani: <strong>&larr;/&rarr;</strong> rotace, <strong>&uarr;</strong> tah, <strong>Mezernik</strong> strelba,
+      <strong>X</strong> sekundarni, <strong>C</strong> utilita, <strong>P</strong> pauza, <strong>Enter</strong> start/restart.
+      Shop: <strong>1/2/3</strong> upgrade, <strong>4/5</strong> prepnout loadout, <strong>6-9</strong> unlock, <strong>Enter</strong> pokracovat
+    </footer>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/rng.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
