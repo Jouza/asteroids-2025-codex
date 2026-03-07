@@ -34,6 +34,11 @@
       return seconds <= 0 ? "Ready" : `${seconds.toFixed(1)}s`;
     }
 
+    truncate(value, maxLen = 22) {
+      if (!value) return "-";
+      return value.length > maxLen ? `${value.slice(0, maxLen - 1)}…` : value;
+    }
+
     sync(model) {
       const ship = model.ship;
       const hull = ship ? `${Math.ceil(ship.hull)}/${ship.hullMax}` : "-/-";
@@ -47,17 +52,11 @@
       this.energyHeatEl.textContent = `${energy} | ${heat}`;
       this.sectorEl.textContent = String(model.sector);
       this.missionEl.textContent = model.currentMission?.label || "-";
-      this.setStatusEl.textContent = model.setStatusText || "No active set";
+      this.setStatusEl.textContent = this.truncate(model.setStatusText || "No active set", 24);
       this.flightModeEl.textContent = model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE";
-      this.primaryStatusEl.textContent = `Space ${model.loadout.primaryLabel} | V Dash: ${this.formatCooldown(
-        model.dashCooldown
-      )}`;
-      this.secondaryStatusEl.textContent = `X ${model.loadout.secondaryLabel}: ${this.formatCooldown(
-        model.secondaryCooldown
-      )}`;
-      this.utilityStatusEl.textContent = `C ${model.loadout.utilityLabel}: ${this.formatCooldown(
-        model.utilityCooldown
-      )}`;
+      this.primaryStatusEl.textContent = `P ${model.loadout.primaryLabel} | Dash ${this.formatCooldown(model.dashCooldown)}`;
+      this.secondaryStatusEl.textContent = `S ${model.loadout.secondaryLabel} ${this.formatCooldown(model.secondaryCooldown)}`;
+      this.utilityStatusEl.textContent = `U ${model.loadout.utilityLabel} ${this.formatCooldown(model.utilityCooldown)}`;
       this.stateEl.textContent = STATE_LABELS[model.gameState] || "UNKNOWN";
     }
   }
