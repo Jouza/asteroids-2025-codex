@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STARFANG - Help</title>
+  <style>
+    :root {
+      --bg: #060b17;
+      --bg2: #0a1428;
+      --line: #53f7ff;
+      --text: #d8f5ff;
+      --muted: #9cc4d6;
+      --warn: #ffd166;
+      --bad: #ff8d95;
+      --ok: #91ffb4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(83, 247, 255, 0.09), transparent 32%),
+        radial-gradient(circle at 82% 72%, rgba(255, 209, 102, 0.08), transparent 26%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+    }
+    .wrap {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 20px 16px 36px;
+    }
+    .top {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .back {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid rgba(83, 247, 255, 0.45);
+      padding: 7px 11px;
+      background: rgba(6, 10, 18, 0.7);
+    }
+    .hint {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.45;
+    }
+    .section {
+      margin-top: 16px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.02rem;
+      color: #b9ffc8;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid rgba(83, 247, 255, 0.4);
+      background: linear-gradient(180deg, rgba(7, 13, 23, 0.86), rgba(6, 10, 18, 0.8));
+      padding: 10px;
+      min-height: 166px;
+    }
+    .head {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .icon {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(83, 247, 255, 0.5);
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      background: rgba(10, 22, 36, 0.85);
+    }
+    .name {
+      margin: 0;
+      font-size: 0.97rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .tag {
+      color: var(--warn);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .line {
+      margin: 7px 0 0;
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.38;
+    }
+    .impact {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      line-height: 1.34;
+      border-top: 1px solid rgba(83, 247, 255, 0.22);
+      padding-top: 7px;
+      color: #cdefff;
+    }
+    .impact strong { color: var(--text); }
+    .bad { color: var(--bad); }
+    .ok { color: var(--ok); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <h1>STARFANG - Objektovy Help</h1>
+      <a class="back" href="./index.html">Zpet do hry</a>
+    </div>
+    <p class="hint">
+      Rychly prehled k tomu, co na obrazovce vidis. Kazda karta obsahuje ikonu, nazev, chovani a dopad do gameplaye.
+    </p>
+
+    <section class="section">
+      <h2>Asteroidy</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="head">
+            <div class="icon">🪨</div>
+            <div>
+              <p class="name">Normal Asteroid</p>
+              <div class="tag">Objekt</div>
+            </div>
+          </div>
+          <p class="line">Klasicky asteroid. Po zasahu se stipe na mensi kusy.</p>
+          <p class="impact"><strong>Dopad:</strong> neutralni threat, <span class="ok">dobry zdroj score/lootu</span>.</p>
+        </article>
+        <article class="card">
+          <div class="head">
+            <div class="icon">🧲</div>
+            <div>
+              <p class="name">Magnetic Asteroid</p>
+              <div class="tag">Objekt</div>
+            </div>
+          </div>
+          <p class="line">Pritahuje lod v blizkem radiusu a kazi ti trajektorii.</p>
+          <p class="impact"><strong>Dopad:</strong> horsi manevrovani, <span class="bad">riziko kolize</span>.</p>
+        </article>
+        <article class="card">
+          <div class="head">
+            <div class="icon">💥</div>
+            <div>
+              <p class="name">Volatile Asteroid</p>
+              <div class="tag">Objekt</div>
+            </div>
+          </div>
+          <p class="line">Po zniceni dela blast, ktery muze retezit dalsi zasahy.</p>
+          <p class="impact"><strong>Dopad:</strong> AOE hazard, ale i <span class="ok">takticka zbran proti packum</span>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>UFO Typy</h2>
+      <div class="grid">
+        <article class="card"><div class="head"><div class="icon">👾</div><div><p class="name">Hunter</p><div class="tag">Nepritel</div></div></div><p class="line">Tlak na kratkou az stredni vzdalenost.</p><p class="impact"><strong>Dopad:</strong> stabilni DPS hrozba.</p></article>
+        <article class="card"><div class="head"><div class="icon">🎯</div><div><p class="name">Sniper</p><div class="tag">Nepritel</div></div></div><p class="line">Drzi si distanci a pali presne strely.</p><p class="impact"><strong>Dopad:</strong> punish za statickou pozici.</p></article>
+        <article class="card"><div class="head"><div class="icon">🐝</div><div><p class="name">Swarm</p><div class="tag">Nepritel</div></div></div><p class="line">Rychly oblet a tlak po kruznici.</p><p class="impact"><strong>Dopad:</strong> zahltit pri horsim aimu.</p></article>
+        <article class="card"><div class="head"><div class="icon">🧨</div><div><p class="name">Kamikaze</p><div class="tag">Nepritel</div></div></div><p class="line">Snazi se kolidovat, po kontaktu detonuje.</p><p class="impact"><strong>Dopad:</strong> burst damage v melee.</p></article>
+        <article class="card"><div class="head"><div class="icon">🛠️</div><div><p class="name">Support</p><div class="tag">Nepritel</div></div></div><p class="line">Leci ostatni UFO jednotky.</p><p class="impact"><strong>Dopad:</strong> prodluzuje boj, priorita focus target.</p></article>
+        <article class="card"><div class="head"><div class="icon">🧱</div><div><p class="name">Mine Layer</p><div class="tag">Nepritel</div></div></div><p class="line">Klade miny a kontroluje prostor.</p><p class="impact"><strong>Dopad:</strong> zoning, nuti k prepozicovani.</p></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Hazard Zony</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="head">
+            <div class="icon">🛰️</div>
+            <div>
+              <p class="name">Debris Field</p>
+              <div class="tag">Biome Hazard (Wreck Graveyard)</div>
+            </div>
+          </div>
+          <p class="line">Sfera trosek. Uvnitr zpomaluje lod a periodicky udeluje damage.</p>
+          <p class="impact"><strong>Dopad:</strong> <span class="bad">ztrata mobility</span> + chip damage.</p>
+        </article>
+        <article class="card">
+          <div class="head">
+            <div class="icon">🔥</div>
+            <div>
+              <p class="name">Plasma Vent</p>
+              <div class="tag">Biome Hazard (Refinery Complex)</div>
+            </div>
+          </div>
+          <p class="line">Pulzujici tepelna zona. Zveda heat a dava termalni tick damage.</p>
+          <p class="impact"><strong>Dopad:</strong> rychly overheat, omezeni strelby/schopnosti.</p>
+        </article>
+        <article class="card">
+          <div class="head">
+            <div class="icon">🌀</div>
+            <div>
+              <p class="name">Gravity Anomaly</p>
+              <div class="tag">Mission Modifier</div>
+            </div>
+          </div>
+          <p class="line">Tahne lod i asteroidy smerem ke stredu anomaly.</p>
+          <p class="impact"><strong>Dopad:</strong> trha trajektorii, vytvari kolizni situace.</p>
+        </article>
+        <article class="card">
+          <div class="head">
+            <div class="icon">⚡</div>
+            <div>
+              <p class="name">Ion Storm</p>
+              <div class="tag">Mission Modifier</div>
+            </div>
+          </div>
+          <p class="line">Snizuje regen stitu a pomalu ho vybija.</p>
+          <p class="impact"><strong>Dopad:</strong> slabsi sustain, vyssi tlak na vyhybani.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

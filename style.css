@@ -193,6 +193,15 @@ body {
   padding: 9px 10px;
 }
 
+.help-link {
+  color: #9cf4ff;
+  text-decoration: none;
+}
+
+.help-link:hover {
+  text-decoration: underline;
+}
+
 strong {
   color: #ffffff;
 }
