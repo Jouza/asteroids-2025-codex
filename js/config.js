@@ -56,6 +56,13 @@
         energyCostPerSecond: 38,
         heatPerSecond: 26
       },
+      sharedPool: {
+        enabled: true,
+        primaryShieldCostFactor: 0.34,
+        secondaryShieldCostFactor: 0.46,
+        utilityShieldCostFactor: 0.55,
+        dashShieldCostFactor: 0.28
+      },
       dash: {
         cooldownSeconds: 1.1,
         impulse: 360,

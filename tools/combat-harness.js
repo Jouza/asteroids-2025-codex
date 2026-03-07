@@ -171,6 +171,21 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(31337);
+    gameA.model.loadout.primaryId = "auto_cannon";
+    gameA.model.bullets = [];
+    const beforeShield = gameA.model.ship.shield;
+    gameA.model.ship.energy = gameA.model.ship.energyMax;
+    gameA.model.ship.heat = 0;
+    gameA.combatSystem.fireBullet();
+    assert(gameA.model.ship.shield < beforeShield, "Primary fire should drain shield in shared pool model");
+    gameA.model.ship.shield = 0;
+    gameA.model.bullets = [];
+    const fired = gameA.combatSystem.fireBullet();
+    assert(!fired, "Primary fire should be blocked when shield pool is empty");
+  });
+
+  tests.push(() => {
     const makeSetModule = (slot) => ({
       uid: `h-${slot}`,
       slot,

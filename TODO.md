@@ -1,7 +1,76 @@
 # STARFANG Drift Hunters - TODO
 
 Prubezny checklist pro realizaci noveho smeru.
-Poradi je serazene podle aktualni priority (nejvyssi nahore).
+## Veci k realizaci
+
+- [ ] Pilot RPG layer
+  - [ ] XP + levely pilota
+  - [ ] Atributy (Reflex/Systems/Grit/Instinct)
+  - [ ] Prvni skill tree (10-12 perku)
+
+- [ ] Frakce a reputace (MVP)
+  - [ ] 2 frakce na start
+  - [ ] Reputation gain/loss
+  - [ ] Frakcni rewardy + odlisne nabidky shopu
+
+- [ ] Endgame / replayability
+  - [ ] Bounty board
+  - [ ] Mutatory
+  - [ ] Endless sektor
+  - [ ] Boss rush
+
+- [ ] Help / codex vrstva
+  - [x] Samostatna help stranka s objekty, hazardy, chovanim a dopadem
+  - [x] Odkaz z hlavni hry na help stranku
+  - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
+
+- [ ] UI / HUD polish
+  - [x] Dvousloupcovy layout (hra vlevo, status panel vpravo) bez horizontal scrollu
+  - [x] Prioritizace panelu podle gameplaye (combat -> ekonomika -> nastaveni)
+  - [x] Emoji ikonky + tooltipy na ikony (vyznam a popis)
+  - [ ] Jemne doladeni na mensich rozlisenich (hustota, zalamovani textu)
+
+- [ ] Audio UX controls
+  - [x] Mute toggle (M)
+  - [x] Ovladas hlasitosti v UI
+  - [x] Persist nastaveni hlasitosti/mute do localStorage
+  - [ ] Samostatne volume bus pro UI/gameplay warningy (pokrocilejsi mix)
+
+- [ ] Dev / testing workflow
+  - [x] Preset `dev_fasttrack` pro rychly pruchod hrou
+  - [ ] Kratky dev test protocol (co otestovat po vetsi zmene)
+  - [ ] Jednoducha smoke stranka/scenar pro manualni QA mimo hlavni run
+
+- [ ] Security / backend readiness
+  - [ ] Leaderboard backend input validace (strict schema, initials A-Z, score range)
+  - [ ] Rate limit + anti-spam ochrana endpointu
+  - [ ] Atomicky file write + lock pri soubeznem zapisu
+  - [ ] Zakladni hardening endpointu (error handling, log sanitizace)
+
+- [ ] Performance & runtime budget
+  - [ ] Adaptive quality budget pro particles/effects pri FPS dropu
+  - [ ] Frame-time / perf overlay pro dev rezim
+  - [ ] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
+  - [ ] Profiling pass (CPU hot paths update/render smycky)
+
+- [ ] Stabilita a release kvalita
+  - [ ] Crash-safe fallbacky (audio/localStorage/feature detect)
+  - [ ] Jednoduchy release checklist pred push do main
+  - [ ] Verzovani/changelog rezim nad build timestampem
+  - [ ] Smoke gate pravidla pred release (harness + manual sanity)
+
+- [ ] Combat economy tuning
+  - [x] MVP: sdileny zdroj energie (strelba/ability snizuje i stit)
+  - [ ] Balancing pass drain hodnot pro primary/secondary/utility/dash
+
+## Wish list
+
+- [ ] High score (server-side, file-based bez DB)
+  - [ ] Zapis pouze pri novem high score (top N)
+  - [ ] Inicialy pouze 3 znaky (A-Z) + score + datum
+  - [ ] Bezpecnost: strict server validace, rate limit, atomicky zapis souboru
+
+## Hotove veci
 
 - [x] Ekonomika a loot 2.0
   - [x] Dropy modulu (rarity + affixy)
@@ -47,29 +116,11 @@ Poradi je serazene podle aktualni priority (nejvyssi nahore).
   - [x] Citelnejsi HUD (resource stress, cooldown urgency, mission risk)
   - [x] Audio vrstva (zakladni SFX + mix priority)
 
-- [ ] Pilot RPG layer
-  - [ ] XP + levely pilota
-  - [ ] Atributy (Reflex/Systems/Grit/Instinct)
-  - [ ] Prvni skill tree (10-12 perku)
-
-- [ ] Frakce a reputace (MVP)
-  - [ ] 2 frakce na start
-  - [ ] Reputation gain/loss
-  - [ ] Frakcni rewardy + odlisne nabidky shopu
-
 - [x] Content a biomy
   - [x] Min. 2 nove areny (vrakoviste/tezebni komplex)
   - [x] Hazardy prostredi jako gameplay prvek
 
-- [ ] Endgame / replayability
-  - [ ] Bounty board
-  - [ ] Mutatory
-  - [ ] Endless sektor
-  - [ ] Boss rush
-
-## Wishlist / Nice to have
-
-- [ ] High score (server-side, file-based bez DB)
-  - [ ] Zapis pouze pri novem high score (top N)
-  - [ ] Inicialy pouze 3 znaky (A-Z) + score + datum
-  - [ ] Bezpecnost: strict server validace, rate limit, atomicky zapis souboru
+- [x] Shared energy economy (MVP)
+  - [x] Strelba spotrebovava energy i shield pool
+  - [x] Ruzne tridy akci maji odlisny shield drain factor (primary/secondary/utility/dash)
+  - [x] Resource gate: bez stitu nelze strilet

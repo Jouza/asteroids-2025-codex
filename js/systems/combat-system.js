@@ -46,13 +46,14 @@
       if (!ship || g.model.dashCooldown > 0) return false;
 
       const dashCfg = g.config.ship.dash;
-      if (!g.canSpendShipResources(dashCfg.energyCost, dashCfg.heatGain)) return false;
+      const shieldCost = g.getSharedPoolShieldCost("dash", dashCfg.energyCost);
+      if (!g.canSpendShipResources(dashCfg.energyCost, dashCfg.heatGain, { shieldCost })) return false;
 
       const impulseX = Math.cos(ship.angle) * dashCfg.impulse;
       const impulseY = Math.sin(ship.angle) * dashCfg.impulse;
       ship.vx += impulseX;
       ship.vy += impulseY;
-      g.spendShipResources(dashCfg.energyCost, dashCfg.heatGain);
+      g.spendShipResources(dashCfg.energyCost, dashCfg.heatGain, { shieldCost });
       ship.invulnMs = Math.max(ship.invulnMs, dashCfg.invulnerabilityMs);
       g.model.dashCooldown = dashCfg.cooldownSeconds;
       g.emitImpactParticles(ship.x, ship.y, 10, "160,242,255");
@@ -66,7 +67,8 @@
 
       const ship = g.model.ship;
       const spec = g.getSecondarySpec();
-      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0)) return;
+      const shieldCost = g.getSharedPoolShieldCost("secondary", spec.energyCost ?? 0);
+      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost })) return;
       if (spec.kind === "rail") {
         const dirX = Math.cos(ship.angle);
         const dirY = Math.sin(ship.angle);
@@ -102,7 +104,7 @@
       }
 
       g.model.secondaryCooldown = spec.cooldownSeconds * g.getCooldownMultiplier("secondary");
-      g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
+      g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost });
       g.emitImpactParticles(ship.x, ship.y, 6, "255,198,132");
       g.recordSecondaryUse();
       g.audio.play("secondary_fire");
@@ -114,9 +116,10 @@
 
       const ship = g.model.ship;
       const spec = g.getUtilitySpec();
-      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0)) return;
+      const shieldCost = g.getSharedPoolShieldCost("utility", spec.energyCost ?? 0);
+      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost })) return;
       g.model.utilityCooldown = spec.cooldownSeconds * g.getCooldownMultiplier("utility");
-      g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
+      g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost });
       g.model.flashMs = Math.max(g.model.flashMs, spec.flashMs);
 
       if (spec.kind === "pulse") {

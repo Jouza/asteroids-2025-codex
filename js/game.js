@@ -1133,25 +1133,43 @@
       const ship = this.model.ship;
       if (!ship) return false;
       const primary = this.getPrimarySpec();
-      return this.canSpendShipResources(primary.energyCost, primary.heatGain);
+      const shieldCost = this.getSharedPoolShieldCost("primary", primary.energyCost);
+      return this.canSpendShipResources(primary.energyCost, primary.heatGain, { shieldCost });
     }
 
     consumePrimaryShotResources() {
       const primary = this.getPrimarySpec();
-      this.spendShipResources(primary.energyCost, primary.heatGain);
+      const shieldCost = this.getSharedPoolShieldCost("primary", primary.energyCost);
+      this.spendShipResources(primary.energyCost, primary.heatGain, { shieldCost });
     }
 
-    canSpendShipResources(energyCost, heatGain = 0) {
+    getSharedPoolShieldCost(action, energyCost = 0) {
+      const shared = this.config.ship.sharedPool || {};
+      if (!shared.enabled) return 0;
+      const factorByAction = {
+        primary: shared.primaryShieldCostFactor ?? 0.3,
+        secondary: shared.secondaryShieldCostFactor ?? 0.4,
+        utility: shared.utilityShieldCostFactor ?? 0.5,
+        dash: shared.dashShieldCostFactor ?? 0.25
+      };
+      const factor = factorByAction[action] ?? 0;
+      return Math.max(0, energyCost * factor);
+    }
+
+    canSpendShipResources(energyCost, heatGain = 0, options = {}) {
       const ship = this.model.ship;
       if (!ship) return false;
       const hardThreshold = this.config.ship.overheatHardThreshold;
-      return ship.energy >= energyCost && ship.heat + heatGain < hardThreshold;
+      const shieldCost = options.shieldCost ?? 0;
+      return ship.energy >= energyCost && ship.shield >= shieldCost && ship.heat + heatGain < hardThreshold;
     }
 
-    spendShipResources(energyCost, heatGain = 0) {
+    spendShipResources(energyCost, heatGain = 0, options = {}) {
       const ship = this.model.ship;
       if (!ship) return;
+      const shieldCost = options.shieldCost ?? 0;
       ship.energy = Math.max(0, ship.energy - energyCost);
+      ship.shield = Math.max(0, ship.shield - shieldCost);
       ship.heat = Math.min(ship.heatMax, ship.heat + heatGain);
     }
 
