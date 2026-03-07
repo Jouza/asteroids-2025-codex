@@ -77,7 +77,7 @@
         }
       }
 
-      g.model.secondaryCooldown = spec.cooldownSeconds;
+      g.model.secondaryCooldown = spec.cooldownSeconds * g.getCooldownMultiplier("secondary");
       g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
       g.emitImpactParticles(ship.x, ship.y, 6, "255,198,132");
       g.recordSecondaryUse();
@@ -90,7 +90,7 @@
       const ship = g.model.ship;
       const spec = g.getUtilitySpec();
       if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0)) return;
-      g.model.utilityCooldown = spec.cooldownSeconds;
+      g.model.utilityCooldown = spec.cooldownSeconds * g.getCooldownMultiplier("utility");
       g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0);
       g.model.flashMs = Math.max(g.model.flashMs, spec.flashMs);
 

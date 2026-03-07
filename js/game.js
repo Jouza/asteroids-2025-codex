@@ -89,7 +89,10 @@
         flightModel: "arcade",
         dotEffects: [],
         hangar: {
-          message: "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start."
+          message: "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.",
+          lootCrate: [],
+          selectionSource: "crate",
+          selectionIndex: 0
         },
         loadout: {
           primaryId: "auto_cannon",
@@ -102,19 +105,28 @@
         unlocks: {
           secondary: {
             missile_burst: true,
-            rail_shot: false,
-            cluster_rockets: false
+            rail_shot: true,
+            cluster_rockets: true
           },
           utility: {
             pulse_bomb: true,
-            emp_pulse: false,
-            shield_dome: false
+            emp_pulse: true,
+            shield_dome: true
           }
         },
         upgrades: {
           fireRateLevel: 0,
           magazineLevel: 0
         },
+        inventory: [],
+        equipment: {
+          hull: null,
+          shield: null,
+          generator: null,
+          engine: null,
+          chipset: null
+        },
+        salvageParts: 0,
         telemetry: createTelemetryState(false)
       };
 
@@ -220,13 +232,19 @@
       this.model.currentMission = null;
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
-      this.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
+      this.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      this.model.hangar.lootCrate = [];
+      this.model.hangar.selectionSource = "crate";
+      this.model.hangar.selectionIndex = 0;
       this.model.upgrades.fireRateLevel = 0;
       this.model.upgrades.magazineLevel = 0;
       this.model.loadout.secondaryId = "missile_burst";
       this.model.loadout.utilityId = "pulse_bomb";
-      this.model.unlocks.secondary = { missile_burst: true, rail_shot: false, cluster_rockets: false };
-      this.model.unlocks.utility = { pulse_bomb: true, emp_pulse: false, shield_dome: false };
+      this.model.unlocks.secondary = { missile_burst: true, rail_shot: true, cluster_rockets: true };
+      this.model.unlocks.utility = { pulse_bomb: true, emp_pulse: true, shield_dome: true };
+      this.model.inventory = [];
+      this.model.equipment = { hull: null, shield: null, generator: null, engine: null, chipset: null };
+      this.model.salvageParts = 0;
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
       this.rng = createSeededRng(this.model.runSeed);
@@ -244,6 +262,155 @@
       this.model.loadout.primaryLabel = primary.label;
       this.model.loadout.secondaryLabel = secondary.label;
       this.model.loadout.utilityLabel = utility.label;
+    }
+
+    getRarityDef(rarityId) {
+      return this.config.loot.rarities.find((rarity) => rarity.id === rarityId) ?? this.config.loot.rarities[0];
+    }
+
+    getModuleModifiers() {
+      const totals = {
+        hullPct: 0,
+        shieldPct: 0,
+        energyPct: 0,
+        shieldRegenPct: 0,
+        energyRegenPct: 0,
+        heatDissipationPct: 0,
+        thrustPct: 0,
+        rotationAccelPct: 0,
+        rotationSpeedPct: 0,
+        maxSpeedPct: 0,
+        primaryCooldownPct: 0,
+        secondaryCooldownPct: 0,
+        utilityCooldownPct: 0,
+        primaryDamagePct: 0,
+        critChanceFlat: 0,
+        collisionResist: 0,
+        plasmaResist: 0
+      };
+
+      for (const slot of Object.keys(this.model.equipment)) {
+        const module = this.model.equipment[slot];
+        if (!module?.modifiers) continue;
+        const modifiers = module.modifiers;
+        for (const key of Object.keys(modifiers)) {
+          if (!(key in totals)) totals[key] = 0;
+          totals[key] += modifiers[key];
+        }
+      }
+
+      return totals;
+    }
+
+    applyPct(baseValue, pctBonus = 0) {
+      return baseValue * (1 + pctBonus);
+    }
+
+    getCooldownMultiplier(slotKey) {
+      const modifiers = this.getModuleModifiers();
+      let cooldownPct = 0;
+      if (slotKey === "primary") cooldownPct = modifiers.primaryCooldownPct ?? 0;
+      if (slotKey === "secondary") cooldownPct = modifiers.secondaryCooldownPct ?? 0;
+      if (slotKey === "utility") cooldownPct = modifiers.utilityCooldownPct ?? 0;
+      return this.clamp(1 - cooldownPct, 0.35, 2.4);
+    }
+
+    getPlayerCritChance() {
+      const modifiers = this.getModuleModifiers();
+      return this.clamp(this.config.damage.player.critChance + (modifiers.critChanceFlat ?? 0), 0, 0.75);
+    }
+
+    getPlayerDamageMultiplier() {
+      const modifiers = this.getModuleModifiers();
+      return Math.max(0.2, 1 + (modifiers.primaryDamagePct ?? 0));
+    }
+
+    rollWeighted(items, weightGetter) {
+      const totalWeight = items.reduce((sum, item) => sum + Math.max(0, weightGetter(item)), 0);
+      if (totalWeight <= 0) return items[0];
+      let roll = this.rng() * totalWeight;
+      for (const item of items) {
+        roll -= Math.max(0, weightGetter(item));
+        if (roll <= 0) return item;
+      }
+      return items[items.length - 1];
+    }
+
+    rollLootRarity() {
+      const rarities = this.config.loot.rarities;
+      const luck = this.clamp((this.model.sector - 1) * 0.016, 0, 0.42);
+      return this.rollWeighted(rarities, (rarity) => {
+        if (rarity.id === "common") return rarity.weight * (1 - luck * 1.55);
+        if (rarity.id === "uncommon") return rarity.weight * (1 + luck * 0.55);
+        if (rarity.id === "rare") return rarity.weight * (1 + luck * 1.25);
+        if (rarity.id === "exotic") return rarity.weight * (1 + luck * 1.85);
+        if (rarity.id === "prototype") return rarity.weight * (1 + luck * 2.25);
+        return rarity.weight * (1 + luck * 2.8);
+      });
+    }
+
+    mergeModifiers(base, add) {
+      const merged = { ...base };
+      for (const key of Object.keys(add || {})) {
+        merged[key] = (merged[key] ?? 0) + add[key];
+      }
+      return merged;
+    }
+
+    createModuleDrop() {
+      const slot = this.config.loot.slots[Math.floor(this.rng() * this.config.loot.slots.length)];
+      const bases = this.config.loot.basesBySlot[slot];
+      const base = bases[Math.floor(this.rng() * bases.length)];
+      const rarity = this.rollLootRarity();
+      const affixPool = this.config.loot.affixes.filter((affix) => affix.slots.includes(slot));
+      const affixes = [];
+      let modifiers = { ...(base.modifiers || {}) };
+      const targetAffixes = Math.min(rarity.affixCount, affixPool.length);
+
+      while (affixes.length < targetAffixes) {
+        const candidate = affixPool[Math.floor(this.rng() * affixPool.length)];
+        if (affixes.some((affix) => affix.id === candidate.id)) continue;
+        affixes.push(candidate);
+        modifiers = this.mergeModifiers(modifiers, candidate.modifiers);
+      }
+
+      const valueBase = 45 + this.model.sector * 8;
+      const sellValue = Math.max(
+        20,
+        Math.round((valueBase + affixes.length * 14) * rarity.valueMult * this.config.economy.moduleSellValueMultiplier)
+      );
+      const salvageValue = Math.max(1, Math.round(rarity.salvage + affixes.length * 2));
+
+      return {
+        uid: `${Date.now().toString(36)}-${Math.floor(this.rng() * 1e6).toString(36)}`,
+        slot,
+        rarity: rarity.id,
+        rarityLabel: rarity.label,
+        color: rarity.color,
+        name: `${rarity.label} ${base.name}`,
+        baseName: base.name,
+        affixes: affixes.map((affix) => ({ id: affix.id, name: affix.name })),
+        modifiers,
+        sellValue,
+        salvageValue,
+        level: this.model.sector
+      };
+    }
+
+    tryDropModule(source, detail) {
+      const lootCfg = this.config.loot.dropChance;
+      let chance = 0;
+      if (source === "asteroid") chance = lootCfg.asteroid[detail] ?? 0;
+      else if (source === "ufo") chance = lootCfg.ufo[detail] ?? 0;
+      else if (source === "miniBoss") chance = lootCfg.miniBoss;
+      if (this.rng() > chance) return;
+
+      const drop = this.createModuleDrop();
+      this.model.hangar.lootCrate.push(drop);
+      this.model.hangar.message = `Recovered module: ${drop.name}`;
+      if (this.model.hangar.lootCrate.length === 1 && this.model.hangar.selectionSource === "crate") {
+        this.model.hangar.selectionIndex = 0;
+      }
     }
 
     update(dt) {
@@ -288,7 +455,15 @@
     }
 
     getCurrentFlightProfile() {
-      return this.config.ship.flightModel[this.model.flightModel] ?? this.config.ship.flightModel.arcade;
+      const baseProfile = this.config.ship.flightModel[this.model.flightModel] ?? this.config.ship.flightModel.arcade;
+      const modifiers = this.getModuleModifiers();
+      return {
+        ...baseProfile,
+        thrust: this.applyPct(baseProfile.thrust, modifiers.thrustPct),
+        maxSpeed: this.applyPct(baseProfile.maxSpeed, modifiers.maxSpeedPct),
+        rotationAcceleration: this.applyPct(baseProfile.rotationAcceleration, modifiers.rotationAccelPct),
+        rotationSpeed: this.applyPct(baseProfile.rotationSpeed, modifiers.rotationSpeedPct)
+      };
     }
 
     toggleFlightModel() {
@@ -297,11 +472,12 @@
 
     initializeShipResources(ship) {
       if (!ship) return;
-      ship.hullMax = this.config.ship.baseHull;
+      const modifiers = this.getModuleModifiers();
+      ship.hullMax = Math.round(this.applyPct(this.config.ship.baseHull, modifiers.hullPct));
       ship.hull = ship.hullMax;
-      ship.shieldMax = this.config.ship.baseShield;
+      ship.shieldMax = Math.round(this.applyPct(this.config.ship.baseShield, modifiers.shieldPct));
       ship.shield = ship.shieldMax;
-      ship.energyMax = this.config.ship.baseEnergy;
+      ship.energyMax = Math.round(this.applyPct(this.config.ship.baseEnergy, modifiers.energyPct));
       ship.energy = ship.energyMax;
       ship.heatMax = this.config.ship.baseHeat;
       ship.heat = 0;
@@ -313,12 +489,19 @@
       if (!ship) return;
 
       const cfg = this.config.ship;
-      ship.energy = Math.min(ship.energyMax, ship.energy + cfg.energyRegenPerSecond * dt);
-      ship.heat = Math.max(0, ship.heat - cfg.heatDissipationPerSecond * dt);
+      const modifiers = this.getModuleModifiers();
+      ship.energy = Math.min(
+        ship.energyMax,
+        ship.energy + this.applyPct(cfg.energyRegenPerSecond, modifiers.energyRegenPct) * dt
+      );
+      ship.heat = Math.max(0, ship.heat - this.applyPct(cfg.heatDissipationPerSecond, modifiers.heatDissipationPct) * dt);
 
       const sinceDamage = this.model.runtimeSeconds - ship.lastDamageAt;
       if (sinceDamage >= cfg.shieldRegenDelaySeconds) {
-        ship.shield = Math.min(ship.shieldMax, ship.shield + cfg.shieldRegenPerSecond * dt);
+        ship.shield = Math.min(
+          ship.shieldMax,
+          ship.shield + this.applyPct(cfg.shieldRegenPerSecond, modifiers.shieldRegenPct) * dt
+        );
       }
     }
 
@@ -346,12 +529,12 @@
       };
     }
 
-    resolvePlayerDamage(baseDamage, damageType = "kinetic", critChance = this.config.damage.player.critChance) {
+    resolvePlayerDamage(baseDamage, damageType = "kinetic", critChance = this.getPlayerCritChance()) {
       const isCrit = this.rng() < this.clamp(critChance, 0, 1);
       const critMultiplier = this.config.damage.player.critMultiplier ?? this.config.damage.critMultiplier;
       return {
         damageType,
-        damage: Math.max(0, baseDamage * (isCrit ? critMultiplier : 1)),
+        damage: Math.max(0, baseDamage * this.getPlayerDamageMultiplier() * (isCrit ? critMultiplier : 1)),
         isCrit
       };
     }
@@ -362,7 +545,13 @@
       if (!overrides.bypassInvulnerability && ship.invulnMs > 0) return false;
 
       const event = this.createDamageEvent(profileId, overrides);
-      const resolved = this.resolveDamage(event, this.config.damage.shipResist);
+      const modifiers = this.getModuleModifiers();
+      const resistProfile = {
+        ...this.config.damage.shipResist,
+        collision: this.clamp((this.config.damage.shipResist.collision ?? 0) + (modifiers.collisionResist ?? 0), 0, 0.9),
+        plasma: this.clamp((this.config.damage.shipResist.plasma ?? 0) + (modifiers.plasmaResist ?? 0), 0, 0.9)
+      };
+      const resolved = this.resolveDamage(event, resistProfile);
       if (!resolved) return false;
       const hasDot = Boolean(event.dotDuration && event.dotDps);
       if (resolved.damage <= 0 && !hasDot) return false;
@@ -445,7 +634,7 @@
       this.endGame();
     }
 
-    applyDamageToMiniBoss(baseDamage, damageType = "kinetic", critChance = this.config.damage.player.critChance) {
+    applyDamageToMiniBoss(baseDamage, damageType = "kinetic", critChance = this.getPlayerCritChance()) {
       const boss = this.model.miniBoss;
       if (!boss) return false;
       const resolved = this.resolvePlayerDamage(baseDamage, damageType, critChance);
@@ -572,7 +761,7 @@
       const overheatRatio =
         ship && ship.heat > softThreshold ? (ship.heat - softThreshold) / (ship.heatMax - softThreshold) : 0;
       const heatPenalty = 1 + overheatRatio * (1 / this.config.ship.overheatPenaltyFactor - 1);
-      return primary.cooldownSeconds * factor * heatPenalty;
+      return primary.cooldownSeconds * factor * heatPenalty * this.getCooldownMultiplier("primary");
     }
 
     canFirePrimary() {
@@ -681,6 +870,7 @@
       this.combatSystem.splitAsteroid(asteroid);
       this.model.asteroids.splice(index, 1);
       this.model.missionAsteroidKills += 1;
+      this.tryDropModule("asteroid", asteroid.size);
 
       if (allowBlast && asteroid.asteroidType === "volatile") {
         this.triggerVolatileBlast(asteroid.x, asteroid.y, asteroid.radius);
@@ -711,6 +901,7 @@
       this.emitImpactParticles(ufo.x, ufo.y, 28, "255,91,186");
       this.model.ufos.splice(index, 1);
       this.model.missionUfoKills += 1;
+      this.tryDropModule("ufo", ufo.mode);
     }
 
     destroyMiniBoss() {
@@ -720,6 +911,8 @@
       this.emitImpactParticles(this.model.miniBoss.x, this.model.miniBoss.y, 42, "255,114,210");
       this.model.flashMs = Math.max(this.model.flashMs, 230);
       this.model.miniBoss = null;
+      this.tryDropModule("miniBoss");
+      this.tryDropModule("miniBoss");
     }
 
     consumePlayerProjectileHit(projectileIndex) {

@@ -11,10 +11,11 @@
       if (g.input.wasPressed("Digit3")) this.purchaseHangarItem(2);
       if (g.input.wasPressed("Digit4")) this.cycleLoadoutSlot("secondary");
       if (g.input.wasPressed("Digit5")) this.cycleLoadoutSlot("utility");
-      if (g.input.wasPressed("Digit6")) this.unlockLoadout("secondary", "rail_shot");
-      if (g.input.wasPressed("Digit7")) this.unlockLoadout("secondary", "cluster_rockets");
-      if (g.input.wasPressed("Digit8")) this.unlockLoadout("utility", "emp_pulse");
-      if (g.input.wasPressed("Digit9")) this.unlockLoadout("utility", "shield_dome");
+      if (g.input.wasPressed("Digit6")) this.changeSelection(-1);
+      if (g.input.wasPressed("Digit7")) this.changeSelection(1);
+      if (g.input.wasPressed("Digit8")) this.takeOrEquipSelected();
+      if (g.input.wasPressed("Digit9")) this.sellSelected();
+      if (g.input.wasPressed("Digit0")) this.salvageSelected();
       if (g.input.wasPressed("Enter")) this.beginNextSectorFromHangar();
     }
 
@@ -30,7 +31,7 @@
       g.model.sectorCompletionHandled = false;
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
       g.missionSystem.startMission(g.model.sector);
-      g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
+      g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
     }
 
     enterHangarPhase() {
@@ -46,7 +47,8 @@
       g.model.enemyBullets = [];
       g.model.bullets = [];
       g.model.utilityEffects = [];
-      g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
+      g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.";
+      this.clampSelection();
     }
 
     purchaseHangarItem(index) {
@@ -94,6 +96,157 @@
       g.model.hangar.message = `Nakoupeno: ${item.title}`;
     }
 
+    getSelectedEntry() {
+      const g = this.game;
+      const h = g.model.hangar;
+      if (h.selectionSource === "inventory") {
+        const item = g.model.inventory[h.selectionIndex];
+        if (!item) return null;
+        return { source: "inventory", item, index: h.selectionIndex };
+      }
+      const item = h.lootCrate[h.selectionIndex];
+      if (!item) return null;
+      return { source: "crate", item, index: h.selectionIndex };
+    }
+
+    clampSelection() {
+      const g = this.game;
+      const h = g.model.hangar;
+      const crateLen = h.lootCrate.length;
+      const invLen = g.model.inventory.length;
+
+      if (h.selectionSource === "crate" && crateLen === 0 && invLen > 0) {
+        h.selectionSource = "inventory";
+        h.selectionIndex = 0;
+      } else if (h.selectionSource === "inventory" && invLen === 0 && crateLen > 0) {
+        h.selectionSource = "crate";
+        h.selectionIndex = 0;
+      }
+
+      const len = h.selectionSource === "inventory" ? invLen : crateLen;
+      if (len <= 0) {
+        h.selectionIndex = 0;
+        return;
+      }
+      if (h.selectionIndex < 0) h.selectionIndex = len - 1;
+      if (h.selectionIndex >= len) h.selectionIndex = 0;
+    }
+
+    changeSelection(step) {
+      const g = this.game;
+      const h = g.model.hangar;
+      const crateLen = h.lootCrate.length;
+      const invLen = g.model.inventory.length;
+      if (crateLen <= 0 && invLen <= 0) {
+        g.model.hangar.message = "Neni co vybirat.";
+        return;
+      }
+
+      const source = h.selectionSource;
+      if (source === "crate" && crateLen > 0) {
+        const nextIndex = h.selectionIndex + step;
+        if (nextIndex >= crateLen && invLen > 0) {
+          h.selectionSource = "inventory";
+          h.selectionIndex = 0;
+        } else if (nextIndex < 0 && invLen > 0) {
+          h.selectionSource = "inventory";
+          h.selectionIndex = invLen - 1;
+        } else {
+          h.selectionIndex = nextIndex;
+        }
+      } else if (source === "inventory" && invLen > 0) {
+        const nextIndex = h.selectionIndex + step;
+        if (nextIndex >= invLen && crateLen > 0) {
+          h.selectionSource = "crate";
+          h.selectionIndex = 0;
+        } else if (nextIndex < 0 && crateLen > 0) {
+          h.selectionSource = "crate";
+          h.selectionIndex = crateLen - 1;
+        } else {
+          h.selectionIndex = nextIndex;
+        }
+      }
+
+      this.clampSelection();
+      const selected = this.getSelectedEntry();
+      if (selected) {
+        h.message = `${selected.source === "crate" ? "Crate" : "Inventory"}: ${selected.item.name}`;
+      }
+    }
+
+    takeOrEquipSelected() {
+      const g = this.game;
+      const entry = this.getSelectedEntry();
+      if (!entry) {
+        g.model.hangar.message = "Neni vybrany modul.";
+        return;
+      }
+
+      if (entry.source === "crate") {
+        if (g.model.inventory.length >= g.config.loot.maxInventoryItems) {
+          g.model.hangar.message = "Inventory je plny. Prodej nebo salvage.";
+          return;
+        }
+        g.model.hangar.lootCrate.splice(entry.index, 1);
+        g.model.inventory.push(entry.item);
+        g.model.hangar.selectionSource = "inventory";
+        g.model.hangar.selectionIndex = g.model.inventory.length - 1;
+        this.clampSelection();
+        g.model.hangar.message = `Vzato do inventory: ${entry.item.name}`;
+        return;
+      }
+
+      const module = entry.item;
+      const slot = module.slot;
+      const previous = g.model.equipment[slot];
+      g.model.equipment[slot] = module;
+      g.model.inventory.splice(entry.index, 1);
+      if (previous) g.model.inventory.push(previous);
+      g.initializeShipResources(g.model.ship);
+      this.clampSelection();
+      g.model.hangar.message = `Equip ${slot}: ${module.name}`;
+    }
+
+    removeEntry(entry) {
+      const g = this.game;
+      if (!entry) return null;
+      if (entry.source === "crate") {
+        return g.model.hangar.lootCrate.splice(entry.index, 1)[0] ?? null;
+      }
+      return g.model.inventory.splice(entry.index, 1)[0] ?? null;
+    }
+
+    sellSelected() {
+      const g = this.game;
+      const entry = this.getSelectedEntry();
+      if (!entry) {
+        g.model.hangar.message = "Neni vybrany modul.";
+        return;
+      }
+      const removed = this.removeEntry(entry);
+      if (!removed) return;
+      const gain = removed.sellValue ?? 0;
+      g.model.credits += gain;
+      this.clampSelection();
+      g.model.hangar.message = `Prodano: ${removed.name} (+${gain} cr)`;
+    }
+
+    salvageSelected() {
+      const g = this.game;
+      const entry = this.getSelectedEntry();
+      if (!entry) {
+        g.model.hangar.message = "Neni vybrany modul.";
+        return;
+      }
+      const removed = this.removeEntry(entry);
+      if (!removed) return;
+      const parts = removed.salvageValue ?? 0;
+      g.model.salvageParts += parts;
+      g.model.credits += parts * g.config.economy.salvageToCredits;
+      this.clampSelection();
+      g.model.hangar.message = `Rozebrano: ${removed.name} (+${parts} parts)`;
+    }
+
     cycleLoadoutSlot(slotName) {
       const g = this.game;
       const unlockedMap = g.model.unlocks[slotName];
@@ -113,35 +266,6 @@
       g.model.hangar.message = `Aktivni ${slotName}: ${label}`;
     }
 
-    unlockLoadout(slotName, loadoutId) {
-      const g = this.game;
-      const unlockSet = g.model.unlocks[slotName];
-      if (!unlockSet || !(loadoutId in unlockSet)) return;
-
-      if (unlockSet[loadoutId]) {
-        g.model.hangar.message = "Uz odemceno.";
-        return;
-      }
-
-      const cost = g.config.hangar.unlockCosts[loadoutId] ?? 0;
-      if (g.model.credits < cost) {
-        g.model.hangar.message = "Nedostatek credits pro unlock.";
-        return;
-      }
-
-      g.model.credits -= cost;
-      unlockSet[loadoutId] = true;
-
-      if (slotName === "secondary") g.model.loadout.secondaryId = loadoutId;
-      else g.model.loadout.utilityId = loadoutId;
-
-      g.syncLoadoutLabels();
-      const label =
-        slotName === "secondary"
-          ? g.config.loadout.secondary[loadoutId].label
-          : g.config.loadout.utility[loadoutId].label;
-      g.model.hangar.message = `Odemceno: ${label}`;
-    }
   }
 
   window.Asteroids = window.Asteroids || {};

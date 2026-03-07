@@ -2,10 +2,10 @@
 
 Prubezny checklist pro realizaci noveho smeru. Polozky budeme odskrtavat postupne.
 
-- [ ] Ekonomika a loot 2.0
-  - [ ] Dropy modulu (rarity + affixy)
-  - [ ] Inventory/equip flow v hangaru
-  - [ ] Salvage rozhodovani (vzit/prodat/rozebrat)
+- [x] Ekonomika a loot 2.0
+  - [x] Dropy modulu (rarity + affixy)
+  - [x] Inventory/equip flow v hangaru
+  - [x] Salvage rozhodovani (vzit/prodat/rozebrat)
 
 - [ ] Ship buildcraft (modularni lod)
   - [ ] Sloty trupu/motoru/generatoru/stitu/chipsetu
