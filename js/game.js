@@ -78,6 +78,7 @@
         comboCount: 0,
         comboMultiplier: 1,
         comboTimer: 0,
+        comboScoringEnabled: config.arcadeMutators.comboScoringEnabled,
         waveCompletionHandled: false,
         missionTimer: 0,
         missionSpawnTimer: 0,
@@ -209,6 +210,7 @@
       this.model.comboCount = 0;
       this.model.comboMultiplier = 1;
       this.model.comboTimer = 0;
+      this.model.comboScoringEnabled = this.config.arcadeMutators.comboScoringEnabled;
       this.model.waveCompletionHandled = false;
       this.model.missionTimer = 0;
       this.model.missionSpawnTimer = 0;
@@ -458,6 +460,12 @@
     }
 
     updateComboTimer(dt) {
+      if (!this.model.comboScoringEnabled) {
+        this.model.comboCount = 0;
+        this.model.comboMultiplier = 1;
+        this.model.comboTimer = 0;
+        return;
+      }
       if (this.model.comboTimer <= 0) return;
       this.model.comboTimer = Math.max(0, this.model.comboTimer - dt);
       if (this.model.comboTimer <= 0) {
@@ -474,13 +482,16 @@
     }
 
     registerScore(basePoints, incrementCombo) {
-      if (incrementCombo) this.bumpCombo();
-      else if (this.model.comboCount > 0) this.model.comboTimer = this.config.combo.resetSeconds;
+      if (this.model.comboScoringEnabled) {
+        if (incrementCombo) this.bumpCombo();
+        else if (this.model.comboCount > 0) this.model.comboTimer = this.config.combo.resetSeconds;
+      }
 
       const missionType = this.model.currentMission?.type;
       const scoreMissionMult = this.config.mission.rewards.scoreByType[missionType] ?? 1;
       const creditsMissionMult = this.config.mission.rewards.creditsByType[missionType] ?? 1;
-      const scored = Math.round(basePoints * this.model.comboMultiplier * scoreMissionMult);
+      const comboMultiplier = this.model.comboScoringEnabled ? this.model.comboMultiplier : 1;
+      const scored = Math.round(basePoints * comboMultiplier * scoreMissionMult);
       this.model.score += scored;
       this.model.telemetry.scoreEarned += scored;
       const creditsGain = Math.max(
@@ -607,8 +618,12 @@
     }
 
     awardNearMiss() {
-      this.registerScore(this.config.combo.nearMissBonus, false);
-      this.emitImpactParticles(this.model.ship.x, this.model.ship.y, 4, "255,220,140");
+      const ship = this.model.ship;
+      if (!ship) return;
+      ship.energy = Math.min(ship.energyMax, ship.energy + this.config.combo.nearMissEnergyGain);
+      ship.heat = Math.max(0, ship.heat - this.config.combo.nearMissHeatReduction);
+      ship.shield = Math.min(ship.shieldMax, ship.shield + this.config.combo.nearMissShieldGain);
+      this.emitImpactParticles(ship.x, ship.y, 6, "255,220,140");
     }
 
     addParticle(x, y, vx, vy, life, radius, color) {
