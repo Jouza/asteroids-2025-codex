@@ -25,19 +25,19 @@
         g.model.ship.energy = g.model.ship.energyMax;
         g.model.ship.heat = 0;
       }
-      g.model.wave += 1;
-      g.model.waveTimerMs = 0;
-      g.model.waveCompletionHandled = false;
+      g.model.sector += 1;
+      g.model.sectorTimerMs = 0;
+      g.model.sectorCompletionHandled = false;
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
-      g.missionSystem.startMission(g.model.wave);
+      g.missionSystem.startMission(g.model.sector);
       g.model.hangar.message = "Hangar: 1-3 upgrade, 4/5 swap, 6-9 unlock, Enter start.";
     }
 
     enterHangarPhase() {
       const g = this.game;
       g.model.gameState = window.Asteroids.GAME_STATE.HANGAR;
-      g.model.waveCompletionHandled = true;
-      g.model.waveTimerMs = 0;
+      g.model.sectorCompletionHandled = true;
+      g.model.sectorTimerMs = 0;
       g.model.comboCount = 0;
       g.model.comboMultiplier = 1;
       g.model.comboTimer = 0;

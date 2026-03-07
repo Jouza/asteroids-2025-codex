@@ -6,10 +6,10 @@
       this.game = game;
     }
 
-    getWaveScale(perWave, maxBonus) {
+    getSectorScale(perSector, maxBonus) {
       const g = this.game;
-      const waveIndex = Math.max(0, g.model.wave - 1);
-      return 1 + Math.min(maxBonus, waveIndex * perWave);
+      const sectorIndex = Math.max(0, g.model.sector - 1);
+      return 1 + Math.min(maxBonus, sectorIndex * perSector);
     }
 
     scheduleNextUfoSpawn() {
@@ -43,8 +43,8 @@
       const ship = g.model.ship;
       const c = g.config;
       if (!ship) return;
-      const speedScale = this.getWaveScale(c.ufo.speedScalePerWave, c.ufo.speedScaleMaxBonus);
-      const fireRateScale = this.getWaveScale(c.ufo.fireRateScalePerWave, c.ufo.fireRateScaleMaxBonus);
+      const speedScale = this.getSectorScale(c.ufo.speedScalePerSector, c.ufo.speedScaleMaxBonus);
+      const fireRateScale = this.getSectorScale(c.ufo.fireRateScalePerSector, c.ufo.fireRateScaleMaxBonus);
 
       for (const ufo of g.model.ufos) {
         const dx = ship.x - ufo.x;
@@ -97,8 +97,8 @@
       const shotAngle = baseAngle + (g.rng() - 0.5) * spread;
       const muzzleX = ufo.x + Math.cos(shotAngle) * (ufo.radius + 4);
       const muzzleY = ufo.y + Math.sin(shotAngle) * (ufo.radius + 4);
-      const speedScale = this.getWaveScale(
-        g.config.ufo.bulletSpeedScalePerWave,
+      const speedScale = this.getSectorScale(
+        g.config.ufo.bulletSpeedScalePerSector,
         g.config.ufo.bulletSpeedScaleMaxBonus
       );
       const bullet = createEnemyBullet(muzzleX, muzzleY, shotAngle, g.config);
@@ -139,8 +139,8 @@
         const dx = ship.x - boss.x;
         const dy = ship.y - boss.y;
         const aim = Math.atan2(dy, dx);
-        const speedScale = this.getWaveScale(
-          g.config.ufo.bulletSpeedScalePerWave,
+        const speedScale = this.getSectorScale(
+          g.config.ufo.bulletSpeedScalePerSector,
           g.config.ufo.bulletSpeedScaleMaxBonus
         );
         const bullet = createEnemyBullet(boss.x, boss.y, aim + (g.rng() - 0.5) * 0.14, g.config);
@@ -149,8 +149,8 @@
         bullet.damageProfile = "mini_boss_bullet";
         g.model.enemyBullets.push(bullet);
         g.recordEnemyShot();
-        const fireRateScale = this.getWaveScale(
-          g.config.ufo.fireRateScalePerWave,
+        const fireRateScale = this.getSectorScale(
+          g.config.ufo.fireRateScalePerSector,
           g.config.ufo.fireRateScaleMaxBonus
         );
         boss.shootTimer = cfg.shootCooldownSeconds / fireRateScale;

@@ -63,8 +63,8 @@
     },
     bullet: {
       maxActive: 3,
-      waveBonusEveryWaves: 4,
-      waveBonusMax: 2,
+      sectorBonusEverySectors: 4,
+      sectorBonusMax: 2,
       speed: 560,
       ttlSeconds: 1.05,
       cooldownSeconds: 0.165,
@@ -134,7 +134,7 @@
           kind: "pulse",
           label: "Pulse",
           role: "Emergency clear",
-          effectText: "AOE wave destruction",
+          effectText: "AOE threat clear",
           impactText: "Deletes nearby threats",
           cooldownSeconds: 9.8,
           pulseRadius: 190,
@@ -274,22 +274,22 @@
       spawnDelayMaxSeconds: 28,
       speedHunter: 88,
       speedSniper: 72,
-      speedScalePerWave: 0.022,
+      speedScalePerSector: 0.022,
       speedScaleMaxBonus: 0.32,
-      fireRateScalePerWave: 0.05,
+      fireRateScalePerSector: 0.05,
       fireRateScaleMaxBonus: 0.7,
-      bulletSpeedScalePerWave: 0.024,
+      bulletSpeedScalePerSector: 0.024,
       bulletSpeedScaleMaxBonus: 0.45,
       radius: 20,
       scoreHunter: 220,
       scoreSniper: 320,
       desiredSniperDistance: 260
     },
-    wave: {
+    sector: {
       baseAsteroids: 4,
       graceMs: 1100,
       speedScaleStep: 0.11,
-      splitScalePerWave: 0.09
+      splitScalePerSector: 0.09
     },
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
@@ -298,18 +298,18 @@
         durationStepSeconds: 2.3,
         asteroidSpawnIntervalSeconds: 3.35,
         minSpawnIntervalSeconds: 1.5,
-        spawnRateRampPerWave: 0.065,
-        extraLargeEveryWaves: 5
+        spawnRateRampPerSector: 0.065,
+        extraLargeEverySectors: 5
       },
       ufoHunt: {
         baseKills: 1,
         killStep: 1,
         maxConcurrentUfos: 1,
-        maxConcurrentRampEveryWaves: 4,
+        maxConcurrentRampEverySectors: 4,
         maxConcurrentCap: 3,
         spawnIntervalSeconds: 3.8,
         minSpawnIntervalSeconds: 1.7,
-        spawnRateRampPerWave: 0.08
+        spawnRateRampPerSector: 0.08
       },
       asteroidStorm: {
         baseTarget: 10,
@@ -318,9 +318,9 @@
         initialMediumCount: 1,
         extraSpawnIntervalSeconds: 5.1,
         minExtraSpawnIntervalSeconds: 2.2,
-        spawnRateRampPerWave: 0.085,
+        spawnRateRampPerSector: 0.085,
         extraMediumChance: 0.32,
-        mediumChanceRampPerWave: 0.03
+        mediumChanceRampPerSector: 0.03
       },
       miniBoss: {
         hpBase: 360,

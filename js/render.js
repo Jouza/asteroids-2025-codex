@@ -397,7 +397,7 @@
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(215,246,255,0.95)";
       ctx.font = "600 18px Trebuchet MS";
-      ctx.fillText(`Sector ${model.wave}: ${model.currentMission.label}`, config.canvas.width / 2, 28);
+      ctx.fillText(`Sector ${model.sector}: ${model.currentMission.label}`, config.canvas.width / 2, 28);
       ctx.font = "500 16px Trebuchet MS";
       ctx.fillStyle = "rgba(186,232,255,0.92)";
       ctx.fillText(model.currentMission.objectiveText || "", config.canvas.width / 2, 50);
@@ -459,7 +459,7 @@
       const currentMission = model.currentMission;
       if (currentMission) {
         drawLine(
-          `Sector ${model.wave}: ${currentMission.label} (${currentMission.type})`,
+          `Sector ${model.sector}: ${currentMission.label} (${currentMission.type})`,
           "rgba(189,255,208,0.96)"
         );
         drawLine(currentMission.objectiveText || "-", "rgba(189,255,208,0.9)");
@@ -470,7 +470,7 @@
       const last = telemetry.lastMission;
       if (last) {
         drawLine(
-          `Last Sector ${last.wave} ${last.label}: +${last.scoreGained} score, +${last.creditsGained} cr, ${last.durationSeconds.toFixed(1)}s`,
+          `Last Sector ${last.sector} ${last.label}: +${last.scoreGained} score, +${last.creditsGained} cr, ${last.durationSeconds.toFixed(1)}s`,
           "rgba(255,224,170,0.96)"
         );
         drawLine(
@@ -516,7 +516,7 @@
         if (model.comboScoringEnabled) {
           ctx.fillText(`Combo pri konci: x${model.comboMultiplier.toFixed(2)}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
         } else {
-          ctx.fillText(`Sektor dosazeny: ${model.wave}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+          ctx.fillText(`Sektor dosazeny: ${model.sector}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
         }
         ctx.fillText("Enter pro restart", config.canvas.width / 2, config.canvas.height / 2 + 76);
       }
@@ -535,7 +535,7 @@
         ctx.font = "600 20px Trebuchet MS";
         ctx.fillText(`Credits: ${model.credits}`, centerX, startY + 34);
         const missionOrder = config.mission.order;
-        const nextMissionType = missionOrder[model.wave % missionOrder.length];
+        const nextMissionType = missionOrder[model.sector % missionOrder.length];
         ctx.fillText(`Next sector mission: ${nextMissionType.toUpperCase()}`, centerX, startY + 58);
 
         const items = config.hangar.items;
