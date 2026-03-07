@@ -610,15 +610,29 @@
 
       if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
-        const startY = config.canvas.height / 2 - 250;
+        const topY = 86;
+        const panelY = 146;
+        const panelH = 468;
+        const panelGap = 14;
+        const panelW = Math.floor((config.canvas.width - 92 * 2 - panelGap * 2) / 3);
+        const panelX0 = 92;
+        const panelX1 = panelX0 + panelW + panelGap;
+        const panelX2 = panelX1 + panelW + panelGap;
         const hangar = model.hangar;
         const lootCrate = hangar.lootCrate || [];
         const inventory = model.inventory || [];
         const equipment = model.equipment || {};
         const selectedSource = hangar.selectionSource || "crate";
         const selectedIndex = hangar.selectionIndex || 0;
+        const primaryDefs = config.loadout.primary;
+        const secondaryDefs = config.loadout.secondary;
+        const utilityDefs = config.loadout.utility;
+        const activePrimary = primaryDefs[model.loadout.primaryId];
+        const activeSecondary = secondaryDefs[model.loadout.secondaryId];
+        const activeUtility = utilityDefs[model.loadout.utilityId];
         const rarityById = {};
         for (const rarity of config.loot.rarities) rarityById[rarity.id] = rarity;
+
         const slotLabels = {
           hull: "Hull",
           shield: "Shield",
@@ -626,212 +640,222 @@
           engine: "Engine",
           chipset: "Chipset"
         };
-        const formatModule = (module) => {
-          if (!module) return "-";
-          const affixCount = module.affixes?.length ?? 0;
-          return `${module.name} [${slotLabels[module.slot] || module.slot}] Afx:${affixCount} Sell:${module.sellValue}`;
-        };
-        const drawListItem = (text, y, isSelected, color) => {
-          ctx.fillStyle = isSelected ? "#ffe7a8" : color;
-          ctx.fillText(isSelected ? `> ${text}` : text, centerX, y);
-        };
+
         const selectedModule =
           selectedSource === "crate" ? lootCrate[selectedIndex] ?? null : inventory[selectedIndex] ?? null;
-        const formatDelta = (nextValue, currentValue, unit = "", invert = false) => {
-          const delta = nextValue - currentValue;
-          const abs = Math.abs(delta);
-          const displayAbs = unit === "%" ? abs * 100 : abs;
-          const valueText = `${delta > 0 ? "+" : delta < 0 ? "-" : ""}${displayAbs.toFixed(displayAbs < 10 ? 1 : 0)}${unit}`;
-          const good = invert ? delta < 0 : delta > 0;
-          const bad = invert ? delta > 0 : delta < 0;
-          return {
-            text: valueText,
-            color: good ? "#9bf5bb" : bad ? "#ff9ea5" : "rgba(216,245,255,0.7)"
-          };
-        };
-        const readMod = (module, key) => module?.modifiers?.[key] ?? 0;
 
-        ctx.fillText("HANGAR", centerX, startY);
-        ctx.font = "600 20px Trebuchet MS";
-        ctx.fillText(`Credits: ${model.credits} | Salvage parts: ${model.salvageParts}`, centerX, startY + 34);
+        const truncate = (value, maxLen = 36) => {
+          if (!value) return "-";
+          return value.length > maxLen ? `${value.slice(0, maxLen - 1)}…` : value;
+        };
+
+        const formatModuleShort = (module) => {
+          if (!module) return "-";
+          return `${truncate(module.name, 22)} | ${slotLabels[module.slot] || module.slot} | ${module.sellValue}cr`;
+        };
+
+        const drawPanel = (x, y, w, h, title) => {
+          ctx.fillStyle = "rgba(4,12,24,0.78)";
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeStyle = "rgba(63,207,255,0.55)";
+          ctx.lineWidth = 1.1;
+          ctx.strokeRect(x, y, w, h);
+          ctx.fillStyle = "#99ebff";
+          ctx.textAlign = "left";
+          ctx.font = "700 16px Trebuchet MS";
+          ctx.fillText(title, x + 12, y + 22);
+          ctx.strokeStyle = "rgba(63,207,255,0.3)";
+          ctx.beginPath();
+          ctx.moveTo(x + 10, y + 30);
+          ctx.lineTo(x + w - 10, y + 30);
+          ctx.stroke();
+        };
+
+        const drawRow = (x, y, text, color = "#d8f5ff", font = "500 14px Trebuchet MS") => {
+          ctx.fillStyle = color;
+          ctx.font = font;
+          ctx.textAlign = "left";
+          ctx.fillText(text, x, y);
+        };
+
+        const drawSelectableRow = (x, y, w, text, selected, color = "#d8f5ff") => {
+          if (selected) {
+            ctx.fillStyle = "rgba(255,231,168,0.16)";
+            ctx.fillRect(x - 4, y - 13, w, 18);
+            ctx.strokeStyle = "rgba(255,231,168,0.7)";
+            ctx.strokeRect(x - 4, y - 13, w, 18);
+          }
+          drawRow(x, y, selected ? `> ${text}` : text, selected ? "#ffe7a8" : color, "500 13px Trebuchet MS");
+        };
+
+        const getWindowStart = (len, selected, rows, centerOffset) =>
+          Math.max(0, Math.min(selected - centerOffset, Math.max(0, len - rows)));
+
+        const readMod = (module, key) => module?.modifiers?.[key] ?? 0;
+        const formatPctDelta = (next, current, invert = false) => {
+          const d = (next - current) * 100;
+          const good = invert ? d < 0 : d > 0;
+          const bad = invert ? d > 0 : d < 0;
+          const color = good ? "#9bf5bb" : bad ? "#ff9ea5" : "rgba(216,245,255,0.72)";
+          return { text: `${d >= 0 ? "+" : ""}${d.toFixed(1)}%`, color };
+        };
+
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#d8f5ff";
+        ctx.font = "700 46px Trebuchet MS";
+        ctx.fillText("HANGAR", centerX, topY);
+        ctx.font = "600 21px Trebuchet MS";
         const missionOrder = config.mission.order;
         const nextMissionType = missionOrder[model.sector % missionOrder.length];
-        ctx.fillText(`Next sector mission: ${nextMissionType.toUpperCase()}`, centerX, startY + 58);
+        ctx.fillText(
+          `Credits ${model.credits}  |  Salvage ${model.salvageParts}  |  Next ${nextMissionType.toUpperCase()}`,
+          centerX,
+          topY + 30
+        );
 
-        const items = config.hangar.items;
-        for (let i = 0; i < items.length; i += 1) {
-          const item = items[i];
-          const y = startY + 102 + i * 38;
+        drawPanel(panelX0, panelY, panelW, panelH, "SHOP");
+        drawPanel(panelX1, panelY, panelW, panelH, "LOADOUT");
+        drawPanel(panelX2, panelY, panelW, panelH, "LOOT");
+
+        const leftX = panelX0 + 12;
+        let leftY = panelY + 54;
+        for (let i = 0; i < config.hangar.items.length; i += 1) {
+          const item = config.hangar.items[i];
           const canAfford = model.credits >= item.cost;
-          ctx.fillStyle = canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)";
-          ctx.fillText(`${i + 1}. ${item.title} - ${item.cost} cr`, centerX, y);
+          drawRow(leftX, leftY, `${i + 1}. ${truncate(item.title, 23)} ${item.cost}cr`, canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)");
+          leftY += 24;
         }
-
-        const primaryDefs = config.loadout.primary;
-        const secondaryDefs = config.loadout.secondary;
-        const utilityDefs = config.loadout.utility;
-        const primaryLineY = startY + 220;
-        const secondaryLineY = startY + 244;
-        const utilityLineY = startY + 268;
-
-        ctx.fillStyle = "#ffd785";
-        ctx.fillText(
-          `4. Primary swap (${model.loadout.primaryLabel})`,
-          centerX,
-          primaryLineY
+        leftY += 8;
+        drawRow(leftX, leftY, `4. Primary: ${model.loadout.primaryLabel}`, "#ffd785");
+        leftY += 22;
+        drawRow(leftX, leftY, `5. Secondary: ${model.loadout.secondaryLabel}`, "#ffd785");
+        leftY += 22;
+        drawRow(leftX, leftY, `R. Utility: ${model.loadout.utilityLabel}`, "#ffd785");
+        leftY += 28;
+        drawRow(
+          leftX,
+          leftY,
+          `Levels FR ${model.upgrades.fireRateLevel} | MAG ${model.upgrades.magazineLevel}`,
+          "#9fe3ff"
         );
-        ctx.fillText(
-          `5. Secondary swap (${model.loadout.secondaryLabel})`,
-          centerX,
-          secondaryLineY
-        );
-        ctx.fillText(
-          `R. Utility swap (${model.loadout.utilityLabel})`,
-          centerX,
-          utilityLineY
-        );
-        ctx.fillStyle = "#d8f5ff";
-        ctx.font = "500 16px Trebuchet MS";
-        ctx.fillText("6/7 Select item | 8 Take/Equip | 9 Sell | 0 Salvage", centerX, startY + 296);
 
-        ctx.fillStyle = "#a7f2ff";
-        ctx.font = "600 18px Trebuchet MS";
-        ctx.fillText(`Salvage Crate (${lootCrate.length})`, centerX, startY + 324);
-        ctx.font = "500 15px Trebuchet MS";
-        const crateRows = 4;
-        const crateStart =
-          selectedSource === "crate" ? Math.max(0, Math.min(selectedIndex - 2, Math.max(0, lootCrate.length - crateRows))) : 0;
-        for (let i = 0; i < crateRows; i += 1) {
-          const itemIndex = crateStart + i;
-          const module = lootCrate[itemIndex];
-          const y = startY + 346 + i * 20;
-          if (!module) {
-            drawListItem("-", y, false, "rgba(216,245,255,0.4)");
-            continue;
-          }
-          const rarity = rarityById[module.rarity];
-          drawListItem(
-            formatModule(module),
-            y,
-            selectedSource === "crate" && selectedIndex === itemIndex,
-            rarity?.color || "#d8f5ff"
-          );
+        const midX = panelX1 + 12;
+        let midY = panelY + 54;
+        drawRow(midX, midY, `P: ${activePrimary.label} (${activePrimary.role})`, "#a7f2ff");
+        midY += 21;
+        drawRow(midX, midY, `S: ${activeSecondary.label} (${activeSecondary.role})`, "#a7f2ff");
+        midY += 21;
+        drawRow(midX, midY, `U: ${activeUtility.label} (${activeUtility.role})`, "#a7f2ff");
+        midY += 26;
+        drawRow(midX, midY, `P CD ${activePrimary.cooldownSeconds.toFixed(2)}s  ${truncate(activePrimary.effectText, 24)}`, "#d8f5ff", "500 13px Trebuchet MS");
+        midY += 20;
+        drawRow(midX, midY, `S CD ${activeSecondary.cooldownSeconds.toFixed(1)}s  ${truncate(activeSecondary.effectText, 24)}`, "#d8f5ff", "500 13px Trebuchet MS");
+        midY += 20;
+        drawRow(midX, midY, `U CD ${activeUtility.cooldownSeconds.toFixed(1)}s  ${truncate(activeUtility.effectText, 24)}`, "#d8f5ff", "500 13px Trebuchet MS");
+        midY += 28;
+
+        drawRow(midX, midY, "Equipped", "#ffd785", "600 14px Trebuchet MS");
+        midY += 20;
+        for (const slot of Object.keys(slotLabels)) {
+          drawRow(midX, midY, `${slotLabels[slot]}: ${truncate(equipment[slot]?.name || "-", 22)}`, "#d8f5ff", "500 13px Trebuchet MS");
+          midY += 18;
         }
-
-        ctx.fillStyle = "#a7f2ff";
-        ctx.font = "600 18px Trebuchet MS";
-        ctx.fillText(`Inventory (${inventory.length}/${config.loot.maxInventoryItems})`, centerX, startY + 396);
-        ctx.font = "500 15px Trebuchet MS";
-        const invRows = 6;
-        const invStart =
-          selectedSource === "inventory" ? Math.max(0, Math.min(selectedIndex - 3, Math.max(0, inventory.length - invRows))) : 0;
-        for (let i = 0; i < invRows; i += 1) {
-          const itemIndex = invStart + i;
-          const module = inventory[itemIndex];
-          const y = startY + 418 + i * 20;
-          if (!module) {
-            drawListItem("-", y, false, "rgba(216,245,255,0.4)");
-            continue;
-          }
-          const rarity = rarityById[module.rarity];
-          drawListItem(
-            formatModule(module),
-            y,
-            selectedSource === "inventory" && selectedIndex === itemIndex,
-            rarity?.color || "#d8f5ff"
-          );
-        }
-
-        const equippedRows = Object.keys(slotLabels).map((slot) => {
-          const module = equipment[slot];
-          return `${slotLabels[slot]}: ${module ? module.name : "-"}`;
-        });
-        ctx.fillStyle = "#ffd785";
-        ctx.font = "600 16px Trebuchet MS";
-        ctx.fillText(`Equipped: ${equippedRows.join(" | ")}`, centerX, startY + 390);
-
+        midY += 6;
         const activeSets = model.activeSets || [];
         const setText = activeSets.length
-          ? activeSets.map((set) => `${set.label} ${set.count}/3 T${set.tier}`).join(" | ")
+          ? activeSets.map((entry) => `${entry.label} ${entry.count}/3`).join(" | ")
           : "No active set";
-        ctx.fillStyle = "#b8f6ff";
-        ctx.font = "600 15px Trebuchet MS";
-        ctx.fillText(`Set bonuses: ${setText}`, centerX, startY + 410);
+        drawRow(midX, midY, `Sets: ${truncate(setText, 30)}`, "#b8f6ff", "600 13px Trebuchet MS");
+        midY += 24;
 
         if (selectedModule) {
           const equippedSameSlot = equipment[selectedModule.slot] || null;
-          const deltaHull = formatDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"), "%");
-          const deltaShield = formatDelta(readMod(selectedModule, "shieldPct"), readMod(equippedSameSlot, "shieldPct"), "%");
-          const deltaDmg = formatDelta(
+          const dHull = formatPctDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"));
+          const dShield = formatPctDelta(readMod(selectedModule, "shieldPct"), readMod(equippedSameSlot, "shieldPct"));
+          const dDmg = formatPctDelta(
             readMod(selectedModule, "primaryDamagePct"),
-            readMod(equippedSameSlot, "primaryDamagePct"),
-            "%"
+            readMod(equippedSameSlot, "primaryDamagePct")
           );
-          const deltaCd = formatDelta(
+          const dCd = formatPctDelta(
             readMod(selectedModule, "primaryCooldownPct"),
             readMod(equippedSameSlot, "primaryCooldownPct"),
-            "%",
             true
           );
-          const deltaSet = selectedModule.setTag
-            ? `Set tag: ${selectedModule.setTag.toUpperCase()}`
-            : "Set tag: -";
-
-          ctx.font = "500 14px Trebuchet MS";
-          ctx.fillStyle = "#d8f5ff";
-          ctx.fillText(
-            `Selected ${selectedModule.name} vs equipped ${equippedSameSlot?.name || "-"}`,
-            centerX,
-            startY + 430
-          );
-          ctx.fillStyle = deltaHull.color;
-          ctx.fillText(`Hull ${deltaHull.text}`, centerX - 300, startY + 450);
-          ctx.fillStyle = deltaShield.color;
-          ctx.fillText(`Shield ${deltaShield.text}`, centerX - 120, startY + 450);
-          ctx.fillStyle = deltaDmg.color;
-          ctx.fillText(`Damage ${deltaDmg.text}`, centerX + 80, startY + 450);
-          ctx.fillStyle = deltaCd.color;
-          ctx.fillText(`CD ${deltaCd.text}`, centerX + 255, startY + 450);
-          ctx.fillStyle = "#ffd9a7";
-          ctx.fillText(deltaSet, centerX, startY + 470);
+          drawRow(midX, midY, `Selected: ${truncate(selectedModule.name, 24)}`, "#d8f5ff", "600 13px Trebuchet MS");
+          midY += 18;
+          drawRow(midX, midY, `Hull ${dHull.text}`, dHull.color, "500 13px Trebuchet MS");
+          drawRow(midX + 68, midY, `Shield ${dShield.text}`, dShield.color, "500 13px Trebuchet MS");
+          drawRow(midX + 152, midY, `Dmg ${dDmg.text}`, dDmg.color, "500 13px Trebuchet MS");
+          drawRow(midX + 218, midY, `CD ${dCd.text}`, dCd.color, "500 13px Trebuchet MS");
         }
 
-        const activePrimary = primaryDefs[model.loadout.primaryId];
-        const activeSecondary = secondaryDefs[model.loadout.secondaryId];
-        const activeUtility = utilityDefs[model.loadout.utilityId];
-        ctx.fillStyle = "#a7f2ff";
-        ctx.font = "600 17px Trebuchet MS";
-        ctx.fillText("Active Weapon Stats", centerX, startY + 500);
-        ctx.font = "500 15px Trebuchet MS";
-        ctx.fillText(
-          `Primary (${activePrimary.label}) | CD ${activePrimary.cooldownSeconds.toFixed(2)}s | ${activePrimary.role} | ${activePrimary.effectText}`,
-          centerX,
-          startY + 520
-        );
-        ctx.fillText(
-          `Secondary (${activeSecondary.label}) | CD ${activeSecondary.cooldownSeconds.toFixed(1)}s | ${activeSecondary.role} | ${activeSecondary.effectText}`,
-          centerX,
-          startY + 538
-        );
-        ctx.fillText(
-          `Utility (${activeUtility.label}) | CD ${activeUtility.cooldownSeconds.toFixed(1)}s | ${activeUtility.role} | ${activeUtility.effectText}`,
-          centerX,
-          startY + 556
-        );
+        const rightX = panelX2 + 12;
+        let rightY = panelY + 54;
+        drawRow(rightX, rightY, "6/7 Select  8 Take/Equip", "#d8f5ff", "600 12px Trebuchet MS");
+        rightY += 16;
+        drawRow(rightX, rightY, "9 Sell  0 Salvage", "#d8f5ff", "600 12px Trebuchet MS");
+        rightY += 24;
+        drawRow(rightX, rightY, `Crate (${lootCrate.length})`, "#a7f2ff", "700 14px Trebuchet MS");
+        rightY += 18;
 
-        ctx.fillStyle = "#ffd785";
-        ctx.font = "500 16px Trebuchet MS";
-        ctx.fillText(
-          `Levels: FireRate ${model.upgrades.fireRateLevel} | Magazine ${model.upgrades.magazineLevel}`,
-          centerX,
-          startY + 574
-        );
+        const crateRows = 5;
+        const crateStart = selectedSource === "crate" ? getWindowStart(lootCrate.length, selectedIndex, crateRows, 2) : 0;
+        for (let i = 0; i < crateRows; i += 1) {
+          const itemIndex = crateStart + i;
+          const module = lootCrate[itemIndex];
+          if (!module) {
+            drawSelectableRow(rightX, rightY, panelW - 22, "-", false, "rgba(216,245,255,0.38)");
+          } else {
+            const rarity = rarityById[module.rarity];
+            drawSelectableRow(
+              rightX,
+              rightY,
+              panelW - 22,
+              formatModuleShort(module),
+              selectedSource === "crate" && selectedIndex === itemIndex,
+              rarity?.color || "#d8f5ff"
+            );
+          }
+          rightY += 18;
+        }
 
-        ctx.fillStyle = "#b9f8c3";
-        ctx.fillText(model.hangar.message, centerX, startY + 592);
+        rightY += 10;
+        drawRow(rightX, rightY, `Inventory (${inventory.length}/${config.loot.maxInventoryItems})`, "#a7f2ff", "700 14px Trebuchet MS");
+        rightY += 18;
+        const invRows = 7;
+        const invStart = selectedSource === "inventory" ? getWindowStart(inventory.length, selectedIndex, invRows, 3) : 0;
+        for (let i = 0; i < invRows; i += 1) {
+          const itemIndex = invStart + i;
+          const module = inventory[itemIndex];
+          if (!module) {
+            drawSelectableRow(rightX, rightY, panelW - 22, "-", false, "rgba(216,245,255,0.38)");
+          } else {
+            const rarity = rarityById[module.rarity];
+            drawSelectableRow(
+              rightX,
+              rightY,
+              panelW - 22,
+              formatModuleShort(module),
+              selectedSource === "inventory" && selectedIndex === itemIndex,
+              rarity?.color || "#d8f5ff"
+            );
+          }
+          rightY += 18;
+        }
 
+        const actionBarY = panelY + panelH + 10;
+        ctx.fillStyle = "rgba(4,12,24,0.88)";
+        ctx.fillRect(panelX0, actionBarY, panelW * 3 + panelGap * 2, 24);
+        ctx.strokeStyle = "rgba(63,207,255,0.45)";
+        ctx.strokeRect(panelX0, actionBarY, panelW * 3 + panelGap * 2, 24);
+        ctx.textAlign = "center";
+        ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Enter = start dalsi sektor", centerX, startY + 610);
+        ctx.fillText("6/7 Select | 8 Take/Equip | 9 Sell | 0 Salvage | Enter Start Sector", centerX, actionBarY + 16);
+
+        ctx.font = "600 14px Trebuchet MS";
+        ctx.fillStyle = "#b9f8c3";
+        ctx.fillText(hangar.message, centerX, actionBarY + 42);
       }
 
       ctx.restore();
