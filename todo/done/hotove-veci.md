@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Overlay flow consistency pass (Game Over -> Victory-style)
+  - [x] `GAME OVER` overlay sjednocen na modal summary layout (bez inline Run setup listu)
+  - [x] `Enter` na `GAME OVER` uz neprovadi okamzity restart, ale vraci na `START` stejne jako `VICTORY`
+  - [x] Run setup editace (Arrow/E) je omezena na `START` overlay pro konzistentni flow
+
 - [x] Help identity + salvage clarity pass
   - [x] Doplnena explicitni karta `Salvage Loop` (salvage parts + credit konverze 1 part = 9 cr)
   - [x] Pridana samostatna data-driven sekce `Pilots (Roster)` s callsigny, referencemi a kratkymi bio popisy

@@ -1540,16 +1540,39 @@
       }
 
       if (model.gameState === GAME_STATE.GAME_OVER) {
-        ctx.fillText(tr("overlay.game_over"), config.canvas.width / 2, config.canvas.height / 2 - 28);
+        const cx = config.canvas.width / 2;
+        const cy = config.canvas.height / 2;
+        const summary = model.victorySummary || {};
+        const pilotLabelFromId = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
+        const shipLabelFromId = tr(`identity.ship.${model.identity?.shipId}.name`);
+        const pilotLabel = summary.identity?.pilot || (pilotLabelFromId.includes("identity.pilot.") ? "-" : pilotLabelFromId);
+        const shipLabel = summary.identity?.ship || (shipLabelFromId.includes("identity.ship.") ? "-" : shipLabelFromId);
+        this.drawOverlayBlock(cx, cy + 20, 560, 224);
+        ctx.fillStyle = "#d8f5ff";
+        ctx.textAlign = "center";
+        ctx.font = "700 38px Trebuchet MS";
+        ctx.fillText(tr("overlay.game_over"), cx, cy - 48);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(tr("overlay.score", { score: model.score }), config.canvas.width / 2, config.canvas.height / 2 + 8);
+        ctx.fillText(tr("overlay.score", { score: model.score }), cx, cy - 10);
+        const sectorLabelY = cy + 24;
         if (model.comboScoringEnabled) {
-          ctx.fillText(`End combo: x${model.comboMultiplier.toFixed(2)}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+          ctx.fillText(`End combo: x${model.comboMultiplier.toFixed(2)}`, cx, sectorLabelY);
         } else {
-          ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 42);
+          ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), cx, sectorLabelY);
         }
-        ctx.fillText(tr("overlay.enter_restart"), config.canvas.width / 2, config.canvas.height / 2 + 76);
-        this.drawRunSettingsList(model, config.canvas.height / 2 + 102);
+        const identityBottomY = this.drawWrappedText(
+          tr("overlay.identity_status", {
+            pilot: pilotLabel,
+            ship: shipLabel
+          }),
+          cx,
+          cy + 56,
+          760,
+          24,
+          2
+        );
+        ctx.fillStyle = "rgba(255,231,168,0.95)";
+        ctx.fillText(tr("overlay.enter_new_run"), cx, identityBottomY + 28);
       }
 
       if (model.gameState === GAME_STATE.VICTORY) {

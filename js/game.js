@@ -671,9 +671,7 @@
         return;
       }
 
-      const canToggleRunMode =
-        this.model.gameState === GAME_STATE.START ||
-        this.model.gameState === GAME_STATE.GAME_OVER;
+      const canToggleRunMode = this.model.gameState === GAME_STATE.START;
       if (canToggleRunMode) {
         if (this.input.wasPressed("ArrowUp")) this.cycleOverlaySettingsRow(-1);
         if (this.input.wasPressed("ArrowDown")) this.cycleOverlaySettingsRow(1);
@@ -699,7 +697,11 @@
           this.hangarSystem.enterHangarPhase();
           this.hud.sync(this.model);
         } else if (this.model.gameState === GAME_STATE.GAME_OVER) {
-          this.startGame(generateRunSeed());
+          this.input.reset();
+          this.model.overlaySettingsRow = 0;
+          this.model.gameState = GAME_STATE.START;
+          this.model.runSeed = generateRunSeed();
+          this.hud.sync(this.model);
         } else if (this.model.gameState === GAME_STATE.VICTORY) {
           this.input.reset();
           this.model.overlaySettingsRow = 0;
