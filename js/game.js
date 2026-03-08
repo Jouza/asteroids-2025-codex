@@ -639,8 +639,7 @@
 
       const canToggleRunMode =
         this.model.gameState === GAME_STATE.START ||
-        this.model.gameState === GAME_STATE.GAME_OVER ||
-        this.model.gameState === GAME_STATE.VICTORY;
+        this.model.gameState === GAME_STATE.GAME_OVER;
       if (canToggleRunMode) {
         if (this.input.wasPressed("ArrowUp")) this.cycleOverlaySettingsRow(-1);
         if (this.input.wasPressed("ArrowDown")) this.cycleOverlaySettingsRow(1);
@@ -665,8 +664,14 @@
           this.input.reset();
           this.hangarSystem.enterHangarPhase();
           this.hud.sync(this.model);
-        } else if (this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY) {
+        } else if (this.model.gameState === GAME_STATE.GAME_OVER) {
           this.startGame(generateRunSeed());
+        } else if (this.model.gameState === GAME_STATE.VICTORY) {
+          this.input.reset();
+          this.model.overlaySettingsRow = 0;
+          this.model.gameState = GAME_STATE.START;
+          this.model.runSeed = generateRunSeed();
+          this.hud.sync(this.model);
         }
       }
 

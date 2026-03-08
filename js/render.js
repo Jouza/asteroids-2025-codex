@@ -1337,6 +1337,7 @@
         const summary = model.victorySummary || {};
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
+        this.drawOverlayBlock(cx, cy + 24, 560, 248);
         ctx.fillText(tr("overlay.victory"), cx, cy - 54);
         ctx.font = "600 20px Trebuchet MS";
         ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy - 18);
@@ -1378,9 +1379,8 @@
           cx,
           unlockY
         );
-        const enterY = unlockY + 28;
-        ctx.fillText(tr("overlay.enter_new_run"), cx, enterY);
-        this.drawRunSettingsList(model, enterY + 44);
+        ctx.fillStyle = "rgba(255,231,168,0.95)";
+        ctx.fillText(tr("overlay.enter_new_run"), cx, unlockY + 32);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {
