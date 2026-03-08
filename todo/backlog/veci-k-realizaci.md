@@ -5,7 +5,7 @@
 - [ ] HUD/Panel clarity refactor (phased)
   - [x] Phase 1: Right panel declutter (kriticke runtime info only + zkraceny help hint vpravo)
   - [x] Phase 2: Audio settings modal (otevreni klavesou + focus-safe ovladani + persist)
-  - [ ] Phase 3: Pilot modal (upgrade/unlock flow mimo hlavni hangar grid)
+  - [x] Phase 3: Pilot modal (upgrade/unlock flow mimo hlavni hangar grid)
   - [ ] Phase 4: Final UX polish + docs/update TODO move
 
 - [x] Biome identity 2.0 (audio + rewards)

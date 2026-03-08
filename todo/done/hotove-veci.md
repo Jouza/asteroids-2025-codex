@@ -6,6 +6,12 @@
   - [x] Audio settings modal: otevreni klavesou `G` nebo klikem, zavreni `G`/`Esc`/backdrop
   - [x] Modal flow je focus-safe: pri otevrenem modalu se nepropisuje gameplay input a nastaveni se dale persistuje do localStorage
 
+- [x] Hangar pilot flow refactor (Phase 3)
+  - [x] Pilot upgrade/unlock flow presunut do samostatneho `Pilot Console` modalu (`J`)
+  - [x] Hangar pilot panel odlehceny na summary + jasny hint pro otevreni modalu
+  - [x] Hangar nav sekce zjednodusena na `shop/loot` (pilot uz neni treti sipkova sekce)
+  - [x] Legacy pilot fallback klavesy (`T/Y/U`, `I/O/K`) zachovany pro kompatibilitu
+
 - [x] Onboarding + action gate feedback (MVP)
   - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
   - [x] Start overlay ma responzivni vertikalni stack (compact/normal/large) s garantovanym spacingem mezi bloky

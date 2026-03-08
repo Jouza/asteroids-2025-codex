@@ -80,6 +80,11 @@
           <div class="hud-item tip" data-i18n-tip="index.tip.identity">
             <span class="hud-icon" data-i18n-title="index.icon.identity.title" data-i18n-aria-label="index.icon.identity.aria">I</span><span id="identityStatus" class="hud-value" data-i18n="hud.identity_unknown">-</span>
           </div>
+          <div id="pilotQuickOpen" class="hud-item tip actionable" data-i18n-tip="index.tip.pilot_open">
+            <span class="hud-icon">J</span>
+            <span class="hud-value" data-i18n="index.pilot_summary_label">Pilot Console</span>
+            <span class="hud-kbd">J</span>
+          </div>
           <div id="audioQuickOpen" class="hud-item tip actionable" data-i18n-tip="index.tip.audio_open">
             <span class="hud-icon" data-i18n-title="index.icon.audio.title" data-i18n-aria-label="index.icon.audio.aria">A</span>
             <span id="audioStatus" class="hud-value" data-i18n="index.audio_summary_default">SFX 60% | Amb 40%</span>
@@ -119,6 +124,18 @@
         <span id="ambientValue" class="modal-value">40%</span>
       </div>
       <p class="modal-muted-hint" data-i18n="index.audio_modal.mute_hint">Mute toggle: M</p>
+    </section>
+  </div>
+
+  <div id="pilotModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pilotModalTitle">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel">
+      <header class="modal-header">
+        <h2 id="pilotModalTitle" data-i18n="index.pilot_modal.title">Pilot Console</h2>
+        <button id="pilotModalClose" class="modal-close" type="button" data-i18n="index.pilot_modal.close">Close</button>
+      </header>
+      <p id="pilotModalHint" class="modal-hint" data-i18n="index.pilot_modal.hint">Available in hangar. Press J or Esc to close.</p>
+      <div id="pilotModalContent" class="pilot-modal-content"></div>
     </section>
   </div>
 

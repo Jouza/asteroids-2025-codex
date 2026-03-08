@@ -1593,7 +1593,6 @@
         const selectedIndex = hangar.selectionIndex || 0;
         const navSection = hangar.navSection || "shop";
         const shopIndex = hangar.shopIndex || 0;
-        const pilotCursor = hangar.pilotCursor || 0;
         const primaryDefs = config.loadout.primary;
         const secondaryDefs = config.loadout.secondary;
         const utilityDefs = config.loadout.utility;
@@ -1623,9 +1622,6 @@
           instinct: "Instinct"
         };
         const pilotPerks = config.pilot?.perks || [];
-        const selectedPerkIndex =
-          pilotPerks.length > 0 ? Math.max(0, Math.min(hangar.pilotPerkIndex || 0, pilotPerks.length - 1)) : 0;
-        const selectedPerk = pilotPerks[selectedPerkIndex] || null;
         const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
         const selectedPilotCallsign = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
         const fireRateLevel = Math.max(0, Math.floor(model.upgrades?.fireRateLevel || 0));
@@ -1670,18 +1666,6 @@
         const formatModuleShort = (module) => {
           if (!module) return "-";
           return `${truncate(module.name, 22)} | ${slotLabels[module.slot] || module.slot} | ${module.sellValue}cr`;
-        };
-
-        const formatPerkRequirements = (perk) => {
-          if (!perk) return "-";
-          const req = [];
-          req.push(`L${perk.levelReq ?? 1}`);
-          if (perk.requires) {
-            for (const key of Object.keys(perk.requires)) {
-              req.push(`${pilotAttrLabels[key] || key}:${perk.requires[key]}`);
-            }
-          }
-          return req.join(" ");
         };
 
         const drawPanel = (x, y, w, h, title, active = false) => {
@@ -1778,7 +1762,7 @@
         drawPanel(colX1, topRowY, colW1, topRowH, "SELECTED DETAIL", navSection === "loot");
         drawPanel(colX2, topRowY, colW2, topRowH, "BUILD SNAPSHOT");
         drawPanel(colX0, bottomRowY, colW0, bottomRowH, "SHOP & OPS", navSection === "shop");
-        drawPanel(colX1, bottomRowY, colW1, bottomRowH, truncate(selectedPilotCallsign.toUpperCase(), 32), navSection === "pilot");
+        drawPanel(colX1, bottomRowY, colW1, bottomRowH, tr("render.hangar.pilot_summary_title"));
         drawPanel(colX2, bottomRowY, colW2, bottomRowH, "RUN/STATUS");
 
         const selX = colX0 + 12;
@@ -1997,53 +1981,73 @@
 
         const pilotX = colX1 + 12;
         let pilotY = bottomRowY + 52;
+        drawRow(pilotX, pilotY, selectedPilotCallsign, "#ffd785", "700 13px Trebuchet MS", colW1 - 24);
+        pilotY += 18;
         drawRow(
           pilotX,
           pilotY,
-          `L${pilot.level || 1} XP ${Math.floor(pilot.xp || 0)}/${Math.floor(pilot.xpToNext || 1)}  A:${pilot.attributePoints || 0} S:${pilot.skillPoints || 0}`,
-          "#ffd785",
-          "600 12px Trebuchet MS",
+          tr("render.hangar.pilot_summary_level", {
+            level: pilot.level || 1,
+            xp: Math.floor(pilot.xp || 0),
+            next: Math.floor(pilot.xpToNext || 1)
+          }),
+          "#d8f5ff",
+          "500 12px Trebuchet MS",
+          colW1 - 24
+        );
+        pilotY += 16;
+        drawRow(
+          pilotX,
+          pilotY,
+          tr("render.hangar.pilot_summary_points", {
+            attr: pilot.attributePoints || 0,
+            skill: pilot.skillPoints || 0
+          }),
+          "#d8f5ff",
+          "500 12px Trebuchet MS",
           colW1 - 24
         );
         pilotY += 18;
         for (let i = 0; i < pilotAttrOrder.length; i += 1) {
           const key = pilotAttrOrder[i];
-          const selected = (hangar.pilotAttrIndex || 0) === i;
-          const navSelected = navSection === "pilot" && pilotCursor === i;
           const value = Math.floor(pilotAttrs[key] || 0);
           drawRow(
-            pilotX + i * 70,
-            pilotY,
-            `${navSelected ? ">" : selected ? "*" : ""}${pilotAttrLabels[key]}:${value}`,
-            navSelected ? "#ffe7a8" : selected ? "#b8f6ff" : "#d8f5ff",
-            "500 11px Trebuchet MS"
+            pilotX + (i % 2) * 110,
+            pilotY + Math.floor(i / 2) * 14,
+            `${pilotAttrLabels[key]}: ${value}`,
+            "#b8f6ff",
+            "500 11px Trebuchet MS",
+            106
           );
         }
+        pilotY += 36;
+        const unlockedCount = unlockedPerkIds.size;
+        drawRow(
+          pilotX,
+          pilotY,
+          tr("render.hangar.pilot_summary_perks", { unlocked: unlockedCount, total: pilotPerks.length }),
+          "#d8f5ff",
+          "500 12px Trebuchet MS",
+          colW1 - 24
+        );
         pilotY += 18;
-        if (selectedPerk) {
-          const perkUnlocked = unlockedPerkIds.has(selectedPerk.id);
-          drawRow(
-            pilotX,
-            pilotY,
-            `${navSection === "pilot" && pilotCursor === 4 ? ">" : ""}Perk ${selectedPerkIndex + 1}/${pilotPerks.length}: ${selectedPerk.label} (${selectedPerk.branch})`,
-            navSection === "pilot" && pilotCursor === 4 ? "#ffe7a8" : perkUnlocked ? "#9bf5bb" : "#d8f5ff",
-            "600 11px Trebuchet MS"
-          );
-          pilotY += 14;
-          drawRow(
-            pilotX,
-            pilotY,
-            `${navSection === "pilot" && pilotCursor === 5 ? ">" : ""}Req ${formatPerkRequirements(selectedPerk)}  [${perkUnlocked ? "Unlocked" : "Lock"}]`,
-            navSection === "pilot" && pilotCursor === 5
-              ? "#ffe7a8"
-              : perkUnlocked
-                ? "#9bf5bb"
-                : "rgba(216,245,255,0.78)",
-            "500 11px Trebuchet MS"
-          );
-          pilotY += 14;
-        }
-        drawRow(pilotX, pilotY + 6, tr("render.hangar.pilot_hint"), "#9fe3ff", "500 11px Trebuchet MS", colW1 - 24);
+        drawRow(
+          pilotX,
+          pilotY,
+          tr("render.hangar.pilot_summary_open_hint"),
+          "#9fe3ff",
+          "600 12px Trebuchet MS",
+          colW1 - 24
+        );
+        pilotY += 16;
+        drawRow(
+          pilotX,
+          pilotY,
+          tr("render.hangar.pilot_summary_legacy_hint"),
+          "rgba(216,245,255,0.68)",
+          "500 11px Trebuchet MS",
+          colW1 - 24
+        );
 
         const statusX = colX2 + 12;
         let statusY = bottomRowY + 52;
@@ -2122,8 +2126,7 @@
         ctx.fillStyle = "#d8f5ff";
         const sectionHintById = {
           loot: tr("render.hangar.context_hint_loot"),
-          shop: tr("render.hangar.context_hint_shop"),
-          pilot: tr("render.hangar.context_hint_pilot")
+          shop: tr("render.hangar.context_hint_shop")
         };
         ctx.fillText(sectionHintById[navSection] || tr("render.hangar.action_hint"), centerX, actionBarY + 16);
 

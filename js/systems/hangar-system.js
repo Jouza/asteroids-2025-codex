@@ -9,7 +9,7 @@
   class HangarSystem {
     constructor(game) {
       this.game = game;
-      this.navSections = ["shop", "loot", "pilot"];
+      this.navSections = ["shop", "loot"];
     }
 
     getShopActionCount() {
@@ -75,21 +75,6 @@
         this.changeSelection(step);
         return;
       }
-      if (h.navSection === "pilot") {
-        const size = 6;
-        h.pilotCursor = (h.pilotCursor + step + size) % size;
-        if (h.pilotCursor <= 3) {
-          h.pilotAttrIndex = h.pilotCursor;
-          const attr = g.getPilotAttributeOrder()[h.pilotCursor];
-          g.model.hangar.message = tr("hangar.pilot.attr", { attr: attr.toUpperCase() });
-        } else if (h.pilotCursor === 4) {
-          const perk = g.getPilotSelectedPerk();
-          g.model.hangar.message = tr("hangar.pilot.perk", { perk: perk?.label || "-" });
-        } else {
-          const perk = g.getPilotSelectedPerk();
-          g.model.hangar.message = tr("hangar.pilot.unlock", { perk: perk?.label || "-" });
-        }
-      }
     }
 
     activateNavSelection() {
@@ -112,16 +97,6 @@
       if (h.navSection === "loot") {
         this.takeOrEquipSelected();
         return;
-      }
-      if (h.navSection === "pilot") {
-        if (h.pilotCursor <= 3) {
-          h.pilotAttrIndex = h.pilotCursor;
-          this.spendSelectedPilotAttribute();
-        } else if (h.pilotCursor === 4) {
-          this.changePilotPerkSelection(1);
-        } else {
-          this.unlockSelectedPilotPerk();
-        }
       }
     }
 

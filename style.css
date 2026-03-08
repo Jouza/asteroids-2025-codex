@@ -357,6 +357,67 @@ strong {
   font-weight: 700;
 }
 
+.pilot-modal-content {
+  display: grid;
+  gap: 10px;
+}
+
+.pilot-modal-card {
+  border: 1px solid rgba(83, 247, 255, 0.34);
+  background: rgba(7, 14, 25, 0.9);
+  padding: 8px;
+}
+
+.pilot-modal-title {
+  margin: 0 0 6px;
+  color: #ffe7a8;
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pilot-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.pilot-stat {
+  border: 1px solid rgba(83, 247, 255, 0.24);
+  padding: 5px 6px;
+  font-size: 0.81rem;
+}
+
+.pilot-stat b {
+  color: #a7f3ff;
+}
+
+.pilot-action-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(83, 247, 255, 0.24);
+  padding: 5px 6px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+}
+
+.pilot-action-btn {
+  border: 1px solid rgba(83, 247, 255, 0.45);
+  background: rgba(10, 18, 32, 0.9);
+  color: #d8f5ff;
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+
+.pilot-action-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 @media (max-width: 1280px) {
   .layout {
     grid-template-columns: minmax(0, 1fr) 300px;

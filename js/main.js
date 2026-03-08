@@ -17,25 +17,145 @@
   const ambientValue = document.getElementById("ambientValue");
   const audioStatus = document.getElementById("audioStatus");
   const audioQuickOpen = document.getElementById("audioQuickOpen");
+  const pilotQuickOpen = document.getElementById("pilotQuickOpen");
   const audioModal = document.getElementById("audioModal");
   const audioModalClose = document.getElementById("audioModalClose");
   const audioModalBackdrop = audioModal ? audioModal.querySelector(".modal-backdrop") : null;
+  const pilotModal = document.getElementById("pilotModal");
+  const pilotModalClose = document.getElementById("pilotModalClose");
+  const pilotModalBackdrop = pilotModal ? pilotModal.querySelector(".modal-backdrop") : null;
+  const pilotModalHint = document.getElementById("pilotModalHint");
+  const pilotModalContent = document.getElementById("pilotModalContent");
 
-  let audioModalOpen = false;
+  let activeModal = null;
 
-  function setAudioModalOpen(open) {
-    audioModalOpen = Boolean(open) && Boolean(audioModal);
+  function setActiveModal(modalId = null) {
+    activeModal = modalId;
+    const audioOpen = modalId === "audio";
+    const pilotOpen = modalId === "pilot";
     if (audioModal) {
-      audioModal.classList.toggle("hidden", !audioModalOpen);
-      audioModal.setAttribute("aria-hidden", audioModalOpen ? "false" : "true");
+      audioModal.classList.toggle("hidden", !audioOpen);
+      audioModal.setAttribute("aria-hidden", audioOpen ? "false" : "true");
+    }
+    if (pilotModal) {
+      pilotModal.classList.toggle("hidden", !pilotOpen);
+      pilotModal.setAttribute("aria-hidden", pilotOpen ? "false" : "true");
     }
     if (typeof game.setUiModal === "function") {
-      game.setUiModal(audioModalOpen ? "audio" : null);
+      game.setUiModal(modalId || null);
     }
-    if (audioModalOpen) {
+    if (audioOpen) {
       input.reset();
       if (volumeSlider) volumeSlider.focus();
+      return;
     }
+    if (pilotOpen) {
+      input.reset();
+      renderPilotModal();
+      if (pilotModalClose) pilotModalClose.focus();
+    }
+  }
+
+  function formatReqLine(perk) {
+    if (!perk) return "-";
+    const parts = [`L${perk.levelReq ?? 1}`];
+    const req = perk.requires || {};
+    for (const key of Object.keys(req)) parts.push(`${key.toUpperCase()}:${req[key]}`);
+    return parts.join(" ");
+  }
+
+  function createEl(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text != null) el.textContent = String(text);
+    return el;
+  }
+
+  function renderPilotModal() {
+    if (!pilotModalContent) return;
+    const tr = (key, params = {}) => (i18n?.t ? i18n.t(key, params) : key);
+    pilotModalContent.innerHTML = "";
+    const isHangar = game.model.gameState === window.Asteroids.GAME_STATE.HANGAR;
+    if (pilotModalHint) {
+      pilotModalHint.textContent = isHangar ? tr("index.pilot_modal.hint") : tr("index.pilot_modal.outside_hangar");
+    }
+
+    const pilot = game.model.pilot || {};
+    const attrs = pilot.attributes || {};
+    const perks = game.getPilotPerkDefs();
+    const unlocked = new Set(pilot.unlockedPerks || []);
+    const selectedPilot = game.getSelectedIdentityPilot();
+    const pilotName = selectedPilot
+      ? (i18n?.t ? i18n.t(`identity.pilot.${selectedPilot.id}.callsign`) : selectedPilot.id)
+      : "-";
+
+    const summary = createEl("section", "pilot-modal-card");
+    summary.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.summary_title")));
+    summary.appendChild(
+      createEl(
+        "div",
+        "pilot-stat",
+        `${pilotName} | ${tr("index.pilot_modal.level_line", {
+          level: pilot.level || 1,
+          xp: Math.floor(pilot.xp || 0),
+          next: Math.floor(pilot.xpToNext || 1),
+          attr: pilot.attributePoints || 0,
+          skill: pilot.skillPoints || 0
+        })}`
+      )
+    );
+    pilotModalContent.appendChild(summary);
+
+    const attrsCard = createEl("section", "pilot-modal-card");
+    attrsCard.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.attributes_title")));
+    const attrGrid = createEl("div", "pilot-modal-grid");
+    for (const key of game.getPilotAttributeOrder()) {
+      const row = createEl("div", "pilot-action-row");
+      const label = createEl("span", "", `${key.toUpperCase()} ${Math.floor(attrs[key] || 0)}`);
+      const btn = createEl("button", "pilot-action-btn", tr("index.pilot_modal.upgrade"));
+      btn.type = "button";
+      btn.disabled = !isHangar;
+      btn.addEventListener("click", () => {
+        if (!isHangar) return;
+        game.spendPilotAttributePoint(key);
+        hud.sync(game.model);
+        renderPilotModal();
+      });
+      row.appendChild(label);
+      row.appendChild(btn);
+      row.appendChild(createEl("span", "", ""));
+      attrGrid.appendChild(row);
+    }
+    attrsCard.appendChild(attrGrid);
+    pilotModalContent.appendChild(attrsCard);
+
+    const perksCard = createEl("section", "pilot-modal-card");
+    perksCard.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.perks_title")));
+    for (const perk of perks) {
+      const row = createEl("div", "pilot-action-row");
+      const reqLine = `${tr("index.pilot_modal.req_prefix")} ${formatReqLine(perk)}`;
+      const label = createEl("span", "", `${perk.label} (${perk.branch}) | ${reqLine}`);
+      const unlockedNow = unlocked.has(perk.id);
+      const canUnlock = isHangar && game.canUnlockPilotPerk(perk);
+      const btn = createEl(
+        "button",
+        "pilot-action-btn",
+        unlockedNow ? tr("index.pilot_modal.unlocked") : tr("index.pilot_modal.unlock")
+      );
+      btn.type = "button";
+      btn.disabled = unlockedNow || !canUnlock;
+      btn.addEventListener("click", () => {
+        if (!canUnlock) return;
+        game.unlockPilotPerk(perk.id);
+        hud.sync(game.model);
+        renderPilotModal();
+      });
+      row.appendChild(label);
+      row.appendChild(btn);
+      row.appendChild(createEl("span", "", ""));
+      perksCard.appendChild(row);
+    }
+    pilotModalContent.appendChild(perksCard);
   }
 
   function loadAudioSettings() {
@@ -112,22 +232,34 @@
     });
   }
   if (audioQuickOpen) {
-    audioQuickOpen.addEventListener("click", () => setAudioModalOpen(true));
+    audioQuickOpen.addEventListener("click", () => setActiveModal("audio"));
+  }
+  if (pilotQuickOpen) {
+    pilotQuickOpen.addEventListener("click", () => setActiveModal("pilot"));
   }
   if (audioModalClose) {
-    audioModalClose.addEventListener("click", () => setAudioModalOpen(false));
+    audioModalClose.addEventListener("click", () => setActiveModal(null));
   }
   if (audioModalBackdrop) {
-    audioModalBackdrop.addEventListener("click", () => setAudioModalOpen(false));
+    audioModalBackdrop.addEventListener("click", () => setActiveModal(null));
+  }
+  if (pilotModalClose) {
+    pilotModalClose.addEventListener("click", () => setActiveModal(null));
+  }
+  if (pilotModalBackdrop) {
+    pilotModalBackdrop.addEventListener("click", () => setActiveModal(null));
   }
   window.addEventListener(
     "keydown",
     (event) => {
       if (event.code === "KeyG") {
-        setAudioModalOpen(!audioModalOpen);
+        setActiveModal(activeModal === "audio" ? null : "audio");
         event.preventDefault();
-      } else if (event.code === "Escape" && audioModalOpen) {
-        setAudioModalOpen(false);
+      } else if (event.code === "KeyJ") {
+        setActiveModal(activeModal === "pilot" ? null : "pilot");
+        event.preventDefault();
+      } else if (event.code === "Escape" && activeModal) {
+        setActiveModal(null);
         event.preventDefault();
       }
     },
@@ -150,7 +282,8 @@
     lastTimestamp = timestamp;
     const frameDelta = game.applyFrameDelta(rawDelta);
 
-    if (audioModalOpen) {
+    if (activeModal) {
+      if (activeModal === "pilot") renderPilotModal();
       game.render();
       input.endFrame();
       requestAnimationFrame(frame);
