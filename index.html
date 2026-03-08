@@ -10,91 +10,86 @@
   <main class="game-shell">
     <section class="layout">
       <section class="play-column">
-        <canvas id="gameCanvas" width="960" height="720" aria-label="STARFANG game"></canvas>
+        <canvas id="gameCanvas" width="960" height="720" data-i18n-aria-label="index.canvas_aria"></canvas>
       </section>
 
       <aside class="status-column">
         <header class="hud">
-          <div class="hud-item resource-item tip" data-tip="Hull: base ship durability. At zero, the run ends.">
+          <div class="hud-item resource-item tip" data-i18n-tip="index.tip.hull">
             <div class="resource-head">
-              <span class="hud-icon" title="Hull" aria-label="Hull">H</span>
-              <span class="resource-label">Hull</span>
+              <span class="hud-icon" data-i18n-title="index.icon.hull.title" data-i18n-aria-label="index.icon.hull.aria">H</span>
+              <span class="resource-label" data-i18n="index.label.hull">Hull</span>
               <span id="hullValue" class="hud-value">125/125</span>
             </div>
             <div class="resource-track"><div id="hullBar" class="resource-fill fill-hull"></div></div>
           </div>
-          <div class="hud-item resource-item tip" data-tip="Shield: regenerating layer. In shared-pool model, firing also drains shield.">
+          <div class="hud-item resource-item tip" data-i18n-tip="index.tip.shield">
             <div class="resource-head">
-              <span class="hud-icon" title="Shield" aria-label="Shield">S</span>
-              <span class="resource-label">Shield</span>
+              <span class="hud-icon" data-i18n-title="index.icon.shield.title" data-i18n-aria-label="index.icon.shield.aria">S</span>
+              <span class="resource-label" data-i18n="index.label.shield">Shield</span>
               <span id="shieldValue" class="hud-value">100/100</span>
             </div>
             <div class="resource-track"><div id="shieldBar" class="resource-fill fill-shield"></div></div>
           </div>
-          <div class="hud-item resource-item tip" data-tip="Energy: resource for weapons and abilities.">
+          <div class="hud-item resource-item tip" data-i18n-tip="index.tip.energy">
             <div class="resource-head">
-              <span class="hud-icon" title="Energy" aria-label="Energy">E</span>
-              <span class="resource-label">Energy</span>
+              <span class="hud-icon" data-i18n-title="index.icon.energy.title" data-i18n-aria-label="index.icon.energy.aria">E</span>
+              <span class="resource-label" data-i18n="index.label.energy">Energy</span>
               <span id="energyValue" class="hud-value">100/100</span>
             </div>
             <div class="resource-track"><div id="energyBar" class="resource-fill fill-energy"></div></div>
           </div>
-          <div class="hud-item resource-item tip" data-tip="Heat: overheating. High heat slows fire rate and limits actions.">
+          <div class="hud-item resource-item tip" data-i18n-tip="index.tip.heat">
             <div class="resource-head">
-              <span class="hud-icon" title="Heat" aria-label="Heat">T</span>
-              <span class="resource-label">Heat</span>
+              <span class="hud-icon" data-i18n-title="index.icon.heat.title" data-i18n-aria-label="index.icon.heat.aria">T</span>
+              <span class="resource-label" data-i18n="index.label.heat">Heat</span>
               <span id="heatValue" class="hud-value">0/100</span>
             </div>
             <div class="resource-track"><div id="heatBar" class="resource-fill fill-heat"></div></div>
           </div>
-          <div class="hud-item tip" data-tip="Primary: each shot consumes both energy and shield.">
-            <span class="hud-icon" title="Primary weapon and dash cooldown status." aria-label="Primary Weapon">P</span><span id="primaryStatus" class="hud-value">Auto</span>
+          <div class="hud-item tip" data-i18n-tip="index.tip.primary">
+            <span class="hud-icon" data-i18n-title="index.icon.primary.title" data-i18n-aria-label="index.icon.primary.aria">P</span><span id="primaryStatus" class="hud-value">Auto</span>
           </div>
-          <div class="hud-item tip" data-tip="Secondary: higher shield/energy drain than primary.">
-            <span class="hud-icon" title="Secondary ability (X)." aria-label="Secondary Ability">S</span><span id="secondaryStatus" class="hud-value">Ready</span>
+          <div class="hud-item tip" data-i18n-tip="index.tip.secondary">
+            <span class="hud-icon" data-i18n-title="index.icon.secondary.title" data-i18n-aria-label="index.icon.secondary.aria">S</span><span id="secondaryStatus" class="hud-value">Ready</span>
           </div>
-          <div class="hud-item tip" data-tip="Utility: strongest effect, highest shield/energy cost.">
-            <span class="hud-icon" title="Utility ability (C)." aria-label="Utility Ability">U</span><span id="utilityStatus" class="hud-value">Ready</span>
-          </div>
-          <div class="hud-pair">
-            <div class="hud-item tip" data-tip="Mission: current sector objective.">
-              <span class="hud-icon" title="Mission: current objective." aria-label="Mission">M</span><span id="mission" class="hud-value">-</span>
-            </div>
-            <div class="hud-item tip" data-tip="Sector: current run level.">
-              <span class="hud-icon" title="Sector index." aria-label="Sector">O</span><span id="sector" class="hud-value">1</span>
-            </div>
+          <div class="hud-item tip" data-i18n-tip="index.tip.utility">
+            <span class="hud-icon" data-i18n-title="index.icon.utility.title" data-i18n-aria-label="index.icon.utility.aria">U</span><span id="utilityStatus" class="hud-value">Ready</span>
           </div>
           <div class="hud-pair">
-            <div class="hud-item tip" data-tip="Credits: currency for hangar purchases.">
-              <span class="hud-icon" title="Credits for hangar shop." aria-label="Credits">C</span><span id="credits" class="hud-value">0</span>
+            <div class="hud-item tip" data-i18n-tip="index.tip.mission">
+              <span class="hud-icon" data-i18n-title="index.icon.mission.title" data-i18n-aria-label="index.icon.mission.aria">M</span><span id="mission" class="hud-value">-</span>
             </div>
-            <div class="hud-item tip" data-tip="Score: points earned this run.">
-              <span class="hud-icon" title="Current run score." aria-label="Score">S</span><span id="score" class="hud-value">0</span>
+            <div class="hud-item tip" data-i18n-tip="index.tip.sector">
+              <span class="hud-icon" data-i18n-title="index.icon.sector.title" data-i18n-aria-label="index.icon.sector.aria">O</span><span id="sector" class="hud-value">1</span>
             </div>
           </div>
-          <div class="hud-item tip" data-tip="Set status: active equipment set bonuses.">
-            <span class="hud-icon" title="Active set bonuses." aria-label="Set Status">T</span><span id="setStatus" class="hud-value">No active set</span>
+          <div class="hud-pair">
+            <div class="hud-item tip" data-i18n-tip="index.tip.credits">
+              <span class="hud-icon" data-i18n-title="index.icon.credits.title" data-i18n-aria-label="index.icon.credits.aria">C</span><span id="credits" class="hud-value">0</span>
+            </div>
+            <div class="hud-item tip" data-i18n-tip="index.tip.score">
+              <span class="hud-icon" data-i18n-title="index.icon.score.title" data-i18n-aria-label="index.icon.score.aria">S</span><span id="score" class="hud-value">0</span>
+            </div>
           </div>
-          <div class="hud-item tip volume-control" data-tip="SFX volume.">
-            <span class="hud-icon" title="Audio volume." aria-label="Audio Volume">A</span>
-            <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Audio volume">
+          <div class="hud-item tip" data-i18n-tip="index.tip.set_status">
+            <span class="hud-icon" data-i18n-title="index.icon.set_status.title" data-i18n-aria-label="index.icon.set_status.aria">T</span><span id="setStatus" class="hud-value" data-i18n="hud.no_active_set">No active set</span>
+          </div>
+          <div class="hud-item tip volume-control" data-i18n-tip="index.tip.audio_volume">
+            <span class="hud-icon" data-i18n-title="index.icon.audio.title" data-i18n-aria-label="index.icon.audio.aria">A</span>
+            <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" data-i18n-aria-label="index.volume_aria">
             <span id="volumeValue" class="hud-value">60%</span>
           </div>
-          <div class="hud-item tip" data-tip="Flight mode: Arcade or Sim Lite.">
-            <span class="hud-icon" title="Flight mode: Arcade or Sim Lite." aria-label="Flight Mode">F</span><span id="flightMode" class="hud-value">ARCADE</span>
+          <div class="hud-item tip" data-i18n-tip="index.tip.flight_mode">
+            <span class="hud-icon" data-i18n-title="index.icon.flight_mode.title" data-i18n-aria-label="index.icon.flight_mode.aria">F</span><span id="flightMode" class="hud-value" data-i18n="hud.flight_arcade">ARCADE</span>
           </div>
-          <div class="hud-item state tip" id="stateLabel" data-tip="Game state.">START</div>
-          <div class="hud-item version tip" id="versionBadge" data-tip="Build version.">NEW BUILD</div>
+          <div class="hud-item state tip" id="stateLabel" data-i18n-tip="index.tip.game_state" data-i18n="state.start">START</div>
+          <div class="hud-item version tip" id="versionBadge" data-i18n-tip="index.tip.build_version">NEW BUILD</div>
         </header>
 
         <footer class="help">
           <strong><a class="help-link" href="./help.html" target="_blank" rel="noopener noreferrer" data-i18n="index.help_link">HELP: objects and hazards reference</a></strong><br>
-          <strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire,
-          <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model,
-          <strong>X</strong> secondary, <strong>C</strong> utility, <strong>E</strong> toggle campaign/endless (after unlock), <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart.
-          <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue.
-          In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>.
-          <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.
+          <span data-i18n-html="index.controls_html"></span>
         </footer>
       </aside>
     </section>

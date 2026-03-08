@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Static UI/help i18n coverage pass
+  - [x] `index.html` HUD/help footer text presunuty na `data-i18n`/`data-i18n-html`
+  - [x] `help.html` staticky obsah sekci/karet napojen na translation keys
+  - [x] `js/i18n.js` rozsireno o `data-i18n-html` a doplneny EN keys pro index/help
+
 - [x] Localization hardening follow-up
   - [x] Runtime gameplay/HUD/mission/hangar text paths dovedeny na i18n keys
   - [x] Doplnen EN key coverage v `js/i18n.js` pro mission/HUD/hangar statusy

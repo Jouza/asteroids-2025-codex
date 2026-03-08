@@ -2,7 +2,7 @@
 
 ## Aktualni fokus
 
-- [ ] i18n coverage pass: dodelat zbyvajici EN literaly v `index.html`/`help.html` na translation keys
+- [x] i18n coverage pass: dodelat zbyvajici EN literaly v `index.html`/`help.html` na translation keys
 - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
 - [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
 

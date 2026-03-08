@@ -194,44 +194,44 @@
 <body>
   <main class="wrap">
     <div class="top">
-      <h1>STARFANG - Object Help</h1>
-      <a class="back" href="./index.html">Back to game</a>
+      <h1 data-i18n="help.page_title">STARFANG - Object Help</h1>
+      <a class="back" href="./index.html" data-i18n="help.back_to_game">Back to game</a>
     </div>
-    <p class="hint">
+    <p class="hint" data-i18n="help.page_hint">
       Quick overview of what you see on screen. Each card includes icon, name, behavior, and gameplay impact.
     </p>
 
     <section class="section">
-      <h2>Combat Economy (Shared Pool)</h2>
+      <h2 data-i18n="help.section.combat_economy">Combat Economy (Shared Pool)</h2>
       <div class="grid">
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-hazard" cx="16" cy="16" r="10"/><path class="g-stroke" d="M16 6 L16 26 M6 16 L26 16"/></svg></div>
             <div>
-              <p class="name">Shared Shield + Energy</p>
-              <div class="tag">Core system</div>
+              <p class="name" data-i18n="help.card.shared_pool.name">Shared Shield + Energy</p>
+              <div class="tag" data-i18n="help.card.shared_pool.tag">Core system</div>
             </div>
           </div>
-          <p class="line">Firing and active abilities consume both energy and a portion of shield.</p>
-          <p class="impact"><strong>Impact:</strong> the more you fire, the lower your defense goes. Actions are blocked at zero shield.</p>
+          <p class="line" data-i18n="help.card.shared_pool.line">Firing and active abilities consume both energy and a portion of shield.</p>
+          <p class="impact" data-i18n-html="help.card.shared_pool.impact"><strong>Impact:</strong> the more you fire, the lower your defense goes. Actions are blocked at zero shield.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path d="M7 22 L25 22" class="g-stroke"/><path d="M9 18 L15 10 L21 18" class="g-stroke"/></svg></div>
             <div>
-              <p class="name">Different Drain Factors</p>
-              <div class="tag">Balancing</div>
+              <p class="name" data-i18n="help.card.drain_factors.name">Different Drain Factors</p>
+              <div class="tag" data-i18n="help.card.drain_factors.tag">Balancing</div>
             </div>
           </div>
-          <p class="line">Primary has the lowest drain, secondary/utility are higher, dash is mid.</p>
-          <p class="impact"><strong>Impact:</strong> weapon identity stays clear, with explicit risk/reward tradeoff.</p>
+          <p class="line" data-i18n="help.card.drain_factors.line">Primary has the lowest drain, secondary/utility are higher, dash is mid.</p>
+          <p class="impact" data-i18n-html="help.card.drain_factors.impact"><strong>Impact:</strong> weapon identity stays clear, with explicit risk/reward tradeoff.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
-      <h2>Weapons and Shots</h2>
-      <p class="small-hint">
+      <h2 data-i18n="help.section.weapons">Weapons and Shots</h2>
+      <p class="small-hint" data-i18n-html="help.section.weapons_hint">
         Data is loaded directly from game configuration. Values match the current build balance.
         <br>
         Note: "DMG" is base hit value (before crit/resist modifiers), "Range" is approximate projectile travel.
@@ -240,8 +240,8 @@
     </section>
 
     <section class="section">
-      <h2>Mission Types</h2>
-      <p class="small-hint">
+      <h2 data-i18n="help.section.mission_types">Mission Types</h2>
+      <p class="small-hint" data-i18n-html="help.section.mission_types_hint">
         Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> (distinct moveset and phases), and clearing it ends the run with VICTORY.
       </p>
       <div class="grid">
@@ -249,55 +249,55 @@
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-stroke" cx="16" cy="16" r="10"/><path class="g-stroke" d="M16 9 L16 16 L21 19"/></svg></div>
             <div>
-              <p class="name">SURVIVE</p>
-              <div class="tag">Hold timer + cleanup</div>
+              <p class="name" data-i18n="help.card.mission_survive.name">SURVIVE</p>
+              <div class="tag" data-i18n="help.card.mission_survive.tag">Hold timer + cleanup</div>
             </div>
           </div>
-          <p class="line">Survive the time limit. After timer expires, objective switches to clearing remaining threats.</p>
-          <p class="impact"><strong>Impact:</strong> tempo management, space control, and stable resource economy.</p>
+          <p class="line" data-i18n="help.card.mission_survive.line">Survive the time limit. After timer expires, objective switches to clearing remaining threats.</p>
+          <p class="impact" data-i18n-html="help.card.mission_survive.impact"><strong>Impact:</strong> tempo management, space control, and stable resource economy.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><path class="g-stroke" d="M8 10 L24 24 M24 10 L8 24"/></svg></div>
             <div>
-              <p class="name">UFO HUNT</p>
-              <div class="tag">Kill quota</div>
+              <p class="name" data-i18n="help.card.mission_ufo_hunt.name">UFO HUNT</p>
+              <div class="tag" data-i18n="help.card.mission_ufo_hunt.tag">Kill quota</div>
             </div>
           </div>
-          <p class="line">Complete UFO kill quota. Spawn tempo and parallel pressure increase by sector.</p>
-          <p class="impact"><strong>Impact:</strong> target-priority execution and reading enemy roles (support/sniper/kamikaze).</p>
+          <p class="line" data-i18n="help.card.mission_ufo_hunt.line">Complete UFO kill quota. Spawn tempo and parallel pressure increase by sector.</p>
+          <p class="impact" data-i18n-html="help.card.mission_ufo_hunt.impact"><strong>Impact:</strong> target-priority execution and reading enemy roles (support/sniper/kamikaze).</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-fill" d="M8 8 L16 5 L24 10 L26 18 L19 25 L10 23 L6 15 Z"/><path class="g-stroke" d="M6 26 L26 6"/></svg></div>
             <div>
-              <p class="name">ASTEROID STORM</p>
-              <div class="tag">Break quota</div>
+              <p class="name" data-i18n="help.card.mission_asteroid_storm.name">ASTEROID STORM</p>
+              <div class="tag" data-i18n="help.card.mission_asteroid_storm.tag">Break quota</div>
             </div>
           </div>
-          <p class="line">Break target number of asteroids. After quota, cleanup of remaining threats still applies.</p>
-          <p class="impact"><strong>Impact:</strong> arena overflow risk; chain/AOE loadouts are efficient.</p>
+          <p class="line" data-i18n="help.card.mission_asteroid_storm.line">Break target number of asteroids. After quota, cleanup of remaining threats still applies.</p>
+          <p class="impact" data-i18n-html="help.card.mission_asteroid_storm.impact"><strong>Impact:</strong> arena overflow risk; chain/AOE loadouts are efficient.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="17" rx="12" ry="6"/><circle cx="16" cy="12" r="3.2" fill="rgba(255,166,219,0.45)" stroke="#ffd2ef" stroke-width="1"/></svg></div>
             <div>
-              <p class="name">MINI BOSS</p>
-              <div class="tag">Phase + weakpoint</div>
+              <p class="name" data-i18n="help.card.mission_mini_boss.name">MINI BOSS</p>
+              <div class="tag" data-i18n="help.card.mission_mini_boss.tag">Phase + weakpoint</div>
             </div>
           </div>
-          <p class="line">Boss fight with phases, weakpoint windows, and phase events. Kill boss, then finish cleanup.</p>
-          <p class="impact"><strong>Impact:</strong> burst-window discipline vs survival, with correct utility/dash timing.</p>
+          <p class="line" data-i18n="help.card.mission_mini_boss.line">Boss fight with phases, weakpoint windows, and phase events. Kill boss, then finish cleanup.</p>
+          <p class="impact" data-i18n-html="help.card.mission_mini_boss.impact"><strong>Impact:</strong> burst-window discipline vs survival, with correct utility/dash timing.</p>
         </article>
       </div>
-      <p class="small-hint">
+      <p class="small-hint" data-i18n-html="help.section.mission_endless_hint">
         Endless mode unlocks after your first campaign clear. On start screen, toggle campaign/endless with <strong>E</strong>.
       </p>
     </section>
 
     <section class="section">
-      <h2>Biomes</h2>
-      <p class="small-hint">
+      <h2 data-i18n="help.section.biomes">Biomes</h2>
+      <p class="small-hint" data-i18n="help.section.biomes_hint">
         Each sector rolls a biome. Biome defines arena atmosphere and may add specific hazard zones.
       </p>
       <div class="grid">
@@ -305,90 +305,90 @@
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-fill" d="M8 8 L16 5 L24 10 L26 18 L19 25 L10 23 L6 15 Z"/><path class="g-stroke" d="M6 16 L26 16"/></svg></div>
             <div>
-              <p class="name">Belt Fringe</p>
-              <div class="tag">Biome</div>
+              <p class="name" data-i18n="help.card.biome_belt_fringe.name">Belt Fringe</p>
+              <div class="tag" data-i18n="help.card.biome_belt_fringe.tag">Biome</div>
             </div>
           </div>
-          <p class="line">Standard asteroid belt edge. Neutral zone without special biome hazard.</p>
-          <p class="impact"><strong>Impact:</strong> cleanest baseline for combat and build comparison.</p>
+          <p class="line" data-i18n="help.card.biome_belt_fringe.line">Standard asteroid belt edge. Neutral zone without special biome hazard.</p>
+          <p class="impact" data-i18n-html="help.card.biome_belt_fringe.impact"><strong>Impact:</strong> cleanest baseline for combat and build comparison.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-fill" d="M8 7 L16 5 L24 9 L26 17 L20 25 L10 24 L6 16 Z" /><path class="g-stroke" d="M7 21 L25 11"/></svg></div>
             <div>
-              <p class="name">Wreck Graveyard</p>
-              <div class="tag">Biome</div>
+              <p class="name" data-i18n="help.card.biome_wreck_graveyard.name">Wreck Graveyard</p>
+              <div class="tag" data-i18n="help.card.biome_wreck_graveyard.tag">Biome</div>
             </div>
           </div>
-          <p class="line">Wreck zone filled with debris. Typically adds <strong>Debris Field</strong> hazard.</p>
-          <p class="impact"><strong>Impact:</strong> reduced mobility, higher collision risk, and chip damage.</p>
+          <p class="line" data-i18n-html="help.card.biome_wreck_graveyard.line">Wreck zone filled with debris. Typically adds <strong>Debris Field</strong> hazard.</p>
+          <p class="impact" data-i18n-html="help.card.biome_wreck_graveyard.impact"><strong>Impact:</strong> reduced mobility, higher collision risk, and chip damage.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><rect x="9" y="7" width="14" height="18" fill="rgba(255,168,116,0.28)" stroke="#ffd3a8" stroke-width="1.2"/><path class="g-stroke" d="M7 25 L25 25"/></svg></div>
             <div>
-              <p class="name">Refinery Complex</p>
-              <div class="tag">Biome</div>
+              <p class="name" data-i18n="help.card.biome_refinery.name">Refinery Complex</p>
+              <div class="tag" data-i18n="help.card.biome_refinery.tag">Biome</div>
             </div>
           </div>
-          <p class="line">Industrial refinery zone with thermal vents. Typically adds <strong>Plasma Vent</strong> hazard.</p>
-          <p class="impact"><strong>Impact:</strong> rapid heat gain and high positioning pressure.</p>
+          <p class="line" data-i18n-html="help.card.biome_refinery.line">Industrial refinery zone with thermal vents. Typically adds <strong>Plasma Vent</strong> hazard.</p>
+          <p class="impact" data-i18n-html="help.card.biome_refinery.impact"><strong>Impact:</strong> rapid heat gain and high positioning pressure.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-hazard" cx="16" cy="16" r="10"/><path class="g-stroke" d="M8 12 L24 12 M8 20 L24 20"/></svg></div>
             <div>
-              <p class="name">Ion Field</p>
-              <div class="tag">Biome</div>
+              <p class="name" data-i18n="help.card.biome_ion_field.name">Ion Field</p>
+              <div class="tag" data-i18n="help.card.biome_ion_field.tag">Biome</div>
             </div>
           </div>
-          <p class="line">Charged ionized area. Neutral by itself, often paired with global mission modifiers.</p>
-          <p class="impact"><strong>Impact:</strong> visual/atmospheric pressure; combined with <strong>Ion Storm</strong> it increases resource stress.</p>
+          <p class="line" data-i18n="help.card.biome_ion_field.line">Charged ionized area. Neutral by itself, often paired with global mission modifiers.</p>
+          <p class="impact" data-i18n-html="help.card.biome_ion_field.impact"><strong>Impact:</strong> visual/atmospheric pressure; combined with <strong>Ion Storm</strong> it increases resource stress.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
-      <h2>Pilot RPG (MVP)</h2>
+      <h2 data-i18n="help.section.pilot_rpg">Pilot RPG (MVP)</h2>
       <div class="grid">
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-stroke" d="M8 24 L8 8 L24 8"/><path class="g-stroke" d="M10 20 L15 15 L19 17 L24 10"/></svg></div>
             <div>
-              <p class="name">XP and Level</p>
-              <div class="tag">Pilot progression</div>
+              <p class="name" data-i18n="help.card.pilot_xp.name">XP and Level</p>
+              <div class="tag" data-i18n="help.card.pilot_xp.tag">Pilot progression</div>
             </div>
           </div>
-          <p class="line">You gain XP from score and mission completion. Level-ups grant attribute points and every two levels also a skill point.</p>
-          <p class="impact"><strong>Impact:</strong> long-term progression between sectors, not only immediate loot spikes.</p>
+          <p class="line" data-i18n="help.card.pilot_xp.line">You gain XP from score and mission completion. Level-ups grant attribute points and every two levels also a skill point.</p>
+          <p class="impact" data-i18n-html="help.card.pilot_xp.impact"><strong>Impact:</strong> long-term progression between sectors, not only immediate loot spikes.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-stroke" cx="16" cy="16" r="10"/><path class="g-stroke" d="M16 6 L16 26 M6 16 L26 16"/></svg></div>
             <div>
-              <p class="name">Attributes</p>
-              <div class="tag">Reflex / Systems / Grit / Instinct</div>
+              <p class="name" data-i18n="help.card.pilot_attributes.name">Attributes</p>
+              <div class="tag" data-i18n="help.card.pilot_attributes.tag">Reflex / Systems / Grit / Instinct</div>
             </div>
           </div>
-          <p class="line">Reflex improves handling and cadence, Systems improves regen/cooldowns, Grit improves toughness, Instinct improves crit and damage economy.</p>
-          <p class="impact"><strong>Impact:</strong> clear build identity from early game onward.</p>
+          <p class="line" data-i18n="help.card.pilot_attributes.line">Reflex improves handling and cadence, Systems improves regen/cooldowns, Grit improves toughness, Instinct improves crit and damage economy.</p>
+          <p class="impact" data-i18n-html="help.card.pilot_attributes.impact"><strong>Impact:</strong> clear build identity from early game onward.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-stroke" d="M16 5 L20 12 L27 13 L22 18 L23 26 L16 22 L9 26 L10 18 L5 13 L12 12 Z"/></svg></div>
             <div>
-              <p class="name">Perk unlock</p>
-              <div class="tag">Hangar controls</div>
+              <p class="name" data-i18n="help.card.pilot_perk_unlock.name">Perk unlock</p>
+              <div class="tag" data-i18n="help.card.pilot_perk_unlock.tag">Hangar controls</div>
             </div>
           </div>
-          <p class="line">In hangar, use Left/Right for sections, Up/Down for selection, and Space for action. Immediate Actions includes Sell selected and Salvage selected without legacy keys. Legacy keys T/Y/U/I/O/K and 9/0 remain fallback.</p>
-          <p class="impact"><strong>Impact:</strong> controlled specialization without chaotic random buffing.</p>
+          <p class="line" data-i18n="help.card.pilot_perk_unlock.line">In hangar, use Left/Right for sections, Up/Down for selection, and Space for action. Immediate Actions includes Sell selected and Salvage selected without legacy keys. Legacy keys T/Y/U/I/O/K and 9/0 remain fallback.</p>
+          <p class="impact" data-i18n-html="help.card.pilot_perk_unlock.impact"><strong>Impact:</strong> controlled specialization without chaotic random buffing.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
-      <h2>Asteroidy</h2>
+      <h2 data-i18n="help.section.asteroids">Asteroids</h2>
       <div class="grid">
         <article class="card">
           <div class="head">
@@ -398,12 +398,12 @@
               </svg>
             </div>
             <div>
-              <p class="name">Normal Asteroid</p>
-              <div class="tag">Object</div>
+              <p class="name" data-i18n="help.card.asteroid_normal.name">Normal Asteroid</p>
+              <div class="tag" data-i18n="help.card.asteroid_normal.tag">Object</div>
             </div>
           </div>
-          <p class="line">Classic asteroid. Splits into smaller parts on hit.</p>
-          <p class="impact"><strong>Impact:</strong> neutral threat, <span class="ok">good source of score/loot</span>.</p>
+          <p class="line" data-i18n="help.card.asteroid_normal.line">Classic asteroid. Splits into smaller parts on hit.</p>
+          <p class="impact" data-i18n-html="help.card.asteroid_normal.impact"><strong>Impact:</strong> neutral threat, <span class="ok">good source of score/loot</span>.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -414,12 +414,12 @@
               </svg>
             </div>
             <div>
-              <p class="name">Magnetic Asteroid</p>
-              <div class="tag">Object</div>
+              <p class="name" data-i18n="help.card.asteroid_magnetic.name">Magnetic Asteroid</p>
+              <div class="tag" data-i18n="help.card.asteroid_magnetic.tag">Object</div>
             </div>
           </div>
-          <p class="line">Pulls the ship in close radius and distorts trajectory.</p>
-          <p class="impact"><strong>Impact:</strong> weaker maneuvering and <span class="bad">higher collision risk</span>.</p>
+          <p class="line" data-i18n="help.card.asteroid_magnetic.line">Pulls the ship in close radius and distorts trajectory.</p>
+          <p class="impact" data-i18n-html="help.card.asteroid_magnetic.impact"><strong>Impact:</strong> weaker maneuvering and <span class="bad">higher collision risk</span>.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -430,74 +430,74 @@
               </svg>
             </div>
             <div>
-              <p class="name">Volatile Asteroid</p>
-              <div class="tag">Object</div>
+              <p class="name" data-i18n="help.card.asteroid_volatile.name">Volatile Asteroid</p>
+              <div class="tag" data-i18n="help.card.asteroid_volatile.tag">Object</div>
             </div>
           </div>
-          <p class="line">On destruction, triggers a blast that can chain additional hits.</p>
-          <p class="impact"><strong>Impact:</strong> AOE hazard, but also <span class="ok">a tactical weapon against packs</span>.</p>
+          <p class="line" data-i18n="help.card.asteroid_volatile.line">On destruction, triggers a blast that can chain additional hits.</p>
+          <p class="impact" data-i18n-html="help.card.asteroid_volatile.impact"><strong>Impact:</strong> AOE hazard, but also <span class="ok">a tactical weapon against packs</span>.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
-      <h2>UFO Types</h2>
+      <h2 data-i18n="help.section.ufo_types">UFO Types</h2>
       <div class="grid">
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><path class="g-stroke" d="M10 15 C13 11,19 11,22 15"/></svg></div><div><p class="name">Hunter</p><div class="tag">Enemy</div></div></div><p class="line">Close- to mid-range pressure.</p><p class="impact"><strong>Impact:</strong> stable DPS threat.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><circle class="g-stroke" cx="16" cy="16" r="8"/></svg></div><div><p class="name">Sniper</p><div class="tag">Enemy</div></div></div><p class="line">Keeps distance and fires precise shots.</p><p class="impact"><strong>Impact:</strong> punishes static positioning.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><path class="g-stroke" d="M6 16 L10 13 M26 16 L22 13"/></svg></div><div><p class="name">Swarm</p><div class="tag">Enemy</div></div></div><p class="line">Fast orbit and circular pressure.</p><p class="impact"><strong>Impact:</strong> can overwhelm weak aim tracking.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="17" rx="10.5" ry="5.2"/><path d="M16 22 L12 28 L20 28 Z" fill="rgba(255,136,120,0.42)" stroke="#ffb89f" stroke-width="1.1"/></svg></div><div><p class="name">Kamikaze</p><div class="tag">Enemy</div></div></div><p class="line">Attempts collision and detonates on contact.</p><p class="impact"><strong>Impact:</strong> melee burst damage.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="8" cy="10" r="2.2" fill="rgba(145,255,188,0.4)" stroke="#baffd4" stroke-width="1"/></svg></div><div><p class="name">Support</p><div class="tag">Enemy</div></div></div><p class="line">Heals nearby UFO units.</p><p class="impact"><strong>Impact:</strong> extends fights, high focus-target priority.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="24" cy="10" r="2.4" fill="rgba(255,200,136,0.42)" stroke="#ffd8a8" stroke-width="1"/></svg></div><div><p class="name">Mine Layer</p><div class="tag">Enemy</div></div></div><p class="line">Deploys mines and controls space.</p><p class="impact"><strong>Impact:</strong> zoning pressure, forces repositioning.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><path class="g-stroke" d="M10 15 C13 11,19 11,22 15"/></svg></div><div><p class="name" data-i18n="help.card.ufo_hunter.name">Hunter</p><div class="tag" data-i18n="help.card.ufo_hunter.tag">Enemy</div></div></div><p class="line" data-i18n="help.card.ufo_hunter.line">Close- to mid-range pressure.</p><p class="impact" data-i18n-html="help.card.ufo_hunter.impact"><strong>Impact:</strong> stable DPS threat.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><circle class="g-stroke" cx="16" cy="16" r="8"/></svg></div><div><p class="name" data-i18n="help.card.ufo_sniper.name">Sniper</p><div class="tag" data-i18n="help.card.ufo_sniper.tag">Enemy</div></div></div><p class="line" data-i18n="help.card.ufo_sniper.line">Keeps distance and fires precise shots.</p><p class="impact" data-i18n-html="help.card.ufo_sniper.impact"><strong>Impact:</strong> punishes static positioning.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><path class="g-stroke" d="M6 16 L10 13 M26 16 L22 13"/></svg></div><div><p class="name" data-i18n="help.card.ufo_swarm.name">Swarm</p><div class="tag" data-i18n="help.card.ufo_swarm.tag">Enemy</div></div></div><p class="line" data-i18n="help.card.ufo_swarm.line">Fast orbit and circular pressure.</p><p class="impact" data-i18n-html="help.card.ufo_swarm.impact"><strong>Impact:</strong> can overwhelm weak aim tracking.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="17" rx="10.5" ry="5.2"/><path d="M16 22 L12 28 L20 28 Z" fill="rgba(255,136,120,0.42)" stroke="#ffb89f" stroke-width="1.1"/></svg></div><div><p class="name" data-i18n="help.card.ufo_kamikaze.name">Kamikaze</p><div class="tag" data-i18n="help.card.ufo_kamikaze.tag">Enemy</div></div></div><p class="line" data-i18n="help.card.ufo_kamikaze.line">Attempts collision and detonates on contact.</p><p class="impact" data-i18n-html="help.card.ufo_kamikaze.impact"><strong>Impact:</strong> melee burst damage.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="8" cy="10" r="2.2" fill="rgba(145,255,188,0.4)" stroke="#baffd4" stroke-width="1"/></svg></div><div><p class="name" data-i18n="help.card.ufo_support.name">Support</p><div class="tag" data-i18n="help.card.ufo_support.tag">Enemy</div></div></div><p class="line" data-i18n="help.card.ufo_support.line">Heals nearby UFO units.</p><p class="impact" data-i18n-html="help.card.ufo_support.impact"><strong>Impact:</strong> extends fights, high focus-target priority.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="24" cy="10" r="2.4" fill="rgba(255,200,136,0.42)" stroke="#ffd8a8" stroke-width="1"/></svg></div><div><p class="name" data-i18n="help.card.ufo_mine_layer.name">Mine Layer</p><div class="tag" data-i18n="help.card.ufo_mine_layer.tag">Enemy</div></div></div><p class="line" data-i18n="help.card.ufo_mine_layer.line">Deploys mines and controls space.</p><p class="impact" data-i18n-html="help.card.ufo_mine_layer.impact"><strong>Impact:</strong> zoning pressure, forces repositioning.</p></article>
       </div>
     </section>
 
     <section class="section">
-      <h2>Hazard Zones</h2>
+      <h2 data-i18n="help.section.hazards">Hazard Zones</h2>
       <div class="grid">
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-hazard" cx="16" cy="16" r="10"/><path class="g-stroke" d="M8 16 L24 16 M16 8 L16 24"/></svg></div>
             <div>
-              <p class="name">Debris Field</p>
-              <div class="tag">Biome Hazard (Wreck Graveyard)</div>
+              <p class="name" data-i18n="help.card.hazard_debris_field.name">Debris Field</p>
+              <div class="tag" data-i18n="help.card.hazard_debris_field.tag">Biome Hazard (Wreck Graveyard)</div>
             </div>
           </div>
-          <p class="line">Debris sphere. Slows the ship inside and applies periodic damage.</p>
-          <p class="impact"><strong>Impact:</strong> <span class="bad">mobility loss</span> + chip damage.</p>
+          <p class="line" data-i18n="help.card.hazard_debris_field.line">Debris sphere. Slows the ship inside and applies periodic damage.</p>
+          <p class="impact" data-i18n-html="help.card.hazard_debris_field.impact"><strong>Impact:</strong> <span class="bad">mobility loss</span> + chip damage.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle cx="16" cy="16" r="10" fill="rgba(255,132,88,0.24)" stroke="rgba(255,182,118,0.95)" stroke-width="1.4"/><circle cx="16" cy="16" r="4" fill="rgba(255,220,152,0.45)"/></svg></div>
             <div>
-              <p class="name">Plasma Vent</p>
-              <div class="tag">Biome Hazard (Refinery Complex)</div>
+              <p class="name" data-i18n="help.card.hazard_plasma_vent.name">Plasma Vent</p>
+              <div class="tag" data-i18n="help.card.hazard_plasma_vent.tag">Biome Hazard (Refinery Complex)</div>
             </div>
           </div>
-          <p class="line">Pulsing thermal zone. Increases heat and applies thermal tick damage.</p>
-          <p class="impact"><strong>Impact:</strong> rapid overheat and action limitations.</p>
+          <p class="line" data-i18n="help.card.hazard_plasma_vent.line">Pulsing thermal zone. Increases heat and applies thermal tick damage.</p>
+          <p class="impact" data-i18n-html="help.card.hazard_plasma_vent.impact"><strong>Impact:</strong> rapid overheat and action limitations.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-hazard" cx="16" cy="16" r="10"/><circle class="g-stroke" cx="16" cy="16" r="5"/><circle cx="16" cy="16" r="1.4" fill="#b9d7ff"/></svg></div>
             <div>
-              <p class="name">Gravity Anomaly</p>
-              <div class="tag">Mission Modifier</div>
+              <p class="name" data-i18n="help.card.hazard_gravity_anomaly.name">Gravity Anomaly</p>
+              <div class="tag" data-i18n="help.card.hazard_gravity_anomaly.tag">Mission Modifier</div>
             </div>
           </div>
-          <p class="line">Pulls ship and asteroids toward anomaly center. Pull is softened in the core to avoid hard-lock behavior.</p>
-          <p class="impact"><strong>Impact:</strong> trajectory distortion and collision setups; escape by holding <strong>thrust</strong> (ArrowUp) or <strong>boost</strong> (Shift) outward from the core.</p>
+          <p class="line" data-i18n="help.card.hazard_gravity_anomaly.line">Pulls ship and asteroids toward anomaly center. Pull is softened in the core to avoid hard-lock behavior.</p>
+          <p class="impact" data-i18n-html="help.card.hazard_gravity_anomaly.impact"><strong>Impact:</strong> trajectory distortion and collision setups; escape by holding <strong>thrust</strong> (ArrowUp) or <strong>boost</strong> (Shift) outward from the core.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path d="M18 5 L10 17 H15 L13 27 L22 14 H17 Z" fill="rgba(255,206,120,0.45)" stroke="#ffdca6" stroke-width="1.1"/></svg></div>
             <div>
-              <p class="name">Ion Storm</p>
-              <div class="tag">Mission Modifier</div>
+              <p class="name" data-i18n="help.card.hazard_ion_storm.name">Ion Storm</p>
+              <div class="tag" data-i18n="help.card.hazard_ion_storm.tag">Mission Modifier</div>
             </div>
           </div>
-          <p class="line">Reduces shield regen and slowly drains shield.</p>
-          <p class="impact"><strong>Impact:</strong> weaker sustain and higher dodge pressure.</p>
+          <p class="line" data-i18n="help.card.hazard_ion_storm.line">Reduces shield regen and slowly drains shield.</p>
+          <p class="impact" data-i18n-html="help.card.hazard_ion_storm.impact"><strong>Impact:</strong> weaker sustain and higher dodge pressure.</p>
         </article>
       </div>
     </section>
@@ -512,14 +512,16 @@
   <script>
     (() => {
       if (window.Asteroids?.i18n) window.Asteroids.i18n.applyTranslations(document);
+      const tr = (key, params = {}) => (typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key);
+      document.title = tr("help.document_title");
       const cfg = window.Asteroids?.GAME_CONFIG;
       const mount = document.getElementById("weaponCards");
       if (!cfg?.loadout || !mount) return;
 
       const slotDefs = [
-        { slot: "primary", label: "Primary", hotkey: "Space", action: "primary" },
-        { slot: "secondary", label: "Secondary", hotkey: "X", action: "secondary" },
-        { slot: "utility", label: "Utility", hotkey: "C", action: "utility" }
+        { slot: "primary", label: tr("help.weapon.slot.primary"), hotkey: "Space", action: "primary" },
+        { slot: "secondary", label: tr("help.weapon.slot.secondary"), hotkey: "X", action: "secondary" },
+        { slot: "utility", label: tr("help.weapon.slot.utility"), hotkey: "C", action: "utility" }
       ];
       const previews = [];
 
@@ -677,24 +679,24 @@
         const speed = spec.projectileSpeed;
         const range = calcRange(spec);
 
-        stats.appendChild(createStat("ID", id));
-        stats.appendChild(createStat("CD", toFixed(cooldown, 2) + "s"));
-        stats.appendChild(createStat("Energy", toFixed(energy, 1)));
-        stats.appendChild(createStat("Shield drain", toFixed(shieldDrain, 1)));
-        stats.appendChild(createStat("Heat", toFixed(heat, 1)));
+        stats.appendChild(createStat(tr("help.weapon.stat.id"), id));
+        stats.appendChild(createStat(tr("help.weapon.stat.cooldown"), toFixed(cooldown, 2) + "s"));
+        stats.appendChild(createStat(tr("help.weapon.stat.energy"), toFixed(energy, 1)));
+        stats.appendChild(createStat(tr("help.weapon.stat.shield_drain"), toFixed(shieldDrain, 1)));
+        stats.appendChild(createStat(tr("help.weapon.stat.heat"), toFixed(heat, 1)));
 
-        if (Number.isFinite(dmg)) stats.appendChild(createStat("DMG", toFixed(dmg, 1)));
-        if (count > 1) stats.appendChild(createStat("Shots/trigger", String(count)));
-        if (count > 1 && Number.isFinite(dmg)) stats.appendChild(createStat("Burst DMG", toFixed(dmg * count, 1)));
-        if (Number.isFinite(speed)) stats.appendChild(createStat("Proj speed", Math.round(speed).toString()));
-        if (Number.isFinite(ttl)) stats.appendChild(createStat("TTL", toFixed(ttl, 2) + "s"));
-        if (Number.isFinite(range)) stats.appendChild(createStat("Range", range.toString()));
-        if (Number.isFinite(spec.radius)) stats.appendChild(createStat("Radius", toFixed(spec.radius, 1)));
-        if ((spec.pierce || 0) > 0) stats.appendChild(createStat("Pierce", String(spec.pierce)));
-        if ((spec.chainTargets || 0) > 0) stats.appendChild(createStat("Chain targets", String(spec.chainTargets)));
-        if ((spec.pulseRadius || 0) > 0) stats.appendChild(createStat("AOE radius", String(Math.round(spec.pulseRadius))));
-        if ((spec.disableSeconds || 0) > 0) stats.appendChild(createStat("Disable", toFixed(spec.disableSeconds, 1) + "s"));
-        if ((spec.shieldSeconds || 0) > 0) stats.appendChild(createStat("Invuln", toFixed(spec.shieldSeconds, 1) + "s"));
+        if (Number.isFinite(dmg)) stats.appendChild(createStat(tr("help.weapon.stat.dmg"), toFixed(dmg, 1)));
+        if (count > 1) stats.appendChild(createStat(tr("help.weapon.stat.shots_per_trigger"), String(count)));
+        if (count > 1 && Number.isFinite(dmg)) stats.appendChild(createStat(tr("help.weapon.stat.burst_dmg"), toFixed(dmg * count, 1)));
+        if (Number.isFinite(speed)) stats.appendChild(createStat(tr("help.weapon.stat.proj_speed"), Math.round(speed).toString()));
+        if (Number.isFinite(ttl)) stats.appendChild(createStat(tr("help.weapon.stat.ttl"), toFixed(ttl, 2) + "s"));
+        if (Number.isFinite(range)) stats.appendChild(createStat(tr("help.weapon.stat.range"), range.toString()));
+        if (Number.isFinite(spec.radius)) stats.appendChild(createStat(tr("help.weapon.stat.radius"), toFixed(spec.radius, 1)));
+        if ((spec.pierce || 0) > 0) stats.appendChild(createStat(tr("help.weapon.stat.pierce"), String(spec.pierce)));
+        if ((spec.chainTargets || 0) > 0) stats.appendChild(createStat(tr("help.weapon.stat.chain_targets"), String(spec.chainTargets)));
+        if ((spec.pulseRadius || 0) > 0) stats.appendChild(createStat(tr("help.weapon.stat.aoe_radius"), String(Math.round(spec.pulseRadius))));
+        if ((spec.disableSeconds || 0) > 0) stats.appendChild(createStat(tr("help.weapon.stat.disable"), toFixed(spec.disableSeconds, 1) + "s"));
+        if ((spec.shieldSeconds || 0) > 0) stats.appendChild(createStat(tr("help.weapon.stat.invuln"), toFixed(spec.shieldSeconds, 1) + "s"));
 
         card.appendChild(head);
         card.appendChild(desc);
