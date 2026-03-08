@@ -1335,42 +1335,52 @@
 
       if (model.gameState === GAME_STATE.VICTORY) {
         const summary = model.victorySummary || {};
-        ctx.fillText(tr("overlay.victory"), config.canvas.width / 2, config.canvas.height / 2 - 54);
+        const cx = config.canvas.width / 2;
+        const cy = config.canvas.height / 2;
+        ctx.fillText(tr("overlay.victory"), cx, cy - 54);
         ctx.font = "600 20px Trebuchet MS";
-        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), config.canvas.width / 2, config.canvas.height / 2 - 18);
-        ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 8);
-        ctx.fillText(
+        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy - 18);
+        ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? model.sector }), cx, cy + 10);
+        const identityBottomY = this.drawWrappedText(
           tr("overlay.identity_status", {
             pilot: summary.identity?.pilot || "-",
             ship: summary.identity?.ship || "-"
           }),
-          config.canvas.width / 2,
-          config.canvas.height / 2 + 34
+          cx,
+          cy + 40,
+          760,
+          26,
+          2
         );
-        ctx.fillText(
+        const buildBottomY = this.drawWrappedText(
           tr("overlay.build", {
             primary: summary.loadout?.primary || "-",
             secondary: summary.loadout?.secondary || "-",
             utility: summary.loadout?.utility || "-"
           }),
-          config.canvas.width / 2,
-          config.canvas.height / 2 + 58
+          cx,
+          identityBottomY + 30,
+          760,
+          24,
+          2
         );
         ctx.font = "600 17px Trebuchet MS";
         ctx.fillText(
           tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? model.runtimeSeconds).toFixed(1) }),
-          config.canvas.width / 2,
-          config.canvas.height / 2 + 84
+          cx,
+          buildBottomY + 30
         );
+        const unlockY = buildBottomY + 58;
         ctx.fillText(
           model.endlessUnlocked
             ? tr("overlay.endless_unlocked")
             : tr("overlay.campaign_complete"),
-          config.canvas.width / 2,
-          config.canvas.height / 2 + 110
+          cx,
+          unlockY
         );
-        ctx.fillText(tr("overlay.enter_new_run"), config.canvas.width / 2, config.canvas.height / 2 + 136);
-        this.drawRunSettingsList(model, config.canvas.height / 2 + 162);
+        const enterY = unlockY + 28;
+        ctx.fillText(tr("overlay.enter_new_run"), cx, enterY);
+        this.drawRunSettingsList(model, enterY + 44);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {
