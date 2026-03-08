@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Ship visual identity pass (MVP)
+  - [x] 4 lodni framy maji odlisnou siluetu trupu (pri zachovani stejneho hitboxu/fyziky)
+  - [x] 4 lodni framy maji odlisny thrust color/plume styl
+  - [x] Jemny vnitrni detail trupu podle frame archetypu pro rychlou vizualni identifikaci
+
 - [x] Pilot identity reference pass
   - [x] Pilot roster rozsireny na 6 pop-culture callsignu
   - [x] Reference texty dostupne na help strance

@@ -76,23 +76,122 @@
       const blink = ship.invulnMs > 0 && Math.floor(ship.invulnMs / 100) % 2 === 0;
       if (blink) return;
 
+      const shipVisualProfiles = {
+        viper_mk2: {
+          fill: "rgba(112,214,255,0.2)",
+          stroke: "#d9faff",
+          thrustInner: "rgba(152,248,255,0.96)",
+          thrustOuter: "rgba(80,197,255,0.92)",
+          sideFlame: "rgba(152,248,255,0.95)",
+          points: [
+            [1.05, 0],
+            [-0.94, -0.58],
+            [-0.42, -0.08],
+            [-0.58, 0],
+            [-0.42, 0.08],
+            [-0.94, 0.58]
+          ],
+          detail: "spine"
+        },
+        bastion_frame: {
+          fill: "rgba(132,207,255,0.22)",
+          stroke: "#e2fbff",
+          thrustInner: "rgba(255,208,132,0.96)",
+          thrustOuter: "rgba(255,133,96,0.9)",
+          sideFlame: "rgba(255,203,132,0.95)",
+          points: [
+            [0.96, 0],
+            [-1.08, -0.76],
+            [-0.58, -0.2],
+            [-0.74, 0],
+            [-0.58, 0.2],
+            [-1.08, 0.76]
+          ],
+          detail: "core"
+        },
+        revenant_frame: {
+          fill: "rgba(146,194,255,0.2)",
+          stroke: "#e4f0ff",
+          thrustInner: "rgba(221,178,255,0.95)",
+          thrustOuter: "rgba(136,112,255,0.9)",
+          sideFlame: "rgba(203,176,255,0.95)",
+          points: [
+            [1.0, 0],
+            [-0.92, -0.66],
+            [-0.3, -0.1],
+            [-0.72, 0],
+            [-0.3, 0.1],
+            [-0.92, 0.66]
+          ],
+          detail: "fang"
+        },
+        helix_frame: {
+          fill: "rgba(121,232,198,0.18)",
+          stroke: "#d8fff0",
+          thrustInner: "rgba(176,255,214,0.95)",
+          thrustOuter: "rgba(102,231,196,0.88)",
+          sideFlame: "rgba(176,255,214,0.92)",
+          points: [
+            [0.98, 0],
+            [-0.96, -0.62],
+            [-0.56, -0.12],
+            [-0.72, 0],
+            [-0.56, 0.12],
+            [-0.96, 0.62]
+          ],
+          detail: "orb"
+        }
+      };
+      const shipStyle = shipVisualProfiles[model.identity?.shipId] || shipVisualProfiles.viper_mk2;
+
       ctx.save();
       ctx.translate(ship.x, ship.y);
       ctx.rotate(ship.angle);
 
       ctx.shadowColor = "rgba(170,247,255,0.9)";
       ctx.shadowBlur = 18;
-      ctx.fillStyle = "rgba(126,206,255,0.22)";
-      ctx.strokeStyle = "#d6f9ff";
+      ctx.fillStyle = shipStyle.fill;
+      ctx.strokeStyle = shipStyle.stroke;
       ctx.lineWidth = 2.2;
       ctx.beginPath();
-      ctx.moveTo(ship.radius, 0);
-      ctx.lineTo(-ship.radius * 0.9, -ship.radius * 0.66);
-      ctx.lineTo(-ship.radius * 0.54, 0);
-      ctx.lineTo(-ship.radius * 0.9, ship.radius * 0.66);
+      const hullPoints = shipStyle.points;
+      ctx.moveTo(ship.radius * hullPoints[0][0], ship.radius * hullPoints[0][1]);
+      for (let i = 1; i < hullPoints.length; i += 1) {
+        ctx.lineTo(ship.radius * hullPoints[i][0], ship.radius * hullPoints[i][1]);
+      }
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
+
+      if (shipStyle.detail === "spine") {
+        ctx.strokeStyle = "rgba(182,245,255,0.8)";
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(ship.radius * 0.35, 0);
+        ctx.lineTo(-ship.radius * 0.54, 0);
+        ctx.stroke();
+      } else if (shipStyle.detail === "core") {
+        ctx.strokeStyle = "rgba(233,245,255,0.8)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(-ship.radius * 0.2, 0, ship.radius * 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (shipStyle.detail === "fang") {
+        ctx.strokeStyle = "rgba(226,214,255,0.82)";
+        ctx.lineWidth = 1.15;
+        ctx.beginPath();
+        ctx.moveTo(ship.radius * 0.2, 0);
+        ctx.lineTo(-ship.radius * 0.18, -ship.radius * 0.18);
+        ctx.moveTo(ship.radius * 0.2, 0);
+        ctx.lineTo(-ship.radius * 0.18, ship.radius * 0.18);
+        ctx.stroke();
+      } else if (shipStyle.detail === "orb") {
+        ctx.strokeStyle = "rgba(189,255,226,0.82)";
+        ctx.lineWidth = 1.15;
+        ctx.beginPath();
+        ctx.arc(-ship.radius * 0.26, 0, ship.radius * 0.18, 0, Math.PI * 2);
+        ctx.stroke();
+      }
 
       if (ship.shield > 0) {
         const shieldRatio = ship.shield / ship.shieldMax;
@@ -107,9 +206,9 @@
 
       if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowUp")) {
         const jetGradient = ctx.createLinearGradient(-ship.radius * 1.6, 0, -ship.radius * 0.8, 0);
-        jetGradient.addColorStop(0, "rgba(255,120,86,0.9)");
-        jetGradient.addColorStop(1, "rgba(255,234,133,0.9)");
-        ctx.shadowColor = "rgba(255,165,95,0.9)";
+        jetGradient.addColorStop(0, shipStyle.thrustOuter);
+        jetGradient.addColorStop(1, shipStyle.thrustInner);
+        ctx.shadowColor = shipStyle.thrustOuter;
         ctx.shadowBlur = 16;
         ctx.fillStyle = jetGradient;
         ctx.beginPath();
@@ -121,8 +220,8 @@
       }
 
       if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowLeft")) {
-        ctx.fillStyle = "rgba(255,198,120,0.95)";
-        ctx.shadowColor = "rgba(255,176,104,0.9)";
+        ctx.fillStyle = shipStyle.sideFlame;
+        ctx.shadowColor = shipStyle.sideFlame;
         ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.moveTo(-ship.radius * 0.24, ship.radius * 0.38);
@@ -133,8 +232,8 @@
       }
 
       if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowRight")) {
-        ctx.fillStyle = "rgba(255,198,120,0.95)";
-        ctx.shadowColor = "rgba(255,176,104,0.9)";
+        ctx.fillStyle = shipStyle.sideFlame;
+        ctx.shadowColor = shipStyle.sideFlame;
         ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.moveTo(-ship.radius * 0.24, -ship.radius * 0.38);
