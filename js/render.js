@@ -1663,7 +1663,23 @@
 
         const formatModuleShort = (module) => {
           if (!module) return "-";
-          return `${truncate(module.name, 22)} | ${slotLabels[module.slot] || module.slot} | ${module.sellValue}cr`;
+          return `${truncate(getModuleDisplayName(module), 22)} | ${slotLabels[module.slot] || module.slot} | ${module.sellValue}cr`;
+        };
+
+        const getModuleDisplayName = (module) => {
+          if (!module) return "-";
+          if (module.baseName) return module.baseName;
+          const rawName = String(module.name || "-");
+          const rarityLabel = String(module.rarityLabel || "").trim();
+          if (rarityLabel && rawName.startsWith(`${rarityLabel} `)) {
+            return rawName.slice(rarityLabel.length + 1);
+          }
+          return rawName;
+        };
+
+        const getModuleRarityColor = (module) => {
+          if (!module) return "#d8f5ff";
+          return module.color || rarityById[module.rarity]?.color || "#d8f5ff";
         };
 
         const drawPanel = (x, y, w, h, title, active = false) => {
@@ -1867,7 +1883,14 @@
             decisionKey = "render.hangar.net.loss";
             decisionColor = "#ff9ea5";
           }
-          drawRow(detailX, detailY, selectedModule.name, "#ffd785", "700 14px Trebuchet MS", colW1 - 24);
+          drawRow(
+            detailX,
+            detailY,
+            getModuleDisplayName(selectedModule),
+            getModuleRarityColor(selectedModule),
+            "700 14px Trebuchet MS",
+            colW1 - 24
+          );
           detailY += 18;
           drawRow(
             detailX,
@@ -1924,7 +1947,15 @@
         drawRow(buildX, buildY, "Equipped", "#ffd785", "700 13px Trebuchet MS");
         buildY += 18;
         for (const slot of Object.keys(slotLabels)) {
-          drawRow(buildX, buildY, `${slotLabels[slot]}: ${equipment[slot]?.name || "-"}`, "#d8f5ff", "500 12px Trebuchet MS", colW2 - 24);
+          const module = equipment[slot];
+          drawRow(
+            buildX,
+            buildY,
+            `${slotLabels[slot]}: ${getModuleDisplayName(module)}`,
+            getModuleRarityColor(module),
+            "500 12px Trebuchet MS",
+            colW2 - 24
+          );
           buildY += 16;
         }
         buildY += 4;
