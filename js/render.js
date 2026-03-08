@@ -1430,6 +1430,8 @@
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
         this.drawOverlayBlock(cx, cy + 20, 520, 178);
+        ctx.fillStyle = "#d8f5ff";
+        ctx.font = "700 38px Trebuchet MS";
         ctx.fillText(tr("overlay.mission_complete"), cx, cy - 26);
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillStyle = "rgba(216,245,255,0.96)";
