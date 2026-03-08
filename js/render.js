@@ -1734,28 +1734,14 @@
         ctx.textAlign = "left";
         ctx.font = "700 42px Trebuchet MS";
         ctx.fillText("HANGAR", layoutX, topY);
-        const headerChipY = topY - 4;
-        const headerChipW = 280;
-        const headerChipGap = 10;
-        const shipChipX = layoutX + layoutW - headerChipW;
-        const pilotChipX = shipChipX - headerChipGap - headerChipW;
-        const drawHeaderChip = (x, label, value) => {
-          ctx.fillStyle = "rgba(5,16,30,0.82)";
-          ctx.fillRect(x, headerChipY, headerChipW, 24);
-          ctx.strokeStyle = "rgba(63,207,255,0.44)";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x, headerChipY, headerChipW, 24);
-          ctx.fillStyle = "#9fe3ff";
-          ctx.font = "700 12px Trebuchet MS";
-          ctx.textAlign = "left";
-          ctx.fillText(`${label}:`, x + 8, headerChipY + 16);
-          ctx.fillStyle = "#d8f5ff";
-          ctx.font = "600 12px Trebuchet MS";
-          const valueText = fitText(value, "600 12px Trebuchet MS", headerChipW - 60);
-          ctx.fillText(valueText, x + 52, headerChipY + 16);
-        };
-        drawHeaderChip(pilotChipX, "Pilot", selectedPilotCallsign);
-        drawHeaderChip(shipChipX, "Ship", selectedShipName);
+        const identityMaxW = 520;
+        const identityLeftX = layoutX + layoutW - identityMaxW;
+        const pilotText = fitText(selectedPilotCallsign, "600 12px Trebuchet MS", 300);
+        const shipText = fitText(selectedShipName, "600 12px Trebuchet MS", 180);
+        ctx.textAlign = "left";
+        ctx.font = "600 12px Trebuchet MS";
+        ctx.fillStyle = "rgba(216,245,255,0.9)";
+        ctx.fillText(`Pilot: ${pilotText}   |   Ship: ${shipText}`, identityLeftX, topY - 4);
 
         ctx.textAlign = "center";
         ctx.font = "600 19px Trebuchet MS";
