@@ -80,6 +80,7 @@
         viper_mk2: {
           fill: "rgba(112,214,255,0.2)",
           stroke: "#d9faff",
+          shieldColor: "120,232,255",
           thrustInner: "rgba(152,248,255,0.96)",
           thrustOuter: "rgba(80,197,255,0.92)",
           sideFlame: "rgba(152,248,255,0.95)",
@@ -96,6 +97,7 @@
         bastion_frame: {
           fill: "rgba(132,207,255,0.22)",
           stroke: "#e2fbff",
+          shieldColor: "255,206,132",
           thrustInner: "rgba(255,208,132,0.96)",
           thrustOuter: "rgba(255,133,96,0.9)",
           sideFlame: "rgba(255,203,132,0.95)",
@@ -112,6 +114,7 @@
         revenant_frame: {
           fill: "rgba(146,194,255,0.2)",
           stroke: "#e4f0ff",
+          shieldColor: "204,166,255",
           thrustInner: "rgba(221,178,255,0.95)",
           thrustOuter: "rgba(136,112,255,0.9)",
           sideFlame: "rgba(203,176,255,0.95)",
@@ -128,6 +131,7 @@
         helix_frame: {
           fill: "rgba(121,232,198,0.18)",
           stroke: "#d8fff0",
+          shieldColor: "157,255,209",
           thrustInner: "rgba(176,255,214,0.95)",
           thrustOuter: "rgba(102,231,196,0.88)",
           sideFlame: "rgba(176,255,214,0.92)",
@@ -195,9 +199,10 @@
 
       if (ship.shield > 0) {
         const shieldRatio = ship.shield / ship.shieldMax;
-        ctx.strokeStyle = `rgba(128,229,255,${0.22 + shieldRatio * 0.5})`;
+        const shieldColor = shipStyle.shieldColor || "128,229,255";
+        ctx.strokeStyle = `rgba(${shieldColor},${0.22 + shieldRatio * 0.5})`;
         ctx.lineWidth = 1.2 + shieldRatio * 1.8;
-        ctx.shadowColor = "rgba(128,229,255,0.75)";
+        ctx.shadowColor = `rgba(${shieldColor},0.75)`;
         ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.arc(0, 0, ship.radius * 1.24, 0, Math.PI * 2);
