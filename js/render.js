@@ -932,15 +932,27 @@
           colW0 - 24
         );
         selY += 20;
-        drawRow(selX, selY, "Up/Down select  |  Space take/equip", "#d8f5ff", "600 12px Trebuchet MS", colW0 - 24);
-        selY += 20;
         const merged = [
           ...lootCrate.map((entry, idx) => ({ source: "crate", entry, idx })),
           ...inventory.map((entry, idx) => ({ source: "inventory", entry, idx }))
         ];
         const mergedIndex = selectedSource === "crate" ? selectedIndex : lootCrate.length + selectedIndex;
+        const selectionPos = merged.length > 0 ? Math.max(0, Math.min(merged.length - 1, mergedIndex)) + 1 : 0;
+        drawRow(
+          selX,
+          selY,
+          `Up/Down select | Space take/equip | Item ${selectionPos}/${merged.length}`,
+          "#d8f5ff",
+          "600 12px Trebuchet MS",
+          colW0 - 24
+        );
+        selY += 20;
         const listRows = 10;
         const listStart = getWindowStart(merged.length, mergedIndex, listRows, 4);
+        const listTopY = selY - 13;
+        const rowHeight = 17;
+        const listHeight = rowHeight * listRows;
+        const listBarX = colX0 + colW0 - 11;
         for (let i = 0; i < listRows; i += 1) {
           const item = merged[listStart + i];
           if (!item) {
@@ -959,6 +971,17 @@
             );
           }
           selY += 17;
+        }
+        ctx.fillStyle = "rgba(63,207,255,0.2)";
+        ctx.fillRect(listBarX, listTopY, 4, listHeight);
+        if (merged.length > 0) {
+          const visibleRows = Math.min(listRows, merged.length);
+          const thumbHeight = Math.max(10, (visibleRows / merged.length) * listHeight);
+          const maxStart = Math.max(1, merged.length - listRows);
+          const scrollRatio = Math.max(0, Math.min(1, listStart / maxStart));
+          const thumbY = listTopY + (listHeight - thumbHeight) * scrollRatio;
+          ctx.fillStyle = "rgba(255,231,168,0.82)";
+          ctx.fillRect(listBarX, thumbY, 4, thumbHeight);
         }
 
         const detailX = colX1 + 12;

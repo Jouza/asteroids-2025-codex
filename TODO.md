@@ -33,6 +33,7 @@ Prubezny checklist pro realizaci noveho smeru.
   - [x] Hangar ovladani sjednoceno na sipky + Space (legacy zkratky jako fallback)
   - [x] Hangar matrix readability pass (spacing/font density/truncation pro 1366x768 a 1920x1080)
   - [x] Full inventory flow: Sell/Salvage dostupne i pres Arrow+Space (Immediate Actions), ne jen pres legacy 9/0
+  - [x] Selection list orientace: Item X/Y + scroll indikator pri dlouhem seznamu
   - [ ] Jemne doladeni na mensich rozlisenich (hustota, zalamovani textu)
 
 - [ ] Audio UX controls
@@ -75,7 +76,7 @@ Prubezny checklist pro realizaci noveho smeru.
 
 - [x] Manualni UX QA pass hangaru (crate+inventory stress)
   - [x] P1: Pri plnem inventory byl flow blokovany bez legacy 9/0; doplneno Sell/Salvage do Arrow+Space Immediate Actions
-  - [ ] P2: V Selection listu chybi scroll/page orientace pri 30+ polozkach (tezsi odhad pozice ve fronte)
+  - [x] P2: V Selection listu doplnena orientace (Item X/Y + scroll indikator) pro 30+ polozek
   - [ ] P3: Dense panel Immediate Actions ma nizsi scan-speed na 1366x768 (malo vertikalniho vzduchu)
 
 - [x] Ekonomika a loot 2.0
