@@ -535,6 +535,9 @@
       if (this.input.wasPressed("F4")) {
         this.model.performance.enabled = !this.model.performance.enabled;
       }
+      if (this.input.wasPressed("F6")) {
+        this.dumpPerformanceSnapshot();
+      }
       if (this.input.wasPressed("KeyF")) {
         this.toggleFlightModel();
       }
@@ -1146,6 +1149,36 @@
       perf.objects.asteroids = this.model.asteroids.length;
       perf.objects.ufos = this.model.ufos.length;
       this.updateAdaptiveQuality(perf.frameMs);
+    }
+
+    dumpPerformanceSnapshot() {
+      const perf = this.model.performance;
+      if (!perf) return;
+      const snapshot = {
+        frameMs: Number(perf.frameMs.toFixed(3)),
+        fps: Number(perf.fps.toFixed(2)),
+        avgFrameMs: Number(perf.avgFrameMs.toFixed(3)),
+        avgFps: Number(perf.avgFps.toFixed(2)),
+        maxFrameMs: Number(perf.maxFrameMs.toFixed(3)),
+        stepsLastFrame: perf.stepsLastFrame,
+        avgSteps: Number(perf.avgSteps.toFixed(3)),
+        qualityLevel: perf.qualityLevel,
+        particles: perf.objects.particles,
+        bullets: perf.objects.bullets,
+        enemyBullets: perf.objects.enemyBullets,
+        utilityEffects: perf.objects.utilityEffects,
+        asteroids: perf.objects.asteroids,
+        ufos: perf.objects.ufos,
+        droppedParticles: perf.dropped?.particles ?? 0,
+        droppedBullets: perf.dropped?.bullets ?? 0,
+        droppedEnemyBullets: perf.dropped?.enemyBullets ?? 0,
+        droppedUtilityEffects: perf.dropped?.utilityEffects ?? 0,
+        frames: perf.frameCount
+      };
+      // Dev profiling helper: capture one readable runtime snapshot during playtesting.
+      if (typeof console !== "undefined" && typeof console.table === "function") console.table([snapshot]);
+      else if (typeof console !== "undefined" && typeof console.log === "function") console.log(snapshot);
+      this.model.hangar.message = tr("game.perf.snapshot_dumped");
     }
 
     getFxQualityProfile() {

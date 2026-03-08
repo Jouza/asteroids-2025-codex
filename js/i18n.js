@@ -34,6 +34,7 @@
         "Hangar: Left/Right section, Up/Down selection, Space action, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K",
       "game.audio.muted": "Audio: muted (M to unmute).",
       "game.audio.enabled": "Audio: enabled (M to mute).",
+      "game.perf.snapshot_dumped": "Perf snapshot dumped to console (F6).",
       "game.unlock.endless": "Campaign cleared. Endless mode unlocked.",
       "game.boss.down": "Boss down: +{credits} credits, {drops} guaranteed module",
       "game.boss.final_down": "Final boss down: +{credits} credits, {drops} guaranteed module",
