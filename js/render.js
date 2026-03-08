@@ -1395,14 +1395,22 @@
       if (model.gameState === GAME_STATE.START) {
         const centerX = config.canvas.width / 2;
         const centerY = config.canvas.height / 2;
-        // Vertically center the whole stack (logo -> info -> setup) as one unit.
-        const stackCenterY = centerY - 58;
-        const logoY = stackCenterY - 112;
-        const titleY = stackCenterY - 28;
-        const infoPressY = stackCenterY + 18;
-        const infoSeedY = stackCenterY + 50;
-        const setupTopY = stackCenterY + 96;
+        // Vertically center the whole stack (logo -> info -> onboarding -> setup)
+        // with explicit section spacing to prevent overlap.
         const setupPanelHeight = 176;
+        const logoRadius = 34;
+        const sectionGap = 26;
+        const rowGap = 18;
+        const onboardingRows = 4; // title + 3 lines
+
+        const stackTop = centerY - 210;
+        const logoY = stackTop + logoRadius;
+        const titleY = logoY + 86;
+        const infoPressY = titleY + 52;
+        const infoSeedY = infoPressY + 34;
+        const onboardingY = infoSeedY + 30;
+        const onboardingBottomY = onboardingY + rowGap * onboardingRows;
+        const setupTopY = onboardingBottomY + sectionGap;
         const setupCenterY = setupTopY + setupPanelHeight / 2;
 
         this.drawStartLogo(centerX, logoY);
@@ -1412,7 +1420,6 @@
         ctx.fillText(tr("overlay.press_enter_start"), centerX, infoPressY);
         ctx.fillStyle = "rgba(210,239,255,0.94)";
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, infoSeedY);
-        const onboardingY = infoSeedY + 24;
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "rgba(174,238,209,0.94)";
         ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
