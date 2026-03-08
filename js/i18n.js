@@ -18,6 +18,7 @@
       "overlay.settings_mode": "Mode",
       "overlay.settings_pilot": "Pilot",
       "overlay.settings_ship": "Ship",
+      "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
       "overlay.onboarding_title": "Quick Start",
       "overlay.onboarding_line1": "Actions spend Energy + Shield together.",
@@ -45,6 +46,7 @@
       "overlay.enter_new_run": "Press Enter for a new run",
       "game.run_mode.locked": "Endless mode is locked. Clear campaign once to unlock.",
       "game.run_mode.changed": "Run mode: {mode}",
+      "game.flight_mode.changed": "Flight model: {mode}",
       "game.run_mode.campaign": "CAMPAIGN",
       "game.run_mode.endless": "ENDLESS",
       "game.identity.pilot_changed": "Pilot selected: {pilot}",
@@ -213,7 +215,7 @@
       "index.icon.flight_mode.aria": "Flight Mode",
       "index.help_link": "HELP: objects and hazards reference",
       "index.controls_html":
-        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Run setup (Start/Game Over/Victory):</strong> <strong>Up/Down</strong> select row (Mode/Pilot/Ship), <strong>Left/Right</strong> change value, <strong>E</strong> quick mode toggle. <strong>Objective complete:</strong> confirm sector clear with <strong>Enter</strong> to enter hangar. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. Shop &amp; Ops shows grouped actions (Sustain/Progression/Loadout/Inventory), and Weapon Progression displays <strong>Cooldown Lv</strong> and <strong>Magazine Lv</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
+        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Run setup (Start/Game Over/Victory):</strong> <strong>Up/Down</strong> select row (Mode/Pilot/Ship/Flight), <strong>Left/Right</strong> change value, <strong>E</strong> quick mode toggle. <strong>Objective complete:</strong> confirm sector clear with <strong>Enter</strong> to enter hangar. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. Shop &amp; Ops shows grouped actions (Sustain/Progression/Loadout/Inventory), and Weapon Progression displays <strong>Cooldown Lv</strong> and <strong>Magazine Lv</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
       "help.document_title": "STARFANG - Help",
       "help.title": "STARFANG Help",
       "help.page_title": "STARFANG - Object Help",
@@ -234,7 +236,7 @@
       "help.section.pilot_rpg": "Pilot RPG (MVP)",
       "help.section.pilot_identity": "Pilot Identity and Ship Frames",
       "help.section.pilot_identity_hint":
-        "In start/game over/victory overlays, use unified Run setup: <strong>Up/Down</strong> select row (Mode/Pilot/Ship), <strong>Left/Right</strong> change value. Hover pilot name for reference tooltip. Identity adds small stat flavor bonuses.",
+        "In start/game over/victory overlays, use unified Run setup: <strong>Up/Down</strong> select row (Mode/Pilot/Ship/Flight), <strong>Left/Right</strong> change value. Hover pilot name for reference tooltip. Identity adds small stat flavor bonuses.",
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.hazards": "Hazard Zones",
@@ -249,6 +251,12 @@
       "help.card.drain_factors.tag": "Balancing",
       "help.card.drain_factors.line": "Primary has the lowest drain, secondary/utility are higher, dash is mid.",
       "help.card.drain_factors.impact": "<strong>Impact:</strong> weapon identity stays clear, with explicit risk/reward tradeoff.",
+      "help.card.flight_models.name": "Flight Models",
+      "help.card.flight_models.tag": "Arcade vs Sim Lite",
+      "help.card.flight_models.line":
+        "Arcade = faster turn response and stronger thrust for tighter close-range control. Sim Lite = higher top speed and gentler steering for wider drift lines.",
+      "help.card.flight_models.impact":
+        "<strong>Impact:</strong> Arcade favors reactive dodging in dense fights; Sim Lite favors speed routing and predictive movement in open lanes.",
       "help.card.mission_survive.name": "SURVIVE",
       "help.card.mission_survive.tag": "Hold timer + cleanup",
       "help.card.mission_survive.line": "Survive the time limit. After timer expires, objective switches to clearing remaining threats.",

@@ -552,6 +552,20 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.overlaySettingsRow = 3;
+    gameA.model.flightModel = "arcade";
+    gameA.adjustSelectedOverlaySetting(1);
+    assert(gameA.model.flightModel === "sim_lite", "Run setup flight row should switch to SIM LITE");
+    assert(
+      gameA.model.profile.progression.flightModel === "sim_lite",
+      "Selected flight model should persist into profile progression"
+    );
+    gameA.adjustSelectedOverlaySetting(-1);
+    assert(gameA.model.flightModel === "arcade", "Run setup flight row should switch back to ARCADE");
+  });
+
+  tests.push(() => {
     gameA.startGame(11111);
     const ship = gameA.model.ship;
     ship.invulnMs = 0;

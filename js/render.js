@@ -1322,6 +1322,11 @@
           id: "ship",
           label: tr("overlay.settings_ship"),
           value: tr(`identity.ship.${model.identity?.shipId}.name`)
+        },
+        {
+          id: "flight",
+          label: tr("overlay.settings_flight"),
+          value: model.flightModel === "sim_lite" ? tr("hud.flight_sim_lite") : tr("hud.flight_arcade")
         }
       ];
       const selected = Math.max(0, Math.min(rows.length - 1, model.overlaySettingsRow ?? 0));
@@ -1406,7 +1411,7 @@
         const seedToOnboarding = compact ? 24 : large ? 32 : 28;
         const onboardingRowGap = compact ? 16 : large ? 20 : 18;
         const onboardingToSetup = compact ? 30 : large ? 38 : 34;
-        const setupPanelHeight = compact ? 168 : large ? 184 : 176;
+        const setupPanelHeight = compact ? 206 : large ? 224 : 214;
         const edgeMargin = 26;
         const extraBottomReserve = model.endlessUnlocked ? 8 : 36;
 

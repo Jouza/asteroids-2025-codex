@@ -55,6 +55,7 @@
 
 - [x] Mode select UX clarification
   - [x] Campaign/Endless explicit selector v overlayi (Start/Game Over/Victory)
+  - [x] Run setup doplnen o explicitni volbu Flight model (ARCADE/SIM LITE) pres Left/Right
   - [x] Left/Right pro prime vyber modu + `E` jako fallback quick toggle
   - [x] UI/help texty aktualizovane na novy mode-select flow
 

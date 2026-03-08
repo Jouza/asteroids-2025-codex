@@ -145,6 +145,7 @@
       schemaVersion: PROFILE_SCHEMA_VERSION,
       updatedAt: Date.now(),
       progression: {
+        flightModel: "arcade",
         loadout: {
           primaryId: "auto_cannon",
           secondaryId: "missile_burst",
@@ -411,6 +412,11 @@
       const progression = rawProfile.progression || {};
       const stats = rawProfile.stats || {};
 
+      safe.progression.flightModel =
+        progression.flightModel === "sim_lite" || progression.flightModel === "arcade"
+          ? progression.flightModel
+          : defaults.progression.flightModel;
+
       const validPrimary = this.config.loadout.primary[progression.loadout?.primaryId];
       const validSecondary = this.config.loadout.secondary[progression.loadout?.secondaryId];
       const validUtility = this.config.loadout.utility[progression.loadout?.utilityId];
@@ -548,6 +554,7 @@
 
     captureProgressionSnapshot() {
       return {
+        flightModel: this.model.flightModel,
         loadout: {
           primaryId: this.model.loadout.primaryId,
           secondaryId: this.model.loadout.secondaryId,
@@ -565,6 +572,7 @@
 
     applyProfileToModel(profile) {
       const progression = profile.progression;
+      this.model.flightModel = progression.flightModel === "sim_lite" ? "sim_lite" : "arcade";
       this.model.loadout.primaryId = progression.loadout.primaryId;
       this.model.loadout.secondaryId = progression.loadout.secondaryId;
       this.model.loadout.utilityId = progression.loadout.utilityId;
@@ -963,7 +971,7 @@
     }
 
     getOverlaySettingRows() {
-      return ["mode", "pilot", "ship"];
+      return ["mode", "pilot", "ship", "flight"];
     }
 
     cycleOverlaySettingsRow(direction = 1) {
@@ -987,7 +995,24 @@
       }
       if (row === "ship") {
         this.cycleIdentityShip(direction);
+        return;
       }
+      if (row === "flight") {
+        this.trySetFlightModel(direction < 0 ? "arcade" : "sim_lite");
+      }
+    }
+
+    trySetFlightModel(mode, { saveProfile = true } = {}) {
+      const next = mode === "sim_lite" ? "sim_lite" : mode === "arcade" ? "arcade" : null;
+      if (!next) return false;
+      if (this.model.flightModel === next) return false;
+      this.model.flightModel = next;
+      this.model.hangar.message = tr("game.flight_mode.changed", {
+        mode: next === "sim_lite" ? tr("hud.flight_sim_lite") : tr("hud.flight_arcade")
+      });
+      if (saveProfile) this.saveProfile("flight_model_change");
+      this.hud.sync(this.model);
+      return true;
     }
 
     cycleIdentityPilot(direction = 1) {
@@ -1771,7 +1796,8 @@
     }
 
     toggleFlightModel() {
-      this.model.flightModel = this.model.flightModel === "arcade" ? "sim_lite" : "arcade";
+      const next = this.model.flightModel === "arcade" ? "sim_lite" : "arcade";
+      this.trySetFlightModel(next);
     }
 
     initializeShipResources(ship) {
