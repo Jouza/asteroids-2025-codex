@@ -45,6 +45,14 @@
       scoreEarned: 0,
       creditsEarned: 0,
       playerHitsTaken: 0,
+      actionBlocks: {
+        energy: 0,
+        shield: 0,
+        heat: 0,
+        cooldown: 0,
+        magazine: 0
+      },
+      powerAudit: null,
       activeMission: null,
       lastMission: null
     };
@@ -315,6 +323,12 @@
         telemetry: createTelemetryState(false),
         performance: createPerformanceState(false),
         profile: createDefaultProfile(),
+        actionHint: {
+          text: "",
+          timer: 0,
+          key: "",
+          lastAtMs: 0
+        },
         uiAlerts: {
           lowHull: false,
           lowEnergy: false,
@@ -608,6 +622,7 @@
       this.model.profile = this.loadProfile();
       this.applyProfileToModel(this.model.profile);
       this.initializeShipResources(this.model.ship);
+      this.refreshPowerAudit();
       this.model.runSeed = generateRunSeed();
       this.enemySystem.scheduleNextUfoSpawn();
       this.hud.sync(this.model);
@@ -1118,8 +1133,8 @@
       return true;
     }
 
-    getModuleModifiers() {
-      const totals = {
+    createModifierTotals() {
+      return {
         hullPct: 0,
         shieldPct: 0,
         energyPct: 0,
@@ -1140,50 +1155,121 @@
         salvageYieldPct: 0,
         creditsGainPct: 0
       };
+    }
+
+    addModifiersToTotals(target, source) {
+      if (!source) return;
+      for (const key of Object.keys(source)) {
+        if (!(key in target)) target[key] = 0;
+        target[key] += source[key];
+      }
+    }
+
+    getModifierBreakdown() {
+      const total = this.createModifierTotals();
+      const equipment = this.createModifierTotals();
+      const sets = this.createModifierTotals();
+      const pilotAttr = this.createModifierTotals();
+      const pilotPerk = this.createModifierTotals();
+      const identity = this.createModifierTotals();
 
       for (const slot of Object.keys(this.model.equipment)) {
         const module = this.model.equipment[slot];
         if (!module?.modifiers) continue;
-        const modifiers = module.modifiers;
-        for (const key of Object.keys(modifiers)) {
-          if (!(key in totals)) totals[key] = 0;
-          totals[key] += modifiers[key];
-        }
+        this.addModifiersToTotals(equipment, module.modifiers);
       }
 
       this.refreshSetState();
       for (const activeSet of this.model.activeSets) {
-        const setModifiers = activeSet.modifiers || {};
-        for (const key of Object.keys(setModifiers)) {
-          if (!(key in totals)) totals[key] = 0;
-          totals[key] += setModifiers[key];
-        }
+        this.addModifiersToTotals(sets, activeSet.modifiers || {});
       }
 
-      const pilotAttrBonuses = this.getPilotAttributeBonuses();
-      for (const key of Object.keys(pilotAttrBonuses)) {
-        if (!(key in totals)) totals[key] = 0;
-        totals[key] += pilotAttrBonuses[key];
-      }
-
-      const pilotPerkBonuses = this.getPilotPerkBonuses();
-      for (const key of Object.keys(pilotPerkBonuses)) {
-        if (!(key in totals)) totals[key] = 0;
-        totals[key] += pilotPerkBonuses[key];
-      }
+      this.addModifiersToTotals(pilotAttr, this.getPilotAttributeBonuses());
+      this.addModifiersToTotals(pilotPerk, this.getPilotPerkBonuses());
 
       const identityPilot = this.getSelectedIdentityPilot();
       const identityShip = this.getSelectedIdentityShip();
-      const addIdentityModifiers = (source) => {
-        for (const key of Object.keys(source || {})) {
-          if (!(key in totals)) totals[key] = 0;
-          totals[key] += source[key];
-        }
-      };
-      addIdentityModifiers(identityPilot?.modifiers);
-      addIdentityModifiers(identityShip?.modifiers);
+      this.addModifiersToTotals(identity, identityPilot?.modifiers);
+      this.addModifiersToTotals(identity, identityShip?.modifiers);
 
-      return totals;
+      this.addModifiersToTotals(total, equipment);
+      this.addModifiersToTotals(total, sets);
+      this.addModifiersToTotals(total, pilotAttr);
+      this.addModifiersToTotals(total, pilotPerk);
+      this.addModifiersToTotals(total, identity);
+
+      return { total, equipment, sets, pilotAttr, pilotPerk, identity };
+    }
+
+    getModuleModifiers() {
+      return this.getModifierBreakdown().total;
+    }
+
+    scoreModifierTotals(modifiers = {}) {
+      const weights = {
+        primaryDamagePct: 130,
+        critChanceFlat: 520,
+        primaryCooldownPct: 92,
+        secondaryCooldownPct: 72,
+        utilityCooldownPct: 68,
+        hullPct: 82,
+        shieldPct: 78,
+        energyRegenPct: 74,
+        heatDissipationPct: 72,
+        shieldRegenPct: 52,
+        maxSpeedPct: 56,
+        thrustPct: 56,
+        rotationSpeedPct: 42,
+        rotationAccelPct: 38,
+        collisionResist: 120,
+        plasmaResist: 90,
+        creditsGainPct: 28,
+        salvageYieldPct: 24
+      };
+      let score = 0;
+      for (const key of Object.keys(weights)) {
+        score += (modifiers[key] ?? 0) * weights[key];
+      }
+      return Math.round(score * 10) / 10;
+    }
+
+    scoreBiomeEvent(event) {
+      if (!event) return 0;
+      let score = 0;
+      score += (event.credits ?? 0) * 0.7;
+      score += (event.salvageParts ?? 0) * 2.8;
+      score += (event.energy ?? 0) * 0.45;
+      score += (event.shield ?? 0) * 0.75;
+      score += -(event.heat ?? 0) * 0.52;
+      score += -(event.cooldownDelta ?? 0) * 18;
+      return Math.round(score * 10) / 10;
+    }
+
+    refreshPowerAudit() {
+      const telemetry = this.model.telemetry;
+      if (!telemetry) return;
+      const breakdown = this.getModifierBreakdown();
+      const event = this.model.currentMission?.biomeMiniEvent || null;
+
+      const pilotCombined = this.createModifierTotals();
+      this.addModifiersToTotals(pilotCombined, breakdown.pilotAttr);
+      this.addModifiersToTotals(pilotCombined, breakdown.pilotPerk);
+
+      const gearCombined = this.createModifierTotals();
+      this.addModifiersToTotals(gearCombined, breakdown.equipment);
+      this.addModifiersToTotals(gearCombined, breakdown.sets);
+
+      telemetry.powerAudit = {
+        gear: this.scoreModifierTotals(gearCombined),
+        pilot: this.scoreModifierTotals(pilotCombined),
+        identity: this.scoreModifierTotals(breakdown.identity),
+        biomeEvent: this.scoreBiomeEvent(event)
+      };
+      telemetry.powerAudit.total =
+        telemetry.powerAudit.gear +
+        telemetry.powerAudit.pilot +
+        telemetry.powerAudit.identity +
+        telemetry.powerAudit.biomeEvent;
     }
 
     applyPct(baseValue, pctBonus = 0) {
@@ -1325,6 +1411,10 @@
 
       this.model.runtimeSeconds += dt;
       this.model.telemetry.runTimeSeconds += dt;
+      if (this.model.actionHint?.timer > 0) {
+        this.model.actionHint.timer = Math.max(0, this.model.actionHint.timer - dt);
+        if (this.model.actionHint.timer <= 0) this.model.actionHint.text = "";
+      }
 
       this.model.shootTimer = Math.max(0, this.model.shootTimer - dt);
       this.model.secondaryCooldown = Math.max(0, this.model.secondaryCooldown - dt);
@@ -1449,6 +1539,40 @@
     getNowMs() {
       if (typeof performance !== "undefined" && typeof performance.now === "function") return performance.now();
       return Date.now();
+    }
+
+    setActionHint(key, params = {}, options = {}) {
+      const nowMs = this.getNowMs();
+      const duration = Math.max(0.45, Number(options.durationSeconds) || 1.15);
+      const cooldownMs = Math.max(120, Number(options.cooldownMs) || 280);
+      const hint = this.model.actionHint || { text: "", timer: 0, key: "", lastAtMs: 0 };
+      if (hint.key === key && nowMs - (hint.lastAtMs || 0) < cooldownMs) return;
+      hint.key = key;
+      hint.text = tr(key, params);
+      hint.timer = duration;
+      hint.lastAtMs = nowMs;
+      this.model.actionHint = hint;
+    }
+
+    registerActionBlock(type, hintKey, hintParams = {}) {
+      const blocks = this.model.telemetry?.actionBlocks;
+      if (blocks && type in blocks) blocks[type] += 1;
+      if (hintKey) this.setActionHint(hintKey, hintParams);
+    }
+
+    showResourceBlockHint(energyCost, heatGain = 0, options = {}) {
+      const reasonKey = this.getSpendBlockReason(energyCost, heatGain, options);
+      if (!reasonKey) return null;
+      if (reasonKey === "game.action.block.energy") {
+        this.registerActionBlock("energy", reasonKey, { cost: Number(energyCost || 0).toFixed(1) });
+      } else if (reasonKey === "game.action.block.shield") {
+        this.registerActionBlock("shield", reasonKey, { cost: Number(options.shieldCost || 0).toFixed(1) });
+      } else if (reasonKey === "game.action.block.heat") {
+        this.registerActionBlock("heat", reasonKey);
+      } else {
+        this.setActionHint(reasonKey);
+      }
+      return reasonKey;
     }
 
     updateTimingBucket(bucket, sample) {
@@ -1913,6 +2037,7 @@
         missionAudioProfile: mission.biomeAudio
       });
       this.applyBiomeMiniEvent();
+      this.refreshPowerAudit();
 
       this.model.telemetry.activeMission = {
         sector: this.model.sector,
@@ -2047,11 +2172,18 @@
     }
 
     canSpendShipResources(energyCost, heatGain = 0, options = {}) {
+      return this.getSpendBlockReason(energyCost, heatGain, options) == null;
+    }
+
+    getSpendBlockReason(energyCost, heatGain = 0, options = {}) {
       const ship = this.model.ship;
-      if (!ship) return false;
+      if (!ship) return "game.action.block.no_ship";
       const hardThreshold = this.config.ship.overheatHardThreshold;
       const shieldCost = options.shieldCost ?? 0;
-      return ship.energy >= energyCost && ship.shield >= shieldCost && ship.heat + heatGain < hardThreshold;
+      if (ship.energy < energyCost) return "game.action.block.energy";
+      if (ship.shield < shieldCost) return "game.action.block.shield";
+      if (ship.heat + heatGain >= hardThreshold) return "game.action.block.heat";
+      return null;
     }
 
     spendShipResources(energyCost, heatGain = 0, options = {}) {

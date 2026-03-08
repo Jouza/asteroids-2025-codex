@@ -954,6 +954,12 @@
         ctx.fillStyle = `rgba(214,244,255,${alpha})`;
         ctx.fillText(`ENTERING BIOME: ${biomeName.toUpperCase()}`, config.canvas.width / 2, 136);
       }
+      if (model.actionHint?.timer > 0 && model.actionHint.text) {
+        const alpha = Math.max(0.25, Math.min(1, model.actionHint.timer / 1.1));
+        ctx.font = "600 13px Trebuchet MS";
+        ctx.fillStyle = `rgba(255,214,154,${alpha})`;
+        ctx.fillText(model.actionHint.text, config.canvas.width / 2, config.canvas.height - 34);
+      }
       ctx.restore();
     }
 
@@ -965,7 +971,7 @@
       const panelX = 18;
       const panelY = 72;
       const panelW = 410;
-      const panelH = 268;
+      const panelH = 312;
       const lineStep = 18;
       let lineY = panelY + 26;
 
@@ -996,6 +1002,18 @@
       );
       drawLine(
         `Shots P:${telemetry.shots.primary}  S:${telemetry.shots.secondary}  U:${telemetry.shots.utility}  Enemy:${telemetry.shots.enemy}`
+      );
+      if (telemetry.powerAudit) {
+        const p = telemetry.powerAudit;
+        drawLine(
+          `Power G:${p.gear.toFixed(1)} P:${p.pilot.toFixed(1)} I:${p.identity.toFixed(1)} B:${p.biomeEvent.toFixed(1)} T:${p.total.toFixed(1)}`,
+          "rgba(176,240,210,0.95)"
+        );
+      }
+      const blocks = telemetry.actionBlocks || {};
+      drawLine(
+        `Blocks E:${blocks.energy ?? 0} S:${blocks.shield ?? 0} H:${blocks.heat ?? 0} C:${blocks.cooldown ?? 0} M:${blocks.magazine ?? 0}`,
+        "rgba(255,218,172,0.92)"
       );
       const ship = model.ship;
       if (ship) {
@@ -1394,6 +1412,17 @@
         ctx.fillText(tr("overlay.press_enter_start"), centerX, infoPressY);
         ctx.fillStyle = "rgba(210,239,255,0.94)";
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, infoSeedY);
+        if ((model.profile?.stats?.runsPlayed ?? 0) <= 0) {
+          const onboardingY = infoSeedY + 24;
+          ctx.font = "600 14px Trebuchet MS";
+          ctx.fillStyle = "rgba(174,238,209,0.94)";
+          ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
+          ctx.font = "500 13px Trebuchet MS";
+          ctx.fillStyle = "rgba(196,233,248,0.92)";
+          ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + 18);
+          ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + 34);
+          ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + 50);
+        }
 
         this.drawOverlayBlock(centerX, setupCenterY, 430, setupPanelHeight);
         const modeBottomY = this.drawRunSettingsList(model, setupTopY + 34);

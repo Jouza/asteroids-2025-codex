@@ -7,8 +7,8 @@
   - [x] Biome-specificke mini reward/event hooky (aby biome nebyl jen vizualni)
 
 - [ ] New player onboarding
-  - [ ] Kratky tutorial flow pro shared shield-energy model
-  - [ ] Contextual hinty pro "proc nejde akce" (shield gate / heat gate / cooldown)
+  - [x] Kratky tutorial flow pro shared shield-energy model
+  - [x] Contextual hinty pro "proc nejde akce" (shield gate / heat gate / cooldown)
 
 - [ ] Accessibility / readability options
   - [ ] Colorblind-safe rezim pro hazard a resource warning barvy

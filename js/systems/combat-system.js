@@ -9,10 +9,17 @@
     fireBullet() {
       const g = this.game;
       if (!g.model.ship) return false;
-      if (!g.canFirePrimary()) return false;
-      if (g.model.bullets.length >= g.getCurrentMaxBullets()) return false;
-      const ship = g.model.ship;
       const spec = g.getPrimarySpec();
+      if (g.model.bullets.length >= g.getCurrentMaxBullets()) {
+        g.registerActionBlock("magazine", "game.action.block.magazine", { shots: g.getCurrentMaxBullets() });
+        return false;
+      }
+      if (!g.canFirePrimary()) {
+        const shieldCost = g.getSharedPoolShieldCost("primary", spec.energyCost);
+        g.showResourceBlockHint(spec.energyCost, spec.heatGain, { shieldCost });
+        return false;
+      }
+      const ship = g.model.ship;
       const count = spec.count ?? 1;
       for (let i = 0; i < count; i += 1) {
         const t = count === 1 ? 0 : i / (count - 1) - 0.5;
@@ -43,11 +50,18 @@
     tryDash() {
       const g = this.game;
       const ship = g.model.ship;
-      if (!ship || g.model.dashCooldown > 0) return false;
+      if (!ship) return false;
+      if (g.model.dashCooldown > 0) {
+        g.registerActionBlock("cooldown", "game.action.block.cooldown", { seconds: g.model.dashCooldown.toFixed(1) });
+        return false;
+      }
 
       const dashCfg = g.config.ship.dash;
       const shieldCost = g.getSharedPoolShieldCost("dash", dashCfg.energyCost);
-      if (!g.canSpendShipResources(dashCfg.energyCost, dashCfg.heatGain, { shieldCost })) return false;
+      if (!g.canSpendShipResources(dashCfg.energyCost, dashCfg.heatGain, { shieldCost })) {
+        g.showResourceBlockHint(dashCfg.energyCost, dashCfg.heatGain, { shieldCost });
+        return false;
+      }
 
       const impulseX = Math.cos(ship.angle) * dashCfg.impulse;
       const impulseY = Math.sin(ship.angle) * dashCfg.impulse;
@@ -63,12 +77,19 @@
 
     tryUseSecondary() {
       const g = this.game;
-      if (g.model.secondaryCooldown > 0 || !g.model.ship) return;
+      if (!g.model.ship) return;
+      if (g.model.secondaryCooldown > 0) {
+        g.registerActionBlock("cooldown", "game.action.block.cooldown", { seconds: g.model.secondaryCooldown.toFixed(1) });
+        return;
+      }
 
       const ship = g.model.ship;
       const spec = g.getSecondarySpec();
       const shieldCost = g.getSharedPoolShieldCost("secondary", spec.energyCost ?? 0);
-      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost })) return;
+      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost })) {
+        g.showResourceBlockHint(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost });
+        return;
+      }
       if (spec.kind === "rail") {
         const dirX = Math.cos(ship.angle);
         const dirY = Math.sin(ship.angle);
@@ -112,12 +133,19 @@
 
     tryUseUtility() {
       const g = this.game;
-      if (g.model.utilityCooldown > 0 || !g.model.ship) return;
+      if (!g.model.ship) return;
+      if (g.model.utilityCooldown > 0) {
+        g.registerActionBlock("cooldown", "game.action.block.cooldown", { seconds: g.model.utilityCooldown.toFixed(1) });
+        return;
+      }
 
       const ship = g.model.ship;
       const spec = g.getUtilitySpec();
       const shieldCost = g.getSharedPoolShieldCost("utility", spec.energyCost ?? 0);
-      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost })) return;
+      if (!g.canSpendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost })) {
+        g.showResourceBlockHint(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost });
+        return;
+      }
       g.model.utilityCooldown = spec.cooldownSeconds * g.getCooldownMultiplier("utility");
       g.spendShipResources(spec.energyCost ?? 0, spec.heatGain ?? 0, { shieldCost });
       g.model.flashMs = Math.max(g.model.flashMs, spec.flashMs);

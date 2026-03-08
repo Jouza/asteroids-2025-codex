@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Onboarding + action gate feedback (MVP)
+  - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
+  - [x] Runtime contextual hint pri blokaci akce (energy/shield/heat/cooldown/magazine)
+  - [x] Telemetry panel rozsireny o action-block counters a power-audit breakdown (gear/pilot/identity/biome)
+
 - [x] Biome expansion pass (2 nove biomy)
   - [x] Pridany biomy `Shattered Relay` a `Cryo Ring` do mission directoru
   - [x] Nove biome hazardy `relay_jammer_burst` a `cryo_shear_zone` s odlisnym gameplay dopadem
