@@ -248,6 +248,8 @@
       "index.pilot_modal.xp_short": "XP",
       "index.pilot_modal.attr_short": "Attr",
       "index.pilot_modal.skill_short": "Skill",
+      "index.pilot_modal.bio_prefix": "Bio:",
+      "index.pilot_modal.reference_prefix": "Reference:",
       "index.pilot_modal.upgrade": "Upgrade",
       "index.pilot_modal.unlock": "Unlock",
       "index.pilot_modal.unlocked": "Unlocked",

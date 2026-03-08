@@ -110,6 +110,7 @@
       ? (i18n?.t ? i18n.t(`identity.pilot.${selectedPilot.id}.callsign`) : selectedPilot.id)
       : "-";
     const pilotBio = tr(`help.pilot.${pilotId}.bio`);
+    const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
     const level = Math.floor(pilot.level || 1);
     const xp = Math.floor(pilot.xp || 0);
     const xpToNext = Math.max(1, Math.floor(pilot.xpToNext || 1));
@@ -123,7 +124,8 @@
 
     const heroContent = createEl("div", "pilot-hero-content");
     heroContent.appendChild(createEl("p", "pilot-hero-name", pilotName));
-    heroContent.appendChild(createEl("p", "pilot-hero-bio", pilotBio));
+    heroContent.appendChild(createEl("p", "pilot-hero-bio", `${tr("index.pilot_modal.bio_prefix")} ${pilotBio}`));
+    heroContent.appendChild(createEl("p", "pilot-hero-ref", `${tr("index.pilot_modal.reference_prefix")} ${pilotReference}`));
     const heroStats = createEl("div", "pilot-hero-stats");
     heroStats.appendChild(createEl("span", "pilot-chip", `${tr("index.pilot_modal.level_short")} ${level}`));
     heroStats.appendChild(createEl("span", "pilot-chip", `${tr("index.pilot_modal.attr_short")} ${attrPoints}`));
@@ -137,11 +139,6 @@
     heroContent.appendChild(xpTrack);
     hero.appendChild(heroContent);
     pilotModalContent.appendChild(hero);
-
-    const summary = createEl("section", "pilot-modal-card");
-    summary.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.summary_title")));
-    summary.appendChild(createEl("div", "pilot-stat", tr("index.pilot_modal.level_line", { level, xp, next: xpToNext, attr: attrPoints, skill: skillPoints })));
-    pilotModalContent.appendChild(summary);
 
     const attrsCard = createEl("section", "pilot-modal-card");
     attrsCard.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.attributes_title")));

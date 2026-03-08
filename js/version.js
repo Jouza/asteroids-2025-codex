@@ -1,6 +1,6 @@
 (() => {
   window.Asteroids = window.Asteroids || {};
   window.Asteroids.APP_BUILD_META = {
-    version: "202603.08.2125"
+    version: "202603.08.2133"
   };
 })();
