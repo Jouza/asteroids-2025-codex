@@ -985,7 +985,10 @@
     drawBrandShipGlyph(centerX, bottomY, width, height, style) {
       const { ctx } = this;
       const topY = bottomY - height;
-      const halfWidth = width * 0.5;
+      const mapX = (originalX) => {
+        const normalized = (originalX + 14) / 28;
+        return centerX - width / 2 + normalized * width;
+      };
       const mapY = (originalY) => {
         const normalized = (originalY + 16) / 26;
         return topY + normalized * height;
@@ -997,12 +1000,12 @@
       ctx.strokeStyle = style.strokeStyle;
       ctx.lineWidth = style.lineWidth;
       ctx.beginPath();
-      ctx.moveTo(centerX, mapY(-16));
-      ctx.lineTo(centerX - halfWidth, mapY(10));
-      ctx.lineTo(centerX - halfWidth * 0.5, mapY(4));
-      ctx.lineTo(centerX, mapY(8));
-      ctx.lineTo(centerX + halfWidth * 0.5, mapY(4));
-      ctx.lineTo(centerX + halfWidth, mapY(10));
+      ctx.moveTo(mapX(0), mapY(-16));
+      ctx.lineTo(mapX(-14), mapY(10));
+      ctx.lineTo(mapX(-7), mapY(4));
+      ctx.lineTo(mapX(0), mapY(8));
+      ctx.lineTo(mapX(7), mapY(4));
+      ctx.lineTo(mapX(14), mapY(10));
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
@@ -1019,7 +1022,7 @@
       const totalWidth = ctx.measureText(title).width;
       const startX = centerX - totalWidth / 2;
       const measuredAscent = ctx.measureText("A").actualBoundingBoxAscent || 36;
-      const shipHeightBase = Math.max(30, measuredAscent * 0.92);
+      const logoAspect = 28 / 26;
 
       for (let i = 0; i < chars.length; i += 1) {
         const ch = chars[i];
@@ -1029,12 +1032,14 @@
         const nextX = startX + ctx.measureText(prefixWithChar).width;
         const charWidth = Math.max(1, nextX - x);
         if (ch === "A") {
-          this.drawBrandShipGlyph(x + charWidth / 2, baselineY - 1, charWidth * 0.94, shipHeightBase, {
+          const shipWidth = Math.min(charWidth * 1.08, charWidth + 4);
+          const shipHeight = Math.min(shipWidth / logoAspect, measuredAscent);
+          this.drawBrandShipGlyph(x + charWidth / 2, baselineY - 2, shipWidth, shipHeight, {
             shadowColor: "rgba(146,225,255,0.92)",
-            shadowBlur: 8,
+            shadowBlur: 8.6,
             fillStyle: "rgba(126,206,255,0.2)",
             strokeStyle: "#d6f9ff",
-            lineWidth: 1.7
+            lineWidth: 1.8
           });
         } else {
           ctx.fillText(ch, x, baselineY);
