@@ -776,11 +776,12 @@
           label: "Belt Fringe",
           weight: 0.3,
           audio: {
-            ambientGain: 0.03,
+            ambientGain: 0.011,
             bedHz: 92,
             layerHz: 142,
             lfoHz: 0.11,
-            lfoDepthHz: 5,
+            lfoDepthHz: 2.2,
+            filterHz: 410,
             warningSoundId: "warning_belt"
           }
         },
@@ -789,11 +790,12 @@
           label: "Wreck Graveyard",
           weight: 0.28,
           audio: {
-            ambientGain: 0.034,
+            ambientGain: 0.012,
             bedHz: 72,
             layerHz: 109,
             lfoHz: 0.09,
-            lfoDepthHz: 6,
+            lfoDepthHz: 2.4,
+            filterHz: 330,
             warningSoundId: "warning_graveyard"
           },
           hazards: {
@@ -812,11 +814,12 @@
           label: "Refinery Complex",
           weight: 0.24,
           audio: {
-            ambientGain: 0.032,
+            ambientGain: 0.011,
             bedHz: 84,
             layerHz: 168,
             lfoHz: 0.14,
-            lfoDepthHz: 7,
+            lfoDepthHz: 2.5,
+            filterHz: 440,
             warningSoundId: "warning_refinery"
           },
           hazards: {
@@ -835,11 +838,12 @@
           label: "Ion Field",
           weight: 0.18,
           audio: {
-            ambientGain: 0.036,
+            ambientGain: 0.012,
             bedHz: 96,
             layerHz: 192,
             lfoHz: 0.19,
-            lfoDepthHz: 10,
+            lfoDepthHz: 2.8,
+            filterHz: 500,
             warningSoundId: "warning_ion_field"
           }
         }

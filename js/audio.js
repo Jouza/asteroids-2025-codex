@@ -14,6 +14,7 @@
         currentGain: 0,
         targetGain: 0,
         gainNode: null,
+        filterNode: null,
         lfoNode: null,
         lfoGainNode: null,
         bedNode: null,
@@ -21,35 +22,39 @@
       };
       this.biomeAudioProfiles = {
         belt: {
-          ambientGain: 0.03,
+          ambientGain: 0.011,
           bedHz: 92,
           layerHz: 142,
           lfoHz: 0.11,
-          lfoDepthHz: 5,
+          lfoDepthHz: 2.2,
+          filterHz: 410,
           warningSoundId: "warning_belt"
         },
         graveyard: {
-          ambientGain: 0.034,
+          ambientGain: 0.012,
           bedHz: 72,
           layerHz: 109,
           lfoHz: 0.09,
-          lfoDepthHz: 6,
+          lfoDepthHz: 2.4,
+          filterHz: 330,
           warningSoundId: "warning_graveyard"
         },
         refinery: {
-          ambientGain: 0.032,
+          ambientGain: 0.011,
           bedHz: 84,
           layerHz: 168,
           lfoHz: 0.14,
-          lfoDepthHz: 7,
+          lfoDepthHz: 2.5,
+          filterHz: 440,
           warningSoundId: "warning_refinery"
         },
         ion_field: {
-          ambientGain: 0.036,
+          ambientGain: 0.012,
           bedHz: 96,
           layerHz: 192,
           lfoHz: 0.19,
-          lfoDepthHz: 10,
+          lfoDepthHz: 2.8,
+          filterHz: 500,
           warningSoundId: "warning_ion_field"
         }
       };
@@ -192,30 +197,37 @@
       const gainNode = this.context.createGain();
       gainNode.gain.setValueAtTime(0.0001, startAt);
       gainNode.connect(this.masterGain);
+      const filterNode = this.context.createBiquadFilter();
+      filterNode.type = "lowpass";
+      filterNode.frequency.setValueAtTime(420, startAt);
+      filterNode.Q.setValueAtTime(0.7, startAt);
 
       const bedNode = this.context.createOscillator();
-      bedNode.type = "triangle";
+      bedNode.type = "sine";
       const layerNode = this.context.createOscillator();
       layerNode.type = "sine";
       const lfoNode = this.context.createOscillator();
       lfoNode.type = "sine";
       const lfoGainNode = this.context.createGain();
 
-      lfoGainNode.gain.setValueAtTime(4, startAt);
+      lfoGainNode.gain.setValueAtTime(2.2, startAt);
       lfoNode.frequency.setValueAtTime(0.12, startAt);
       bedNode.frequency.setValueAtTime(90, startAt);
       layerNode.frequency.setValueAtTime(140, startAt);
+      layerNode.detune.setValueAtTime(4, startAt);
 
       lfoNode.connect(lfoGainNode);
       lfoGainNode.connect(layerNode.frequency);
-      bedNode.connect(gainNode);
-      layerNode.connect(gainNode);
+      bedNode.connect(filterNode);
+      layerNode.connect(filterNode);
+      filterNode.connect(gainNode);
 
       bedNode.start(startAt);
       layerNode.start(startAt);
       lfoNode.start(startAt);
 
       this.ambient.gainNode = gainNode;
+      this.ambient.filterNode = filterNode;
       this.ambient.bedNode = bedNode;
       this.ambient.layerNode = layerNode;
       this.ambient.lfoNode = lfoNode;
@@ -249,7 +261,13 @@
       } catch (error) {
         // Already disconnected.
       }
+      try {
+        this.ambient.filterNode?.disconnect();
+      } catch (error) {
+        // Already disconnected.
+      }
       this.ambient.gainNode = null;
+      this.ambient.filterNode = null;
       this.ambient.lfoNode = null;
       this.ambient.lfoGainNode = null;
       this.ambient.bedNode = null;
@@ -263,10 +281,12 @@
       this.ambient.layerNode.frequency.cancelScheduledValues(now);
       this.ambient.lfoNode.frequency.cancelScheduledValues(now);
       this.ambient.lfoGainNode.gain.cancelScheduledValues(now);
+      this.ambient.filterNode?.frequency.cancelScheduledValues(now);
       this.ambient.bedNode.frequency.linearRampToValueAtTime(Math.max(36, profile.bedHz || 90), now + 0.35);
       this.ambient.layerNode.frequency.linearRampToValueAtTime(Math.max(42, profile.layerHz || 140), now + 0.35);
       this.ambient.lfoNode.frequency.linearRampToValueAtTime(Math.max(0.03, profile.lfoHz || 0.12), now + 0.35);
-      this.ambient.lfoGainNode.gain.linearRampToValueAtTime(Math.max(0, profile.lfoDepthHz || 4), now + 0.35);
+      this.ambient.lfoGainNode.gain.linearRampToValueAtTime(Math.max(0, profile.lfoDepthHz || 2.2), now + 0.35);
+      this.ambient.filterNode?.frequency.linearRampToValueAtTime(Math.max(180, profile.filterHz || 420), now + 0.35);
     }
 
     updateBiomeAmbience(dt, context = {}) {
@@ -288,7 +308,7 @@
         }
       }
 
-      this.ambient.targetGain = profile ? profile.ambientGain ?? 0.03 : 0;
+      this.ambient.targetGain = profile ? profile.ambientGain ?? 0.011 : 0;
       const lerpFactor = Math.min(1, safeDt * 2.2);
       this.ambient.currentGain += (this.ambient.targetGain - this.ambient.currentGain) * lerpFactor;
       if (this.ambient.gainNode) {
