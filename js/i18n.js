@@ -202,7 +202,8 @@
       "help.section.mission_endless_hint":
         "Endless mode unlocks after your first campaign clear. On start/game over/victory overlays, pick mode explicitly with <strong>Left/Right</strong> (or quick toggle by <strong>E</strong>).",
       "help.section.biomes": "Biomes",
-      "help.section.biomes_hint": "Each sector rolls a biome. Biome defines arena atmosphere and may add specific hazard zones.",
+      "help.section.biomes_hint":
+        "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, and may add specific hazard zones.",
       "help.section.pilot_rpg": "Pilot RPG (MVP)",
       "help.section.pilot_identity": "Pilot Identity and Ship Frames",
       "help.section.pilot_identity_hint":

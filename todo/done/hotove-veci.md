@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Biome identity 2.0 - audio slice (MVP)
+  - [x] Biome-specific ambient audio bed podle aktivniho biome v mission contextu
+  - [x] Biome-specific warning SFX varianta pro critical alerts (low hull/high heat/shield break)
+  - [x] Plynule zeslabeni ambientu mimo `PLAYING` stav a preladeni pri zmene sektoru/biomu
+
 - [x] Help content generator (data-driven)
   - [x] `help.html` sekce/karty uz nejsou rucni staticky HTML obsah
   - [x] Mission/Biome/UFO/Asteroid/Hazard karty se skladaji z `GAME_CONFIG`/`ASTEROID_TYPES`

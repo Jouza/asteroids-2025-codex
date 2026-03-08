@@ -614,6 +614,12 @@
     }
 
     handleMetaInput() {
+      if (typeof this.audio.updateBiomeAmbience === "function") {
+        this.audio.updateBiomeAmbience(1 / 60, {
+          gameState: this.model.gameState,
+          mission: this.model.currentMission
+        });
+      }
       if (this.input.wasPressed("F3")) {
         this.model.telemetry.enabled = !this.model.telemetry.enabled;
       }
@@ -1308,6 +1314,12 @@
 
     update(dt) {
       if (this.model.gameState !== GAME_STATE.PLAYING) return;
+      if (typeof this.audio.updateBiomeAmbience === "function") {
+        this.audio.updateBiomeAmbience(dt, {
+          gameState: this.model.gameState,
+          mission: this.model.currentMission
+        });
+      }
       const perfEnabled = Boolean(this.model.performance?.enabled);
       let sectionStart = perfEnabled ? this.getNowMs() : 0;
 
@@ -2162,9 +2174,11 @@
         secondaryReady: this.model.secondaryCooldown <= 0,
         utilityReady: this.model.utilityCooldown <= 0
       };
-      if (this.model.uiAlerts.lowHull && !prevAlerts.lowHull) this.audio.play("warning");
-      if (this.model.uiAlerts.highHeat && !prevAlerts.highHeat) this.audio.play("warning");
-      if (this.model.uiAlerts.shieldBroken && !prevAlerts.shieldBroken) this.audio.play("warning");
+      const biomeId = this.model.currentMission?.biomeId || null;
+      const missionAudioProfile = this.model.currentMission?.biomeAudio || null;
+      if (this.model.uiAlerts.lowHull && !prevAlerts.lowHull) this.audio.play("warning", { biomeId, missionAudioProfile });
+      if (this.model.uiAlerts.highHeat && !prevAlerts.highHeat) this.audio.play("warning", { biomeId, missionAudioProfile });
+      if (this.model.uiAlerts.shieldBroken && !prevAlerts.shieldBroken) this.audio.play("warning", { biomeId, missionAudioProfile });
     }
 
     getAsteroidScore(asteroid) {

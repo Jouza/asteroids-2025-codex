@@ -3,7 +3,7 @@
 ## Dalsi chybejici temata (zatim neevidovana)
 
 - [ ] Biome identity 2.0 (audio + rewards)
-  - [ ] Biome-specificky ambient layer a warning SFX variace
+  - [x] Biome-specificky ambient layer a warning SFX variace
   - [ ] Biome-specificke mini reward/event hooky (aby biome nebyl jen vizualni)
 
 - [ ] New player onboarding

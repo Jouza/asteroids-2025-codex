@@ -774,12 +774,28 @@
         {
           id: "belt",
           label: "Belt Fringe",
-          weight: 0.3
+          weight: 0.3,
+          audio: {
+            ambientGain: 0.03,
+            bedHz: 92,
+            layerHz: 142,
+            lfoHz: 0.11,
+            lfoDepthHz: 5,
+            warningSoundId: "warning_belt"
+          }
         },
         {
           id: "graveyard",
           label: "Wreck Graveyard",
           weight: 0.28,
+          audio: {
+            ambientGain: 0.034,
+            bedHz: 72,
+            layerHz: 109,
+            lfoHz: 0.09,
+            lfoDepthHz: 6,
+            warningSoundId: "warning_graveyard"
+          },
           hazards: {
             type: "debris_field",
             minCount: 2,
@@ -795,6 +811,14 @@
           id: "refinery",
           label: "Refinery Complex",
           weight: 0.24,
+          audio: {
+            ambientGain: 0.032,
+            bedHz: 84,
+            layerHz: 168,
+            lfoHz: 0.14,
+            lfoDepthHz: 7,
+            warningSoundId: "warning_refinery"
+          },
           hazards: {
             type: "plasma_vent",
             minCount: 1,
@@ -809,7 +833,15 @@
         {
           id: "ion_field",
           label: "Ion Field",
-          weight: 0.18
+          weight: 0.18,
+          audio: {
+            ambientGain: 0.036,
+            bedHz: 96,
+            layerHz: 192,
+            lfoHz: 0.19,
+            lfoDepthHz: 10,
+            warningSoundId: "warning_ion_field"
+          }
         }
       ],
       modifiers: {

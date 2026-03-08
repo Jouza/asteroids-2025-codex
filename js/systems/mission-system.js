@@ -145,6 +145,7 @@
       return {
         biomeId: biome.id,
         biomeLabel: biome.label,
+        biomeAudio: biome.audio || null,
         biomeHazards: this.createBiomeHazardsForMission(biome),
         modifierId: modifier.id,
         modifierLabel: modifier.label,
