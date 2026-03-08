@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Runtime/UI cleanup follow-up
+  - [x] Odstranen mrtvy start-overlay renderer kod (`drawIdentitySelector`, `drawModeSelector`)
+  - [x] Vycišteny stale i18n klice po sjednoceni Run setup UI
+  - [x] Doplnena migrační hlaska pri fallbacku nevalidni pilot/ship identity z profilu
+  - [x] Pridany obecny wrap helper pro overlay text; mission-complete gratulace je zalamovana
+
 - [x] Ship visual identity pass (MVP)
   - [x] 4 lodni framy maji odlisnou siluetu trupu (pri zachovani stejneho hitboxu/fyziky)
   - [x] 4 lodni framy maji odlisny thrust color/plume styl

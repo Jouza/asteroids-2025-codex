@@ -1167,6 +1167,40 @@
       ctx.strokeRect(centerX - width / 2, centerY - height / 2, width, height);
     }
 
+    drawWrappedText(text, centerX, startY, maxWidth, lineHeight, maxLines = 2) {
+      const { ctx } = this;
+      const value = String(text || "").trim();
+      if (!value) return startY;
+      const words = value.split(/\s+/).filter(Boolean);
+      if (!words.length) return startY;
+      const lines = [];
+      let current = words[0];
+      for (let i = 1; i < words.length; i += 1) {
+        const candidate = `${current} ${words[i]}`;
+        if (ctx.measureText(candidate).width <= maxWidth) {
+          current = candidate;
+          continue;
+        }
+        lines.push(current);
+        current = words[i];
+      }
+      lines.push(current);
+
+      if (lines.length > maxLines) {
+        lines.length = maxLines;
+        let lastLine = lines[maxLines - 1];
+        while (lastLine.length > 0 && ctx.measureText(`${lastLine}...`).width > maxWidth) {
+          lastLine = lastLine.slice(0, -1).trimEnd();
+        }
+        lines[maxLines - 1] = `${lastLine}...`;
+      }
+
+      for (let i = 0; i < lines.length; i += 1) {
+        ctx.fillText(lines[i], centerX, startY + i * lineHeight);
+      }
+      return startY + (lines.length - 1) * lineHeight;
+    }
+
     drawRunSettingsList(model, centerY) {
       const { ctx, config } = this;
       const centerX = config.canvas.width / 2;
@@ -1245,86 +1279,6 @@
       }
 
       return hintY;
-    }
-
-    drawIdentitySelector(model, centerY) {
-      const { ctx, config } = this;
-      const centerX = config.canvas.width / 2;
-      const boxW = 356;
-      const boxH = 30;
-      const gapY = 8;
-      const row0Y = centerY;
-      const row1Y = row0Y + boxH + gapY;
-      const pilotLabel = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
-      const shipLabel = tr(`identity.ship.${model.identity?.shipId}.name`);
-
-      const drawRow = (y, label, value) => {
-        ctx.fillStyle = "rgba(6,18,34,0.7)";
-        ctx.fillRect(centerX - boxW / 2, y, boxW, boxH);
-        ctx.strokeStyle = "rgba(108,216,255,0.46)";
-        ctx.lineWidth = 1.1;
-        ctx.strokeRect(centerX - boxW / 2, y, boxW, boxH);
-        ctx.fillStyle = "rgba(182,226,246,0.86)";
-        ctx.font = "600 14px Trebuchet MS";
-        ctx.textAlign = "left";
-        ctx.fillText(label, centerX - boxW / 2 + 10, y + 20);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#d8f5ff";
-        ctx.fillText(value, centerX + boxW / 2 - 10, y + 20);
-      };
-
-      ctx.textAlign = "center";
-      ctx.font = "600 15px Trebuchet MS";
-      ctx.fillStyle = "#bfeeff";
-      ctx.fillText(tr("overlay.identity_select"), centerX, centerY - 10);
-      drawRow(row0Y, tr("overlay.identity_pilot"), pilotLabel);
-      drawRow(row1Y, tr("overlay.identity_ship"), shipLabel);
-      ctx.font = "500 13px Trebuchet MS";
-      ctx.fillStyle = "rgba(186,226,248,0.86)";
-      ctx.textAlign = "center";
-      ctx.fillText(tr("overlay.identity_select_hint"), centerX, row1Y + boxH + 18);
-      return row1Y + boxH + 18;
-    }
-
-    drawModeSelector(model, centerY) {
-      const { ctx, config } = this;
-      const centerX = config.canvas.width / 2;
-      const boxW = 168;
-      const boxH = 32;
-      const gap = 12;
-      const campaignSelected = model.runMode === "campaign";
-      const endlessSelected = model.runMode === "endless";
-      const endlessLocked = !model.endlessUnlocked;
-      const rowY = centerY;
-
-      const drawOption = (x, label, selected, locked = false) => {
-        ctx.fillStyle = selected ? "rgba(255,231,168,0.2)" : "rgba(4,14,26,0.72)";
-        ctx.fillRect(x, rowY, boxW, boxH);
-        ctx.strokeStyle = selected ? "rgba(255,231,168,0.95)" : "rgba(108,216,255,0.56)";
-        ctx.lineWidth = selected ? 1.8 : 1.1;
-        ctx.strokeRect(x, rowY, boxW, boxH);
-        ctx.fillStyle = locked ? "rgba(174,202,218,0.6)" : selected ? "#ffe7a8" : "#cdefff";
-        ctx.font = "600 15px Trebuchet MS";
-        ctx.fillText(label, x + boxW / 2, rowY + 22);
-      };
-
-      ctx.textAlign = "center";
-      ctx.font = "600 16px Trebuchet MS";
-      ctx.fillStyle = "#bfeeff";
-      ctx.fillText(tr("overlay.mode_select"), centerX, rowY - 10);
-      const leftX = centerX - gap / 2 - boxW;
-      const rightX = centerX + gap / 2;
-      drawOption(leftX, tr("game.run_mode.campaign"), campaignSelected, false);
-      drawOption(rightX, tr("game.run_mode.endless"), endlessSelected, endlessLocked);
-      if (endlessLocked) {
-        ctx.font = "500 12px Trebuchet MS";
-        ctx.fillStyle = "rgba(172,201,218,0.78)";
-        ctx.fillText(tr("overlay.mode_locked"), rightX + boxW / 2, rowY + boxH + 12);
-      }
-      ctx.font = "500 13px Trebuchet MS";
-      ctx.fillStyle = "rgba(186,226,248,0.86)";
-      ctx.fillText(tr("overlay.mode_select_hint"), centerX, rowY + boxH + 22);
-      return rowY + boxH + 22;
     }
 
     drawOverlay(model) {
@@ -1429,23 +1383,29 @@
         const summary = model.missionCompleteSummary || {};
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
-        this.drawOverlayBlock(cx, cy + 24, 520, 196);
+        this.drawOverlayBlock(cx, cy + 24, 560, 228);
         ctx.fillStyle = "#d8f5ff";
         ctx.font = "700 38px Trebuchet MS";
         ctx.fillText(tr("overlay.mission_complete"), cx, cy - 26);
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillStyle = "rgba(216,245,255,0.96)";
-        ctx.fillText(
+        const messageBottomY = this.drawWrappedText(
           tr("overlay.mission_complete_congrats", {
             pilot: summary.pilot || "-"
           }),
           cx,
-          cy + 12
+          cy + 12,
+          500,
+          30,
+          2
         );
-        ctx.fillText(tr("overlay.mission_complete_sector", { sector: summary.sector ?? model.sector }), cx, cy + 44);
-        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy + 76);
+        const sectorY = messageBottomY + 30;
+        const scoreY = sectorY + 32;
+        const nextY = scoreY + 32;
+        ctx.fillText(tr("overlay.mission_complete_sector", { sector: summary.sector ?? model.sector }), cx, sectorY);
+        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, scoreY);
         ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr("overlay.mission_complete_next"), cx, cy + 108);
+        ctx.fillText(tr("overlay.mission_complete_next"), cx, nextY);
       }
 
       if (model.gameState === GAME_STATE.HANGAR) {

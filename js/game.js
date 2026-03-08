@@ -330,6 +330,7 @@
       this.hangarSystem = new HangarSystem(this);
       this.combatSystem = new CombatSystem(this);
       this.enemySystem = new EnemySystem(this);
+      this.identityMigrationNoticePending = false;
 
       this.attachPointerTracking();
     }
@@ -500,17 +501,33 @@
       return safe;
     }
 
+    shouldNotifyIdentityMigration(rawProfile) {
+      const identityRaw = rawProfile?.progression?.identity;
+      if (!identityRaw || typeof identityRaw !== "object") return false;
+      const hasPilotId = typeof identityRaw.pilotId === "string";
+      const hasShipId = typeof identityRaw.shipId === "string";
+      if (!hasPilotId && !hasShipId) return false;
+      const identityPilotDefs = this.getIdentityPilotDefs();
+      const identityShipDefs = this.getIdentityShipDefs();
+      const validPilot = !hasPilotId || identityPilotDefs.some((entry) => entry.id === identityRaw.pilotId);
+      const validShip = !hasShipId || identityShipDefs.some((entry) => entry.id === identityRaw.shipId);
+      return !validPilot || !validShip;
+    }
+
     loadProfile() {
       const defaults = this.getDefaultProfile();
+      this.identityMigrationNoticePending = false;
       try {
         const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
         if (!raw) return defaults;
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== "object") return defaults;
+        this.identityMigrationNoticePending = this.shouldNotifyIdentityMigration(parsed);
         if (parsed.schemaVersion !== PROFILE_SCHEMA_VERSION) return this.sanitizeProfile(parsed);
         return this.sanitizeProfile(parsed);
       } catch (error) {
         console.warn("Profile load failed, using defaults.", error);
+        this.identityMigrationNoticePending = false;
         return defaults;
       }
     }
@@ -549,6 +566,10 @@
       this.syncIdentitySelectionState();
       this.syncLoadoutLabels();
       this.refreshSetState();
+      if (this.identityMigrationNoticePending) {
+        this.model.hangar.message = tr("game.identity.migrated_default");
+        this.identityMigrationNoticePending = false;
+      }
     }
 
     syncModelToProfile() {
