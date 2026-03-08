@@ -68,7 +68,7 @@
       "hangar.pilot.cannot_unlock": "Cannot unlock perk: {label}",
       "hangar.source.crate": "Crate",
       "hangar.source.inventory": "Inventory",
-      "render.start.title": "STARFANG 86",
+      "render.start.title": "STARFANG",
       "render.pause.title": "PAUSED",
       "render.hangar.no_selection": "No item selected.",
       "render.hangar.action_hint": "Left/Right section | Up/Down select | Space action | Enter start | Legacy fallback: 9/0",
