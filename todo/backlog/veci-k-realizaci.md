@@ -2,7 +2,7 @@
 
 ## Aktualni fokus
 
-- [ ] Performance & runtime budget
+- [x] Performance & runtime budget
   - [x] Adaptive quality budget pro particles/effects pri FPS dropu
   - [x] Frame-time / perf overlay pro dev rezim
   - [x] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
@@ -73,8 +73,6 @@
   - [ ] Rate limit + anti-spam ochrana endpointu
   - [ ] Atomicky file write + lock pri soubeznem zapisu
   - [ ] Zakladni hardening endpointu (error handling, log sanitizace)
-
-- [ ] Performance & runtime budget (priorita v Aktualni fokus)
 
 - [ ] Stabilita a release kvalita
   - [ ] Crash-safe fallbacky (audio/localStorage/feature detect)
