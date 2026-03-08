@@ -62,7 +62,7 @@
 - [x] Content a biomy
   - [x] Min. 2 nove areny (vrakoviste/tezebni komplex)
   - [x] Hazardy prostredi jako gameplay prvek
-  - [x] Biome readability pass: intro banner + trvale vizualni signatury graveyard/refinery
+  - [x] Biome readability pass: intro banner + trvale vizualni signatury graveyard/refinery/belt/ion_field
   - [x] Vazba biome/hazard v mission statusu (ACTIVE/Potential hazard)
   - [x] Odlisene hazard telegraphy (debris_field vs plasma_vent)
 

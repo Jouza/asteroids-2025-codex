@@ -549,6 +549,55 @@
           ctx.fillRect(x, 36, 4, config.canvas.height - 72);
         }
         ctx.restore();
+      } else if (mission.biomeId === "belt") {
+        ctx.fillStyle = "rgba(132,164,188,0.07)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < 6; i += 1) {
+          const y = 84 + i * 104 + Math.sin(performance.now() * 0.0009 + i * 0.8) * 8;
+          const beltLine = ctx.createLinearGradient(0, y, config.canvas.width, y + 18);
+          beltLine.addColorStop(0, "rgba(172,214,238,0)");
+          beltLine.addColorStop(0.5, "rgba(172,214,238,0.15)");
+          beltLine.addColorStop(1, "rgba(172,214,238,0)");
+          ctx.fillStyle = beltLine;
+          ctx.fillRect(0, y, config.canvas.width, 18);
+        }
+        ctx.fillStyle = "rgba(188,228,245,0.26)";
+        for (let i = 0; i < 18; i += 1) {
+          const t = performance.now() * 0.00015 + i * 0.31;
+          const x = (t * config.canvas.width * 0.35 + i * 72) % (config.canvas.width + 24) - 12;
+          const y = 70 + (i % 6) * 110 + Math.sin(t * 7 + i) * 11;
+          ctx.fillRect(x, y, 2, 2);
+        }
+        ctx.restore();
+      } else if (mission.biomeId === "ion_field") {
+        ctx.fillStyle = "rgba(98,132,204,0.08)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < 4; i += 1) {
+          const y = 92 + i * 150;
+          const alpha = 0.16 + Math.sin(performance.now() * 0.0018 + i * 1.4) * 0.06;
+          ctx.strokeStyle = `rgba(166,196,255,${Math.max(0.06, alpha)})`;
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          for (let x = 0; x <= config.canvas.width; x += 48) {
+            const waveY = y + Math.sin(x * 0.018 + performance.now() * 0.003 + i) * 8;
+            ctx.lineTo(x, waveY);
+          }
+          ctx.stroke();
+        }
+        for (let i = 0; i < 10; i += 1) {
+          const pulse = 0.2 + Math.sin(performance.now() * 0.0022 + i * 0.7) * 0.1;
+          const x = 72 + i * 92;
+          const y = 64 + (i % 5) * 118;
+          ctx.strokeStyle = `rgba(184,206,255,${Math.max(0.08, pulse)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(x, y, 18 + i % 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
       }
 
       if ((effects.fogAlpha ?? 0) > 0) {
