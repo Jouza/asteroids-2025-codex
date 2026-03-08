@@ -17,6 +17,11 @@
   - [x] Compact controls hint a help texty sjednoceny s aktualnimi modal shortcuty (`G/J/H`)
   - [x] TODO cleanup: kompletni phased item presunut z backlogu do done
 
+- [x] Frontend bootstrap hardening (post-incident)
+  - [x] Opraven parser break v `js/i18n.js` (chybici carka v dictionary key listu)
+  - [x] `tools/combat-harness.js` nacita i `js/i18n.js`, takze parse chyby i18n shodi gate
+  - [x] Pridan `tools/validate-runtime-syntax.js` pro syntax-check vsech runtime `js/*.js` souboru
+
 - [x] Onboarding + action gate feedback (MVP)
   - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
   - [x] Start overlay ma responzivni vertikalni stack (compact/normal/large) s garantovanym spacingem mezi bloky

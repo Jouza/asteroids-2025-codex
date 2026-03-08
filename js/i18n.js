@@ -245,7 +245,7 @@
       "index.pilot_modal.upgrade": "Upgrade",
       "index.pilot_modal.unlock": "Unlock",
       "index.pilot_modal.unlocked": "Unlocked",
-      "index.pilot_modal.req_prefix": "Req"
+      "index.pilot_modal.req_prefix": "Req",
       "help.document_title": "STARFANG - Help",
       "help.title": "STARFANG Help",
       "help.page_title": "STARFANG - Object Help",

@@ -56,6 +56,7 @@ function createRuntime(sharedStorage) {
     "js/content-data.js",
     "js/balance-data.js",
     "js/balance-presets.js",
+    "js/i18n.js",
     "js/config.js",
     "js/rng.js",
     "js/entities.js",

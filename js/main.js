@@ -1,6 +1,7 @@
 (() => {
   const { AudioSystem, GAME_CONFIG, Game, Hud, InputController, Renderer } = window.Asteroids;
   const i18n = window.Asteroids.i18n;
+  const tr = (key, params = {}) => (i18n?.t ? i18n.t(key, params) : key);
 
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
@@ -199,8 +200,8 @@
     }
     if (audioStatus) {
       audioStatus.textContent = audio.isMuted()
-        ? i18n.t("index.audio_summary_muted", { sfx: sfxPercent, ambient: ambientPercent })
-        : i18n.t("index.audio_summary", { sfx: sfxPercent, ambient: ambientPercent });
+        ? tr("index.audio_summary_muted", { sfx: sfxPercent, ambient: ambientPercent })
+        : tr("index.audio_summary", { sfx: sfxPercent, ambient: ambientPercent });
     }
   }
 
