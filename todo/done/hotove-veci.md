@@ -2,6 +2,7 @@
 
 - [x] Onboarding + action gate feedback (MVP)
   - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
+  - [x] Start overlay ma responzivni vertikalni stack (compact/normal/large) s garantovanym spacingem mezi bloky
   - [x] Runtime contextual hint pri blokaci akce (energy/shield/heat/cooldown/magazine)
   - [x] Telemetry panel rozsireny o action-block counters a power-audit breakdown (gear/pilot/identity/biome)
 

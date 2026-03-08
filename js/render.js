@@ -1395,22 +1395,47 @@
       if (model.gameState === GAME_STATE.START) {
         const centerX = config.canvas.width / 2;
         const centerY = config.canvas.height / 2;
-        // Vertically center the whole stack (logo -> info -> onboarding -> setup)
-        // with explicit section spacing to prevent overlap.
-        const setupPanelHeight = 176;
+        // Responsive vertical stack to keep clear spacing on small/large displays.
+        const canvasHeight = config.canvas.height;
+        const compact = canvasHeight < 780;
+        const large = canvasHeight > 980;
         const logoRadius = 34;
-        const sectionGap = 26;
-        const rowGap = 18;
-        const onboardingRows = 4; // title + 3 lines
+        const logoToTitle = compact ? 80 : large ? 90 : 86;
+        const titleToPress = compact ? 46 : large ? 56 : 52;
+        const pressToSeed = compact ? 30 : large ? 36 : 34;
+        const seedToOnboarding = compact ? 24 : large ? 32 : 28;
+        const onboardingRowGap = compact ? 16 : large ? 20 : 18;
+        const onboardingToSetup = compact ? 30 : large ? 38 : 34;
+        const setupPanelHeight = compact ? 168 : large ? 184 : 176;
+        const edgeMargin = 26;
+        const extraBottomReserve = model.endlessUnlocked ? 8 : 36;
 
-        const stackTop = centerY - 210;
+        const relativeStackHeight =
+          logoRadius +
+          logoToTitle +
+          titleToPress +
+          pressToSeed +
+          seedToOnboarding +
+          onboardingRowGap * 3 +
+          onboardingToSetup +
+          setupPanelHeight +
+          extraBottomReserve;
+
+        let stackTop = centerY - relativeStackHeight / 2;
+        const maxTop = canvasHeight - edgeMargin - relativeStackHeight;
+        if (maxTop <= edgeMargin) {
+          stackTop = Math.max(8, maxTop);
+        } else {
+          stackTop = Math.min(Math.max(stackTop, edgeMargin), maxTop);
+        }
+
         const logoY = stackTop + logoRadius;
-        const titleY = logoY + 86;
-        const infoPressY = titleY + 52;
-        const infoSeedY = infoPressY + 34;
-        const onboardingY = infoSeedY + 30;
-        const onboardingBottomY = onboardingY + rowGap * onboardingRows;
-        const setupTopY = onboardingBottomY + sectionGap;
+        const titleY = logoY + logoToTitle;
+        const infoPressY = titleY + titleToPress;
+        const infoSeedY = infoPressY + pressToSeed;
+        const onboardingY = infoSeedY + seedToOnboarding;
+        const onboardingBottomY = onboardingY + onboardingRowGap * 3;
+        const setupTopY = onboardingBottomY + onboardingToSetup;
         const setupCenterY = setupTopY + setupPanelHeight / 2;
 
         this.drawStartLogo(centerX, logoY);
@@ -1425,9 +1450,9 @@
         ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
         ctx.font = "500 13px Trebuchet MS";
         ctx.fillStyle = "rgba(196,233,248,0.92)";
-        ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + 18);
-        ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + 34);
-        ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + 50);
+        ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + onboardingRowGap);
+        ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + onboardingRowGap * 2);
+        ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + onboardingRowGap * 3);
 
         this.drawOverlayBlock(centerX, setupCenterY, 430, setupPanelHeight);
         const modeBottomY = this.drawRunSettingsList(model, setupTopY + 34);
