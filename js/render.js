@@ -1066,6 +1066,8 @@
     drawRunSettingsList(model, centerY) {
       const { ctx, config } = this;
       const centerX = config.canvas.width / 2;
+      const pilotId = model.identity?.pilotId;
+      const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
       const rows = [
         {
           id: "mode",
@@ -1088,6 +1090,8 @@
       const rowH = 30;
       const gap = 8;
       const topY = centerY;
+      const pointer = model.pointer || { inside: false, x: 0, y: 0 };
+      let showPilotReference = false;
       ctx.textAlign = "center";
       ctx.font = "600 16px Trebuchet MS";
       ctx.fillStyle = "#bfeeff";
@@ -1109,6 +1113,18 @@
         ctx.textAlign = "right";
         ctx.fillStyle = "#d8f5ff";
         ctx.fillText(row.value, centerX + rowW / 2 - 10, y + 20);
+
+        if (row.id === "pilot") {
+          const valueLeftX = centerX + 34;
+          const valueRightX = centerX + rowW / 2 - 8;
+          const hovered =
+            pointer.inside &&
+            pointer.x >= valueLeftX &&
+            pointer.x <= valueRightX &&
+            pointer.y >= y &&
+            pointer.y <= y + rowH;
+          if (hovered || active) showPilotReference = true;
+        }
       }
 
       ctx.textAlign = "center";
@@ -1116,6 +1132,14 @@
       ctx.fillStyle = "rgba(186,226,248,0.86)";
       const hintY = topY + rows.length * (rowH + gap) + 10;
       ctx.fillText(tr("overlay.settings_hint"), centerX, hintY);
+
+      if (showPilotReference) {
+        ctx.font = "500 12px Trebuchet MS";
+        ctx.fillStyle = "rgba(210,238,252,0.84)";
+        ctx.fillText(tr("overlay.pilot_reference", { reference: pilotReference }), centerX, hintY + 18);
+        return hintY + 18;
+      }
+
       return hintY;
     }
 

@@ -127,7 +127,7 @@
 
   function createDefaultIdentitySelection() {
     return {
-      pilotId: "needle_voss",
+      pilotId: "buzz_calder",
       shipId: "viper_mk2"
     };
   }
@@ -250,6 +250,11 @@
         missionCompleteSummary: null,
         flightModel: "arcade",
         dotEffects: [],
+        pointer: {
+          x: 0,
+          y: 0,
+          inside: false
+        },
         hangar: {
           message: tr("game.hangar.controls"),
           lootCrate: [],
@@ -325,6 +330,27 @@
       this.hangarSystem = new HangarSystem(this);
       this.combatSystem = new CombatSystem(this);
       this.enemySystem = new EnemySystem(this);
+
+      this.attachPointerTracking();
+    }
+
+    attachPointerTracking() {
+      if (!this.canvas || typeof this.canvas.addEventListener !== "function") return;
+      const updatePointer = (event) => {
+        if (typeof this.canvas.getBoundingClientRect !== "function") return;
+        const rect = this.canvas.getBoundingClientRect();
+        if (!rect || rect.width <= 0 || rect.height <= 0) return;
+        const scaleX = this.config.canvas.width / rect.width;
+        const scaleY = this.config.canvas.height / rect.height;
+        this.model.pointer.x = (event.clientX - rect.left) * scaleX;
+        this.model.pointer.y = (event.clientY - rect.top) * scaleY;
+        this.model.pointer.inside = true;
+      };
+      this.canvas.addEventListener("mousemove", updatePointer);
+      this.canvas.addEventListener("mouseenter", updatePointer);
+      this.canvas.addEventListener("mouseleave", () => {
+        this.model.pointer.inside = false;
+      });
     }
 
     clamp(value, min, max) {

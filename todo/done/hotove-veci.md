@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Pilot identity reference pass
+  - [x] Pilot roster rozsireny na 6 pop-culture callsignu
+  - [x] Reference texty dostupne na help strance
+  - [x] Reference tooltip zobrazen pri hoveru nad jmenem pilota v Run setup overlayi
+
 - [x] Pilot/Ship identity layer (MVP 4+4)
   - [x] 4 kultovni piloti s lehkymi stat bonusy (5-10%) a persistent vyberem v profilu
   - [x] 4 lodni framy s lehkymi stat bonusy (5-10%) a persistent vyberem v profilu

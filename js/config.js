@@ -439,20 +439,28 @@
     identity: {
       pilots: [
         {
-          id: "needle_voss",
-          modifiers: { primaryCooldownPct: 0.06, critChanceFlat: 0.015 }
+          id: "buzz_calder",
+          modifiers: { hullPct: 0.06, shieldPct: 0.05 }
         },
         {
-          id: "graveline_kade",
-          modifiers: { shieldRegenPct: 0.08, collisionResist: 0.03 }
+          id: "neo_mercer",
+          modifiers: { primaryCooldownPct: 0.05, critChanceFlat: 0.012 }
         },
         {
-          id: "rook_86",
-          modifiers: { hullPct: 0.08, shieldPct: 0.06, maxSpeedPct: -0.03 }
+          id: "boba_vane",
+          modifiers: { creditsGainPct: 0.08, primaryDamagePct: 0.04 }
         },
         {
-          id: "blink_serrat",
-          modifiers: { thrustPct: 0.08, maxSpeedPct: 0.05, shieldPct: -0.03 }
+          id: "luke_ryder",
+          modifiers: { critChanceFlat: 0.016, primaryDamagePct: 0.03 }
+        },
+        {
+          id: "marty_carter",
+          modifiers: { utilityCooldownPct: 0.08, energyRegenPct: 0.05 }
+        },
+        {
+          id: "max_steel",
+          modifiers: { thrustPct: 0.06, maxSpeedPct: 0.05, shieldPct: -0.02 }
         }
       ],
       ships: [
