@@ -2,6 +2,17 @@
 
 Pouziti pred push do `main` a pred vetsi balanc/content zmenou.
 
+## Dev test protocol (kratka verze)
+
+Pouzij tento sled po kazde vetsi zmene:
+
+1. Spust automaticke gate:
+   - `node tools/combat-harness.js` (vzdy)
+   - `node tools/validate-content-data.js` (jen kdyz se meni content/balance data)
+2. Projdi manualni smoke scenar "Campaign to Victory + Endless Unlock" (sekce nize).
+3. Over, ze nejsou chyby v konzoli a zadny flow neskoncil dead-endem.
+4. Teprve potom commit/push.
+
 ## 1) Automaticky smoke test (combat harness)
 
 Spust:
@@ -50,6 +61,24 @@ Kontrolovane oblasti:
   - progression zustava (loadout/upgrades/inventory/equipment/salvage).
 - HUD:
   - cooldowny a set status se aktualizuji korektne.
+
+## 2.1) Smoke scenar: Campaign to Victory + Endless Unlock (8-12 min)
+
+Cil: rychle overit novy win-state, final boss flow a persist odemknuti Endless.
+
+- Spust hru s rychlym presetem:
+  - `index.html?preset=dev_fasttrack`
+- Dokoncuj sektory az do final encounteru.
+- Ve final encounteru over:
+  - final boss ma odlisny pressure/faze oproti mini-bossi.
+  - gravity anomaly nehard-lockuje pohyb; thrust/boost umi pomoct z core zony ven.
+- Po porazce final bosse over:
+  - zobrazi se `VICTORY` summary overlay.
+  - summary obsahuje run/build progress informace (ne prazdny panel).
+- Po navratu do menu/hangaru over:
+  - Endless je odemceny (persistuje po restartu stranky).
+- Proved quick restart runu a potvrd:
+  - Campaign i Endless flow jde normalne spustit.
 
 ## 3) Balancing sanity check
 

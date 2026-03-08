@@ -1,5 +1,9 @@
 # Hotove veci
 
+- [x] Dev / testing protocol baseline
+  - [x] Kratky "dev test protocol" doplnen do `docs/regression-checklist.md`
+  - [x] Smoke scenar "Campaign to Victory + Endless Unlock" doplnen pro manualni QA
+
 - [x] Localization baseline (P0)
   - [x] Runtime UI switched to English
   - [x] Help page switched to English
