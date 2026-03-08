@@ -1543,7 +1543,7 @@
 
     setActionHint(key, params = {}, options = {}) {
       const nowMs = this.getNowMs();
-      const duration = Math.max(0.45, Number(options.durationSeconds) || 1.15);
+      const duration = Math.max(0.6, Number(options.durationSeconds) || 1.8);
       const cooldownMs = Math.max(120, Number(options.cooldownMs) || 280);
       const hint = this.model.actionHint || { text: "", timer: 0, key: "", lastAtMs: 0 };
       if (hint.key === key && nowMs - (hint.lastAtMs || 0) < cooldownMs) return;

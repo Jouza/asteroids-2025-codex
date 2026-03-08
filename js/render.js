@@ -1412,17 +1412,15 @@
         ctx.fillText(tr("overlay.press_enter_start"), centerX, infoPressY);
         ctx.fillStyle = "rgba(210,239,255,0.94)";
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, infoSeedY);
-        if ((model.profile?.stats?.runsPlayed ?? 0) <= 0) {
-          const onboardingY = infoSeedY + 24;
-          ctx.font = "600 14px Trebuchet MS";
-          ctx.fillStyle = "rgba(174,238,209,0.94)";
-          ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
-          ctx.font = "500 13px Trebuchet MS";
-          ctx.fillStyle = "rgba(196,233,248,0.92)";
-          ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + 18);
-          ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + 34);
-          ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + 50);
-        }
+        const onboardingY = infoSeedY + 24;
+        ctx.font = "600 14px Trebuchet MS";
+        ctx.fillStyle = "rgba(174,238,209,0.94)";
+        ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
+        ctx.font = "500 13px Trebuchet MS";
+        ctx.fillStyle = "rgba(196,233,248,0.92)";
+        ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + 18);
+        ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + 34);
+        ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + 50);
 
         this.drawOverlayBlock(centerX, setupCenterY, 430, setupPanelHeight);
         const modeBottomY = this.drawRunSettingsList(model, setupTopY + 34);
