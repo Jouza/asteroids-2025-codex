@@ -1734,14 +1734,13 @@
         ctx.textAlign = "left";
         ctx.font = "700 42px Trebuchet MS";
         ctx.fillText("HANGAR", layoutX, topY);
-        const identityMaxW = 520;
-        const identityLeftX = layoutX + layoutW - identityMaxW;
-        const pilotText = fitText(selectedPilotCallsign, "600 12px Trebuchet MS", 300);
-        const shipText = fitText(selectedShipName, "600 12px Trebuchet MS", 180);
-        ctx.textAlign = "left";
-        ctx.font = "600 12px Trebuchet MS";
-        ctx.fillStyle = "rgba(216,245,255,0.9)";
-        ctx.fillText(`Pilot: ${pilotText}   |   Ship: ${shipText}`, identityLeftX, topY - 4);
+        const identityFont = "700 28px Trebuchet MS";
+        const identityMaxW = 640;
+        const identityText = fitText(`${selectedPilotCallsign}  |  ${selectedShipName}`, identityFont, identityMaxW);
+        ctx.textAlign = "right";
+        ctx.font = identityFont;
+        ctx.fillStyle = "rgba(216,245,255,0.94)";
+        ctx.fillText(identityText, layoutX + layoutW, topY + 2);
 
         ctx.textAlign = "center";
         ctx.font = "600 19px Trebuchet MS";
