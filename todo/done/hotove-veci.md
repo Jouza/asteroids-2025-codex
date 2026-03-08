@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Mode select UX clarification
+  - [x] Campaign/Endless explicit selector v overlayi (Start/Game Over/Victory)
+  - [x] Left/Right pro prime vyber modu + `E` jako fallback quick toggle
+  - [x] UI/help texty aktualizovane na novy mode-select flow
+
 - [x] Performance tooling baseline (dev)
   - [x] Frame-time/perf overlay toggle (`B`) s FPS/ms/step metrikami + snapshot dump (`N`)
   - [x] Runtime frame/object telemetry (particles/bullets/utility/asteroids/UFO) pro rychly profiling vstup

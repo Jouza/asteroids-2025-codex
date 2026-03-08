@@ -3,7 +3,6 @@
 ## Aktualni fokus
 
 - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
-- [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
 
 ## Dalsi chybejici temata (zatim neevidovana)
 
@@ -43,7 +42,7 @@
   - [ ] Win-state follow-up po MVP
   - [ ] Samostatna reward tabulka pro final clear (clear bonus/meta reward)
   - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
-  - [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
+  - [x] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
   - [ ] Endless pacing pass po unlocku (skalovani, anti-snowball ekonomika, delka runu)
 
 - [ ] Help / codex vrstva

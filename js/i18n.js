@@ -12,6 +12,9 @@
       "overlay.press_enter_start": "Press Enter to start",
       "overlay.seed": "Run seed: {seed}",
       "overlay.mode": "Mode: {mode}  (E toggle)",
+      "overlay.mode_select": "Select mode",
+      "overlay.mode_locked": "Locked",
+      "overlay.mode_select_hint": "Left/Right select, Enter start/restart, E quick toggle",
       "overlay.endless_unlock_hint": "Endless unlock: clear campaign once",
       "overlay.game_over": "GAME OVER",
       "overlay.score": "Score: {score}",
@@ -146,7 +149,7 @@
       "index.icon.flight_mode.aria": "Flight Mode",
       "index.help_link": "HELP: objects and hazards reference",
       "index.controls_html":
-        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>E</strong> toggle campaign/endless (after unlock), <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
+        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Mode select (Start/Game Over/Victory):</strong> <strong>Left/Right</strong> explicit Campaign/Endless choice, <strong>E</strong> quick toggle. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
       "help.document_title": "STARFANG - Help",
       "help.title": "STARFANG Help",
       "help.page_title": "STARFANG - Object Help",
@@ -160,7 +163,7 @@
       "help.section.mission_types_hint":
         "Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> (distinct moveset and phases), and clearing it ends the run with VICTORY.",
       "help.section.mission_endless_hint":
-        "Endless mode unlocks after your first campaign clear. On start screen, toggle campaign/endless with <strong>E</strong>.",
+        "Endless mode unlocks after your first campaign clear. On start/game over/victory overlays, pick mode explicitly with <strong>Left/Right</strong> (or quick toggle by <strong>E</strong>).",
       "help.section.biomes": "Biomes",
       "help.section.biomes_hint": "Each sector rolls a biome. Biome defines arena atmosphere and may add specific hazard zones.",
       "help.section.pilot_rpg": "Pilot RPG (MVP)",

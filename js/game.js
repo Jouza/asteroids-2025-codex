@@ -568,14 +568,13 @@
         this.model.gameState === GAME_STATE.START ||
         this.model.gameState === GAME_STATE.GAME_OVER ||
         this.model.gameState === GAME_STATE.VICTORY;
-      if (this.input.wasPressed("KeyE") && canToggleRunMode) {
-        if (!this.model.endlessUnlocked) {
-          this.model.hangar.message = tr("game.run_mode.locked");
-        } else {
-          this.model.runMode = this.model.runMode === "campaign" ? "endless" : "campaign";
-          this.model.hangar.message = tr("game.run_mode.changed", { mode: this.model.runMode.toUpperCase() });
+      if (canToggleRunMode) {
+        if (this.input.wasPressed("ArrowLeft")) this.trySetRunMode("campaign");
+        if (this.input.wasPressed("ArrowRight")) this.trySetRunMode("endless");
+        if (this.input.wasPressed("KeyE")) {
+          const next = this.model.runMode === "campaign" ? "endless" : "campaign";
+          this.trySetRunMode(next);
         }
-        this.hud.sync(this.model);
       }
 
       if (this.input.wasPressed("KeyP")) {
@@ -607,6 +606,20 @@
       this.model.gameState = GAME_STATE.PLAYING;
       this.audio.play("ui_start");
       this.hud.sync(this.model);
+    }
+
+    trySetRunMode(mode) {
+      if (mode !== "campaign" && mode !== "endless") return false;
+      if (mode === "endless" && !this.model.endlessUnlocked) {
+        this.model.hangar.message = tr("game.run_mode.locked");
+        this.hud.sync(this.model);
+        return false;
+      }
+      if (this.model.runMode === mode) return false;
+      this.model.runMode = mode;
+      this.model.hangar.message = tr("game.run_mode.changed", { mode: this.model.runMode.toUpperCase() });
+      this.hud.sync(this.model);
+      return true;
     }
 
     endRun(state, saveReason, soundCue) {

@@ -940,6 +940,46 @@
       ctx.restore();
     }
 
+    drawModeSelector(model, centerY) {
+      const { ctx, config } = this;
+      const centerX = config.canvas.width / 2;
+      const boxW = 168;
+      const boxH = 34;
+      const gap = 16;
+      const campaignSelected = model.runMode === "campaign";
+      const endlessSelected = model.runMode === "endless";
+      const endlessLocked = !model.endlessUnlocked;
+      const rowY = centerY;
+
+      const drawOption = (x, label, selected, locked = false) => {
+        ctx.fillStyle = selected ? "rgba(255,231,168,0.2)" : "rgba(4,14,26,0.72)";
+        ctx.fillRect(x, rowY, boxW, boxH);
+        ctx.strokeStyle = selected ? "rgba(255,231,168,0.95)" : "rgba(108,216,255,0.56)";
+        ctx.lineWidth = selected ? 1.8 : 1.1;
+        ctx.strokeRect(x, rowY, boxW, boxH);
+        ctx.fillStyle = locked ? "rgba(174,202,218,0.6)" : selected ? "#ffe7a8" : "#cdefff";
+        ctx.font = "600 15px Trebuchet MS";
+        ctx.fillText(label, x + boxW / 2, rowY + 22);
+      };
+
+      ctx.textAlign = "center";
+      ctx.font = "600 16px Trebuchet MS";
+      ctx.fillStyle = "#bfeeff";
+      ctx.fillText(tr("overlay.mode_select"), centerX, rowY - 12);
+      const leftX = centerX - gap / 2 - boxW;
+      const rightX = centerX + gap / 2;
+      drawOption(leftX, tr("game.run_mode.campaign"), campaignSelected, false);
+      drawOption(rightX, tr("game.run_mode.endless"), endlessSelected, endlessLocked);
+      if (endlessLocked) {
+        ctx.font = "500 12px Trebuchet MS";
+        ctx.fillStyle = "rgba(172,201,218,0.78)";
+        ctx.fillText(tr("overlay.mode_locked"), rightX + boxW / 2, rowY + boxH + 14);
+      }
+      ctx.font = "500 13px Trebuchet MS";
+      ctx.fillStyle = "rgba(186,226,248,0.86)";
+      ctx.fillText(tr("overlay.mode_select_hint"), centerX, rowY + boxH + 30);
+    }
+
     drawOverlay(model) {
       const { ctx, config } = this;
       ctx.save();
@@ -955,15 +995,10 @@
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText(tr("overlay.press_enter_start"), config.canvas.width / 2, config.canvas.height / 2 + 6);
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), config.canvas.width / 2, config.canvas.height / 2 + 40);
-        ctx.font = "600 18px Trebuchet MS";
-        ctx.fillText(
-          tr("overlay.mode", { mode: model.runMode === "endless" ? "ENDLESS" : "CAMPAIGN" }),
-          config.canvas.width / 2,
-          config.canvas.height / 2 + 68
-        );
+        this.drawModeSelector(model, config.canvas.height / 2 + 62);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
-          ctx.fillText(tr("overlay.endless_unlock_hint"), config.canvas.width / 2, config.canvas.height / 2 + 92);
+          ctx.fillText(tr("overlay.endless_unlock_hint"), config.canvas.width / 2, config.canvas.height / 2 + 128);
         }
       }
 
@@ -977,6 +1012,7 @@
           ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 42);
         }
         ctx.fillText(tr("overlay.enter_restart"), config.canvas.width / 2, config.canvas.height / 2 + 76);
+        this.drawModeSelector(model, config.canvas.height / 2 + 96);
       }
 
       if (model.gameState === GAME_STATE.VICTORY) {
@@ -1008,6 +1044,7 @@
           config.canvas.height / 2 + 86
         );
         ctx.fillText(tr("overlay.enter_new_run"), config.canvas.width / 2, config.canvas.height / 2 + 112);
+        this.drawModeSelector(model, config.canvas.height / 2 + 130);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {
