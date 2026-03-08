@@ -102,6 +102,8 @@
       "render.hangar.shop_group_progression": "Weapon Progression",
       "render.hangar.shop_group_loadout": "Loadout",
       "render.hangar.shop_group_inventory": "Inventory Ops",
+      "render.hangar.identity_pilot": "Pilot: {pilot}",
+      "render.hangar.identity_ship": "Ship: {ship}",
       "render.hangar.pilot_summary_title": "PILOT SUMMARY",
       "render.hangar.pilot_summary_level": "Level {level} | XP {xp}/{next}",
       "render.hangar.pilot_summary_points": "Points: Attr {attr} | Skill {skill}",

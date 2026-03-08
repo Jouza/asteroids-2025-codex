@@ -1578,6 +1578,7 @@
         const topRowH = 250;
         const bottomRowY = topRowY + topRowH + panelGap;
         const bottomRowH = 220;
+        const bottomRowSplit = 0.44;
         const totalGap = panelGap * 2;
         const colW0 = Math.floor((layoutW - totalGap) * 0.34);
         const colW1 = Math.floor((layoutW - totalGap) * 0.34);
@@ -1585,6 +1586,10 @@
         const colX0 = layoutX;
         const colX1 = colX0 + colW0 + panelGap;
         const colX2 = colX1 + colW1 + panelGap;
+        const bottomColW0 = Math.floor((layoutW - panelGap) * bottomRowSplit);
+        const bottomColW1 = layoutW - bottomColW0 - panelGap;
+        const bottomColX0 = layoutX;
+        const bottomColX1 = bottomColX0 + bottomColW0 + panelGap;
         const hangar = model.hangar;
         const lootCrate = hangar.lootCrate || [];
         const inventory = model.inventory || [];
@@ -1613,17 +1618,10 @@
         const selectedModule =
           selectedSource === "crate" ? lootCrate[selectedIndex] ?? null : inventory[selectedIndex] ?? null;
         const pilot = model.pilot || {};
-        const pilotAttrs = pilot.attributes || {};
-        const pilotAttrOrder = ["reflex", "systems", "grit", "instinct"];
-        const pilotAttrLabels = {
-          reflex: "Reflex",
-          systems: "Systems",
-          grit: "Grit",
-          instinct: "Instinct"
-        };
         const pilotPerks = config.pilot?.perks || [];
         const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
         const selectedPilotCallsign = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
+        const selectedShipName = tr(`identity.ship.${model.identity?.shipId}.name`);
         const fireRateLevel = Math.max(0, Math.floor(model.upgrades?.fireRateLevel || 0));
         const magazineLevel = Math.max(0, Math.floor(model.upgrades?.magazineLevel || 0));
         const fireRateMax = Math.max(1, Math.floor(config.hangar.maxFireRateLevel || 1));
@@ -1757,13 +1755,19 @@
           centerX,
           topY + 52
         );
+        ctx.font = "600 14px Trebuchet MS";
+        ctx.fillStyle = "rgba(216,245,255,0.92)";
+        ctx.fillText(
+          `${tr("render.hangar.identity_pilot", { pilot: selectedPilotCallsign })}   |   ${tr("render.hangar.identity_ship", { ship: selectedShipName })}`,
+          centerX,
+          topY + 72
+        );
 
         drawPanel(colX0, topRowY, colW0, topRowH, "SELECTION LIST", navSection === "loot");
         drawPanel(colX1, topRowY, colW1, topRowH, "SELECTED DETAIL", navSection === "loot");
         drawPanel(colX2, topRowY, colW2, topRowH, "BUILD SNAPSHOT");
-        drawPanel(colX0, bottomRowY, colW0, bottomRowH, "SHOP & OPS", navSection === "shop");
-        drawPanel(colX1, bottomRowY, colW1, bottomRowH, tr("render.hangar.pilot_summary_title"));
-        drawPanel(colX2, bottomRowY, colW2, bottomRowH, "RUN/STATUS");
+        drawPanel(bottomColX0, bottomRowY, bottomColW0, bottomRowH, "SHOP & OPS", navSection === "shop");
+        drawPanel(bottomColX1, bottomRowY, bottomColW1, bottomRowH, "TACTICAL STATUS");
 
         const selX = colX0 + 12;
         let selY = topRowY + 52;
@@ -1926,7 +1930,7 @@
         const setText = activeSets.length ? activeSets.map((entry) => `${entry.label} ${entry.count}/3`).join(" | ") : "No active set";
         drawRow(buildX, buildY, `Set: ${setText}`, "#b8f6ff", "600 12px Trebuchet MS", colW2 - 24);
 
-        const actX = colX0 + 12;
+        const actX = bottomColX0 + 12;
         let actY = bottomRowY + 52;
         const actionRows = [];
         const pushHeader = (label) => actionRows.push({ type: "header", label });
@@ -1964,14 +1968,14 @@
         for (let i = 0; i < actionRows.length; i += 1) {
           const row = actionRows[i];
           if (row.type === "header") {
-            drawSectionHeader(actX, actY, row.label, colW0 - 24);
+            drawSectionHeader(actX, actY, row.label, bottomColW0 - 24);
             actY += 16;
             continue;
           }
           drawSelectableRow(
             actX,
             actY,
-            colW0 - 22,
+            bottomColW0 - 22,
             row.label,
             navSection === "shop" && shopIndex === row.actionIndex,
             row.color
@@ -1979,87 +1983,21 @@
           actY += rowStep;
         }
 
-        const pilotX = colX1 + 12;
-        let pilotY = bottomRowY + 52;
-        drawRow(pilotX, pilotY, selectedPilotCallsign, "#ffd785", "700 13px Trebuchet MS", colW1 - 24);
-        pilotY += 18;
-        drawRow(
-          pilotX,
-          pilotY,
-          tr("render.hangar.pilot_summary_level", {
-            level: pilot.level || 1,
-            xp: Math.floor(pilot.xp || 0),
-            next: Math.floor(pilot.xpToNext || 1)
-          }),
-          "#d8f5ff",
-          "500 12px Trebuchet MS",
-          colW1 - 24
-        );
-        pilotY += 16;
-        drawRow(
-          pilotX,
-          pilotY,
-          tr("render.hangar.pilot_summary_points", {
-            attr: pilot.attributePoints || 0,
-            skill: pilot.skillPoints || 0
-          }),
-          "#d8f5ff",
-          "500 12px Trebuchet MS",
-          colW1 - 24
-        );
-        pilotY += 18;
-        for (let i = 0; i < pilotAttrOrder.length; i += 1) {
-          const key = pilotAttrOrder[i];
-          const value = Math.floor(pilotAttrs[key] || 0);
-          drawRow(
-            pilotX + (i % 2) * 110,
-            pilotY + Math.floor(i / 2) * 14,
-            `${pilotAttrLabels[key]}: ${value}`,
-            "#b8f6ff",
-            "500 11px Trebuchet MS",
-            106
-          );
-        }
-        pilotY += 36;
-        const unlockedCount = unlockedPerkIds.size;
-        drawRow(
-          pilotX,
-          pilotY,
-          tr("render.hangar.pilot_summary_perks", { unlocked: unlockedCount, total: pilotPerks.length }),
-          "#d8f5ff",
-          "500 12px Trebuchet MS",
-          colW1 - 24
-        );
-        pilotY += 18;
-        drawRow(
-          pilotX,
-          pilotY,
-          tr("render.hangar.pilot_summary_open_hint"),
-          "#9fe3ff",
-          "600 12px Trebuchet MS",
-          colW1 - 24
-        );
-        pilotY += 16;
-        drawRow(
-          pilotX,
-          pilotY,
-          tr("render.hangar.pilot_summary_legacy_hint"),
-          "rgba(216,245,255,0.68)",
-          "500 11px Trebuchet MS",
-          colW1 - 24
-        );
-
-        const statusX = colX2 + 12;
+        const statusX = bottomColX1 + 12;
         let statusY = bottomRowY + 52;
-        drawRow(statusX, statusY, `Mission: ${model.currentMission?.label || nextMissionType.toUpperCase()}`, "#d8f5ff", "600 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Mission: ${model.currentMission?.label || nextMissionType.toUpperCase()}`, "#d8f5ff", "600 12px Trebuchet MS", bottomColW1 - 24);
         statusY += 16;
-        drawRow(statusX, statusY, `Sector: ${model.sector}  |  Credits: ${model.credits}`, "#d8f5ff", "500 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Sector: ${model.sector}  |  Credits: ${model.credits}`, "#d8f5ff", "500 12px Trebuchet MS", bottomColW1 - 24);
         statusY += 16;
-        drawRow(statusX, statusY, `Score: ${model.score}  |  Salvage: ${model.salvageParts}`, "#d8f5ff", "500 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Score: ${model.score}  |  Salvage: ${model.salvageParts}`, "#d8f5ff", "500 12px Trebuchet MS", bottomColW1 - 24);
         statusY += 16;
-        drawRow(statusX, statusY, `Set: ${model.setStatusText || "No active set"}`, "#b8f6ff", "500 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Set: ${model.setStatusText || "No active set"}`, "#b8f6ff", "500 12px Trebuchet MS", bottomColW1 - 24);
         statusY += 16;
-        drawRow(statusX, statusY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", bottomColW1 - 24);
+        statusY += 16;
+        drawRow(statusX, statusY, `Pilot L${pilot.level || 1} | Perks ${unlockedPerkIds.size}/${pilotPerks.length}`, "#9fe3ff", "500 12px Trebuchet MS", bottomColW1 - 24);
+        statusY += 16;
+        drawRow(statusX, statusY, tr("render.hangar.pilot_summary_open_hint"), "#9fe3ff", "600 12px Trebuchet MS", bottomColW1 - 24);
         statusY += 16;
         drawRow(
           statusX,
@@ -2067,7 +2005,7 @@
           tr("render.hangar.metric_primary_cd", { seconds: formatSeconds(activePrimary.cooldownSeconds * tuningMultiplier) }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
-          colW2 - 24
+          bottomColW1 - 24
         );
         statusY += 16;
         drawRow(
@@ -2076,7 +2014,7 @@
           tr("render.hangar.metric_secondary_cd", { seconds: formatSeconds(activeSecondary.cooldownSeconds) }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
-          colW2 - 24
+          bottomColW1 - 24
         );
         statusY += 16;
         drawRow(
@@ -2085,7 +2023,7 @@
           tr("render.hangar.metric_utility_cd", { seconds: formatSeconds(activeUtility.cooldownSeconds) }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
-          colW2 - 24
+          bottomColW1 - 24
         );
         statusY += 16;
         const shared = config.ship.sharedPool || {};
@@ -2102,7 +2040,7 @@
           }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
-          colW2 - 24
+          bottomColW1 - 24
         );
         statusY += 16;
         drawRow(
@@ -2111,10 +2049,10 @@
           tr("render.hangar.metric_tuning", { tuning: tuningMultiplier.toFixed(2), shots: maxShots }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
-          colW2 - 24
+          bottomColW1 - 24
         );
         statusY += 16;
-        drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS", bottomColW1 - 24);
 
         const actionBarY = bottomRowY + bottomRowH + 10;
         ctx.fillStyle = "rgba(4,12,24,0.88)";

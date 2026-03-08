@@ -22,6 +22,11 @@
   - [x] `tools/combat-harness.js` nacita i `js/i18n.js`, takze parse chyby i18n shodi gate
   - [x] Pridan `tools/validate-runtime-syntax.js` pro syntax-check vsech runtime `js/*.js` souboru
 
+- [x] Hangar layout variant B (identity-first)
+  - [x] Spodni radek hangaru zjednodusen na 2 panely (`SHOP & OPS` + `TACTICAL STATUS`)
+  - [x] Pilot/Ship identita presunuta do hlavicky hangaru jako trvale viditelny kontext
+  - [x] Pilot summary panel odstraneny; pilot info je v `TACTICAL STATUS` + `Pilot Console (J)`
+
 - [x] Onboarding + action gate feedback (MVP)
   - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
   - [x] Start overlay ma responzivni vertikalni stack (compact/normal/large) s garantovanym spacingem mezi bloky
