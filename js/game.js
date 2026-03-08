@@ -86,6 +86,12 @@
         utilityEffects: 0,
         asteroids: 0,
         ufos: 0
+      },
+      dropped: {
+        particles: 0,
+        bullets: 0,
+        enemyBullets: 0,
+        utilityEffects: 0
       }
     };
   }
@@ -1080,6 +1086,7 @@
       if (this.model.hitstopSeconds > 0) {
         this.model.hitstopSeconds = Math.max(0, this.model.hitstopSeconds - dt);
         this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
+        this.enforceRuntimeGuards();
         this.updateUiAlerts();
         this.hud.sync(this.model);
         return;
@@ -1112,6 +1119,7 @@
       this.combatSystem.updateUtilityEffects(dt);
       this.missionSystem.updateMission(dt);
       this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
+      this.enforceRuntimeGuards();
       this.updateUiAlerts();
 
       this.hud.sync(this.model);
@@ -1169,6 +1177,28 @@
       };
     }
 
+    getRuntimeGuardLimits() {
+      const profile = this.getFxQualityProfile();
+      const maxPlayerBullets = Math.max(this.getCurrentMaxBullets() + 8, 44);
+      const maxEnemyBullets = profile.level === "low" ? 180 : profile.level === "medium" ? 260 : 340;
+      return {
+        maxParticles: profile.maxParticles,
+        maxUtilityEffects: profile.maxUtilityEffects,
+        maxPlayerBullets,
+        maxEnemyBullets
+      };
+    }
+
+    trimOldest(arrayRef, maxCount, droppedKey) {
+      if (!Array.isArray(arrayRef) || maxCount < 1) return;
+      const overflow = arrayRef.length - maxCount;
+      if (overflow <= 0) return;
+      arrayRef.splice(0, overflow);
+      if (droppedKey && this.model.performance?.dropped && droppedKey in this.model.performance.dropped) {
+        this.model.performance.dropped[droppedKey] += overflow;
+      }
+    }
+
     updateAdaptiveQuality(frameMs) {
       const perf = this.model.performance;
       if (!perf || this.model.gameState !== GAME_STATE.PLAYING) return;
@@ -1201,11 +1231,29 @@
     }
 
     pushUtilityEffect(effect) {
-      const profile = this.getFxQualityProfile();
-      if (this.model.utilityEffects.length >= profile.maxUtilityEffects) {
-        this.model.utilityEffects.shift();
-      }
+      const { maxUtilityEffects } = this.getRuntimeGuardLimits();
+      this.trimOldest(this.model.utilityEffects, maxUtilityEffects - 1, "utilityEffects");
       this.model.utilityEffects.push(effect);
+    }
+
+    pushPlayerBullet(bullet) {
+      const { maxPlayerBullets } = this.getRuntimeGuardLimits();
+      this.trimOldest(this.model.bullets, maxPlayerBullets - 1, "bullets");
+      this.model.bullets.push(bullet);
+    }
+
+    pushEnemyBullet(bullet) {
+      const { maxEnemyBullets } = this.getRuntimeGuardLimits();
+      this.trimOldest(this.model.enemyBullets, maxEnemyBullets - 1, "enemyBullets");
+      this.model.enemyBullets.push(bullet);
+    }
+
+    enforceRuntimeGuards() {
+      const limits = this.getRuntimeGuardLimits();
+      this.trimOldest(this.model.particles, limits.maxParticles, "particles");
+      this.trimOldest(this.model.utilityEffects, limits.maxUtilityEffects, "utilityEffects");
+      this.trimOldest(this.model.bullets, limits.maxPlayerBullets, "bullets");
+      this.trimOldest(this.model.enemyBullets, limits.maxEnemyBullets, "enemyBullets");
     }
 
     getCurrentFlightProfile() {
@@ -1611,7 +1659,10 @@
 
     addParticle(x, y, vx, vy, life, radius, color) {
       const profile = this.getFxQualityProfile();
-      if (this.model.particles.length >= profile.maxParticles) return;
+      if (this.model.particles.length >= profile.maxParticles) {
+        this.model.performance.dropped.particles += 1;
+        return;
+      }
       this.model.particles.push({
         x,
         y,
@@ -1629,7 +1680,10 @@
 
     addRingParticle(x, y, life, radius, color, growth = 120) {
       const profile = this.getFxQualityProfile();
-      if (this.model.particles.length >= profile.maxParticles) return;
+      if (this.model.particles.length >= profile.maxParticles) {
+        this.model.performance.dropped.particles += 1;
+        return;
+      }
       this.model.particles.push({
         x,
         y,
@@ -1647,7 +1701,10 @@
 
     addDebrisParticle(x, y, vx, vy, life, radius, color) {
       const profile = this.getFxQualityProfile();
-      if (this.model.particles.length >= profile.maxParticles) return;
+      if (this.model.particles.length >= profile.maxParticles) {
+        this.model.performance.dropped.particles += 1;
+        return;
+      }
       this.model.particles.push({
         x,
         y,
@@ -1812,7 +1869,7 @@
           bullet.vy *= 0.85;
           bullet.ttl = 1.3;
           bullet.damageProfile = "enemy_mine";
-          this.model.enemyBullets.push(bullet);
+          this.pushEnemyBullet(bullet);
         }
       }
       this.model.ufos.splice(index, 1);

@@ -201,7 +201,7 @@
       mine.radius = g.config.ufo.mineRadius;
       mine.isMine = true;
       mine.damageProfile = "enemy_mine";
-      g.model.enemyBullets.push(mine);
+      g.pushEnemyBullet(mine);
       g.recordEnemyShot();
       g.emitImpactParticles(ufo.x, ufo.y, 3, "255,178,120");
     }
@@ -216,7 +216,7 @@
         bullet.vy *= 0.8;
         bullet.ttl = 1.4;
         bullet.damageProfile = "enemy_mine";
-        g.model.enemyBullets.push(bullet);
+        g.pushEnemyBullet(bullet);
       }
       g.emitImpactParticles(ufo.x, ufo.y, 14, "255,124,120");
     }
@@ -250,7 +250,7 @@
             : ufo.mode === "support"
               ? "enemy_bullet_support"
               : "enemy_bullet_hunter";
-      g.model.enemyBullets.push(bullet);
+      g.pushEnemyBullet(bullet);
       g.recordEnemyShot();
       g.emitImpactParticles(muzzleX, muzzleY, 2, "255,123,196");
       g.audio.play("enemy_fire");
@@ -294,7 +294,7 @@
         bullet.radius = g.config.ufo.mineRadius;
         bullet.isMine = true;
         bullet.damageProfile = "enemy_mine";
-        g.model.enemyBullets.push(bullet);
+        g.pushEnemyBullet(bullet);
       }
 
       for (const asteroid of g.model.asteroids) {
@@ -326,7 +326,7 @@
         bullet.radius = g.config.ufo.mineRadius;
         bullet.isMine = true;
         bullet.damageProfile = "enemy_mine";
-        g.model.enemyBullets.push(bullet);
+        g.pushEnemyBullet(bullet);
       }
       const large = cfg.asteroidSpawnLargeByPhase?.[phase] ?? 1;
       const medium = cfg.asteroidSpawnMediumByPhase?.[phase] ?? 1;
@@ -420,7 +420,7 @@
             bullet.vx *= speedScale * 1.05;
             bullet.vy *= speedScale * 1.05;
             bullet.damageProfile = "mini_boss_bullet";
-            g.model.enemyBullets.push(bullet);
+            g.pushEnemyBullet(bullet);
             g.recordEnemyShot();
           }
           const radialEvery = Math.max(1, cfg.radialRingEveryShots ?? 3);
@@ -435,7 +435,7 @@
               bullet.vx *= speedScale * speedFactor;
               bullet.vy *= speedScale * speedFactor;
               bullet.damageProfile = "mini_boss_bullet";
-              g.model.enemyBullets.push(bullet);
+              g.pushEnemyBullet(bullet);
               g.recordEnemyShot();
             }
           }
@@ -452,7 +452,7 @@
               bullet.radius = g.config.ufo.mineRadius;
               bullet.isMine = true;
               bullet.damageProfile = "enemy_mine";
-              g.model.enemyBullets.push(bullet);
+              g.pushEnemyBullet(bullet);
             }
           }
         } else {
@@ -464,7 +464,7 @@
             bullet.vx *= speedScale;
             bullet.vy *= speedScale;
             bullet.damageProfile = "mini_boss_bullet";
-            g.model.enemyBullets.push(bullet);
+            g.pushEnemyBullet(bullet);
             g.recordEnemyShot();
           }
         }
@@ -480,3 +480,4 @@
   window.Asteroids = window.Asteroids || {};
   window.Asteroids.EnemySystem = EnemySystem;
 })();
+

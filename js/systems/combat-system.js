@@ -19,7 +19,7 @@
         const angle = ship.angle + t * (spec.spread ?? 0);
         const dirX = Math.cos(angle);
         const dirY = Math.sin(angle);
-        g.model.bullets.push({
+        g.pushPlayerBullet({
           x: ship.x + dirX * (ship.radius + 8),
           y: ship.y + dirY * (ship.radius + 8),
           vx: ship.vx * g.config.bullet.inheritVelocityFactor + dirX * (spec.projectileSpeed ?? g.config.bullet.speed),
@@ -72,7 +72,7 @@
       if (spec.kind === "rail") {
         const dirX = Math.cos(ship.angle);
         const dirY = Math.sin(ship.angle);
-        g.model.bullets.push({
+        g.pushPlayerBullet({
           x: ship.x + dirX * (ship.radius + 12),
           y: ship.y + dirY * (ship.radius + 12),
           vx: dirX * spec.projectileSpeed + ship.vx * 0.15,
@@ -89,7 +89,7 @@
           const angle = ship.angle + t * spec.spread;
           const dirX = Math.cos(angle);
           const dirY = Math.sin(angle);
-          g.model.bullets.push({
+          g.pushPlayerBullet({
             x: ship.x + dirX * (ship.radius + 10),
             y: ship.y + dirY * (ship.radius + 10),
             vx: dirX * spec.projectileSpeed + ship.vx * 0.2,

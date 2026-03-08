@@ -4,6 +4,7 @@
   - [x] Frame-time/perf overlay toggle (`F4`) s FPS/ms/step metrikami
   - [x] Runtime frame/object telemetry (particles/bullets/utility/asteroids/UFO) pro rychly profiling vstup
   - [x] Adaptive FX quality (high/medium/low) s auto downshift/upshift podle frame-time
+  - [x] Runtime guardy proti memory growth (hard caps + central push helpers pro bullets/enemy bullets/utility + particle cap enforcement)
 
 - [x] Static UI/help i18n coverage pass
   - [x] `index.html` HUD/help footer text presunuty na `data-i18n`/`data-i18n-html`

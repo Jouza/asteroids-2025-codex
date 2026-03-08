@@ -864,7 +864,7 @@
       const { ctx, config } = this;
       const perf = model.performance;
       const panelW = 286;
-      const panelH = 148;
+      const panelH = 164;
       const panelX = config.canvas.width - panelW - 16;
       const panelY = 16;
 
@@ -907,8 +907,13 @@
         "rgba(176,226,255,0.92)"
       );
       drawLine(
-        `Quality ${String(perf.qualityLevel || "high").toUpperCase()} | Frames ${perf.frameCount}`,
+        `Dropped P:${perf.dropped?.particles ?? 0} B:${perf.dropped?.bullets ?? 0} E:${perf.dropped?.enemyBullets ?? 0} U:${perf.dropped?.utilityEffects ?? 0}`,
         panelY + 132,
+        "rgba(176,215,242,0.88)"
+      );
+      drawLine(
+        `Quality ${String(perf.qualityLevel || "high").toUpperCase()} | Frames ${perf.frameCount}`,
+        panelY + 150,
         "rgba(156,209,236,0.88)"
       );
 
