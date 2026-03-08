@@ -456,7 +456,10 @@ function runTests() {
     gameA.model.ufos = [];
     gameA.model.enemyBullets = [];
     gameA.missionSystem.updateMission(1 / 60);
-    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.PLAYING, "Endless mode should continue after final-sector boss");
+    assert(
+      gameA.model.gameState === AsteroidsA.GAME_STATE.MISSION_COMPLETE,
+      "Endless mode should show mission-complete confirmation before hangar"
+    );
     assert(gameA.model.sectorCompletionHandled, "Endless mode should route mission completion to hangar flow");
   });
 

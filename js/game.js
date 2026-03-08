@@ -716,11 +716,6 @@
         this.completeRunVictory();
         return true;
       }
-      if (!this.isCampaignMode()) {
-        this.model.sectorCompletionHandled = true;
-        this.model.sectorTimerMs = 0;
-        return false;
-      }
       this.model.missionCompleteSummary = this.buildMissionCompleteSummary();
       this.model.gameState = GAME_STATE.MISSION_COMPLETE;
       this.model.sectorCompletionHandled = true;
