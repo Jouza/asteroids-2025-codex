@@ -304,6 +304,7 @@
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
         identityStatusText: tr("hud.identity_unknown"),
+        overlaySettingsRow: 0,
         salvageParts: 0,
         telemetry: createTelemetryState(false),
         performance: createPerformanceState(false),
@@ -593,12 +594,10 @@
         this.model.gameState === GAME_STATE.GAME_OVER ||
         this.model.gameState === GAME_STATE.VICTORY;
       if (canToggleRunMode) {
-        if (this.input.wasPressed("ArrowLeft")) this.trySetRunMode("campaign");
-        if (this.input.wasPressed("ArrowRight")) this.trySetRunMode("endless");
-        if (this.input.wasPressed("ArrowUp")) this.cycleIdentityPilot(-1);
-        if (this.input.wasPressed("ArrowDown")) this.cycleIdentityPilot(1);
-        if (this.input.wasPressed("KeyA")) this.cycleIdentityShip(-1);
-        if (this.input.wasPressed("KeyD")) this.cycleIdentityShip(1);
+        if (this.input.wasPressed("ArrowUp")) this.cycleOverlaySettingsRow(-1);
+        if (this.input.wasPressed("ArrowDown")) this.cycleOverlaySettingsRow(1);
+        if (this.input.wasPressed("ArrowLeft")) this.adjustSelectedOverlaySetting(-1);
+        if (this.input.wasPressed("ArrowRight")) this.adjustSelectedOverlaySetting(1);
         if (this.input.wasPressed("KeyE")) {
           const next = this.model.runMode === "campaign" ? "endless" : "campaign";
           this.trySetRunMode(next);
@@ -763,6 +762,7 @@
       this.model.hangar.navSection = "shop";
       this.model.hangar.shopIndex = 0;
       this.model.hangar.pilotCursor = 0;
+      this.model.overlaySettingsRow = 0;
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
@@ -868,6 +868,34 @@
       const pilotLabel = selectedPilot ? tr(`identity.pilot.${selectedPilot.id}.callsign`) : "-";
       const shipLabel = selectedShip ? tr(`identity.ship.${selectedShip.id}.name`) : "-";
       this.model.identityStatusText = tr("hud.identity_status", { pilot: pilotLabel, ship: shipLabel });
+    }
+
+    getOverlaySettingRows() {
+      return ["mode", "pilot", "ship"];
+    }
+
+    cycleOverlaySettingsRow(direction = 1) {
+      const rows = this.getOverlaySettingRows();
+      const current = this.clamp(this.model.overlaySettingsRow ?? 0, 0, rows.length - 1);
+      this.model.overlaySettingsRow = (current + direction + rows.length) % rows.length;
+      this.hud.sync(this.model);
+    }
+
+    adjustSelectedOverlaySetting(direction = 1) {
+      const rows = this.getOverlaySettingRows();
+      const current = this.clamp(this.model.overlaySettingsRow ?? 0, 0, rows.length - 1);
+      const row = rows[current];
+      if (row === "mode") {
+        this.trySetRunMode(direction < 0 ? "campaign" : "endless");
+        return;
+      }
+      if (row === "pilot") {
+        this.cycleIdentityPilot(direction);
+        return;
+      }
+      if (row === "ship") {
+        this.cycleIdentityShip(direction);
+      }
     }
 
     cycleIdentityPilot(direction = 1) {

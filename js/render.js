@@ -1054,6 +1054,71 @@
       ctx.restore();
     }
 
+    drawOverlayBlock(centerX, centerY, width, height) {
+      const { ctx } = this;
+      ctx.fillStyle = "rgba(4, 13, 24, 0.62)";
+      ctx.fillRect(centerX - width / 2, centerY - height / 2, width, height);
+      ctx.strokeStyle = "rgba(83, 215, 255, 0.36)";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(centerX - width / 2, centerY - height / 2, width, height);
+    }
+
+    drawRunSettingsList(model, centerY) {
+      const { ctx, config } = this;
+      const centerX = config.canvas.width / 2;
+      const rows = [
+        {
+          id: "mode",
+          label: tr("overlay.settings_mode"),
+          value: model.runMode === "campaign" ? tr("game.run_mode.campaign") : tr("game.run_mode.endless")
+        },
+        {
+          id: "pilot",
+          label: tr("overlay.settings_pilot"),
+          value: tr(`identity.pilot.${model.identity?.pilotId}.callsign`)
+        },
+        {
+          id: "ship",
+          label: tr("overlay.settings_ship"),
+          value: tr(`identity.ship.${model.identity?.shipId}.name`)
+        }
+      ];
+      const selected = Math.max(0, Math.min(rows.length - 1, model.overlaySettingsRow ?? 0));
+      const rowW = 382;
+      const rowH = 30;
+      const gap = 8;
+      const topY = centerY;
+      ctx.textAlign = "center";
+      ctx.font = "600 16px Trebuchet MS";
+      ctx.fillStyle = "#bfeeff";
+      ctx.fillText(tr("overlay.settings_title"), centerX, topY - 12);
+
+      for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i];
+        const y = topY + i * (rowH + gap);
+        const active = i === selected;
+        ctx.fillStyle = active ? "rgba(255,231,168,0.16)" : "rgba(6,18,34,0.7)";
+        ctx.fillRect(centerX - rowW / 2, y, rowW, rowH);
+        ctx.strokeStyle = active ? "rgba(255,231,168,0.9)" : "rgba(108,216,255,0.46)";
+        ctx.lineWidth = active ? 1.7 : 1.1;
+        ctx.strokeRect(centerX - rowW / 2, y, rowW, rowH);
+        ctx.textAlign = "left";
+        ctx.font = "600 14px Trebuchet MS";
+        ctx.fillStyle = "rgba(186,226,248,0.92)";
+        ctx.fillText(row.label, centerX - rowW / 2 + 10, y + 20);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#d8f5ff";
+        ctx.fillText(row.value, centerX + rowW / 2 - 10, y + 20);
+      }
+
+      ctx.textAlign = "center";
+      ctx.font = "500 13px Trebuchet MS";
+      ctx.fillStyle = "rgba(186,226,248,0.86)";
+      const hintY = topY + rows.length * (rowH + gap) + 10;
+      ctx.fillText(tr("overlay.settings_hint"), centerX, hintY);
+      return hintY;
+    }
+
     drawIdentitySelector(model, centerY) {
       const { ctx, config } = this;
       const centerX = config.canvas.width / 2;
@@ -1147,15 +1212,15 @@
       if (model.gameState === GAME_STATE.START) {
         const centerX = config.canvas.width / 2;
         const centerY = config.canvas.height / 2;
-        // 3 visual blocks on start screen:
-        // 1) logo + title, 2) run info, 3) mode selection
+        this.drawOverlayBlock(centerX, centerY - 116, 430, 152);
         this.drawStartLogo(centerX, centerY - 138);
         this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, centerY - 54);
+        this.drawOverlayBlock(centerX, centerY + 22, 430, 86);
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY + 2);
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 36);
-        const identityBottomY = this.drawIdentitySelector(model, centerY + 62);
-        const modeBottomY = this.drawModeSelector(model, identityBottomY + 26);
+        this.drawOverlayBlock(centerX, centerY + 192, 430, 176);
+        const modeBottomY = this.drawRunSettingsList(model, centerY + 126);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
           ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
@@ -1172,7 +1237,7 @@
           ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 42);
         }
         ctx.fillText(tr("overlay.enter_restart"), config.canvas.width / 2, config.canvas.height / 2 + 76);
-        this.drawModeSelector(model, config.canvas.height / 2 + 96);
+        this.drawRunSettingsList(model, config.canvas.height / 2 + 102);
       }
 
       if (model.gameState === GAME_STATE.VICTORY) {
@@ -1212,7 +1277,7 @@
           config.canvas.height / 2 + 110
         );
         ctx.fillText(tr("overlay.enter_new_run"), config.canvas.width / 2, config.canvas.height / 2 + 136);
-        this.drawModeSelector(model, config.canvas.height / 2 + 154);
+        this.drawRunSettingsList(model, config.canvas.height / 2 + 162);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {
