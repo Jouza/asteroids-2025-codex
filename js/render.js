@@ -940,12 +940,50 @@
       ctx.restore();
     }
 
+    drawStartLogo(centerX, centerY) {
+      const { ctx } = this;
+      ctx.save();
+      ctx.translate(centerX, centerY);
+
+      const ring = ctx.createRadialGradient(0, 0, 8, 0, 0, 44);
+      ring.addColorStop(0, "rgba(98,216,255,0.2)");
+      ring.addColorStop(1, "rgba(98,216,255,0)");
+      ctx.fillStyle = ring;
+      ctx.beginPath();
+      ctx.arc(0, 0, 44, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(106,220,255,0.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 32, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255,229,161,0.95)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-17, 7);
+      ctx.lineTo(0, -16);
+      ctx.lineTo(17, 7);
+      ctx.moveTo(-10, 2);
+      ctx.lineTo(0, -7);
+      ctx.lineTo(10, 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffe5a1";
+      ctx.font = "700 14px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText("86", 0, 24);
+
+      ctx.restore();
+    }
+
     drawModeSelector(model, centerY) {
       const { ctx, config } = this;
       const centerX = config.canvas.width / 2;
       const boxW = 168;
-      const boxH = 34;
-      const gap = 16;
+      const boxH = 32;
+      const gap = 12;
       const campaignSelected = model.runMode === "campaign";
       const endlessSelected = model.runMode === "endless";
       const endlessLocked = !model.endlessUnlocked;
@@ -965,7 +1003,7 @@
       ctx.textAlign = "center";
       ctx.font = "600 16px Trebuchet MS";
       ctx.fillStyle = "#bfeeff";
-      ctx.fillText(tr("overlay.mode_select"), centerX, rowY - 12);
+      ctx.fillText(tr("overlay.mode_select"), centerX, rowY - 10);
       const leftX = centerX - gap / 2 - boxW;
       const rightX = centerX + gap / 2;
       drawOption(leftX, tr("game.run_mode.campaign"), campaignSelected, false);
@@ -973,11 +1011,12 @@
       if (endlessLocked) {
         ctx.font = "500 12px Trebuchet MS";
         ctx.fillStyle = "rgba(172,201,218,0.78)";
-        ctx.fillText(tr("overlay.mode_locked"), rightX + boxW / 2, rowY + boxH + 14);
+        ctx.fillText(tr("overlay.mode_locked"), rightX + boxW / 2, rowY + boxH + 12);
       }
       ctx.font = "500 13px Trebuchet MS";
       ctx.fillStyle = "rgba(186,226,248,0.86)";
-      ctx.fillText(tr("overlay.mode_select_hint"), centerX, rowY + boxH + 30);
+      ctx.fillText(tr("overlay.mode_select_hint"), centerX, rowY + boxH + 22);
+      return rowY + boxH + 22;
     }
 
     drawOverlay(model) {
@@ -991,14 +1030,17 @@
       ctx.font = "700 38px Trebuchet MS";
 
       if (model.gameState === GAME_STATE.START) {
-        ctx.fillText("ASTEROIDS", config.canvas.width / 2, config.canvas.height / 2 - 36);
+        const centerX = config.canvas.width / 2;
+        const centerY = config.canvas.height / 2;
+        this.drawStartLogo(centerX, centerY - 102);
+        ctx.fillText(tr("render.start.title"), centerX, centerY - 44);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(tr("overlay.press_enter_start"), config.canvas.width / 2, config.canvas.height / 2 + 6);
-        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), config.canvas.width / 2, config.canvas.height / 2 + 40);
-        this.drawModeSelector(model, config.canvas.height / 2 + 62);
+        ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY - 10);
+        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 20);
+        const modeBottomY = this.drawModeSelector(model, centerY + 52);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
-          ctx.fillText(tr("overlay.endless_unlock_hint"), config.canvas.width / 2, config.canvas.height / 2 + 128);
+          ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
         }
       }
 
