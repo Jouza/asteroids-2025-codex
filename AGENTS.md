@@ -20,6 +20,7 @@ TODO:
 
 - Branch workflow in this project is direct-to-`main`.
 - Always run the required test gate(s) before commit/push.
+- Team agreement for this repo: after task completion, run commit+push to `main` directly without asking for extra confirmation.
 - Do not edit `js/version.js` manually unless explicitly requested.
   - `.githooks/pre-commit` regenerates `js/version.js` and stages it.
   - `.githooks/prepare-commit-msg` appends `[build:YYYYMM.DD.HHMM]` to commit messages.

@@ -95,7 +95,11 @@
         x: g.config.canvas.width * (0.22 + g.rng() * 0.56),
         y: g.config.canvas.height * (0.22 + g.rng() * 0.56),
         radius: modifier.radius ?? 300,
-        pullStrength: modifier.pullStrength ?? 18000
+        pullStrength: modifier.pullStrength ?? 18000,
+        coreRadius: modifier.coreRadius ?? 60,
+        maxShipPullAccel: modifier.maxShipPullAccel ?? 210,
+        maxAsteroidPullAccel: modifier.maxAsteroidPullAccel ?? 130,
+        escapeThrustPullMultiplier: modifier.escapeThrustPullMultiplier ?? 0.6
       };
     }
 
@@ -323,12 +327,24 @@
         const applyPull = (entity, scalar = 1) => {
           const dx = anomaly.x - entity.x;
           const dy = anomaly.y - entity.y;
-          const dist = Math.max(12, Math.hypot(dx, dy));
+          const rawDist = Math.hypot(dx, dy);
+          const dist = Math.max(1, rawDist);
           if (dist > anomaly.radius) return;
           const falloff = 1 - dist / anomaly.radius;
-          const force = ((anomaly.pullStrength * falloff) / dist) * dt * scalar;
-          entity.vx += dx * force;
-          entity.vy += dy * force;
+          const coreRadius = Math.max(1, anomaly.coreRadius ?? 60);
+          const inCore = dist < coreRadius;
+          const coreFactor = inCore ? 0.18 + 0.82 * (dist / coreRadius) : 1;
+          const thrusting =
+            entity === ship &&
+            (g.input.isDown("ArrowUp") || g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight"));
+          const escapeFactor = thrusting ? anomaly.escapeThrustPullMultiplier ?? 0.6 : 1;
+          const maxAccel = entity === ship ? anomaly.maxShipPullAccel ?? 210 : anomaly.maxAsteroidPullAccel ?? 130;
+          const accelUncapped = ((anomaly.pullStrength * falloff) / Math.max(24, dist)) * scalar * coreFactor * escapeFactor;
+          const accel = Math.min(maxAccel, Math.max(0, accelUncapped));
+          const dirX = dx / dist;
+          const dirY = dy / dist;
+          entity.vx += dirX * accel * dt;
+          entity.vy += dirY * accel * dt;
         };
 
         applyPull(ship, 1);

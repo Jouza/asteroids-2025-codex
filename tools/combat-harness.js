@@ -361,6 +361,48 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(8383);
+    const ship = gameA.model.ship;
+    const originalIsDown = gameA.input.isDown;
+    ship.x = 480;
+    ship.y = 360;
+    ship.vx = 0;
+    ship.vy = 0;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "gravity_anomaly",
+      modifierLabel: "Gravity Anomaly",
+      modifierEffects: {},
+      gravityAnomaly: {
+        x: ship.x + 1,
+        y: ship.y,
+        radius: 300,
+        pullStrength: 14800,
+        coreRadius: 62,
+        maxShipPullAccel: 210,
+        maxAsteroidPullAccel: 130,
+        escapeThrustPullMultiplier: 0.58
+      }
+    };
+
+    gameA.input.isDown = () => false;
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const noThrustPull = Math.hypot(ship.vx, ship.vy);
+    assert(noThrustPull < 5, "Gravity anomaly near-center pull should be capped");
+
+    ship.vx = 0;
+    ship.vy = 0;
+    gameA.input.isDown = (code) => code === "ArrowUp";
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const thrustPull = Math.hypot(ship.vx, ship.vy);
+    assert(thrustPull < noThrustPull, "Thrusting should reduce gravity anomaly pull for escape");
+    gameA.input.isDown = originalIsDown;
+  });
+
+  tests.push(() => {
     gameA.startGame(9191);
     gameA.model.ship.invulnMs = 0;
     const before = gameA.model.hitstopSeconds;

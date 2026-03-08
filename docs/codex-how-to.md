@@ -120,3 +120,5 @@ Dej mi handoff summary pro nove vlakno.
 - TODO pravidla jsou v [todo/AGENTS.md](../todo/AGENTS.md).
 - Opakovatelny pre-push workflow je ve skillu:
   - [.agents/skills/release-gate/SKILL.md](../.agents/skills/release-gate/SKILL.md)
+- Projektova dohoda k doruceni:
+  - po dokonceni tasku a probehnuti gate se commit+push dela rovnou bez dalsiho potvrzovani.

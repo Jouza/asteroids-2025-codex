@@ -786,8 +786,12 @@
           description: "Anomaly well bends nearby trajectories.",
           weight: 0.18,
           unlockSector: 4,
-          pullStrength: 19500,
-          radius: 300
+          pullStrength: 14800,
+          radius: 300,
+          coreRadius: 62,
+          maxShipPullAccel: 210,
+          maxAsteroidPullAccel: 130,
+          escapeThrustPullMultiplier: 0.58
         },
         clear_skies: {
           label: "Clear Skies",
