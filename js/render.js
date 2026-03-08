@@ -907,7 +907,7 @@
         "rgba(176,226,255,0.92)"
       );
       drawLine(
-        `Quality baseline | Frames ${perf.frameCount}`,
+        `Quality ${String(perf.qualityLevel || "high").toUpperCase()} | Frames ${perf.frameCount}`,
         panelY + 132,
         "rgba(156,209,236,0.88)"
       );

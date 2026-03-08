@@ -3,6 +3,7 @@
 - [x] Performance tooling baseline (dev)
   - [x] Frame-time/perf overlay toggle (`F4`) s FPS/ms/step metrikami
   - [x] Runtime frame/object telemetry (particles/bullets/utility/asteroids/UFO) pro rychly profiling vstup
+  - [x] Adaptive FX quality (high/medium/low) s auto downshift/upshift podle frame-time
 
 - [x] Static UI/help i18n coverage pass
   - [x] `index.html` HUD/help footer text presunuty na `data-i18n`/`data-i18n-html`

@@ -3,7 +3,7 @@
 ## Aktualni fokus
 
 - [ ] Performance & runtime budget
-  - [ ] Adaptive quality budget pro particles/effects pri FPS dropu
+  - [x] Adaptive quality budget pro particles/effects pri FPS dropu
   - [x] Frame-time / perf overlay pro dev rezim
   - [ ] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
   - [ ] Profiling pass (CPU hot paths update/render smycky)

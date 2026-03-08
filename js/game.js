@@ -68,6 +68,17 @@
       stepsLastFrame: 0,
       avgSteps: 0,
       frameCount: 0,
+      qualityLevel: "high",
+      downshiftCounter: 0,
+      upshiftCounter: 0,
+      thresholds: {
+        downshiftMs: 20,
+        upshiftMs: 14
+      },
+      windows: {
+        downshiftFrames: 45,
+        upshiftFrames: 180
+      },
       objects: {
         particles: 0,
         bullets: 0,
@@ -1126,6 +1137,75 @@
       perf.objects.utilityEffects = this.model.utilityEffects.length;
       perf.objects.asteroids = this.model.asteroids.length;
       perf.objects.ufos = this.model.ufos.length;
+      this.updateAdaptiveQuality(perf.frameMs);
+    }
+
+    getFxQualityProfile() {
+      const level = this.model.performance?.qualityLevel || "high";
+      if (level === "low") {
+        return {
+          level,
+          particleMultiplier: 0.45,
+          thrusterSpawnChance: 0.45,
+          maxParticles: 320,
+          maxUtilityEffects: 14
+        };
+      }
+      if (level === "medium") {
+        return {
+          level,
+          particleMultiplier: 0.7,
+          thrusterSpawnChance: 0.7,
+          maxParticles: 500,
+          maxUtilityEffects: 20
+        };
+      }
+      return {
+        level: "high",
+        particleMultiplier: 1,
+        thrusterSpawnChance: 1,
+        maxParticles: 760,
+        maxUtilityEffects: 28
+      };
+    }
+
+    updateAdaptiveQuality(frameMs) {
+      const perf = this.model.performance;
+      if (!perf || this.model.gameState !== GAME_STATE.PLAYING) return;
+
+      if (frameMs >= perf.thresholds.downshiftMs) {
+        perf.downshiftCounter += 1;
+        perf.upshiftCounter = Math.max(0, perf.upshiftCounter - 2);
+      } else if (frameMs <= perf.thresholds.upshiftMs) {
+        perf.upshiftCounter += 1;
+        perf.downshiftCounter = Math.max(0, perf.downshiftCounter - 1);
+      } else {
+        perf.downshiftCounter = Math.max(0, perf.downshiftCounter - 1);
+        perf.upshiftCounter = Math.max(0, perf.upshiftCounter - 1);
+      }
+
+      if (perf.downshiftCounter >= perf.windows.downshiftFrames) {
+        if (perf.qualityLevel === "high") perf.qualityLevel = "medium";
+        else if (perf.qualityLevel === "medium") perf.qualityLevel = "low";
+        perf.downshiftCounter = 0;
+        perf.upshiftCounter = 0;
+        return;
+      }
+
+      if (perf.upshiftCounter >= perf.windows.upshiftFrames) {
+        if (perf.qualityLevel === "low") perf.qualityLevel = "medium";
+        else if (perf.qualityLevel === "medium") perf.qualityLevel = "high";
+        perf.downshiftCounter = 0;
+        perf.upshiftCounter = 0;
+      }
+    }
+
+    pushUtilityEffect(effect) {
+      const profile = this.getFxQualityProfile();
+      if (this.model.utilityEffects.length >= profile.maxUtilityEffects) {
+        this.model.utilityEffects.shift();
+      }
+      this.model.utilityEffects.push(effect);
     }
 
     getCurrentFlightProfile() {
@@ -1530,6 +1610,8 @@
     }
 
     addParticle(x, y, vx, vy, life, radius, color) {
+      const profile = this.getFxQualityProfile();
+      if (this.model.particles.length >= profile.maxParticles) return;
       this.model.particles.push({
         x,
         y,
@@ -1546,6 +1628,8 @@
     }
 
     addRingParticle(x, y, life, radius, color, growth = 120) {
+      const profile = this.getFxQualityProfile();
+      if (this.model.particles.length >= profile.maxParticles) return;
       this.model.particles.push({
         x,
         y,
@@ -1562,6 +1646,8 @@
     }
 
     addDebrisParticle(x, y, vx, vy, life, radius, color) {
+      const profile = this.getFxQualityProfile();
+      if (this.model.particles.length >= profile.maxParticles) return;
       this.model.particles.push({
         x,
         y,
@@ -1578,6 +1664,8 @@
     }
 
     emitThrusterParticle(ship) {
+      const profile = this.getFxQualityProfile();
+      if (this.rng() > profile.thrusterSpawnChance) return;
       const baseAngle = ship.angle + Math.PI;
       const spread = (this.rng() - 0.5) * 0.55;
       const angle = baseAngle + spread;
@@ -1596,7 +1684,9 @@
     }
 
     emitImpactParticles(x, y, count, baseColor) {
-      for (let i = 0; i < count; i += 1) {
+      const profile = this.getFxQualityProfile();
+      const effectiveCount = Math.max(1, Math.round(count * profile.particleMultiplier));
+      for (let i = 0; i < effectiveCount; i += 1) {
         const angle = this.rng() * Math.PI * 2;
         const speed = 40 + this.rng() * 220;
         this.addParticle(

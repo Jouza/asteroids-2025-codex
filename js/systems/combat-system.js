@@ -124,7 +124,7 @@
 
       if (spec.kind === "pulse") {
         const pulseRadius = spec.pulseRadius;
-        g.model.utilityEffects.push({
+        g.pushUtilityEffect({
           type: "pulse",
           x: ship.x,
           y: ship.y,
@@ -171,7 +171,7 @@
           g.model.miniBoss.shootTimer = Math.max(g.model.miniBoss.shootTimer, spec.disableSeconds);
         }
         g.model.enemyBullets = [];
-        g.model.utilityEffects.push({
+        g.pushUtilityEffect({
           type: "emp",
           x: ship.x,
           y: ship.y,
@@ -184,7 +184,7 @@
 
       if (spec.kind === "shield") {
         ship.invulnMs = Math.max(ship.invulnMs, spec.shieldSeconds * 1000);
-        g.model.utilityEffects.push({
+        g.pushUtilityEffect({
           type: "shield",
           x: ship.x,
           y: ship.y,
