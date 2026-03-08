@@ -24,6 +24,7 @@
         event.code === "ArrowLeft" ||
         event.code === "ArrowRight" ||
         event.code === "ArrowUp" ||
+        event.code === "ArrowDown" ||
         event.code === "Space" ||
         event.code === "KeyX" ||
         event.code === "KeyC" ||

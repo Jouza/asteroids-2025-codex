@@ -180,12 +180,15 @@
         flightModel: "arcade",
         dotEffects: [],
         hangar: {
-          message: "Hangar: 1-3 upgrade, 4 primary, 5 secondary, R utility, 6/7 select, 8 take/equip, 9 sell, 0 salvage, Enter start.",
+          message: "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K",
           lootCrate: [],
           selectionSource: "crate",
           selectionIndex: 0,
           pilotAttrIndex: 0,
-          pilotPerkIndex: 0
+          pilotPerkIndex: 0,
+          navSection: "shop",
+          shopIndex: 0,
+          pilotCursor: 0
         },
         loadout: {
           primaryId: "auto_cannon",
@@ -561,12 +564,15 @@
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
       this.model.hangar.message =
-        "Hangar: 1-3 upgrade, 4/5/R loadout, 6/7 select, 8 equip, 9 sell, 0 salvage, T/Y attr, U spend, I/O perk, K unlock, Enter start.";
+        "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K";
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;
       this.model.hangar.pilotAttrIndex = 0;
       this.model.hangar.pilotPerkIndex = 0;
+      this.model.hangar.navSection = "shop";
+      this.model.hangar.shopIndex = 0;
+      this.model.hangar.pilotCursor = 0;
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);

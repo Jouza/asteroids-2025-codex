@@ -226,9 +226,13 @@ function runTests() {
     input.onKeyDown(mkEvt("Digit0"));
     input.onKeyDown(mkEvt("KeyR"));
     input.onKeyDown(mkEvt("KeyM"));
+    input.onKeyDown(mkEvt("ArrowDown"));
+    input.onKeyDown(mkEvt("Space"));
     assert(input.wasPressed("Digit0"), "Digit0 should be tracked");
     assert(input.wasPressed("KeyR"), "KeyR should be tracked");
     assert(input.wasPressed("KeyM"), "KeyM should be tracked");
+    assert(input.wasPressed("ArrowDown"), "ArrowDown should be tracked");
+    assert(input.wasPressed("Space"), "Space should be tracked");
   });
 
   tests.push(() => {

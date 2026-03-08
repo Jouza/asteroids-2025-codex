@@ -2,10 +2,17 @@
   class HangarSystem {
     constructor(game) {
       this.game = game;
+      this.navSections = ["shop", "loot", "pilot"];
     }
 
     handleHangarInput() {
       const g = this.game;
+      this.ensureNavState();
+      if (g.input.wasPressed("ArrowLeft")) this.changeNavSection(-1);
+      if (g.input.wasPressed("ArrowRight")) this.changeNavSection(1);
+      if (g.input.wasPressed("ArrowUp")) this.moveNavCursor(-1);
+      if (g.input.wasPressed("ArrowDown")) this.moveNavCursor(1);
+      if (g.input.wasPressed("Space")) this.activateNavSelection();
       if (g.input.wasPressed("Digit1")) this.purchaseHangarItem(0);
       if (g.input.wasPressed("Digit2")) this.purchaseHangarItem(1);
       if (g.input.wasPressed("Digit3")) this.purchaseHangarItem(2);
@@ -26,6 +33,81 @@
       if (g.input.wasPressed("Enter")) this.beginNextSectorFromHangar();
     }
 
+    ensureNavState() {
+      const h = this.game.model.hangar;
+      if (!h.navSection || !this.navSections.includes(h.navSection)) h.navSection = "shop";
+      if (!Number.isInteger(h.shopIndex)) h.shopIndex = 0;
+      if (!Number.isInteger(h.pilotCursor)) h.pilotCursor = 0;
+    }
+
+    changeNavSection(step) {
+      const g = this.game;
+      const h = g.model.hangar;
+      const idx = this.navSections.indexOf(h.navSection);
+      const next = (idx + step + this.navSections.length) % this.navSections.length;
+      h.navSection = this.navSections[next];
+      g.model.hangar.message = `Sekce: ${h.navSection.toUpperCase()} | Up/Down vyber | Space akce`;
+    }
+
+    moveNavCursor(step) {
+      const g = this.game;
+      const h = g.model.hangar;
+      if (h.navSection === "shop") {
+        const size = g.config.hangar.items.length + 3;
+        h.shopIndex = (h.shopIndex + step + size) % size;
+        g.model.hangar.message = `Shop volba ${h.shopIndex + 1}/${size} | Space akce`;
+        return;
+      }
+      if (h.navSection === "loot") {
+        this.changeSelection(step);
+        return;
+      }
+      if (h.navSection === "pilot") {
+        const size = 6;
+        h.pilotCursor = (h.pilotCursor + step + size) % size;
+        if (h.pilotCursor <= 3) {
+          h.pilotAttrIndex = h.pilotCursor;
+          const attr = g.getPilotAttributeOrder()[h.pilotCursor];
+          g.model.hangar.message = `Pilot attr: ${attr.toUpperCase()} | Space upgrade`;
+        } else if (h.pilotCursor === 4) {
+          const perk = g.getPilotSelectedPerk();
+          g.model.hangar.message = `Pilot perk: ${perk?.label || "-"} | Space dalsi perk`;
+        } else {
+          const perk = g.getPilotSelectedPerk();
+          g.model.hangar.message = `Pilot unlock: ${perk?.label || "-"} | Space unlock`;
+        }
+      }
+    }
+
+    activateNavSelection() {
+      const g = this.game;
+      const h = g.model.hangar;
+      if (h.navSection === "shop") {
+        if (h.shopIndex <= 2) {
+          this.purchaseHangarItem(h.shopIndex);
+          return;
+        }
+        if (h.shopIndex === 3) this.cycleLoadoutSlot("primary");
+        else if (h.shopIndex === 4) this.cycleLoadoutSlot("secondary");
+        else this.cycleLoadoutSlot("utility");
+        return;
+      }
+      if (h.navSection === "loot") {
+        this.takeOrEquipSelected();
+        return;
+      }
+      if (h.navSection === "pilot") {
+        if (h.pilotCursor <= 3) {
+          h.pilotAttrIndex = h.pilotCursor;
+          this.spendSelectedPilotAttribute();
+        } else if (h.pilotCursor === 4) {
+          this.changePilotPerkSelection(1);
+        } else {
+          this.unlockSelectedPilotPerk();
+        }
+      }
+    }
+
     beginNextSectorFromHangar() {
       const g = this.game;
       if (g.model.ship) {
@@ -39,7 +121,7 @@
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
       g.missionSystem.startMission(g.model.sector);
       g.model.hangar.message =
-        "Hangar: 1-3 upgrade, 4/5/R loadout, 6/7 select, 8 equip, 9 sell, 0 salvage, T/Y attr, U spend, I/O perk, K unlock, Enter start.";
+        "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K";
       g.saveProfile("sector_start");
     }
 
@@ -57,7 +139,10 @@
       g.model.bullets = [];
       g.model.utilityEffects = [];
       g.model.hangar.message =
-        "Hangar: 1-3 upgrade, 4/5/R loadout, 6/7 select, 8 equip, 9 sell, 0 salvage, T/Y attr, U spend, I/O perk, K unlock, Enter start.";
+        "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K";
+      g.model.hangar.navSection = "shop";
+      g.model.hangar.shopIndex = 0;
+      g.model.hangar.pilotCursor = 0;
       this.clampSelection();
       g.saveProfile("sector_complete");
     }

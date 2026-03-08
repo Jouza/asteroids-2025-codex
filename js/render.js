@@ -758,6 +758,9 @@
         const equipment = model.equipment || {};
         const selectedSource = hangar.selectionSource || "crate";
         const selectedIndex = hangar.selectionIndex || 0;
+        const navSection = hangar.navSection || "shop";
+        const shopIndex = hangar.shopIndex || 0;
+        const pilotCursor = hangar.pilotCursor || 0;
         const primaryDefs = config.loadout.primary;
         const secondaryDefs = config.loadout.secondary;
         const utilityDefs = config.loadout.utility;
@@ -814,13 +817,13 @@
           return req.join(" ");
         };
 
-        const drawPanel = (x, y, w, h, title) => {
+        const drawPanel = (x, y, w, h, title, active = false) => {
           ctx.fillStyle = "rgba(4,12,24,0.78)";
           ctx.fillRect(x, y, w, h);
-          ctx.strokeStyle = "rgba(63,207,255,0.55)";
-          ctx.lineWidth = 1.1;
+          ctx.strokeStyle = active ? "rgba(255,231,168,0.88)" : "rgba(63,207,255,0.55)";
+          ctx.lineWidth = active ? 1.6 : 1.1;
           ctx.strokeRect(x, y, w, h);
-          ctx.fillStyle = "#99ebff";
+          ctx.fillStyle = active ? "#ffe7a8" : "#99ebff";
           ctx.textAlign = "left";
           ctx.font = "700 16px Trebuchet MS";
           ctx.fillText(title, x + 12, y + 22);
@@ -873,24 +876,52 @@
           topY + 30
         );
 
-        drawPanel(panelX0, panelY, panelW, panelH, "SHOP");
-        drawPanel(panelX1, panelY, panelW, panelH, "LOADOUT");
-        drawPanel(panelX2, panelY, panelW, panelH, "LOOT");
+        drawPanel(panelX0, panelY, panelW, panelH, "SHOP", navSection === "shop");
+        drawPanel(panelX1, panelY, panelW, panelH, "LOADOUT/PILOT", navSection === "pilot");
+        drawPanel(panelX2, panelY, panelW, panelH, "LOOT", navSection === "loot");
 
         const leftX = panelX0 + 12;
         let leftY = panelY + 54;
         for (let i = 0; i < config.hangar.items.length; i += 1) {
           const item = config.hangar.items[i];
           const canAfford = model.credits >= item.cost;
-          drawRow(leftX, leftY, `${i + 1}. ${truncate(item.title, 23)} ${item.cost}cr`, canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)");
+          drawSelectableRow(
+            leftX,
+            leftY,
+            panelW - 22,
+            `${i + 1}. ${truncate(item.title, 23)} ${item.cost}cr`,
+            navSection === "shop" && shopIndex === i,
+            canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+          );
           leftY += 24;
         }
         leftY += 8;
-        drawRow(leftX, leftY, `4. Primary: ${model.loadout.primaryLabel}`, "#ffd785");
+        drawSelectableRow(
+          leftX,
+          leftY,
+          panelW - 22,
+          `4. Primary: ${model.loadout.primaryLabel}`,
+          navSection === "shop" && shopIndex === 3,
+          "#ffd785"
+        );
         leftY += 22;
-        drawRow(leftX, leftY, `5. Secondary: ${model.loadout.secondaryLabel}`, "#ffd785");
+        drawSelectableRow(
+          leftX,
+          leftY,
+          panelW - 22,
+          `5. Secondary: ${model.loadout.secondaryLabel}`,
+          navSection === "shop" && shopIndex === 4,
+          "#ffd785"
+        );
         leftY += 22;
-        drawRow(leftX, leftY, `R. Utility: ${model.loadout.utilityLabel}`, "#ffd785");
+        drawSelectableRow(
+          leftX,
+          leftY,
+          panelW - 22,
+          `R. Utility: ${model.loadout.utilityLabel}`,
+          navSection === "shop" && shopIndex === 5,
+          "#ffd785"
+        );
         leftY += 28;
         drawRow(
           leftX,
@@ -942,12 +973,13 @@
         for (let i = 0; i < pilotAttrOrder.length; i += 1) {
           const key = pilotAttrOrder[i];
           const selected = (hangar.pilotAttrIndex || 0) === i;
+          const navSelected = navSection === "pilot" && pilotCursor === i;
           const value = Math.floor(pilotAttrs[key] || 0);
           drawRow(
             midX + i * 68,
             midY,
-            `${selected ? ">" : ""}${pilotAttrLabels[key]}:${value}`,
-            selected ? "#ffe7a8" : "#d8f5ff",
+            `${navSelected ? ">" : selected ? "*" : ""}${pilotAttrLabels[key]}:${value}`,
+            navSelected ? "#ffe7a8" : selected ? "#b8f6ff" : "#d8f5ff",
             "500 12px Trebuchet MS"
           );
         }
@@ -957,16 +989,20 @@
           drawRow(
             midX,
             midY,
-            `Perk ${selectedPerkIndex + 1}/${pilotPerks.length}: ${selectedPerk.label} (${selectedPerk.branch})`,
-            perkUnlocked ? "#9bf5bb" : "#d8f5ff",
+            `${navSection === "pilot" && pilotCursor === 4 ? ">" : ""}Perk ${selectedPerkIndex + 1}/${pilotPerks.length}: ${selectedPerk.label} (${selectedPerk.branch})`,
+            navSection === "pilot" && pilotCursor === 4 ? "#ffe7a8" : perkUnlocked ? "#9bf5bb" : "#d8f5ff",
             "600 12px Trebuchet MS"
           );
           midY += 16;
           drawRow(
             midX,
             midY,
-            `Req ${formatPerkRequirements(selectedPerk)}  [${perkUnlocked ? "Unlocked" : "Lock"}]`,
-            perkUnlocked ? "#9bf5bb" : "rgba(216,245,255,0.78)",
+            `${navSection === "pilot" && pilotCursor === 5 ? ">" : ""}Req ${formatPerkRequirements(selectedPerk)}  [${perkUnlocked ? "Unlocked" : "Lock"}]`,
+            navSection === "pilot" && pilotCursor === 5
+              ? "#ffe7a8"
+              : perkUnlocked
+                ? "#9bf5bb"
+                : "rgba(216,245,255,0.78)",
             "500 12px Trebuchet MS"
           );
           midY += 18;
@@ -995,9 +1031,9 @@
 
         const rightX = panelX2 + 12;
         let rightY = panelY + 54;
-        drawRow(rightX, rightY, "6/7 Select  8 Take/Equip", "#d8f5ff", "600 12px Trebuchet MS");
+        drawRow(rightX, rightY, "Up/Down Select  Space Take/Equip", "#d8f5ff", "600 12px Trebuchet MS");
         rightY += 16;
-        drawRow(rightX, rightY, "9 Sell  0 Salvage", "#d8f5ff", "600 12px Trebuchet MS");
+        drawRow(rightX, rightY, "Legacy: 9 Sell  0 Salvage", "#d8f5ff", "600 12px Trebuchet MS");
         rightY += 24;
         drawRow(rightX, rightY, `Crate (${lootCrate.length})`, "#a7f2ff", "700 14px Trebuchet MS");
         rightY += 18;
@@ -1055,7 +1091,7 @@
         ctx.textAlign = "center";
         ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("6/7 Select | 8 Take/Equip | 9 Sell | 0 Salvage | T/Y/U attrs | I/O/K perks | Enter Start", centerX, actionBarY + 16);
+        ctx.fillText("Left/Right sekce | Up/Down vyber | Space akce | Enter start | Legacy: 9 sell, 0 salvage", centerX, actionBarY + 16);
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";

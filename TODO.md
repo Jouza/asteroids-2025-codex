@@ -30,6 +30,7 @@ Prubezny checklist pro realizaci noveho smeru.
   - [x] Dvousloupcovy layout (hra vlevo, status panel vpravo) bez horizontal scrollu
   - [x] Prioritizace panelu podle gameplaye (combat -> ekonomika -> nastaveni)
   - [x] Emoji ikonky + tooltipy na ikony (vyznam a popis)
+  - [x] Hangar ovladani sjednoceno na sipky + Space (legacy zkratky jako fallback)
   - [ ] Jemne doladeni na mensich rozlisenich (hustota, zalamovani textu)
 
 - [ ] Audio UX controls
