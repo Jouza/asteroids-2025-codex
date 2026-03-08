@@ -408,12 +408,19 @@
     drawMiniBoss(boss) {
       if (!boss) return;
       const { ctx } = this;
-      const weakpointColor = boss.weakpointOpen ? "rgba(138,240,255,0.98)" : "rgba(255,180,235,0.95)";
+      const isFinalBoss = Boolean(boss.isFinalBoss);
+      const weakpointColor = boss.weakpointOpen
+        ? isFinalBoss
+          ? "rgba(158,242,255,0.99)"
+          : "rgba(138,240,255,0.98)"
+        : isFinalBoss
+          ? "rgba(255,214,150,0.96)"
+          : "rgba(255,180,235,0.95)";
       ctx.save();
       ctx.translate(boss.x, boss.y);
-      ctx.shadowColor = "rgba(255,120,210,0.85)";
+      ctx.shadowColor = isFinalBoss ? "rgba(255,188,124,0.88)" : "rgba(255,120,210,0.85)";
       ctx.shadowBlur = 20;
-      ctx.fillStyle = "rgba(174,72,145,0.42)";
+      ctx.fillStyle = isFinalBoss ? "rgba(196,108,54,0.44)" : "rgba(174,72,145,0.42)";
       ctx.strokeStyle = weakpointColor;
       ctx.lineWidth = 2.5;
 
@@ -436,18 +443,26 @@
       ctx.arc(0, -boss.radius * 0.16, boss.radius * 0.23, 0, Math.PI * 2);
       ctx.fill();
 
+      if (isFinalBoss) {
+        ctx.strokeStyle = "rgba(255,226,168,0.9)";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(0, 0, boss.radius * 1.58 + Math.sin((boss.phase ?? 0) * 2.6) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       if (boss.phaseAnnounceTimer > 0) {
         ctx.textAlign = "center";
         ctx.font = "700 14px Trebuchet MS";
-        ctx.fillStyle = "rgba(255,223,146,0.96)";
-        ctx.fillText(`PHASE ${boss.phaseIndex + 1}`, 0, -boss.radius * 1.55);
+        ctx.fillStyle = isFinalBoss ? "rgba(255,238,176,0.98)" : "rgba(255,223,146,0.96)";
+        ctx.fillText(`${isFinalBoss ? "FINAL " : ""}PHASE ${boss.phaseIndex + 1}`, 0, -boss.radius * 1.55);
       }
 
       const hpRatio = Math.max(0, boss.hp / boss.maxHp);
       const barWidth = boss.radius * 2.2;
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.fillRect(-barWidth / 2, boss.radius + 10, barWidth, 7);
-      ctx.fillStyle = "rgba(255,134,204,0.95)";
+      ctx.fillStyle = isFinalBoss ? "rgba(255,184,108,0.96)" : "rgba(255,134,204,0.95)";
       ctx.fillRect(-barWidth / 2, boss.radius + 10, barWidth * hpRatio, 7);
       ctx.restore();
     }

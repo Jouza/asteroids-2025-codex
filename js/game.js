@@ -561,12 +561,12 @@
       return this.model.runMode === "campaign";
     }
 
-    isFinalEncounter() {
+    isFinalEncounter(missionType = this.model.currentMission?.type, sector = this.model.sector) {
       if (!this.isCampaignMode()) return false;
       const runCfg = this.config.run || {};
       const finalSector = Math.max(1, Math.floor(runCfg.finalSector ?? 4));
-      const missionType = runCfg.finalMissionType || "mini_boss";
-      return this.model.sector >= finalSector && this.model.currentMission?.type === missionType;
+      const finalMissionType = runCfg.finalMissionType || "mini_boss";
+      return sector >= finalSector && missionType === finalMissionType;
     }
 
     buildVictorySummary() {
@@ -1260,7 +1260,7 @@
     applyDamageToMiniBoss(baseDamage, damageType = "kinetic", critChance = this.getPlayerCritChance()) {
       const boss = this.model.miniBoss;
       if (!boss) return false;
-      const bossCfg = this.config.mission.miniBoss;
+      const bossCfg = boss.isFinalBoss ? this.config.run?.finalBoss || this.config.mission.miniBoss : this.config.mission.miniBoss;
       const weakpointMultiplier = boss.weakpointOpen
         ? bossCfg.weakpointDamageMultiplier
         : bossCfg.weakpointClosedMultiplier;

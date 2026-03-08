@@ -256,22 +256,27 @@
       g.audio.play("enemy_fire");
     }
 
-    spawnMiniBoss(hp) {
+    spawnMiniBoss(hp, options = {}) {
       const g = this.game;
-      const cfg = g.config.mission.miniBoss;
+      const isFinalBoss = Boolean(options.isFinalBoss);
+      const miniCfg = g.config.mission.miniBoss;
+      const finalCfg = g.config.run?.finalBoss || {};
+      const cfg = isFinalBoss ? finalCfg : miniCfg;
       g.model.miniBoss = {
         x: g.config.canvas.width * 0.5,
         y: 120,
-        radius: cfg.radius,
+        radius: cfg.radius ?? miniCfg.radius,
         hp,
         maxHp: hp,
         phase: 0,
         phaseIndex: 0,
         phaseAnnounceTimer: 0.9,
         shootTimer: 0,
-        weakpointTimer: cfg.weakpointCycleSeconds[0],
+        weakpointTimer: (cfg.weakpointCycleSeconds || miniCfg.weakpointCycleSeconds)[0],
         weakpointOpenFor: 0,
-        weakpointOpen: false
+        weakpointOpen: false,
+        isFinalBoss,
+        shotCounter: 0
       };
     }
 
@@ -305,9 +310,33 @@
       g.model.flashMs = Math.max(g.model.flashMs, 190);
     }
 
-    updateMiniBossWeakpoint(boss, dt) {
+    triggerFinalBossPhaseEvent(boss) {
       const g = this.game;
-      const cfg = g.config.mission.miniBoss;
+      const cfg = g.config.run?.finalBoss || {};
+      const phase = boss.phaseIndex;
+      const mineCount = cfg.mineRingCountByPhase?.[phase] ?? 8;
+      const mineSpeedFactor = cfg.mineSpeedFactor ?? 0.66;
+      const mineTtlSeconds = cfg.mineTtlSeconds ?? 6.1;
+      for (let i = 0; i < mineCount; i += 1) {
+        const angle = (i / mineCount) * Math.PI * 2 + (boss.phase % (Math.PI * 2));
+        const bullet = createEnemyBullet(boss.x, boss.y, angle, g.config);
+        bullet.vx *= mineSpeedFactor;
+        bullet.vy *= mineSpeedFactor;
+        bullet.ttl = mineTtlSeconds;
+        bullet.radius = g.config.ufo.mineRadius;
+        bullet.isMine = true;
+        bullet.damageProfile = "enemy_mine";
+        g.model.enemyBullets.push(bullet);
+      }
+      const large = cfg.asteroidSpawnLargeByPhase?.[phase] ?? 1;
+      const medium = cfg.asteroidSpawnMediumByPhase?.[phase] ?? 1;
+      g.missionSystem.spawnAsteroidPack(g.model.sector, large, medium);
+      g.emitImpactParticles(boss.x, boss.y, 30, "130,220,255");
+      g.model.flashMs = Math.max(g.model.flashMs, 210);
+    }
+
+    updateMiniBossWeakpoint(boss, dt, cfg) {
+      const g = this.game;
       const phase = boss.phaseIndex;
       if (boss.weakpointOpenFor > 0) {
         boss.weakpointOpenFor = Math.max(0, boss.weakpointOpenFor - dt);
@@ -325,7 +354,7 @@
 
     updateMiniBossPhaseState(boss) {
       const g = this.game;
-      const cfg = g.config.mission.miniBoss;
+      const cfg = boss.isFinalBoss ? g.config.run?.finalBoss || g.config.mission.miniBoss : g.config.mission.miniBoss;
       const ratio = boss.hp / boss.maxHp;
       const thresholds = cfg.phaseThresholds;
       const nextPhase =
@@ -334,7 +363,8 @@
       boss.phaseIndex = nextPhase;
       boss.phaseAnnounceTimer = 1.4;
       boss.weakpointTimer = Math.min(boss.weakpointTimer, cfg.weakpointCycleSeconds[nextPhase] * 0.55);
-      this.triggerMiniBossPhaseEvent(boss);
+      if (boss.isFinalBoss) this.triggerFinalBossPhaseEvent(boss);
+      else this.triggerMiniBossPhaseEvent(boss);
     }
 
     updateMiniBoss(dt) {
@@ -343,17 +373,28 @@
       const ship = g.model.ship;
       if (!boss || !ship) return;
 
-      const cfg = g.config.mission.miniBoss;
+      const cfg = boss.isFinalBoss ? g.config.run?.finalBoss || g.config.mission.miniBoss : g.config.mission.miniBoss;
       boss.phase += dt;
       boss.phaseAnnounceTimer = Math.max(0, (boss.phaseAnnounceTimer ?? 0) - dt);
       this.updateMiniBossPhaseState(boss);
-      this.updateMiniBossWeakpoint(boss, dt);
+      this.updateMiniBossWeakpoint(boss, dt, cfg);
 
       const phase = boss.phaseIndex;
-      boss.x =
-        g.config.canvas.width * 0.5 +
-        Math.sin(boss.phase * cfg.movementFreqX[phase]) * cfg.movementAmplitudeX[phase];
-      boss.y = 120 + Math.sin(boss.phase * cfg.movementFreqY[phase]) * cfg.movementAmplitudeY[phase];
+      if (boss.isFinalBoss) {
+        const centerX = g.config.canvas.width * 0.5;
+        const centerY = g.config.canvas.height * 0.34;
+        const orbitX = cfg.orbitRadiusX?.[phase] ?? 280;
+        const orbitY = cfg.orbitRadiusY?.[phase] ?? 140;
+        const orbitFreq = cfg.orbitFreq?.[phase] ?? 0.72;
+        const driftFreq = cfg.driftFreq?.[phase] ?? 1.35;
+        boss.x = centerX + Math.cos(boss.phase * orbitFreq) * orbitX + Math.sin(boss.phase * driftFreq) * 24;
+        boss.y = centerY + Math.sin(boss.phase * orbitFreq * 1.25) * orbitY;
+      } else {
+        boss.x =
+          g.config.canvas.width * 0.5 +
+          Math.sin(boss.phase * cfg.movementFreqX[phase]) * cfg.movementAmplitudeX[phase];
+        boss.y = 120 + Math.sin(boss.phase * cfg.movementFreqY[phase]) * cfg.movementAmplitudeY[phase];
+      }
 
       boss.shootTimer = Math.max(0, boss.shootTimer - dt);
       if (boss.shootTimer <= 0) {
@@ -364,22 +405,74 @@
           g.config.ufo.bulletSpeedScalePerSector,
           g.config.ufo.bulletSpeedScaleMaxBonus
         );
-        const volleyCount = cfg.volleyCount[phase];
-        const spread = cfg.spreadRadians[phase];
-        for (let i = 0; i < volleyCount; i += 1) {
-          const t = volleyCount === 1 ? 0 : i / (volleyCount - 1) - 0.5;
-          const bullet = createEnemyBullet(boss.x, boss.y, aim + t * spread + (g.rng() - 0.5) * 0.06, g.config);
-          bullet.vx *= speedScale;
-          bullet.vy *= speedScale;
-          bullet.damageProfile = "mini_boss_bullet";
-          g.model.enemyBullets.push(bullet);
-          g.recordEnemyShot();
+        if (boss.isFinalBoss) {
+          const spiralShots = cfg.spiralShotsByPhase?.[phase] ?? 8;
+          const spiralSpread = cfg.spiralSpreadRadians?.[phase] ?? 0.8;
+          for (let i = 0; i < spiralShots; i += 1) {
+            const t = spiralShots === 1 ? 0 : i / (spiralShots - 1) - 0.5;
+            const spinOffset = boss.phase * (1.4 + phase * 0.35);
+            const bullet = createEnemyBullet(
+              boss.x,
+              boss.y,
+              aim + t * spiralSpread + spinOffset,
+              g.config
+            );
+            bullet.vx *= speedScale * 1.05;
+            bullet.vy *= speedScale * 1.05;
+            bullet.damageProfile = "mini_boss_bullet";
+            g.model.enemyBullets.push(bullet);
+            g.recordEnemyShot();
+          }
+          const radialEvery = Math.max(1, cfg.radialRingEveryShots ?? 3);
+          const mineEvery = Math.max(1, cfg.mineRingEveryShots ?? 4);
+          boss.shotCounter = (boss.shotCounter ?? 0) + 1;
+          if (boss.shotCounter % radialEvery === 0) {
+            const radialShots = cfg.radialRingShotsByPhase?.[phase] ?? 10;
+            const speedFactor = cfg.radialRingSpeedFactor?.[phase] ?? 0.9;
+            for (let i = 0; i < radialShots; i += 1) {
+              const angle = (i / radialShots) * Math.PI * 2 + boss.phase * 0.8;
+              const bullet = createEnemyBullet(boss.x, boss.y, angle, g.config);
+              bullet.vx *= speedScale * speedFactor;
+              bullet.vy *= speedScale * speedFactor;
+              bullet.damageProfile = "mini_boss_bullet";
+              g.model.enemyBullets.push(bullet);
+              g.recordEnemyShot();
+            }
+          }
+          if (boss.shotCounter % mineEvery === 0) {
+            const mineCount = cfg.mineRingCountByPhase?.[phase] ?? 8;
+            const mineSpeedFactor = cfg.mineSpeedFactor ?? 0.66;
+            const mineTtlSeconds = cfg.mineTtlSeconds ?? 6.1;
+            for (let i = 0; i < mineCount; i += 1) {
+              const angle = (i / mineCount) * Math.PI * 2 + (g.rng() - 0.5) * 0.18;
+              const bullet = createEnemyBullet(boss.x, boss.y, angle, g.config);
+              bullet.vx *= mineSpeedFactor;
+              bullet.vy *= mineSpeedFactor;
+              bullet.ttl = mineTtlSeconds;
+              bullet.radius = g.config.ufo.mineRadius;
+              bullet.isMine = true;
+              bullet.damageProfile = "enemy_mine";
+              g.model.enemyBullets.push(bullet);
+            }
+          }
+        } else {
+          const volleyCount = cfg.volleyCount[phase];
+          const spread = cfg.spreadRadians[phase];
+          for (let i = 0; i < volleyCount; i += 1) {
+            const t = volleyCount === 1 ? 0 : i / (volleyCount - 1) - 0.5;
+            const bullet = createEnemyBullet(boss.x, boss.y, aim + t * spread + (g.rng() - 0.5) * 0.06, g.config);
+            bullet.vx *= speedScale;
+            bullet.vy *= speedScale;
+            bullet.damageProfile = "mini_boss_bullet";
+            g.model.enemyBullets.push(bullet);
+            g.recordEnemyShot();
+          }
         }
         const fireRateScale = this.getSectorScale(
           g.config.ufo.fireRateScalePerSector,
           g.config.ufo.fireRateScaleMaxBonus
         );
-        boss.shootTimer = cfg.shootCooldownSeconds[phase] / fireRateScale;
+        boss.shootTimer = (cfg.shootCooldownSeconds?.[phase] ?? 1) / fireRateScale;
       }
     }
   }

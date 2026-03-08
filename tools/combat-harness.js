@@ -250,6 +250,29 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(5252);
+    const finalSector = gameA.config.run.finalSector;
+    gameA.model.sector = finalSector;
+    gameA.model.runMode = "campaign";
+    gameA.model.enemyBullets = [];
+    gameA.model.asteroids = [];
+    gameA.missionSystem.startMission(finalSector);
+    const boss = gameA.model.miniBoss;
+    assert(boss?.isFinalBoss, "Final encounter should spawn dedicated final boss archetype");
+    const centerX = gameA.config.canvas.width * 0.5;
+    gameA.enemySystem.updateMiniBoss(1 / 60);
+    assert(Math.abs(boss.x - centerX) > 180, "Final boss movement should differ from regular mini boss orbit");
+    boss.hp = Math.floor(boss.maxHp * 0.4);
+    boss.phaseIndex = 0;
+    const bulletsBefore = gameA.model.enemyBullets.length;
+    gameA.enemySystem.updateMiniBoss(1 / 60);
+    assert(
+      gameA.model.enemyBullets.length >= bulletsBefore + 8,
+      "Final boss phase transition should trigger stronger phase event pressure"
+    );
+  });
+
+  tests.push(() => {
     gameA.startGame(6161);
     gameA.model.sector = 4;
     gameA.model.credits = 0;

@@ -1,5 +1,11 @@
 # Veci k realizaci
 
+## Aktualni fokus
+
+- [x] Unikatni final boss archetyp (odlisny move-set/faze oproti mini-boss)
+- [ ] Kratky dev test protocol (co otestovat po vetsi zmene)
+- [ ] Jednoducha smoke stranka/scenar pro manualni QA mimo hlavni run
+
 ## Dalsi chybejici temata (zatim neevidovana)
 
 - [ ] Biome identity 2.0 (audio + rewards)
@@ -35,6 +41,11 @@
   - [ ] Mutatory
   - [x] Endless sektor (run loop bez finalniho win-state)
   - [ ] Boss rush
+  - [ ] Win-state follow-up po MVP
+  - [ ] Samostatna reward tabulka pro final clear (clear bonus/meta reward)
+  - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
+  - [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
+  - [ ] Endless pacing pass po unlocku (skalovani, anti-snowball ekonomika, delka runu)
 
 - [ ] Help / codex vrstva
   - [x] Samostatna help stranka s objekty, hazardy, chovanim a dopadem
@@ -52,8 +63,6 @@
 
 - [ ] Dev / testing workflow
   - [x] Preset `dev_fasttrack` pro rychly pruchod hrou
-  - [ ] Kratky dev test protocol (co otestovat po vetsi zmene)
-  - [ ] Jednoducha smoke stranka/scenar pro manualni QA mimo hlavni run
 
 - [ ] Security / backend readiness
   - [ ] Leaderboard backend input validace (strict schema, initials A-Z, score range)

@@ -283,7 +283,7 @@
       }
 
       if (type === "mini_boss") {
-        const isFinalEncounter = typeof g.isFinalEncounter === "function" ? g.isFinalEncounter() : false;
+        const isFinalEncounter = typeof g.isFinalEncounter === "function" ? g.isFinalEncounter(type, level) : false;
         const hpBase = Math.round(
           (missionCfg.miniBoss.hpBase + (level - 1) * missionCfg.miniBoss.hpStep) * (0.95 + difficulty * 0.2)
         );
@@ -292,8 +292,10 @@
         );
         g.model.currentMission.isFinalEncounter = isFinalEncounter;
         g.model.currentMission.label = isFinalEncounter ? "FINAL BOSS" : "MINI BOSS";
-        g.model.currentMission.objectiveText = `Destroy boss (${hp} HP)`;
-        g.enemySystem.spawnMiniBoss(hp);
+        g.model.currentMission.objectiveText = isFinalEncounter
+          ? `Destroy final boss (${hp} HP)`
+          : `Destroy boss (${hp} HP)`;
+        g.enemySystem.spawnMiniBoss(hp, { isFinalBoss: isFinalEncounter });
         this.spawnAsteroidPack(
           level,
           1 + Math.floor((level - 1) / 5) + (difficulty >= 1.25 ? 1 : 0),

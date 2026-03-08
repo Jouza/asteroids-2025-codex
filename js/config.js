@@ -612,7 +612,31 @@
       finalSector: 4,
       finalMissionType: "mini_boss",
       finalBossHpMultiplier: 1.45,
-      finalBossRewardMultiplier: 1.35
+      finalBossRewardMultiplier: 1.35,
+      finalBoss: {
+        radius: 42,
+        phaseThresholds: [0.78, 0.46],
+        orbitRadiusX: [250, 300, 350],
+        orbitRadiusY: [120, 150, 180],
+        orbitFreq: [0.55, 0.72, 0.94],
+        driftFreq: [1.15, 1.35, 1.6],
+        shootCooldownSeconds: [1.1, 0.86, 0.66],
+        weakpointCycleSeconds: [4.1, 3.5, 2.9],
+        weakpointWindowSeconds: [1.35, 1.5, 1.65],
+        weakpointDamageMultiplier: 2.55,
+        weakpointClosedMultiplier: 0.28,
+        spiralShotsByPhase: [6, 8, 10],
+        spiralSpreadRadians: [0.62, 0.8, 0.98],
+        radialRingShotsByPhase: [8, 10, 12],
+        radialRingSpeedFactor: [0.82, 0.9, 0.98],
+        radialRingEveryShots: 3,
+        mineRingEveryShots: 4,
+        mineRingCountByPhase: [6, 8, 10],
+        mineSpeedFactor: 0.66,
+        mineTtlSeconds: 6.1,
+        asteroidSpawnLargeByPhase: [1, 1, 2],
+        asteroidSpawnMediumByPhase: [1, 2, 2]
+      }
     },
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
