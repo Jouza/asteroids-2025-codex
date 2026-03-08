@@ -2,7 +2,11 @@
 
 ## Aktualni fokus
 
-- [x] i18n coverage pass: dodelat zbyvajici EN literaly v `index.html`/`help.html` na translation keys
+- [ ] Performance & runtime budget
+  - [ ] Adaptive quality budget pro particles/effects pri FPS dropu
+  - [ ] Frame-time / perf overlay pro dev rezim
+  - [ ] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
+  - [ ] Profiling pass (CPU hot paths update/render smycky)
 - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
 - [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
 
@@ -70,11 +74,7 @@
   - [ ] Atomicky file write + lock pri soubeznem zapisu
   - [ ] Zakladni hardening endpointu (error handling, log sanitizace)
 
-- [ ] Performance & runtime budget
-  - [ ] Adaptive quality budget pro particles/effects pri FPS dropu
-  - [ ] Frame-time / perf overlay pro dev rezim
-  - [ ] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
-  - [ ] Profiling pass (CPU hot paths update/render smycky)
+- [ ] Performance & runtime budget (priorita v Aktualni fokus)
 
 - [ ] Stabilita a release kvalita
   - [ ] Crash-safe fallbacky (audio/localStorage/feature detect)
