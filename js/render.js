@@ -959,22 +959,14 @@
       ctx.arc(0, 0, 32, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Logo uses the same triangular ship silhouette language as gameplay.
-      ctx.shadowColor = "rgba(146,225,255,0.92)";
-      ctx.shadowBlur = 10;
-      ctx.fillStyle = "rgba(126,206,255,0.2)";
-      ctx.strokeStyle = "#d6f9ff";
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(0, -16);
-      ctx.lineTo(-14, 10);
-      ctx.lineTo(-7, 4);
-      ctx.lineTo(0, 8);
-      ctx.lineTo(7, 4);
-      ctx.lineTo(14, 10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      // Same ship glyph is reused in title letters for visual consistency.
+      this.drawBrandShipGlyph(0, 10, 28, 26, {
+        shadowColor: "rgba(146,225,255,0.92)",
+        shadowBlur: 10,
+        fillStyle: "rgba(126,206,255,0.2)",
+        strokeStyle: "#d6f9ff",
+        lineWidth: 1.8
+      });
 
       ctx.shadowBlur = 0;
       ctx.fillStyle = "rgba(6,18,34,0.85)";
@@ -990,23 +982,27 @@
       ctx.restore();
     }
 
-    drawTitleShipGlyph(centerX, baselineY, size) {
+    drawBrandShipGlyph(centerX, bottomY, width, height, style) {
       const { ctx } = this;
-      const topY = baselineY - size;
-      const wingY = baselineY;
+      const topY = bottomY - height;
+      const halfWidth = width * 0.5;
+      const mapY = (originalY) => {
+        const normalized = (originalY + 16) / 26;
+        return topY + normalized * height;
+      };
       ctx.save();
-      ctx.shadowColor = "rgba(152,232,255,0.7)";
-      ctx.shadowBlur = 5;
-      ctx.fillStyle = "rgba(126,206,255,0.2)";
-      ctx.strokeStyle = "#d8f5ff";
-      ctx.lineWidth = 1.5;
+      ctx.shadowColor = style.shadowColor;
+      ctx.shadowBlur = style.shadowBlur;
+      ctx.fillStyle = style.fillStyle;
+      ctx.strokeStyle = style.strokeStyle;
+      ctx.lineWidth = style.lineWidth;
       ctx.beginPath();
-      ctx.moveTo(centerX, topY);
-      ctx.lineTo(centerX - size * 0.74, wingY);
-      ctx.lineTo(centerX - size * 0.34, baselineY - size * 0.44);
-      ctx.lineTo(centerX, baselineY - size * 0.2);
-      ctx.lineTo(centerX + size * 0.34, baselineY - size * 0.44);
-      ctx.lineTo(centerX + size * 0.74, wingY);
+      ctx.moveTo(centerX, mapY(-16));
+      ctx.lineTo(centerX - halfWidth, mapY(10));
+      ctx.lineTo(centerX - halfWidth * 0.5, mapY(4));
+      ctx.lineTo(centerX, mapY(8));
+      ctx.lineTo(centerX + halfWidth * 0.5, mapY(4));
+      ctx.lineTo(centerX + halfWidth, mapY(10));
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
@@ -1019,27 +1015,30 @@
       ctx.font = "700 54px Trebuchet MS";
       ctx.fillStyle = "#d8f5ff";
       ctx.textAlign = "left";
-      const tracking = 1;
-      const shipWidth = 33;
-      const shipSize = 37;
       const chars = Array.from(title);
-      let totalWidth = 0;
+      const totalWidth = ctx.measureText(title).width;
+      const startX = centerX - totalWidth / 2;
+      const measuredAscent = ctx.measureText("A").actualBoundingBoxAscent || 36;
+      const shipHeightBase = Math.max(30, measuredAscent * 0.92);
+
       for (let i = 0; i < chars.length; i += 1) {
         const ch = chars[i];
-        totalWidth += ch === "A" ? shipWidth : ctx.measureText(ch).width;
-        if (i < chars.length - 1) totalWidth += tracking;
-      }
-      let x = centerX - totalWidth / 2;
-      for (let i = 0; i < chars.length; i += 1) {
-        const ch = chars[i];
+        const prefix = title.slice(0, i);
+        const prefixWithChar = title.slice(0, i + 1);
+        const x = startX + ctx.measureText(prefix).width;
+        const nextX = startX + ctx.measureText(prefixWithChar).width;
+        const charWidth = Math.max(1, nextX - x);
         if (ch === "A") {
-          this.drawTitleShipGlyph(x + shipWidth / 2, baselineY, shipSize);
-          x += shipWidth;
+          this.drawBrandShipGlyph(x + charWidth / 2, baselineY - 1, charWidth * 0.94, shipHeightBase, {
+            shadowColor: "rgba(146,225,255,0.92)",
+            shadowBlur: 8,
+            fillStyle: "rgba(126,206,255,0.2)",
+            strokeStyle: "#d6f9ff",
+            lineWidth: 1.7
+          });
         } else {
           ctx.fillText(ch, x, baselineY);
-          x += ctx.measureText(ch).width;
         }
-        if (i < chars.length - 1) x += tracking;
       }
       ctx.restore();
     }
