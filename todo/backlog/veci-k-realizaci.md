@@ -1,5 +1,31 @@
 # Veci k realizaci
 
+## Nova priorita (P0)
+
+- [ ] Run completion / win-state milestone
+  - [ ] Final encounter: full boss (ne mini-boss) a jasna podminka "run dokoncen"
+  - [ ] Victory flow: obrazovka dokonceni runu + shrnuti buildu/progrese
+  - [ ] Odemknuti Endless modu po prvnim uspesnem dojeti runu
+
+## Dalsi chybejici temata (zatim neevidovana)
+
+- [ ] Biome identity 2.0 (audio + rewards)
+  - [ ] Biome-specificky ambient layer a warning SFX variace
+  - [ ] Biome-specificke mini reward/event hooky (aby biome nebyl jen vizualni)
+
+- [ ] New player onboarding
+  - [ ] Kratky tutorial flow pro shared shield-energy model
+  - [ ] Contextual hinty pro "proc nejde akce" (shield gate / heat gate / cooldown)
+
+- [ ] Accessibility / readability options
+  - [ ] Colorblind-safe rezim pro hazard a resource warning barvy
+  - [ ] UI scale / font scale volba pro slabsi citelnost na mensich displejich
+  - [ ] Volitelny high-contrast HUD preset
+
+- [ ] Input UX quality
+  - [ ] Remap klaves (min. movement/combat/hangar akce)
+  - [ ] Volitelne gamepad mapovani (MVP)
+
 - [ ] Pilot RPG layer
   - [x] MVP: XP + levely pilota
   - [x] MVP: Atributy (Reflex/Systems/Grit/Instinct)
