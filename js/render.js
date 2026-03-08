@@ -1217,6 +1217,78 @@
       ctx.restore();
     }
 
+    drawShipIdentityIcon(centerX, centerY, shipId) {
+      const { ctx } = this;
+      const profiles = {
+        viper_mk2: {
+          stroke: "#d9faff",
+          fill: "rgba(112,214,255,0.22)",
+          points: [
+            [1.05, 0],
+            [-0.94, -0.58],
+            [-0.42, -0.08],
+            [-0.58, 0],
+            [-0.42, 0.08],
+            [-0.94, 0.58]
+          ]
+        },
+        bastion_frame: {
+          stroke: "#e2fbff",
+          fill: "rgba(132,207,255,0.24)",
+          points: [
+            [0.96, 0],
+            [-1.08, -0.76],
+            [-0.58, -0.2],
+            [-0.74, 0],
+            [-0.58, 0.2],
+            [-1.08, 0.76]
+          ]
+        },
+        revenant_frame: {
+          stroke: "#e4f0ff",
+          fill: "rgba(146,194,255,0.24)",
+          points: [
+            [1.0, 0],
+            [-0.92, -0.66],
+            [-0.3, -0.1],
+            [-0.72, 0],
+            [-0.3, 0.1],
+            [-0.92, 0.66]
+          ]
+        },
+        helix_frame: {
+          stroke: "#d8fff0",
+          fill: "rgba(121,232,198,0.22)",
+          points: [
+            [0.98, 0],
+            [-0.96, -0.62],
+            [-0.56, -0.12],
+            [-0.72, 0],
+            [-0.56, 0.12],
+            [-0.96, 0.62]
+          ]
+        }
+      };
+      const profile = profiles[shipId] || profiles.viper_mk2;
+      const r = 10;
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.shadowColor = profile.stroke;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = profile.fill;
+      ctx.strokeStyle = profile.stroke;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(r * profile.points[0][0], r * profile.points[0][1]);
+      for (let i = 1; i < profile.points.length; i += 1) {
+        ctx.lineTo(r * profile.points[i][0], r * profile.points[i][1]);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
     drawStartTitleWithShipAs(title, centerX, baselineY) {
       const { ctx } = this;
       ctx.save();
@@ -1621,7 +1693,7 @@
         const pilotPerks = config.pilot?.perks || [];
         const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
         const selectedPilotCallsign = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
-        const selectedShipName = tr(`identity.ship.${model.identity?.shipId}.name`);
+        const selectedShipId = model.identity?.shipId || "viper_mk2";
         const fireRateLevel = Math.max(0, Math.floor(model.upgrades?.fireRateLevel || 0));
         const magazineLevel = Math.max(0, Math.floor(model.upgrades?.magazineLevel || 0));
         const fireRateMax = Math.max(1, Math.floor(config.hangar.maxFireRateLevel || 1));
@@ -1752,11 +1824,15 @@
         ctx.fillText("HANGAR", layoutX, topY);
         const identityFont = "700 28px Trebuchet MS";
         const identityMaxW = 640;
-        const identityText = fitText(`${selectedPilotCallsign}  |  ${selectedShipName}`, identityFont, identityMaxW);
+        const iconRightPadding = 2;
+        const iconSlotW = 26;
+        const textRightX = layoutX + layoutW - iconSlotW - iconRightPadding;
+        const identityText = fitText(`${selectedPilotCallsign}  |`, identityFont, identityMaxW - iconSlotW);
         ctx.textAlign = "right";
         ctx.font = identityFont;
         ctx.fillStyle = "rgba(216,245,255,0.94)";
-        ctx.fillText(identityText, layoutX + layoutW, topY + 2);
+        ctx.fillText(identityText, textRightX, topY);
+        this.drawShipIdentityIcon(layoutX + layoutW - iconSlotW / 2 - iconRightPadding, topY - 8, selectedShipId);
 
         ctx.textAlign = "center";
         ctx.font = "600 19px Trebuchet MS";
