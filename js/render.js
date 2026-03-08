@@ -985,8 +985,62 @@
       ctx.fillStyle = "#ffe5a1";
       ctx.font = "700 10px Trebuchet MS";
       ctx.textAlign = "center";
-      ctx.fillText("86", 16, 19);
+      ctx.fillText("JH", 16, 19);
 
+      ctx.restore();
+    }
+
+    drawTitleShipGlyph(centerX, baselineY, size) {
+      const { ctx } = this;
+      const topY = baselineY - size * 0.98;
+      const wingY = baselineY - size * 0.1;
+      ctx.save();
+      ctx.shadowColor = "rgba(152,232,255,0.8)";
+      ctx.shadowBlur = 7;
+      ctx.fillStyle = "rgba(126,206,255,0.2)";
+      ctx.strokeStyle = "#d8f5ff";
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(centerX, topY);
+      ctx.lineTo(centerX - size * 0.74, wingY);
+      ctx.lineTo(centerX - size * 0.36, baselineY - size * 0.38);
+      ctx.lineTo(centerX, baselineY - size * 0.16);
+      ctx.lineTo(centerX + size * 0.36, baselineY - size * 0.38);
+      ctx.lineTo(centerX + size * 0.74, wingY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    drawStartTitleWithShipAs(title, centerX, baselineY) {
+      const { ctx } = this;
+      ctx.save();
+      ctx.font = "700 54px Trebuchet MS";
+      ctx.fillStyle = "#d8f5ff";
+      ctx.textAlign = "left";
+      const tracking = 1.2;
+      const shipWidth = 34;
+      const shipSize = 18;
+      const chars = Array.from(title);
+      let totalWidth = 0;
+      for (let i = 0; i < chars.length; i += 1) {
+        const ch = chars[i];
+        totalWidth += ch === "A" ? shipWidth : ctx.measureText(ch).width;
+        if (i < chars.length - 1) totalWidth += tracking;
+      }
+      let x = centerX - totalWidth / 2;
+      for (let i = 0; i < chars.length; i += 1) {
+        const ch = chars[i];
+        if (ch === "A") {
+          this.drawTitleShipGlyph(x + shipWidth / 2, baselineY, shipSize);
+          x += shipWidth;
+        } else {
+          ctx.fillText(ch, x, baselineY);
+          x += ctx.measureText(ch).width;
+        }
+        if (i < chars.length - 1) x += tracking;
+      }
       ctx.restore();
     }
 
@@ -1044,8 +1098,8 @@
       if (model.gameState === GAME_STATE.START) {
         const centerX = config.canvas.width / 2;
         const centerY = config.canvas.height / 2;
-        this.drawStartLogo(centerX, centerY - 102);
-        ctx.fillText(tr("render.start.title"), centerX, centerY - 44);
+        this.drawStartLogo(centerX, centerY - 120);
+        this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, centerY - 36);
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY - 10);
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 20);
