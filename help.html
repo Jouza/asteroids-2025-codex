@@ -215,6 +215,14 @@
     (() => {
       if (window.Asteroids?.i18n) window.Asteroids.i18n.applyTranslations(document);
       const tr = (key, params = {}) => (typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key);
+      const setRichText = (node, value) => {
+        if (!node) return;
+        if (typeof window.Asteroids?.i18n?.setRichText === "function") {
+          window.Asteroids.i18n.setRichText(node, value);
+          return;
+        }
+        node.textContent = String(value ?? "");
+      };
       document.title = tr("help.document_title");
 
       const cfg = window.Asteroids?.GAME_CONFIG;
@@ -281,17 +289,28 @@
         const head = document.createElement("div");
         head.className = "head";
         const icon = cardIconByKey[cardKey] || "asteroid";
-        head.innerHTML =
-          `<div class="icon">${iconSvg(icon)}</div>` +
-          `<div><p class="name">${tr(nameKey)}</p><div class="tag">${tr(`help.card.${cardKey}.tag`)}</div></div>`;
+        const iconNode = document.createElement("div");
+        iconNode.className = "icon";
+        iconNode.innerHTML = iconSvg(icon);
+        const titleWrap = document.createElement("div");
+        const name = document.createElement("p");
+        name.className = "name";
+        name.textContent = tr(nameKey);
+        const tag = document.createElement("div");
+        tag.className = "tag";
+        tag.textContent = tr(`help.card.${cardKey}.tag`);
+        titleWrap.appendChild(name);
+        titleWrap.appendChild(tag);
+        head.appendChild(iconNode);
+        head.appendChild(titleWrap);
 
         const line = document.createElement("p");
         line.className = "line";
-        line.innerHTML = tr(`help.card.${cardKey}.line`);
+        setRichText(line, tr(`help.card.${cardKey}.line`));
 
         const impact = document.createElement("p");
         impact.className = "impact";
-        impact.innerHTML = tr(`help.card.${cardKey}.impact`);
+        setRichText(impact, tr(`help.card.${cardKey}.impact`));
 
         card.appendChild(head);
         card.appendChild(line);
@@ -310,7 +329,7 @@
         if (opts.hintKey) {
           const hint = document.createElement("p");
           hint.className = "small-hint";
-          if (opts.hintHtml) hint.innerHTML = tr(opts.hintKey);
+          if (opts.hintHtml) setRichText(hint, tr(opts.hintKey));
           else hint.textContent = tr(opts.hintKey);
           section.appendChild(hint);
         }
@@ -319,7 +338,7 @@
           for (const extra of opts.extraHints) {
             const hint = document.createElement("p");
             hint.className = "small-hint";
-            if (extra.html) hint.innerHTML = tr(extra.key);
+            if (extra.html) setRichText(hint, tr(extra.key));
             else hint.textContent = tr(extra.key);
             section.appendChild(hint);
           }
@@ -481,7 +500,10 @@
       function createStat(label, value) {
         const div = document.createElement("div");
         div.className = "stat";
-        div.innerHTML = `<b>${label}</b> ${value}`;
+        const key = document.createElement("b");
+        key.textContent = label;
+        div.appendChild(key);
+        div.appendChild(document.createTextNode(` ${value}`));
         return div;
       }
 
@@ -582,9 +604,21 @@
 
         const head = document.createElement("div");
         head.className = "head";
-        head.innerHTML =
-          '<div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-stroke" d="M6 16 L26 16 M18 10 L26 16 L18 22"/></svg></div>' +
-          `<div><p class="name">${spec.label}</p><div class="tag">${slotDef.label} | ${spec.role} | ${slotDef.hotkey}</div></div>`;
+        const icon = document.createElement("div");
+        icon.className = "icon";
+        icon.innerHTML =
+          '<svg viewBox="0 0 32 32" class="glyph"><path class="g-stroke" d="M6 16 L26 16 M18 10 L26 16 L18 22"/></svg>';
+        const info = document.createElement("div");
+        const name = document.createElement("p");
+        name.className = "name";
+        name.textContent = spec.label;
+        const tag = document.createElement("div");
+        tag.className = "tag";
+        tag.textContent = `${slotDef.label} | ${spec.role} | ${slotDef.hotkey}`;
+        info.appendChild(name);
+        info.appendChild(tag);
+        head.appendChild(icon);
+        head.appendChild(info);
 
         const desc = document.createElement("p");
         desc.className = "line";

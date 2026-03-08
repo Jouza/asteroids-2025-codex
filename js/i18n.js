@@ -411,6 +411,55 @@
     return format(template, params);
   }
 
+  function sanitizeRichText(input) {
+    const html = String(input ?? "");
+    if (typeof document === "undefined") return html;
+
+    const allowedTags = new Set(["STRONG", "EM", "B", "I", "BR", "SPAN", "CODE"]);
+    const allowedSpanClasses = new Set(["ok", "bad"]);
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    const sanitizeNodeInto = (source, targetParent) => {
+      const nodes = Array.from(source.childNodes || []);
+      for (const node of nodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          targetParent.appendChild(document.createTextNode(node.textContent || ""));
+          continue;
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+        const tag = String(node.nodeName || "").toUpperCase();
+        if (!allowedTags.has(tag)) {
+          sanitizeNodeInto(node, targetParent);
+          continue;
+        }
+
+        const clean = document.createElement(tag.toLowerCase());
+        if (tag === "SPAN") {
+          const classAttr = (node.getAttribute("class") || "").trim();
+          if (classAttr) {
+            const safeClasses = classAttr
+              .split(/\s+/)
+              .filter((name) => allowedSpanClasses.has(name));
+            if (safeClasses.length) clean.className = safeClasses.join(" ");
+          }
+        }
+        sanitizeNodeInto(node, clean);
+        targetParent.appendChild(clean);
+      }
+    };
+
+    const out = document.createElement("div");
+    sanitizeNodeInto(template.content, out);
+    return out.innerHTML;
+  }
+
+  function setRichText(node, input) {
+    if (!node) return;
+    node.innerHTML = sanitizeRichText(input);
+  }
+
   function applyTranslations(root = document) {
     if (!root || typeof root.querySelectorAll !== "function") return;
     root.querySelectorAll("[data-i18n]").forEach((node) => {
@@ -421,7 +470,7 @@
     root.querySelectorAll("[data-i18n-html]").forEach((node) => {
       const key = node.getAttribute("data-i18n-html");
       if (!key) return;
-      node.innerHTML = t(key);
+      setRichText(node, t(key));
     });
     root.querySelectorAll("[data-i18n-title]").forEach((node) => {
       const key = node.getAttribute("data-i18n-title");
@@ -457,7 +506,9 @@
     t,
     setLanguage,
     getLanguage: () => window.Asteroids.lang || "en",
-    applyTranslations
+    applyTranslations,
+    sanitizeRichText,
+    setRichText
   };
   window.Asteroids.t = t;
   window.Asteroids.lang = getStoredLanguage();
