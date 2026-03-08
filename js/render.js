@@ -719,6 +719,37 @@
           ctx.stroke();
         }
         ctx.restore();
+      } else if (mission.biomeId === "shattered_relay") {
+        ctx.fillStyle = "rgba(126,138,170,0.09)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < 6; i += 1) {
+          const pulse = 0.2 + Math.sin(performance.now() * 0.0022 + i * 0.7) * 0.14;
+          const x = 88 + i * 146;
+          const y = 74 + (i % 3) * 186;
+          ctx.strokeStyle = `rgba(192,206,255,${Math.max(0.08, pulse)})`;
+          ctx.lineWidth = 1.1;
+          ctx.strokeRect(x, y, 42, 16);
+          ctx.beginPath();
+          ctx.moveTo(x + 42, y + 8);
+          ctx.lineTo(x + 58, y + 8);
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (mission.biomeId === "cryo_ring") {
+        ctx.fillStyle = "rgba(126,188,218,0.08)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < 5; i += 1) {
+          const y = 86 + i * 126 + Math.sin(performance.now() * 0.0013 + i) * 7;
+          const line = ctx.createLinearGradient(0, y, config.canvas.width, y + 18);
+          line.addColorStop(0, "rgba(196,236,255,0)");
+          line.addColorStop(0.5, "rgba(196,236,255,0.16)");
+          line.addColorStop(1, "rgba(196,236,255,0)");
+          ctx.fillStyle = line;
+          ctx.fillRect(0, y, config.canvas.width, 18);
+        }
+        ctx.restore();
       }
 
       if ((effects.fogAlpha ?? 0) > 0) {
@@ -795,6 +826,47 @@
           ctx.beginPath();
           ctx.arc(hazard.x, hazard.y, pulseRadius * 0.2, 0, Math.PI * 2);
           ctx.fill();
+        } else if (hazard.type === "relay_jammer_burst") {
+          const cycle = Math.max(0.2, hazard.pulseCycleSeconds || 2.6);
+          const windowSeconds = Math.max(0.08, Math.min(cycle, hazard.pulseWindowSeconds || 0.7));
+          const pulsePhase = (hazard.phase ?? 0) % cycle;
+          const pulseActive = pulsePhase <= windowSeconds;
+          const alpha = pulseActive ? 0.52 : 0.26;
+          ctx.strokeStyle = `rgba(194,204,255,${alpha})`;
+          ctx.fillStyle = `rgba(122,140,194,${pulseActive ? 0.18 : 0.09})`;
+          ctx.lineWidth = pulseActive ? 2 : 1.2;
+          ctx.setLineDash([6, 5]);
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.setLineDash([]);
+          if (pulseActive) {
+            for (let i = 0; i < 3; i += 1) {
+              const r = pulseRadius * (0.34 + i * 0.22);
+              ctx.strokeStyle = `rgba(216,224,255,${0.3 - i * 0.08})`;
+              ctx.beginPath();
+              ctx.arc(hazard.x, hazard.y, r, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+        } else if (hazard.type === "cryo_shear_zone") {
+          const chill = 0.24 + Math.sin((hazard.phase ?? 0) * 2.1) * 0.08;
+          ctx.strokeStyle = `rgba(176,236,255,${Math.max(0.12, chill + 0.18)})`;
+          ctx.fillStyle = `rgba(132,212,248,${Math.max(0.06, chill * 0.32)})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(214,246,255,0.3)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(hazard.x - pulseRadius * 0.6, hazard.y);
+          ctx.lineTo(hazard.x + pulseRadius * 0.6, hazard.y);
+          ctx.moveTo(hazard.x, hazard.y - pulseRadius * 0.6);
+          ctx.lineTo(hazard.x, hazard.y + pulseRadius * 0.6);
+          ctx.stroke();
         }
         ctx.restore();
       }
@@ -804,6 +876,10 @@
       if (mission.gravityAnomaly) warnings.push("GRAVITY ANOMALY");
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "debris_field")) warnings.push("DEBRIS FIELD");
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "plasma_vent")) warnings.push("PLASMA VENT");
+      if (biomeHazards.some((hazard) => hazard.active && hazard.type === "relay_jammer_burst" && hazard.pulseActive)) {
+        warnings.push("RELAY JAMMER");
+      }
+      if (biomeHazards.some((hazard) => hazard.active && hazard.type === "cryo_shear_zone")) warnings.push("CRYO SHEAR");
       if (model.miniBoss?.phaseAnnounceTimer > 0) warnings.push(`BOSS PHASE ${model.miniBoss.phaseIndex + 1}`);
       if (model.uiAlerts?.lowHull) warnings.push("HULL CRITICAL");
       if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");
@@ -837,19 +913,21 @@
       }
       const biomeName = model.currentMission.biomeLabel || "Outer Void";
       const activeHazards = (model.currentMission.biomeHazards || []).filter((hazard) => hazard.active);
+      const hazardLabel = (type) =>
+        type === "debris_field"
+          ? "Debris Field"
+          : type === "plasma_vent"
+            ? "Plasma Vent"
+            : type === "relay_jammer_burst"
+              ? "Relay Jammer"
+              : type === "cryo_shear_zone"
+                ? "Cryo Shear"
+                : type;
       const activeHazardText = activeHazards.length
-        ? activeHazards
-            .map((hazard) => (hazard.type === "debris_field" ? "Debris Field" : hazard.type === "plasma_vent" ? "Plasma Vent" : hazard.type))
-            .join(", ")
+        ? activeHazards.map((hazard) => hazardLabel(hazard.type)).join(", ")
         : "None";
       const potentialHazard = (model.currentMission.biomeHazards || [])[0];
-      const potentialText = potentialHazard
-        ? potentialHazard.type === "debris_field"
-          ? "Debris Field"
-          : potentialHazard.type === "plasma_vent"
-            ? "Plasma Vent"
-            : potentialHazard.type
-        : "None";
+      const potentialText = potentialHazard ? hazardLabel(potentialHazard.type) : "None";
       ctx.font = "500 12px Trebuchet MS";
       ctx.fillStyle = "rgba(178,236,255,0.9)";
       ctx.fillText(

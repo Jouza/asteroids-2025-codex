@@ -99,8 +99,17 @@
           tickDamage: hazardDef.tickDamage ?? 8,
           slowMul: hazardDef.slowMul ?? 0.9,
           heatPerSecond: hazardDef.heatPerSecond ?? 0,
+          pulseCycleSeconds: hazardDef.pulseCycleSeconds ?? 0,
+          pulseWindowSeconds: hazardDef.pulseWindowSeconds ?? 0,
+          jamCooldownPerSecond: hazardDef.jamCooldownPerSecond ?? 0,
+          jamDragMul: hazardDef.jamDragMul ?? 1,
+          angularDragMul: hazardDef.angularDragMul ?? 1,
+          angularDampingMul: hazardDef.angularDampingMul ?? 1,
+          coolingPerSecond: hazardDef.coolingPerSecond ?? 0,
+          dashCooldownPerSecond: hazardDef.dashCooldownPerSecond ?? 0,
           tickTimer: 0,
           phase: g.rng() * Math.PI * 2,
+          pulseActive: false,
           active: false
         });
       }
@@ -394,6 +403,7 @@
       const hazards = mission.biomeHazards || [];
       for (const hazard of hazards) {
         hazard.phase += dt;
+        if (hazard.type === "relay_jammer_burst") hazard.pulseActive = false;
         const pulseRadius =
           hazard.type === "plasma_vent"
             ? hazard.radius * (0.84 + Math.sin(hazard.phase * 2.8) * 0.16)
@@ -430,6 +440,38 @@
             });
             hazard.tickTimer = hazard.tickSeconds;
           }
+        } else if (hazard.type === "relay_jammer_burst") {
+          const cycle = Math.max(0.2, hazard.pulseCycleSeconds || 2.6);
+          const windowSeconds = Math.max(0.08, Math.min(cycle, hazard.pulseWindowSeconds || 0.7));
+          const pulsePhase = hazard.phase % cycle;
+          const pulseActive = pulsePhase <= windowSeconds;
+          hazard.pulseActive = pulseActive;
+          const drag = Math.pow(hazard.jamDragMul ?? 1, dt * 60);
+          ship.vx *= drag;
+          ship.vy *= drag;
+          if (!pulseActive) continue;
+          const angularDrag = Math.pow(hazard.angularDragMul ?? 1, dt * 60);
+          ship.angularVelocity *= angularDrag;
+          const cooldownPressure = Math.max(0, hazard.jamCooldownPerSecond || 0) * dt;
+          g.model.shootTimer += cooldownPressure;
+          g.model.secondaryCooldown += cooldownPressure * 0.6;
+          g.model.utilityCooldown += cooldownPressure * 0.45;
+          g.model.dashCooldown += cooldownPressure * 0.55;
+          if (hazard.tickTimer <= 0) {
+            g.applyDamageToShip("enemy_bullet_support", {
+              baseDamage: hazard.tickDamage,
+              critChance: 0,
+              critMultiplier: 1
+            });
+            hazard.tickTimer = hazard.tickSeconds;
+          }
+        } else if (hazard.type === "cryo_shear_zone") {
+          const slowFactor = Math.pow(hazard.slowMul ?? 1, dt * 60);
+          ship.vx *= slowFactor;
+          ship.vy *= slowFactor;
+          ship.angularVelocity *= Math.pow(hazard.angularDampingMul ?? 1, dt * 60);
+          ship.heat = Math.max(0, ship.heat - Math.max(0, hazard.coolingPerSecond || 0) * dt);
+          g.model.dashCooldown += Math.max(0, hazard.dashCooldownPerSecond || 0) * dt;
         }
       }
     }

@@ -261,6 +261,8 @@
         biome_wreck_graveyard: "biome",
         biome_refinery: "biome",
         biome_ion_field: "biome",
+        biome_shattered_relay: "biome",
+        biome_cryo_ring: "biome",
         pilot_xp: "pilot",
         pilot_attributes: "pilot",
         pilot_perk_unlock: "pilot",
@@ -279,7 +281,9 @@
         hazard_debris_field: "hazard",
         hazard_plasma_vent: "hazard",
         hazard_gravity_anomaly: "hazard",
-        hazard_ion_storm: "hazard"
+        hazard_ion_storm: "hazard",
+        hazard_relay_jammer_burst: "hazard",
+        hazard_cryo_shear_zone: "hazard"
       };
 
       const appendCard = (grid, cardKey) => {
@@ -368,14 +372,18 @@
         belt: "biome_belt_fringe",
         graveyard: "biome_wreck_graveyard",
         refinery: "biome_refinery",
-        ion_field: "biome_ion_field"
+        ion_field: "biome_ion_field",
+        shattered_relay: "biome_shattered_relay",
+        cryo_ring: "biome_cryo_ring"
       };
 
       const hazardCardBySource = {
         debris_field: "hazard_debris_field",
         plasma_vent: "hazard_plasma_vent",
         gravity_anomaly: "hazard_gravity_anomaly",
-        ion_storm: "hazard_ion_storm"
+        ion_storm: "hazard_ion_storm",
+        relay_jammer_burst: "hazard_relay_jammer_burst",
+        cryo_shear_zone: "hazard_cryo_shear_zone"
       };
 
       appendSection({

@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Biome expansion pass (2 nove biomy)
+  - [x] Pridany biomy `Shattered Relay` a `Cryo Ring` do mission directoru
+  - [x] Nove biome hazardy `relay_jammer_burst` a `cryo_shear_zone` s odlisnym gameplay dopadem
+  - [x] Doplneny render telegraphy + mission status/warning labely + help karty/i18n coverage
+
 - [x] Biome identity 2.0 - audio slice (MVP)
   - [x] Biome-specific ambient audio bed podle aktivniho biome v mission contextu
   - [x] Biome-specific warning SFX varianta pro critical alerts (low hull/high heat/shield break)

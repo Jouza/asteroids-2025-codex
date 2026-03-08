@@ -265,6 +265,18 @@
       "help.card.biome_ion_field.line": "Charged ionized area. Neutral by itself, often paired with global mission modifiers.",
       "help.card.biome_ion_field.impact":
         "<strong>Impact:</strong> visual/atmospheric pressure; combined with <strong>Ion Storm</strong> it increases resource stress.",
+      "help.card.biome_shattered_relay.name": "Shattered Relay",
+      "help.card.biome_shattered_relay.tag": "Biome",
+      "help.card.biome_shattered_relay.line":
+        "Fractured relay network with interference bursts. Usually includes <strong>Relay Jammer</strong> zones.",
+      "help.card.biome_shattered_relay.impact":
+        "<strong>Impact:</strong> burst windows become less stable; cooldown timing discipline matters more.",
+      "help.card.biome_cryo_ring.name": "Cryo Ring",
+      "help.card.biome_cryo_ring.tag": "Biome",
+      "help.card.biome_cryo_ring.line":
+        "Frozen ring with shear currents. Usually includes <strong>Cryo Shear</strong> zones.",
+      "help.card.biome_cryo_ring.impact":
+        "<strong>Impact:</strong> mobility and turning are softer in-zone, but heat pressure is lower.",
       "help.card.pilot_xp.name": "XP and Level",
       "help.card.pilot_xp.tag": "Pilot progression",
       "help.card.pilot_xp.line":
@@ -370,6 +382,18 @@
       "help.card.hazard_ion_storm.tag": "Mission Modifier",
       "help.card.hazard_ion_storm.line": "Reduces shield regen and slowly drains shield.",
       "help.card.hazard_ion_storm.impact": "<strong>Impact:</strong> weaker sustain and higher dodge pressure.",
+      "help.card.hazard_relay_jammer_burst.name": "Relay Jammer Burst",
+      "help.card.hazard_relay_jammer_burst.tag": "Biome Hazard (Shattered Relay)",
+      "help.card.hazard_relay_jammer_burst.line":
+        "Interference field pulses periodically. During active pulse, weapon/ability cooldown pressure increases.",
+      "help.card.hazard_relay_jammer_burst.impact":
+        "<strong>Impact:</strong> weaker burst uptime and noisier control windows; timing around pulse cycles is key.",
+      "help.card.hazard_cryo_shear_zone.name": "Cryo Shear Zone",
+      "help.card.hazard_cryo_shear_zone.tag": "Biome Hazard (Cryo Ring)",
+      "help.card.hazard_cryo_shear_zone.line":
+        "Cold shear field that slows motion response and makes dash recovery slightly longer, while cooling heat.",
+      "help.card.hazard_cryo_shear_zone.impact":
+        "<strong>Impact:</strong> lower mobility but improved thermal management for sustained firing.",
       "help.weapon.slot.primary": "Primary",
       "help.weapon.slot.secondary": "Secondary",
       "help.weapon.slot.utility": "Utility",

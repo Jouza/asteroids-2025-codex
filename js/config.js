@@ -774,29 +774,19 @@
         {
           id: "belt",
           label: "Belt Fringe",
-          weight: 0.3,
+          weight: 0.22,
           audio: {
-            ambientGain: 0.011,
-            bedHz: 92,
-            layerHz: 142,
-            lfoHz: 0.11,
-            lfoDepthHz: 2.2,
-            filterHz: 410,
-            warningSoundId: "warning_belt"
+            warningSoundId: "warning_belt",
+            stinger: { a: 260, b: 390, c: 520 }
           }
         },
         {
           id: "graveyard",
           label: "Wreck Graveyard",
-          weight: 0.28,
+          weight: 0.2,
           audio: {
-            ambientGain: 0.012,
-            bedHz: 72,
-            layerHz: 109,
-            lfoHz: 0.09,
-            lfoDepthHz: 2.4,
-            filterHz: 330,
-            warningSoundId: "warning_graveyard"
+            warningSoundId: "warning_graveyard",
+            stinger: { a: 190, b: 250, c: 330 }
           },
           hazards: {
             type: "debris_field",
@@ -812,15 +802,10 @@
         {
           id: "refinery",
           label: "Refinery Complex",
-          weight: 0.24,
+          weight: 0.2,
           audio: {
-            ambientGain: 0.011,
-            bedHz: 84,
-            layerHz: 168,
-            lfoHz: 0.14,
-            lfoDepthHz: 2.5,
-            filterHz: 440,
-            warningSoundId: "warning_refinery"
+            warningSoundId: "warning_refinery",
+            stinger: { a: 240, b: 310, c: 460 }
           },
           hazards: {
             type: "plasma_vent",
@@ -836,15 +821,53 @@
         {
           id: "ion_field",
           label: "Ion Field",
-          weight: 0.18,
+          weight: 0.14,
           audio: {
-            ambientGain: 0.012,
-            bedHz: 96,
-            layerHz: 192,
-            lfoHz: 0.19,
-            lfoDepthHz: 2.8,
-            filterHz: 500,
-            warningSoundId: "warning_ion_field"
+            warningSoundId: "warning_ion_field",
+            stinger: { a: 320, b: 420, c: 620 }
+          }
+        },
+        {
+          id: "shattered_relay",
+          label: "Shattered Relay",
+          weight: 0.12,
+          audio: {
+            warningSoundId: "warning_shattered_relay",
+            stinger: { a: 220, b: 340, c: 510 }
+          },
+          hazards: {
+            type: "relay_jammer_burst",
+            minCount: 1,
+            maxCount: 2,
+            radiusMin: 92,
+            radiusMax: 128,
+            tickSeconds: 0.3,
+            tickDamage: 6,
+            pulseCycleSeconds: 2.6,
+            pulseWindowSeconds: 0.72,
+            jamCooldownPerSecond: 0.55,
+            jamDragMul: 0.995,
+            angularDragMul: 0.965
+          }
+        },
+        {
+          id: "cryo_ring",
+          label: "Cryo Ring",
+          weight: 0.12,
+          audio: {
+            warningSoundId: "warning_cryo_ring",
+            stinger: { a: 170, b: 240, c: 300 }
+          },
+          hazards: {
+            type: "cryo_shear_zone",
+            minCount: 2,
+            maxCount: 3,
+            radiusMin: 80,
+            radiusMax: 118,
+            slowMul: 0.988,
+            angularDampingMul: 0.95,
+            coolingPerSecond: 18,
+            dashCooldownPerSecond: 0.2
           }
         }
       ],
