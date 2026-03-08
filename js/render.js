@@ -1054,6 +1054,45 @@
       ctx.restore();
     }
 
+    drawIdentitySelector(model, centerY) {
+      const { ctx, config } = this;
+      const centerX = config.canvas.width / 2;
+      const boxW = 356;
+      const boxH = 30;
+      const gapY = 8;
+      const row0Y = centerY;
+      const row1Y = row0Y + boxH + gapY;
+      const pilotLabel = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
+      const shipLabel = tr(`identity.ship.${model.identity?.shipId}.name`);
+
+      const drawRow = (y, label, value) => {
+        ctx.fillStyle = "rgba(6,18,34,0.7)";
+        ctx.fillRect(centerX - boxW / 2, y, boxW, boxH);
+        ctx.strokeStyle = "rgba(108,216,255,0.46)";
+        ctx.lineWidth = 1.1;
+        ctx.strokeRect(centerX - boxW / 2, y, boxW, boxH);
+        ctx.fillStyle = "rgba(182,226,246,0.86)";
+        ctx.font = "600 14px Trebuchet MS";
+        ctx.textAlign = "left";
+        ctx.fillText(label, centerX - boxW / 2 + 10, y + 20);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#d8f5ff";
+        ctx.fillText(value, centerX + boxW / 2 - 10, y + 20);
+      };
+
+      ctx.textAlign = "center";
+      ctx.font = "600 15px Trebuchet MS";
+      ctx.fillStyle = "#bfeeff";
+      ctx.fillText(tr("overlay.identity_select"), centerX, centerY - 10);
+      drawRow(row0Y, tr("overlay.identity_pilot"), pilotLabel);
+      drawRow(row1Y, tr("overlay.identity_ship"), shipLabel);
+      ctx.font = "500 13px Trebuchet MS";
+      ctx.fillStyle = "rgba(186,226,248,0.86)";
+      ctx.textAlign = "center";
+      ctx.fillText(tr("overlay.identity_select_hint"), centerX, row1Y + boxH + 18);
+      return row1Y + boxH + 18;
+    }
+
     drawModeSelector(model, centerY) {
       const { ctx, config } = this;
       const centerX = config.canvas.width / 2;
@@ -1115,7 +1154,8 @@
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY + 2);
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 36);
-        const modeBottomY = this.drawModeSelector(model, centerY + 126);
+        const identityBottomY = this.drawIdentitySelector(model, centerY + 62);
+        const modeBottomY = this.drawModeSelector(model, identityBottomY + 26);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
           ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
@@ -1142,29 +1182,37 @@
         ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), config.canvas.width / 2, config.canvas.height / 2 - 18);
         ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 8);
         ctx.fillText(
+          tr("overlay.identity_status", {
+            pilot: summary.identity?.pilot || "-",
+            ship: summary.identity?.ship || "-"
+          }),
+          config.canvas.width / 2,
+          config.canvas.height / 2 + 34
+        );
+        ctx.fillText(
           tr("overlay.build", {
             primary: summary.loadout?.primary || "-",
             secondary: summary.loadout?.secondary || "-",
             utility: summary.loadout?.utility || "-"
           }),
           config.canvas.width / 2,
-          config.canvas.height / 2 + 34
+          config.canvas.height / 2 + 58
         );
         ctx.font = "600 17px Trebuchet MS";
         ctx.fillText(
           tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? model.runtimeSeconds).toFixed(1) }),
           config.canvas.width / 2,
-          config.canvas.height / 2 + 60
+          config.canvas.height / 2 + 84
         );
         ctx.fillText(
           model.endlessUnlocked
             ? tr("overlay.endless_unlocked")
             : tr("overlay.campaign_complete"),
           config.canvas.width / 2,
-          config.canvas.height / 2 + 86
+          config.canvas.height / 2 + 110
         );
-        ctx.fillText(tr("overlay.enter_new_run"), config.canvas.width / 2, config.canvas.height / 2 + 112);
-        this.drawModeSelector(model, config.canvas.height / 2 + 130);
+        ctx.fillText(tr("overlay.enter_new_run"), config.canvas.width / 2, config.canvas.height / 2 + 136);
+        this.drawModeSelector(model, config.canvas.height / 2 + 154);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {

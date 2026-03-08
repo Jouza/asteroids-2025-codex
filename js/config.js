@@ -435,6 +435,44 @@
         }
       ]
     },
+    identity: {
+      pilots: [
+        {
+          id: "needle_voss",
+          modifiers: { primaryCooldownPct: 0.06, critChanceFlat: 0.015 }
+        },
+        {
+          id: "graveline_kade",
+          modifiers: { shieldRegenPct: 0.08, collisionResist: 0.03 }
+        },
+        {
+          id: "rook_86",
+          modifiers: { hullPct: 0.08, shieldPct: 0.06, maxSpeedPct: -0.03 }
+        },
+        {
+          id: "blink_serrat",
+          modifiers: { thrustPct: 0.08, maxSpeedPct: 0.05, shieldPct: -0.03 }
+        }
+      ],
+      ships: [
+        {
+          id: "viper_mk2",
+          modifiers: { maxSpeedPct: 0.07, hullPct: -0.04 }
+        },
+        {
+          id: "bastion_frame",
+          modifiers: { hullPct: 0.08, shieldPct: 0.05, thrustPct: -0.03 }
+        },
+        {
+          id: "revenant_frame",
+          modifiers: { primaryDamagePct: 0.06, heatDissipationPct: -0.04 }
+        },
+        {
+          id: "helix_frame",
+          modifiers: { energyRegenPct: 0.08, utilityCooldownPct: 0.06, hullPct: -0.03 }
+        }
+      ]
+    },
     loot: {
       maxInventoryItems: 24,
       dropChance: {

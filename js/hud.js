@@ -31,6 +31,7 @@
       this.sectorEl = document.getElementById("sector");
       this.missionEl = document.getElementById("mission");
       this.setStatusEl = document.getElementById("setStatus");
+      this.identityStatusEl = document.getElementById("identityStatus");
       this.flightModeEl = document.getElementById("flightMode");
       this.primaryStatusEl = document.getElementById("primaryStatus");
       this.secondaryStatusEl = document.getElementById("secondaryStatus");
@@ -98,6 +99,9 @@
       this.sectorEl.textContent = String(model.sector);
       this.missionEl.textContent = this.truncate(model.currentMission?.label || "-", 14);
       this.setStatusEl.textContent = this.truncate(model.setStatusText || tr("hud.no_active_set"), 24);
+      if (this.identityStatusEl) {
+        this.identityStatusEl.textContent = this.truncate(model.identityStatusText || tr("hud.identity_unknown"), 28);
+      }
       this.flightModeEl.textContent = model.flightModel === "sim_lite" ? tr("hud.flight_sim_lite") : tr("hud.flight_arcade");
       this.primaryStatusEl.textContent = `${model.loadout.primaryLabel} D:${this.formatUrgentCooldown(model.dashCooldown)}`;
       this.secondaryStatusEl.textContent = `${model.loadout.secondaryLabel} ${this.formatUrgentCooldown(model.secondaryCooldown)}`;

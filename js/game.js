@@ -125,6 +125,13 @@
     };
   }
 
+  function createDefaultIdentitySelection() {
+    return {
+      pilotId: "needle_voss",
+      shipId: "viper_mk2"
+    };
+  }
+
   function createDefaultProfile() {
     return {
       schemaVersion: PROFILE_SCHEMA_VERSION,
@@ -166,6 +173,7 @@
           engine: null,
           chipset: null
         },
+        identity: createDefaultIdentitySelection(),
         salvageParts: 0,
         pilot: createDefaultPilotProgression()
       },
@@ -294,6 +302,8 @@
         activeSets: [],
         setStatusText: tr("hud.no_active_set"),
         pilot: createDefaultPilotProgression(),
+        identity: createDefaultIdentitySelection(),
+        identityStatusText: tr("hud.identity_unknown"),
         salvageParts: 0,
         telemetry: createTelemetryState(false),
         performance: createPerformanceState(false),
@@ -408,6 +418,17 @@
         safe.progression.equipment[slot] = this.sanitizeModule(equipmentRaw[slot]);
       }
 
+      const identityPilotDefs = this.getIdentityPilotDefs();
+      const identityShipDefs = this.getIdentityShipDefs();
+      const identityRaw = progression.identity && typeof progression.identity === "object" ? progression.identity : {};
+      const fallbackIdentity = createDefaultIdentitySelection();
+      const validPilot = identityPilotDefs.some((entry) => entry.id === identityRaw.pilotId);
+      const validShip = identityShipDefs.some((entry) => entry.id === identityRaw.shipId);
+      safe.progression.identity = {
+        pilotId: validPilot ? identityRaw.pilotId : fallbackIdentity.pilotId,
+        shipId: validShip ? identityRaw.shipId : fallbackIdentity.shipId
+      };
+
       safe.progression.salvageParts = Math.max(0, Math.floor(Number(progression.salvageParts) || 0));
 
       const defaultPilot = createDefaultPilotProgression();
@@ -477,6 +498,7 @@
         upgrades: deepClone(this.model.upgrades),
         inventory: deepClone(this.model.inventory),
         equipment: deepClone(this.model.equipment),
+        identity: deepClone(this.model.identity),
         salvageParts: this.model.salvageParts,
         pilot: deepClone(this.model.pilot)
       };
@@ -491,10 +513,12 @@
       this.model.upgrades = deepClone(progression.upgrades);
       this.model.inventory = deepClone(progression.inventory);
       this.model.equipment = deepClone(progression.equipment);
+      this.model.identity = deepClone(progression.identity || createDefaultIdentitySelection());
       this.model.salvageParts = progression.salvageParts;
       this.model.pilot = deepClone(progression.pilot || createDefaultPilotProgression());
       this.model.endlessUnlocked = Boolean(progression.unlocks?.endlessMode);
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
+      this.syncIdentitySelectionState();
       this.syncLoadoutLabels();
       this.refreshSetState();
     }
@@ -571,6 +595,10 @@
       if (canToggleRunMode) {
         if (this.input.wasPressed("ArrowLeft")) this.trySetRunMode("campaign");
         if (this.input.wasPressed("ArrowRight")) this.trySetRunMode("endless");
+        if (this.input.wasPressed("ArrowUp")) this.cycleIdentityPilot(-1);
+        if (this.input.wasPressed("ArrowDown")) this.cycleIdentityPilot(1);
+        if (this.input.wasPressed("KeyA")) this.cycleIdentityShip(-1);
+        if (this.input.wasPressed("KeyD")) this.cycleIdentityShip(1);
         if (this.input.wasPressed("KeyE")) {
           const next = this.model.runMode === "campaign" ? "endless" : "campaign";
           this.trySetRunMode(next);
@@ -648,10 +676,16 @@
     }
 
     buildVictorySummary() {
+      const selectedPilot = this.getSelectedIdentityPilot();
+      const selectedShip = this.getSelectedIdentityShip();
       return {
         score: this.model.score,
         sector: this.model.sector,
         runtimeSeconds: this.model.runtimeSeconds,
+        identity: {
+          pilot: selectedPilot ? tr(`identity.pilot.${selectedPilot.id}.callsign`) : "-",
+          ship: selectedShip ? tr(`identity.ship.${selectedShip.id}.name`) : "-"
+        },
         loadout: {
           primary: this.model.loadout.primaryLabel,
           secondary: this.model.loadout.secondaryLabel,
@@ -804,6 +838,68 @@
 
     getPilotAttributeOrder() {
       return ["reflex", "systems", "grit", "instinct"];
+    }
+
+    getIdentityPilotDefs() {
+      return this.config.identity?.pilots || [];
+    }
+
+    getIdentityShipDefs() {
+      return this.config.identity?.ships || [];
+    }
+
+    getSelectedIdentityPilot() {
+      const defs = this.getIdentityPilotDefs();
+      if (!defs.length) return null;
+      return defs.find((entry) => entry.id === this.model.identity.pilotId) || defs[0];
+    }
+
+    getSelectedIdentityShip() {
+      const defs = this.getIdentityShipDefs();
+      if (!defs.length) return null;
+      return defs.find((entry) => entry.id === this.model.identity.shipId) || defs[0];
+    }
+
+    syncIdentitySelectionState() {
+      const selectedPilot = this.getSelectedIdentityPilot();
+      const selectedShip = this.getSelectedIdentityShip();
+      if (selectedPilot) this.model.identity.pilotId = selectedPilot.id;
+      if (selectedShip) this.model.identity.shipId = selectedShip.id;
+      const pilotLabel = selectedPilot ? tr(`identity.pilot.${selectedPilot.id}.callsign`) : "-";
+      const shipLabel = selectedShip ? tr(`identity.ship.${selectedShip.id}.name`) : "-";
+      this.model.identityStatusText = tr("hud.identity_status", { pilot: pilotLabel, ship: shipLabel });
+    }
+
+    cycleIdentityPilot(direction = 1) {
+      const defs = this.getIdentityPilotDefs();
+      if (!defs.length) return false;
+      const currentIndex = defs.findIndex((entry) => entry.id === this.model.identity.pilotId);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (safeIndex + direction + defs.length) % defs.length;
+      this.model.identity.pilotId = defs[nextIndex].id;
+      this.syncIdentitySelectionState();
+      this.model.hangar.message = tr("game.identity.pilot_changed", {
+        pilot: tr(`identity.pilot.${defs[nextIndex].id}.callsign`)
+      });
+      this.saveProfile("identity_pilot_change");
+      this.hud.sync(this.model);
+      return true;
+    }
+
+    cycleIdentityShip(direction = 1) {
+      const defs = this.getIdentityShipDefs();
+      if (!defs.length) return false;
+      const currentIndex = defs.findIndex((entry) => entry.id === this.model.identity.shipId);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (safeIndex + direction + defs.length) % defs.length;
+      this.model.identity.shipId = defs[nextIndex].id;
+      this.syncIdentitySelectionState();
+      this.model.hangar.message = tr("game.identity.ship_changed", {
+        ship: tr(`identity.ship.${defs[nextIndex].id}.name`)
+      });
+      this.saveProfile("identity_ship_change");
+      this.hud.sync(this.model);
+      return true;
     }
 
     getPilotPerkDefs() {
@@ -970,6 +1066,17 @@
         if (!(key in totals)) totals[key] = 0;
         totals[key] += pilotPerkBonuses[key];
       }
+
+      const identityPilot = this.getSelectedIdentityPilot();
+      const identityShip = this.getSelectedIdentityShip();
+      const addIdentityModifiers = (source) => {
+        for (const key of Object.keys(source || {})) {
+          if (!(key in totals)) totals[key] = 0;
+          totals[key] += source[key];
+        }
+      };
+      addIdentityModifiers(identityPilot?.modifiers);
+      addIdentityModifiers(identityShip?.modifiers);
 
       return totals;
     }

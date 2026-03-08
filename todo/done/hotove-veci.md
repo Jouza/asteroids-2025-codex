@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Pilot/Ship identity layer (MVP 4+4)
+  - [x] 4 kultovni piloti s lehkymi stat bonusy (5-10%) a persistent vyberem v profilu
+  - [x] 4 lodni framy s lehkymi stat bonusy (5-10%) a persistent vyberem v profilu
+  - [x] Start overlay vyber identity (pilot + lod) + ovladani Up/Down a A/D
+  - [x] HUD + Victory summary zobrazuji vybranou identitu (Pilot // Ship)
+  - [x] Help sekce doplnena o prehled pilotu a lodi
+
 - [x] Mode select UX clarification
   - [x] Campaign/Endless explicit selector v overlayi (Start/Game Over/Victory)
   - [x] Left/Right pro prime vyber modu + `E` jako fallback quick toggle
