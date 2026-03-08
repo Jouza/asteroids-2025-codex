@@ -20,7 +20,10 @@
   }
 
   function tr(key, params = {}) {
-    return typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key;
+    if (typeof window.Asteroids?.t === "function") return window.Asteroids.t(key, params);
+    const dict = window.Asteroids?.i18n?.dictionaries?.en || {};
+    const template = dict[key] ?? key;
+    return String(template).replace(/\{(\w+)\}/g, (_, p) => (params[p] != null ? String(params[p]) : `{${p}}`));
   }
 
   function createTelemetryState(enabled = false) {
@@ -238,7 +241,7 @@
           chipset: null
         },
         activeSets: [],
-        setStatusText: "No active set",
+        setStatusText: tr("hud.no_active_set"),
         pilot: createDefaultPilotProgression(),
         salvageParts: 0,
         telemetry: createTelemetryState(false),
@@ -494,7 +497,7 @@
       }
       if (this.input.wasPressed("KeyM")) {
         const muted = this.audio.toggleMuted();
-        this.model.hangar.message = muted ? "Audio: muted (M to unmute)." : "Audio: enabled (M to mute).";
+        this.model.hangar.message = muted ? tr("game.audio.muted") : tr("game.audio.enabled");
       }
 
       if (this.model.gameState === GAME_STATE.HANGAR) {
@@ -717,7 +720,7 @@
     }
 
     getSetStatusText() {
-      if (!this.model.activeSets.length) return "No active set";
+      if (!this.model.activeSets.length) return tr("hud.no_active_set");
       return this.model.activeSets.map((entry) => `${entry.label} ${entry.count}/3 (T${entry.tier})`).join(" | ");
     }
 

@@ -1,5 +1,11 @@
 (() => {
   const { APP_META, GAME_STATE } = window.Asteroids;
+  const tr = (key, params = {}) => {
+    if (typeof window.Asteroids?.t === "function") return window.Asteroids.t(key, params);
+    const dict = window.Asteroids?.i18n?.dictionaries?.en || {};
+    const template = dict[key] ?? key;
+    return String(template).replace(/\{(\w+)\}/g, (_, p) => (params[p] != null ? String(params[p]) : `{${p}}`));
+  };
 
   const stateLabelKeyByState = {
     [GAME_STATE.START]: "state.start",
@@ -39,11 +45,11 @@
     }
 
     formatCooldown(seconds) {
-      return seconds <= 0 ? "Ready" : `${seconds.toFixed(1)}s`;
+      return seconds <= 0 ? tr("hud.ready") : `${seconds.toFixed(1)}s`;
     }
 
     formatUrgentCooldown(seconds) {
-      if (seconds <= 0) return "Ready";
+      if (seconds <= 0) return tr("hud.ready");
       if (seconds <= 1.2) return `${seconds.toFixed(1)}s!`;
       return `${seconds.toFixed(1)}s`;
     }
@@ -91,13 +97,13 @@
       this.updateGauge(this.heatValueEl, this.heatBarEl, heat, heatMax);
       this.sectorEl.textContent = String(model.sector);
       this.missionEl.textContent = this.truncate(model.currentMission?.label || "-", 14);
-      this.setStatusEl.textContent = this.truncate(model.setStatusText || "No active set", 24);
-      this.flightModeEl.textContent = model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE";
+      this.setStatusEl.textContent = this.truncate(model.setStatusText || tr("hud.no_active_set"), 24);
+      this.flightModeEl.textContent = model.flightModel === "sim_lite" ? tr("hud.flight_sim_lite") : tr("hud.flight_arcade");
       this.primaryStatusEl.textContent = `${model.loadout.primaryLabel} D:${this.formatUrgentCooldown(model.dashCooldown)}`;
       this.secondaryStatusEl.textContent = `${model.loadout.secondaryLabel} ${this.formatUrgentCooldown(model.secondaryCooldown)}`;
       this.utilityStatusEl.textContent = `${model.loadout.utilityLabel} ${this.formatUrgentCooldown(model.utilityCooldown)}`;
       const stateKey = stateLabelKeyByState[model.gameState];
-      this.stateEl.textContent = stateKey && typeof window.Asteroids?.t === "function" ? window.Asteroids.t(stateKey) : "UNKNOWN";
+      this.stateEl.textContent = stateKey ? tr(stateKey) : tr("hud.unknown");
 
       this.setHudItemState(
         this.hullValueEl,

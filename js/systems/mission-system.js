@@ -1,4 +1,34 @@
 (() => {
+  const EN_FALLBACK = {
+    "mission.outer_void": "Outer Void",
+    "mission.clear_skies": "Clear Skies",
+    "mission.clear_skies_desc": "No global mission hazard.",
+    "mission.label.survive": "SURVIVE",
+    "mission.label.ufo_hunt": "UFO HUNT",
+    "mission.label.asteroid_storm": "ASTEROID STORM",
+    "mission.label.mini_boss": "MINI BOSS",
+    "mission.label.final_boss": "FINAL BOSS",
+    "mission.hold_for": "Hold for {seconds}s",
+    "mission.destroy_ufos": "Destroy UFOs: {kills}/{target}",
+    "mission.break_asteroids": "Break asteroids: {kills}/{target}",
+    "mission.target_reached_clear": "Target reached. Clear remaining threats: {count}",
+    "mission.clear_remaining": "Clear remaining threats: {count}",
+    "mission.destroy_boss": "Destroy boss ({hp} HP)",
+    "mission.destroy_final_boss": "Destroy final boss ({hp} HP)",
+    "mission.destroy_boss_plain": "Destroy boss",
+    "mission.weakpoint_open": "Weakpoint OPEN {seconds}s",
+    "mission.weakpoint_in": "Weakpoint in {seconds}s",
+    "mission.phase_status": "Phase {phase} | HP {hp}/{maxHp} | {weakpoint}",
+    "mission.context": "{biome} | {modifier}"
+  };
+
+  const tr = (key, params = {}) => {
+    if (typeof window.Asteroids?.t === "function") return window.Asteroids.t(key, params);
+    const dict = window.Asteroids?.i18n?.dictionaries?.en || {};
+    const template = dict[key] ?? EN_FALLBACK[key] ?? key;
+    return String(template).replace(/\{(\w+)\}/g, (_, p) => (params[p] != null ? String(params[p]) : `{${p}}`));
+  };
+
   class MissionSystem {
     constructor(game) {
       this.game = game;
@@ -29,7 +59,7 @@
     rollMissionBiome(level) {
       const g = this.game;
       const biomes = g.config.missionDirector.biomes || [];
-      if (!biomes.length) return { id: "void", label: "Outer Void" };
+      if (!biomes.length) return { id: "void", label: tr("mission.outer_void") };
       return this.pickWeighted(biomes, biomes[0]);
     }
 
@@ -86,7 +116,13 @@
       }));
       const unlocked = entries.filter((entry) => level >= (entry.unlockSector ?? 1));
       const picked = this.pickWeighted(unlocked, unlocked[0] || entries[0]);
-      return picked || { id: "clear_skies", label: "Clear Skies", description: "No global mission hazard." };
+      return (
+        picked || {
+          id: "clear_skies",
+          label: tr("mission.clear_skies"),
+          description: tr("mission.clear_skies_desc")
+        }
+      );
     }
 
     createGravityAnomaly(modifier) {
@@ -234,8 +270,8 @@
           level
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.72, difficulty);
-        g.model.currentMission.label = "SURVIVE";
-        g.model.currentMission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(0)}s`;
+        g.model.currentMission.label = tr("mission.label.survive");
+        g.model.currentMission.objectiveText = tr("mission.hold_for", { seconds: g.model.missionTimer.toFixed(0) });
       }
 
       if (type === "ufo_hunt") {
@@ -256,8 +292,8 @@
           level
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
-        g.model.currentMission.label = "UFO HUNT";
-        g.model.currentMission.objectiveText = `Destroy UFOs: 0/${g.model.missionSpawnBudget}`;
+        g.model.currentMission.label = tr("mission.label.ufo_hunt");
+        g.model.currentMission.objectiveText = tr("mission.destroy_ufos", { kills: 0, target: g.model.missionSpawnBudget });
       }
 
       if (type === "asteroid_storm") {
@@ -280,8 +316,11 @@
           level
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
-        g.model.currentMission.label = "ASTEROID STORM";
-        g.model.currentMission.objectiveText = `Break asteroids: 0/${g.model.missionSpawnBudget}`;
+        g.model.currentMission.label = tr("mission.label.asteroid_storm");
+        g.model.currentMission.objectiveText = tr("mission.break_asteroids", {
+          kills: 0,
+          target: g.model.missionSpawnBudget
+        });
         this.spawnAsteroidPack(level, initialLarge, initialMedium);
         g.model.missionSpawnTimer = g.model.currentMission.spawnIntervalSeconds;
       }
@@ -295,10 +334,10 @@
           hpBase * (isFinalEncounter ? g.config.run.finalBossHpMultiplier ?? 1 : 1)
         );
         g.model.currentMission.isFinalEncounter = isFinalEncounter;
-        g.model.currentMission.label = isFinalEncounter ? "FINAL BOSS" : "MINI BOSS";
+        g.model.currentMission.label = isFinalEncounter ? tr("mission.label.final_boss") : tr("mission.label.mini_boss");
         g.model.currentMission.objectiveText = isFinalEncounter
-          ? `Destroy final boss (${hp} HP)`
-          : `Destroy boss (${hp} HP)`;
+          ? tr("mission.destroy_final_boss", { hp })
+          : tr("mission.destroy_boss", { hp });
         g.enemySystem.spawnMiniBoss(hp, { isFinalBoss: isFinalEncounter });
         this.spawnAsteroidPack(
           level,
@@ -430,9 +469,9 @@
         }
         g.enemySystem.maybeSpawnAmbientUfo(dt);
         if (g.model.missionTimer > 0) {
-          mission.objectiveText = `Hold for ${g.model.missionTimer.toFixed(1)}s`;
+          mission.objectiveText = tr("mission.hold_for", { seconds: g.model.missionTimer.toFixed(1) });
         } else {
-          mission.objectiveText = `Clear remaining threats: ${threatsRemaining}`;
+          mission.objectiveText = tr("mission.clear_remaining", { count: threatsRemaining });
         }
         if (g.model.missionTimer <= 0 && threatsRemaining === 0) mission.completed = true;
       }
@@ -446,7 +485,7 @@
           g.enemySystem.spawnMissionUfo();
           g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.ufoHunt.spawnIntervalSeconds;
         }
-        mission.objectiveText = `Destroy UFOs: ${g.model.missionUfoKills}/${target}`;
+        mission.objectiveText = tr("mission.destroy_ufos", { kills: g.model.missionUfoKills, target });
         if (g.model.missionUfoKills >= target && threatsRemaining === 0) mission.completed = true;
       }
 
@@ -459,9 +498,9 @@
         }
         const shownKills = Math.min(target, g.model.missionAsteroidKills);
         if (g.model.missionAsteroidKills < target) {
-          mission.objectiveText = `Break asteroids: ${shownKills}/${target}`;
+          mission.objectiveText = tr("mission.break_asteroids", { kills: shownKills, target });
         } else {
-          mission.objectiveText = `Target reached. Clear remaining threats: ${threatsRemaining}`;
+          mission.objectiveText = tr("mission.target_reached_clear", { count: threatsRemaining });
         }
         if (g.model.missionAsteroidKills >= target && threatsRemaining === 0) mission.completed = true;
       }
@@ -470,16 +509,24 @@
         const boss = g.model.miniBoss;
         if (boss) {
           const weakpointText = boss.weakpointOpen
-            ? `Weakpoint OPEN ${Math.max(0, boss.weakpointOpenFor).toFixed(1)}s`
-            : `Weakpoint in ${Math.max(0, boss.weakpointTimer).toFixed(1)}s`;
-          mission.objectiveText = `Phase ${boss.phaseIndex + 1} | HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp} | ${weakpointText}`;
+            ? tr("mission.weakpoint_open", { seconds: Math.max(0, boss.weakpointOpenFor).toFixed(1) })
+            : tr("mission.weakpoint_in", { seconds: Math.max(0, boss.weakpointTimer).toFixed(1) });
+          mission.objectiveText = tr("mission.phase_status", {
+            phase: boss.phaseIndex + 1,
+            hp: Math.max(0, Math.ceil(boss.hp)),
+            maxHp: boss.maxHp,
+            weakpoint: weakpointText
+          });
         } else {
-          mission.objectiveText = "Destroy boss";
+          mission.objectiveText = tr("mission.destroy_boss_plain");
         }
         if (!boss && threatsRemaining === 0) mission.completed = true;
       }
 
-      mission.contextText = `${mission.biomeLabel || "Outer Void"} | ${mission.modifierLabel || "Clear Skies"}`;
+      mission.contextText = tr("mission.context", {
+        biome: mission.biomeLabel || tr("mission.outer_void"),
+        modifier: mission.modifierLabel || tr("mission.clear_skies")
+      });
 
       if (mission.completed && !g.model.sectorCompletionHandled) {
         g.onMissionCompleted();

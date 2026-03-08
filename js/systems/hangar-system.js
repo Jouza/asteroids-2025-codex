@@ -1,6 +1,9 @@
 (() => {
   function tr(key, params = {}) {
-    return typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key;
+    if (typeof window.Asteroids?.t === "function") return window.Asteroids.t(key, params);
+    const dict = window.Asteroids?.i18n?.dictionaries?.en || {};
+    const template = dict[key] ?? key;
+    return String(template).replace(/\{(\w+)\}/g, (_, p) => (params[p] != null ? String(params[p]) : `{${p}}`));
   }
 
   class HangarSystem {
@@ -175,16 +178,16 @@
         const ship = g.model.ship;
         const canRepairHullShield = ship && (ship.hull < ship.hullMax || ship.shield < ship.shieldMax);
         if (!canRepairHullShield) {
-          g.model.hangar.message = "Hull i shield jsou plne.";
+          g.model.hangar.message = tr("hangar.full_hull_shield");
           return;
         }
       }
       if (item.id === "fire_rate" && g.model.upgrades.fireRateLevel >= g.config.hangar.maxFireRateLevel) {
-        g.model.hangar.message = "Fire rate je na maximu.";
+        g.model.hangar.message = tr("hangar.fire_rate_max");
         return;
       }
       if (item.id === "magazine" && g.model.upgrades.magazineLevel >= g.config.hangar.maxMagazineLevel) {
-        g.model.hangar.message = "Magazine je na maximu.";
+        g.model.hangar.message = tr("hangar.magazine_max");
         return;
       }
 
@@ -196,14 +199,14 @@
         ) {
           g.model.ship.hull = g.model.ship.hullMax;
           g.model.ship.shield = g.model.ship.shieldMax;
-          g.model.hangar.message = "Hull i shield opraveny na maximum.";
+          g.model.hangar.message = tr("hangar.repaired");
           return;
         }
       }
       if (item.id === "fire_rate") g.model.upgrades.fireRateLevel += 1;
       if (item.id === "magazine") g.model.upgrades.magazineLevel += 1;
 
-      g.model.hangar.message = `Nakoupeno: ${item.title}`;
+      g.model.hangar.message = tr("hangar.purchased", { title: item.title });
       g.saveProfile("hangar_purchase");
     }
 
@@ -281,7 +284,10 @@
       this.clampSelection();
       const selected = this.getSelectedEntry();
       if (selected) {
-        g.model.hangar.message = `${selected.source === "crate" ? "Crate" : "Inventory"}: ${selected.item.name}`;
+        g.model.hangar.message = tr("hangar.selected", {
+          source: selected.source === "crate" ? tr("hangar.source.crate") : tr("hangar.source.inventory"),
+          name: selected.item.name
+        });
       }
     }
 
@@ -295,7 +301,7 @@
 
       if (entry.source === "crate") {
         if (g.model.inventory.length >= g.config.loot.maxInventoryItems) {
-          g.model.hangar.message = "Inventory je plny. Prodej nebo salvage.";
+          g.model.hangar.message = tr("hangar.inventory_full");
           return;
         }
         g.model.hangar.lootCrate.splice(entry.index, 1);
@@ -303,7 +309,7 @@
         g.model.hangar.selectionSource = "inventory";
         g.model.hangar.selectionIndex = g.model.inventory.length - 1;
         this.clampSelection();
-        g.model.hangar.message = `Vzato do inventory: ${entry.item.name}`;
+        g.model.hangar.message = tr("hangar.taken", { name: entry.item.name });
         g.saveProfile("hangar_take");
         return;
       }
@@ -317,7 +323,7 @@
       g.refreshSetState();
       g.initializeShipResources(g.model.ship);
       this.clampSelection();
-      g.model.hangar.message = `Equip ${slot}: ${module.name}`;
+      g.model.hangar.message = tr("hangar.equipped", { slot, name: module.name });
       g.saveProfile("hangar_equip");
     }
 
@@ -399,7 +405,7 @@
       g.model.hangar.pilotAttrIndex = next;
       const key = order[next];
       const value = g.model.pilot.attributes[key] ?? 0;
-      g.model.hangar.message = `Pilot attr selected: ${key.toUpperCase()} (${value})`;
+      g.model.hangar.message = tr("hangar.pilot.selected_attr", { attr: key.toUpperCase(), value });
     }
 
     spendSelectedPilotAttribute() {
@@ -408,7 +414,7 @@
       const key = order[g.model.hangar.pilotAttrIndex] ?? "reflex";
       const ok = g.spendPilotAttributePoint(key);
       if (!ok) {
-        g.model.hangar.message = `Cannot upgrade ${key.toUpperCase()} (need attr point or cap reached).`;
+        g.model.hangar.message = tr("hangar.pilot.cannot_upgrade", { attr: key.toUpperCase() });
       }
     }
 
@@ -420,7 +426,7 @@
       const next = (g.model.hangar.pilotPerkIndex + step + size) % size;
       g.model.hangar.pilotPerkIndex = next;
       const perk = perks[next];
-      g.model.hangar.message = `Perk selected: ${perk.label} (${perk.branch})`;
+      g.model.hangar.message = tr("hangar.pilot.selected_perk", { label: perk.label, branch: perk.branch });
     }
 
     unlockSelectedPilotPerk() {
@@ -428,7 +434,7 @@
       const perk = g.getPilotSelectedPerk();
       if (!perk) return;
       const ok = g.unlockPilotPerk(perk.id);
-      if (!ok) g.model.hangar.message = `Cannot unlock perk: ${perk.label}`;
+      if (!ok) g.model.hangar.message = tr("hangar.pilot.cannot_unlock", { label: perk.label });
     }
 
   }
