@@ -2,9 +2,9 @@
 
 ## Dalsi chybejici temata (zatim neevidovana)
 
-- [ ] Biome identity 2.0 (audio + rewards)
+- [x] Biome identity 2.0 (audio + rewards)
   - [x] Biome-specificky ambient layer a warning SFX variace
-  - [ ] Biome-specificke mini reward/event hooky (aby biome nebyl jen vizualni)
+  - [x] Biome-specificke mini reward/event hooky (aby biome nebyl jen vizualni)
 
 - [ ] New player onboarding
   - [ ] Kratky tutorial flow pro shared shield-energy model

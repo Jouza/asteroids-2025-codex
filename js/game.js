@@ -1912,6 +1912,7 @@
         biomeId: mission.biomeId,
         missionAudioProfile: mission.biomeAudio
       });
+      this.applyBiomeMiniEvent();
 
       this.model.telemetry.activeMission = {
         sector: this.model.sector,
@@ -1927,6 +1928,58 @@
         utilityUsesStart: this.model.telemetry.shots.utility,
         playerHitsStart: this.model.telemetry.playerHitsTaken
       };
+    }
+
+    formatBiomeEventBonuses(event) {
+      if (!event) return "";
+      const parts = [];
+      if ((event.credits ?? 0) > 0) parts.push(tr("mission.event.bonus.credits", { value: Math.floor(event.credits) }));
+      if ((event.salvageParts ?? 0) > 0) {
+        parts.push(tr("mission.event.bonus.salvage", { value: Math.floor(event.salvageParts) }));
+      }
+      if ((event.energy ?? 0) !== 0) parts.push(tr("mission.event.bonus.energy", { value: Math.floor(event.energy) }));
+      if ((event.shield ?? 0) !== 0) parts.push(tr("mission.event.bonus.shield", { value: Math.floor(event.shield) }));
+      if ((event.heat ?? 0) !== 0) parts.push(tr("mission.event.bonus.heat", { value: Math.floor(event.heat) }));
+      if ((event.cooldownDelta ?? 0) !== 0) {
+        parts.push(tr("mission.event.bonus.cooldown", { value: Math.abs(Number(event.cooldownDelta).toFixed(1)) }));
+      }
+      return parts.join(", ");
+    }
+
+    applyBiomeMiniEvent() {
+      const mission = this.model.currentMission;
+      if (!mission || mission.biomeMiniEventApplied) return;
+      const event = mission.biomeMiniEvent;
+      if (!event || typeof event !== "object") return;
+      const ship = this.model.ship;
+
+      if ((event.credits ?? 0) > 0) {
+        const gain = Math.max(0, Math.floor(event.credits));
+        this.model.credits += gain;
+        this.model.telemetry.creditsEarned += gain;
+      }
+      if ((event.salvageParts ?? 0) > 0) {
+        this.model.salvageParts += Math.max(0, Math.floor(event.salvageParts));
+      }
+      if (ship) {
+        if ((event.energy ?? 0) !== 0) ship.energy = this.clamp(ship.energy + event.energy, 0, ship.energyMax);
+        if ((event.shield ?? 0) !== 0) ship.shield = this.clamp(ship.shield + event.shield, 0, ship.shieldMax);
+        if ((event.heat ?? 0) !== 0) ship.heat = this.clamp(ship.heat + event.heat, 0, ship.heatMax);
+      }
+      if ((event.cooldownDelta ?? 0) !== 0) {
+        const delta = Number(event.cooldownDelta) || 0;
+        this.model.shootTimer = Math.max(0, this.model.shootTimer + delta);
+        this.model.secondaryCooldown = Math.max(0, this.model.secondaryCooldown + delta);
+        this.model.utilityCooldown = Math.max(0, this.model.utilityCooldown + delta);
+        this.model.dashCooldown = Math.max(0, this.model.dashCooldown + delta);
+      }
+
+      mission.biomeMiniEventApplied = true;
+      const eventName = tr(`mission.event.${event.id}`);
+      const bonusSummary = this.formatBiomeEventBonuses(event);
+      mission.biomeEventText = tr("mission.event.triggered", { event: eventName, bonus: bonusSummary || "-" });
+      this.model.hangar.message = mission.biomeEventText;
+      this.hud.sync(this.model);
     }
 
     onMissionCompleted() {

@@ -5,10 +5,11 @@
   - [x] Nove biome hazardy `relay_jammer_burst` a `cryo_shear_zone` s odlisnym gameplay dopadem
   - [x] Doplneny render telegraphy + mission status/warning labely + help karty/i18n coverage
 
-- [x] Biome identity 2.0 - audio slice (MVP)
-  - [x] Biome-specific ambient audio bed podle aktivniho biome v mission contextu
+- [x] Biome identity 2.0 (audio + rewards)
+  - [x] Hybrid audio rezim bez kontinuálního podkresu (biome stinger cue + biome warning variace)
+  - [x] Samostatny `Ambient cue volume` slider s persistenci nastaveni
   - [x] Biome-specific warning SFX varianta pro critical alerts (low hull/high heat/shield break)
-  - [x] Plynule zeslabeni ambientu mimo `PLAYING` stav a preladeni pri zmene sektoru/biomu
+  - [x] Biome mini reward/event hooky pri startu mise (credits/salvage/resource/cooldown bonus podle biome)
 
 - [x] Help content generator (data-driven)
   - [x] `help.html` sekce/karty uz nejsou rucni staticky HTML obsah

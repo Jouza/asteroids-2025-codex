@@ -778,6 +778,10 @@
           audio: {
             warningSoundId: "warning_belt",
             stinger: { a: 260, b: 390, c: 520 }
+          },
+          miniEvent: {
+            id: "prospector_ping",
+            credits: 12
           }
         },
         {
@@ -787,6 +791,10 @@
           audio: {
             warningSoundId: "warning_graveyard",
             stinger: { a: 190, b: 250, c: 330 }
+          },
+          miniEvent: {
+            id: "scrap_cache",
+            salvageParts: 3
           },
           hazards: {
             type: "debris_field",
@@ -807,6 +815,11 @@
             warningSoundId: "warning_refinery",
             stinger: { a: 240, b: 310, c: 460 }
           },
+          miniEvent: {
+            id: "coolant_cache",
+            heat: -20,
+            shield: 10
+          },
           hazards: {
             type: "plasma_vent",
             minCount: 1,
@@ -825,6 +838,11 @@
           audio: {
             warningSoundId: "warning_ion_field",
             stinger: { a: 320, b: 420, c: 620 }
+          },
+          miniEvent: {
+            id: "capacitor_surge",
+            energy: 16,
+            shield: 6
           }
         },
         {
@@ -834,6 +852,10 @@
           audio: {
             warningSoundId: "warning_shattered_relay",
             stinger: { a: 220, b: 340, c: 510 }
+          },
+          miniEvent: {
+            id: "relay_hack",
+            cooldownDelta: -0.9
           },
           hazards: {
             type: "relay_jammer_burst",
@@ -857,6 +879,11 @@
           audio: {
             warningSoundId: "warning_cryo_ring",
             stinger: { a: 170, b: 240, c: 300 }
+          },
+          miniEvent: {
+            id: "cryo_focus",
+            heat: -24,
+            cooldownDelta: -0.4
           },
           hazards: {
             type: "cryo_shear_zone",

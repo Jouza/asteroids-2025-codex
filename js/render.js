@@ -935,19 +935,24 @@
         config.canvas.width / 2,
         84
       );
+      if (model.currentMission.biomeEventText) {
+        ctx.font = "600 12px Trebuchet MS";
+        ctx.fillStyle = "rgba(255,224,162,0.94)";
+        ctx.fillText(model.currentMission.biomeEventText, config.canvas.width / 2, 100);
+      }
       if ((model.currentMission.biomeIntroTimer ?? 0) > 0) {
         const ratio = Math.min(1, model.currentMission.biomeIntroTimer / 1.9);
         const alpha = Math.max(0, Math.min(0.9, ratio * 0.9));
         const width = 380;
         const x = config.canvas.width / 2 - width / 2;
         ctx.fillStyle = `rgba(3,12,24,${alpha * 0.78})`;
-        ctx.fillRect(x, 96, width, 42);
+        ctx.fillRect(x, 110, width, 42);
         ctx.strokeStyle = `rgba(105,224,255,${alpha})`;
         ctx.lineWidth = 1.1;
-        ctx.strokeRect(x, 96, width, 42);
+        ctx.strokeRect(x, 110, width, 42);
         ctx.font = "700 14px Trebuchet MS";
         ctx.fillStyle = `rgba(214,244,255,${alpha})`;
-        ctx.fillText(`ENTERING BIOME: ${biomeName.toUpperCase()}`, config.canvas.width / 2, 122);
+        ctx.fillText(`ENTERING BIOME: ${biomeName.toUpperCase()}`, config.canvas.width / 2, 136);
       }
       ctx.restore();
     }
