@@ -1908,6 +1908,10 @@
       const mission = this.model.currentMission;
       if (!mission) return;
       this.audio.play("mission_start");
+      this.audio.play("biome_stinger", {
+        biomeId: mission.biomeId,
+        missionAudioProfile: mission.biomeAudio
+      });
 
       this.model.telemetry.activeMission = {
         sector: this.model.sector,

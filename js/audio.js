@@ -5,64 +5,22 @@
       this.masterGain = null;
       this.muted = false;
       this.volume = 0.6;
+      this.ambientVolume = 0.4;
       this.maxVoices = 18;
       this.activeVoices = [];
       this.lastPlayedAt = {};
-      this.ambient = {
-        biomeId: null,
-        profile: null,
-        currentGain: 0,
-        targetGain: 0,
-        gainNode: null,
-        filterNode: null,
-        lfoNode: null,
-        lfoGainNode: null,
-        bedNode: null,
-        layerNode: null
-      };
       this.biomeAudioProfiles = {
-        belt: {
-          ambientGain: 0.011,
-          bedHz: 92,
-          layerHz: 142,
-          lfoHz: 0.11,
-          lfoDepthHz: 2.2,
-          filterHz: 410,
-          warningSoundId: "warning_belt"
-        },
-        graveyard: {
-          ambientGain: 0.012,
-          bedHz: 72,
-          layerHz: 109,
-          lfoHz: 0.09,
-          lfoDepthHz: 2.4,
-          filterHz: 330,
-          warningSoundId: "warning_graveyard"
-        },
-        refinery: {
-          ambientGain: 0.011,
-          bedHz: 84,
-          layerHz: 168,
-          lfoHz: 0.14,
-          lfoDepthHz: 2.5,
-          filterHz: 440,
-          warningSoundId: "warning_refinery"
-        },
-        ion_field: {
-          ambientGain: 0.012,
-          bedHz: 96,
-          layerHz: 192,
-          lfoHz: 0.19,
-          lfoDepthHz: 2.8,
-          filterHz: 500,
-          warningSoundId: "warning_ion_field"
-        }
+        belt: { warningSoundId: "warning_belt", stinger: { a: 260, b: 390, c: 520 } },
+        graveyard: { warningSoundId: "warning_graveyard", stinger: { a: 190, b: 250, c: 330 } },
+        refinery: { warningSoundId: "warning_refinery", stinger: { a: 240, b: 310, c: 460 } },
+        ion_field: { warningSoundId: "warning_ion_field", stinger: { a: 320, b: 420, c: 620 } }
       };
       this.soundDefs = {
         ui_start: { priority: 4, cooldownMs: 120 },
         ui_game_over: { priority: 5, cooldownMs: 400 },
         mission_start: { priority: 4, cooldownMs: 120 },
         mission_complete: { priority: 5, cooldownMs: 160 },
+        biome_stinger: { priority: 3, cooldownMs: 900, cooldownAlias: "biome_stinger" },
         primary_fire: { priority: 1, cooldownMs: 28 },
         secondary_fire: { priority: 2, cooldownMs: 80 },
         utility_use: { priority: 3, cooldownMs: 120 },
@@ -131,6 +89,18 @@
       return this.volume;
     }
 
+    setAmbientVolume(value) {
+      this.ambientVolume = Math.max(0, Math.min(1, Number(value) || 0));
+    }
+
+    getAmbientVolume() {
+      return this.ambientVolume;
+    }
+
+    updateBiomeAmbience() {
+      // Hybrid mode: no continuous ambient bed to avoid background hiss.
+    }
+
     cleanupVoices(now = this.nowMs()) {
       this.activeVoices = this.activeVoices.filter((voice) => now < voice.endsAt);
     }
@@ -153,8 +123,13 @@
     }
 
     resolveWarningSoundId(biomeId, missionAudioProfile = null) {
-      const profile = missionAudioProfile || (biomeId ? this.biomeAudioProfiles[biomeId] : null);
-      return profile?.warningSoundId || "warning";
+      const fallback = biomeId ? this.biomeAudioProfiles[biomeId] : null;
+      return missionAudioProfile?.warningSoundId || fallback?.warningSoundId || "warning";
+    }
+
+    resolveStingerProfile(biomeId, missionAudioProfile = null) {
+      const fallback = biomeId ? this.biomeAudioProfiles[biomeId] : null;
+      return missionAudioProfile?.stinger || fallback?.stinger || { a: 240, b: 360, c: 480 };
     }
 
     play(soundId, options = {}) {
@@ -190,135 +165,12 @@
       else if (resolvedSoundId === "mission_start") this.playTone(startAt, 0.12, 240, 430, "triangle", 0.045, def.priority);
       else if (resolvedSoundId === "ui_game_over") this.playTone(startAt, 0.28, 240, 72, "sawtooth", 0.085, def.priority);
       else if (resolvedSoundId === "ui_start") this.playTone(startAt, 0.1, 320, 520, "triangle", 0.05, def.priority);
-    }
-
-    createAmbientNodes() {
-      const startAt = this.context.currentTime;
-      const gainNode = this.context.createGain();
-      gainNode.gain.setValueAtTime(0.0001, startAt);
-      gainNode.connect(this.masterGain);
-      const filterNode = this.context.createBiquadFilter();
-      filterNode.type = "lowpass";
-      filterNode.frequency.setValueAtTime(420, startAt);
-      filterNode.Q.setValueAtTime(0.7, startAt);
-
-      const bedNode = this.context.createOscillator();
-      bedNode.type = "sine";
-      const layerNode = this.context.createOscillator();
-      layerNode.type = "sine";
-      const lfoNode = this.context.createOscillator();
-      lfoNode.type = "sine";
-      const lfoGainNode = this.context.createGain();
-
-      lfoGainNode.gain.setValueAtTime(2.2, startAt);
-      lfoNode.frequency.setValueAtTime(0.12, startAt);
-      bedNode.frequency.setValueAtTime(90, startAt);
-      layerNode.frequency.setValueAtTime(140, startAt);
-      layerNode.detune.setValueAtTime(4, startAt);
-
-      lfoNode.connect(lfoGainNode);
-      lfoGainNode.connect(layerNode.frequency);
-      bedNode.connect(filterNode);
-      layerNode.connect(filterNode);
-      filterNode.connect(gainNode);
-
-      bedNode.start(startAt);
-      layerNode.start(startAt);
-      lfoNode.start(startAt);
-
-      this.ambient.gainNode = gainNode;
-      this.ambient.filterNode = filterNode;
-      this.ambient.bedNode = bedNode;
-      this.ambient.layerNode = layerNode;
-      this.ambient.lfoNode = lfoNode;
-      this.ambient.lfoGainNode = lfoGainNode;
-    }
-
-    destroyAmbientNodes() {
-      const stopNode = (node) => {
-        if (!node) return;
-        try {
-          node.stop();
-        } catch (error) {
-          // Node may already be stopped.
-        }
-        try {
-          node.disconnect();
-        } catch (error) {
-          // Node may already be disconnected.
-        }
-      };
-      stopNode(this.ambient.bedNode);
-      stopNode(this.ambient.layerNode);
-      stopNode(this.ambient.lfoNode);
-      try {
-        this.ambient.lfoGainNode?.disconnect();
-      } catch (error) {
-        // Already disconnected.
-      }
-      try {
-        this.ambient.gainNode?.disconnect();
-      } catch (error) {
-        // Already disconnected.
-      }
-      try {
-        this.ambient.filterNode?.disconnect();
-      } catch (error) {
-        // Already disconnected.
-      }
-      this.ambient.gainNode = null;
-      this.ambient.filterNode = null;
-      this.ambient.lfoNode = null;
-      this.ambient.lfoGainNode = null;
-      this.ambient.bedNode = null;
-      this.ambient.layerNode = null;
-    }
-
-    applyAmbientProfile(profile) {
-      if (!this.context || !profile || !this.ambient.bedNode || !this.ambient.layerNode || !this.ambient.lfoNode || !this.ambient.lfoGainNode) return;
-      const now = this.context.currentTime;
-      this.ambient.bedNode.frequency.cancelScheduledValues(now);
-      this.ambient.layerNode.frequency.cancelScheduledValues(now);
-      this.ambient.lfoNode.frequency.cancelScheduledValues(now);
-      this.ambient.lfoGainNode.gain.cancelScheduledValues(now);
-      this.ambient.filterNode?.frequency.cancelScheduledValues(now);
-      this.ambient.bedNode.frequency.linearRampToValueAtTime(Math.max(36, profile.bedHz || 90), now + 0.35);
-      this.ambient.layerNode.frequency.linearRampToValueAtTime(Math.max(42, profile.layerHz || 140), now + 0.35);
-      this.ambient.lfoNode.frequency.linearRampToValueAtTime(Math.max(0.03, profile.lfoHz || 0.12), now + 0.35);
-      this.ambient.lfoGainNode.gain.linearRampToValueAtTime(Math.max(0, profile.lfoDepthHz || 2.2), now + 0.35);
-      this.ambient.filterNode?.frequency.linearRampToValueAtTime(Math.max(180, profile.filterHz || 420), now + 0.35);
-    }
-
-    updateBiomeAmbience(dt, context = {}) {
-      if (!this.ensureContext()) return;
-      if (this.context.state === "suspended") return;
-      const safeDt = Math.max(0, Number(dt) || 0);
-      const shouldPlay = context.gameState === "playing";
-      const biomeId = shouldPlay ? context.biomeId || context.mission?.biomeId || null : null;
-      const profile = shouldPlay
-        ? context.mission?.biomeAudio || (biomeId ? this.biomeAudioProfiles[biomeId] || null : null)
-        : null;
-
-      if (biomeId !== this.ambient.biomeId) {
-        this.ambient.biomeId = biomeId;
-        this.ambient.profile = profile;
-        if (profile) {
-          if (!this.ambient.gainNode) this.createAmbientNodes();
-          this.applyAmbientProfile(profile);
-        }
-      }
-
-      this.ambient.targetGain = profile ? profile.ambientGain ?? 0.011 : 0;
-      const lerpFactor = Math.min(1, safeDt * 2.2);
-      this.ambient.currentGain += (this.ambient.targetGain - this.ambient.currentGain) * lerpFactor;
-      if (this.ambient.gainNode) {
-        const now = this.context.currentTime;
-        this.ambient.gainNode.gain.cancelScheduledValues(now);
-        this.ambient.gainNode.gain.linearRampToValueAtTime(Math.max(0.0001, this.ambient.currentGain), now + 0.06);
-      }
-
-      if (this.ambient.targetGain <= 0.0002 && this.ambient.currentGain <= 0.0006 && this.ambient.gainNode) {
-        this.destroyAmbientNodes();
+      else if (resolvedSoundId === "biome_stinger") {
+        if (this.ambientVolume <= 0.001) return;
+        const s = this.resolveStingerProfile(options.biomeId, options.missionAudioProfile);
+        const amp = 0.03 * this.ambientVolume;
+        this.playTone(startAt, 0.09, s.a, s.b, "sine", amp, def.priority);
+        this.playTone(startAt + 0.08, 0.12, s.b, s.c, "triangle", amp * 0.9, def.priority);
       }
     }
 

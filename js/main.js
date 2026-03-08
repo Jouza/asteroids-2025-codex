@@ -13,6 +13,8 @@
   const game = new Game(canvas, renderer, hud, input, GAME_CONFIG, audio);
   const volumeSlider = document.getElementById("volumeSlider");
   const volumeValue = document.getElementById("volumeValue");
+  const ambientSlider = document.getElementById("ambientSlider");
+  const ambientValue = document.getElementById("ambientValue");
 
   function loadAudioSettings() {
     try {
@@ -20,6 +22,7 @@
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (typeof parsed?.volume === "number") audio.setVolume(parsed.volume);
+      if (typeof parsed?.ambientVolume === "number") audio.setAmbientVolume(parsed.ambientVolume);
       if (typeof parsed?.muted === "boolean") audio.setMuted(parsed.muted);
     } catch (error) {
       // Ignore invalid persisted settings.
@@ -30,7 +33,11 @@
     try {
       window.localStorage.setItem(
         AUDIO_SETTINGS_KEY,
-        JSON.stringify({ volume: audio.getVolume(), muted: audio.isMuted() })
+        JSON.stringify({
+          volume: audio.getVolume(),
+          ambientVolume: audio.getAmbientVolume(),
+          muted: audio.isMuted()
+        })
       );
     } catch (error) {
       // Ignore storage write issues.
@@ -38,10 +45,16 @@
   }
 
   function syncVolumeUi() {
-    if (!volumeSlider || !volumeValue) return;
-    const percent = Math.round(audio.getVolume() * 100);
-    volumeSlider.value = String(percent);
-    volumeValue.textContent = `${percent}%`;
+    if (volumeSlider && volumeValue) {
+      const percent = Math.round(audio.getVolume() * 100);
+      volumeSlider.value = String(percent);
+      volumeValue.textContent = `${percent}%`;
+    }
+    if (ambientSlider && ambientValue) {
+      const percent = Math.round(audio.getAmbientVolume() * 100);
+      ambientSlider.value = String(percent);
+      ambientValue.textContent = `${percent}%`;
+    }
   }
 
   const unlockAudio = () => {
@@ -54,13 +67,21 @@
   loadAudioSettings();
   if (i18n) i18n.applyTranslations(document);
   syncVolumeUi();
-  let lastAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
+  let lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
   if (volumeSlider) {
     volumeSlider.addEventListener("input", () => {
       audio.setVolume(Number(volumeSlider.value) / 100);
       syncVolumeUi();
       saveAudioSettings();
-      lastAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
+      lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
+    });
+  }
+  if (ambientSlider) {
+    ambientSlider.addEventListener("input", () => {
+      audio.setAmbientVolume(Number(ambientSlider.value) / 100);
+      syncVolumeUi();
+      saveAudioSettings();
+      lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
     });
   }
 
@@ -81,7 +102,7 @@
     const frameDelta = game.applyFrameDelta(rawDelta);
 
     game.handleMetaInput();
-    const currentAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
+    const currentAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
     if (currentAudioState !== lastAudioState) {
       saveAudioSettings();
       syncVolumeUi();
