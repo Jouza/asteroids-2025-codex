@@ -227,7 +227,7 @@
       "index.audio_summary_muted": "Audio muted | SFX {sfx}% | Amb {ambient}%",
       "index.pilot_summary_label": "Pilot Console",
       "index.controls_compact_html":
-        "<strong>Core:</strong> Left/Right rotate, Up thrust, Space fire, Shift boost, V dash, X secondary, C utility.<br><strong>Setup:</strong> Enter start/restart, F flight model, G audio, J pilot, B/N perf.",
+        "<strong>Core:</strong> Left/Right rotate, Up thrust, Space fire, Shift boost, V dash, X secondary, C utility.<br><strong>Setup:</strong> Enter start/restart, F flight model, G audio, J pilot, H help, B/N perf.",
       "index.audio_modal.title": "Audio settings",
       "index.audio_modal.close": "Close",
       "index.audio_modal.hint": "Adjust SFX and ambient cue mix. Press G or Esc to close.",
@@ -273,6 +273,8 @@
       "help.section.dev_profiling": "Dev Profiling Controls",
       "help.section.dev_profiling_hint":
         "For runtime performance diagnostics during manual QA, use <strong>B</strong> to toggle the perf overlay and <strong>N</strong> to dump a profiling snapshot to the browser console.",
+      "help.section.ui_shortcuts_hint":
+        "Quick UI shortcuts: <strong>G</strong> audio settings, <strong>J</strong> pilot console, <strong>H</strong> open Help page.",
       "help.card.shared_pool.name": "Shared Shield + Energy",
       "help.card.shared_pool.tag": "Core system",
       "help.card.shared_pool.line": "Firing and active abilities consume both energy and a portion of shield.",

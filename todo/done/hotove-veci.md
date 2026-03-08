@@ -12,6 +12,11 @@
   - [x] Hangar nav sekce zjednodusena na `shop/loot` (pilot uz neni treti sipkova sekce)
   - [x] Legacy pilot fallback klavesy (`T/Y/U`, `I/O/K`) zachovany pro kompatibilitu
 
+- [x] HUD/panel clarity refactor (Phase 4 polish)
+  - [x] Quick shortcut `H` otevre `help.html` v nove zalozce
+  - [x] Compact controls hint a help texty sjednoceny s aktualnimi modal shortcuty (`G/J/H`)
+  - [x] TODO cleanup: kompletni phased item presunut z backlogu do done
+
 - [x] Onboarding + action gate feedback (MVP)
   - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
   - [x] Start overlay ma responzivni vertikalni stack (compact/normal/large) s garantovanym spacingem mezi bloky

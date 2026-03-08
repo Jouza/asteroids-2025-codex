@@ -258,6 +258,9 @@
       } else if (event.code === "KeyJ") {
         setActiveModal(activeModal === "pilot" ? null : "pilot");
         event.preventDefault();
+      } else if (event.code === "KeyH") {
+        window.open("./help.html", "_blank", "noopener,noreferrer");
+        event.preventDefault();
       } else if (event.code === "Escape" && activeModal) {
         setActiveModal(null);
         event.preventDefault();
