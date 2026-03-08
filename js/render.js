@@ -1338,6 +1338,9 @@
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
         this.drawOverlayBlock(cx, cy + 24, 560, 248);
+        ctx.fillStyle = "#d8f5ff";
+        ctx.textAlign = "center";
+        ctx.font = "700 38px Trebuchet MS";
         ctx.fillText(tr("overlay.victory"), cx, cy - 54);
         ctx.font = "600 20px Trebuchet MS";
         ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy - 18);
