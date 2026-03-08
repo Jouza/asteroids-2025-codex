@@ -55,6 +55,8 @@ Kontrolovane oblasti:
   - Legacy fallback stale funguje (`4/5/R`, `8/9/0`, `T/Y/U/I/O/K`).
 - Behem runu:
   - `M` prepina mute/unmute bez erroru v konzoli.
+  - `B` prepina perf overlay (FPS/ms/quality/hotspots).
+  - `N` vypise profiling snapshot do konzole (pro zaznam a porovnani behu).
 - Mise `SURVIVE`:
   - po dobehnuti casu se ukazuje `Clear remaining threats: N`.
 - Po game over + restart:

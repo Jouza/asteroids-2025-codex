@@ -146,7 +146,7 @@
       "index.icon.flight_mode.aria": "Flight Mode",
       "index.help_link": "HELP: objects and hazards reference",
       "index.controls_html":
-        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>E</strong> toggle campaign/endless (after unlock), <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
+        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>E</strong> toggle campaign/endless (after unlock), <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
       "help.document_title": "STARFANG - Help",
       "help.title": "STARFANG Help",
       "help.page_title": "STARFANG - Object Help",
@@ -167,6 +167,9 @@
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.hazards": "Hazard Zones",
+      "help.section.dev_profiling": "Dev Profiling Controls",
+      "help.section.dev_profiling_hint":
+        "For runtime performance diagnostics during manual QA, use <strong>B</strong> to toggle the perf overlay and <strong>N</strong> to dump a profiling snapshot to the browser console.",
       "help.card.shared_pool.name": "Shared Shield + Energy",
       "help.card.shared_pool.tag": "Core system",
       "help.card.shared_pool.line": "Firing and active abilities consume both energy and a portion of shield.",
