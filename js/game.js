@@ -532,10 +532,10 @@
       if (this.input.wasPressed("F3")) {
         this.model.telemetry.enabled = !this.model.telemetry.enabled;
       }
-      if (this.input.wasPressed("F4")) {
+      if (this.input.wasPressed("KeyB")) {
         this.model.performance.enabled = !this.model.performance.enabled;
       }
-      if (this.input.wasPressed("F6")) {
+      if (this.input.wasPressed("KeyN")) {
         this.dumpPerformanceSnapshot();
       }
       if (this.input.wasPressed("KeyF")) {

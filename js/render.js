@@ -882,7 +882,7 @@
       ctx.textAlign = "left";
       ctx.font = "600 12px Trebuchet MS";
 
-      drawLine("PERF OVERLAY [F4]", panelY + 18, "rgba(178,239,255,1)");
+      drawLine("PERF OVERLAY [B] SNAPSHOT [N]", panelY + 18, "rgba(178,239,255,1)");
       drawLine(
         `Frame ${perf.frameMs.toFixed(2)} ms | FPS ${perf.fps.toFixed(1)}`,
         panelY + 38
