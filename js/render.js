@@ -514,11 +514,41 @@
       const { ctx, config } = this;
       const effects = mission.modifierEffects || {};
       if (mission.biomeId === "graveyard") {
-        ctx.fillStyle = "rgba(118,142,170,0.05)";
+        ctx.fillStyle = "rgba(118,142,170,0.09)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        ctx.strokeStyle = "rgba(132,168,212,0.22)";
+        ctx.lineWidth = 1.1;
+        for (let i = 0; i < 6; i += 1) {
+          const drift = Math.sin(performance.now() * 0.0006 + i * 0.9) * 12;
+          const x = 120 + i * 150 + drift;
+          const y = 90 + (i % 2) * 120;
+          ctx.strokeRect(x, y, 58, 20);
+          ctx.beginPath();
+          ctx.moveTo(x - 14, y + 10);
+          ctx.lineTo(x + 72, y + 10);
+          ctx.stroke();
+        }
+        ctx.restore();
       } else if (mission.biomeId === "refinery") {
-        ctx.fillStyle = "rgba(158,112,74,0.05)";
+        ctx.fillStyle = "rgba(158,112,74,0.09)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < 4; i += 1) {
+          const y = 120 + i * 140 + Math.sin(performance.now() * 0.0012 + i) * 6;
+          const heatLine = ctx.createLinearGradient(0, y, config.canvas.width, y + 22);
+          heatLine.addColorStop(0, "rgba(255,172,108,0)");
+          heatLine.addColorStop(0.5, "rgba(255,172,108,0.18)");
+          heatLine.addColorStop(1, "rgba(255,172,108,0)");
+          ctx.fillStyle = heatLine;
+          ctx.fillRect(0, y, config.canvas.width, 22);
+        }
+        ctx.fillStyle = "rgba(255,201,142,0.12)";
+        for (let i = 0; i < 5; i += 1) {
+          const x = 96 + i * 180;
+          ctx.fillRect(x, 36, 4, config.canvas.height - 72);
+        }
+        ctx.restore();
       }
 
       if ((effects.fogAlpha ?? 0) > 0) {
@@ -560,13 +590,23 @@
             : hazard.radius;
         ctx.save();
         if (hazard.type === "debris_field") {
-          ctx.strokeStyle = "rgba(140,205,255,0.38)";
+          const ringPulse = 0.9 + Math.sin((hazard.phase ?? 0) * 3.6) * 0.1;
+          ctx.strokeStyle = "rgba(140,205,255,0.55)";
           ctx.fillStyle = "rgba(96,146,198,0.09)";
-          ctx.lineWidth = 1.4;
+          ctx.lineWidth = 1.4 + ringPulse * 0.4;
+          ctx.setLineDash([8, 6]);
           ctx.beginPath();
           ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(186,224,255,0.62)";
+          for (let i = 0; i < 8; i += 1) {
+            const orbit = (i / 8) * Math.PI * 2 + (hazard.phase ?? 0) * 1.4;
+            const ox = hazard.x + Math.cos(orbit) * pulseRadius * 0.78;
+            const oy = hazard.y + Math.sin(orbit) * pulseRadius * 0.78;
+            ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
+          }
         } else if (hazard.type === "plasma_vent") {
           const alpha = 0.38 + Math.sin((hazard.phase ?? 0) * 3.3) * 0.14;
           ctx.strokeStyle = `rgba(255,166,108,${alpha})`;
@@ -576,6 +616,15 @@
           ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
+          ctx.strokeStyle = `rgba(255,214,148,${Math.min(0.7, alpha + 0.2)})`;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius * 0.58, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255,221,146,0.34)";
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius * 0.2, 0, Math.PI * 2);
+          ctx.fill();
         }
         ctx.restore();
       }
@@ -615,6 +664,42 @@
         ctx.font = "500 13px Trebuchet MS";
         ctx.fillStyle = "rgba(160,236,202,0.92)";
         ctx.fillText(model.currentMission.contextText, config.canvas.width / 2, 68);
+      }
+      const biomeName = model.currentMission.biomeLabel || "Outer Void";
+      const activeHazards = (model.currentMission.biomeHazards || []).filter((hazard) => hazard.active);
+      const activeHazardText = activeHazards.length
+        ? activeHazards
+            .map((hazard) => (hazard.type === "debris_field" ? "Debris Field" : hazard.type === "plasma_vent" ? "Plasma Vent" : hazard.type))
+            .join(", ")
+        : "None";
+      const potentialHazard = (model.currentMission.biomeHazards || [])[0];
+      const potentialText = potentialHazard
+        ? potentialHazard.type === "debris_field"
+          ? "Debris Field"
+          : potentialHazard.type === "plasma_vent"
+            ? "Plasma Vent"
+            : potentialHazard.type
+        : "None";
+      ctx.font = "500 12px Trebuchet MS";
+      ctx.fillStyle = "rgba(178,236,255,0.9)";
+      ctx.fillText(
+        `Biome: ${biomeName} | Hazard: ${activeHazards.length ? `ACTIVE ${activeHazardText}` : `Potential ${potentialText}`}`,
+        config.canvas.width / 2,
+        84
+      );
+      if ((model.currentMission.biomeIntroTimer ?? 0) > 0) {
+        const ratio = Math.min(1, model.currentMission.biomeIntroTimer / 1.9);
+        const alpha = Math.max(0, Math.min(0.9, ratio * 0.9));
+        const width = 380;
+        const x = config.canvas.width / 2 - width / 2;
+        ctx.fillStyle = `rgba(3,12,24,${alpha * 0.78})`;
+        ctx.fillRect(x, 96, width, 42);
+        ctx.strokeStyle = `rgba(105,224,255,${alpha})`;
+        ctx.lineWidth = 1.1;
+        ctx.strokeRect(x, 96, width, 42);
+        ctx.font = "700 14px Trebuchet MS";
+        ctx.fillStyle = `rgba(214,244,255,${alpha})`;
+        ctx.fillText(`ENTERING BIOME: ${biomeName.toUpperCase()}`, config.canvas.width / 2, 122);
       }
       ctx.restore();
     }

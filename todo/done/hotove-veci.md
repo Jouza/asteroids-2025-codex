@@ -62,6 +62,9 @@
 - [x] Content a biomy
   - [x] Min. 2 nove areny (vrakoviste/tezebni komplex)
   - [x] Hazardy prostredi jako gameplay prvek
+  - [x] Biome readability pass: intro banner + trvale vizualni signatury graveyard/refinery
+  - [x] Vazba biome/hazard v mission statusu (ACTIVE/Potential hazard)
+  - [x] Odlisene hazard telegraphy (debris_field vs plasma_vent)
 
 - [x] Shared energy economy (MVP)
   - [x] Strelba spotrebovava energy i shield pool

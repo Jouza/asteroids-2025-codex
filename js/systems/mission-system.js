@@ -193,6 +193,7 @@
         label: type.toUpperCase(),
         objectiveText: "",
         completed: false,
+        biomeIntroTimer: 1.9,
         difficulty,
         ...context
       };
@@ -375,6 +376,7 @@
 
       const mission = g.model.currentMission;
       const type = mission.type;
+      mission.biomeIntroTimer = Math.max(0, (mission.biomeIntroTimer ?? 0) - dt);
       const threatsRemaining =
         g.model.asteroids.length +
         g.model.ufos.length +
