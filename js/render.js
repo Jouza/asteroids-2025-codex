@@ -992,20 +992,20 @@
 
     drawTitleShipGlyph(centerX, baselineY, size) {
       const { ctx } = this;
-      const topY = baselineY - size * 0.98;
-      const wingY = baselineY - size * 0.1;
+      const topY = baselineY - size;
+      const wingY = baselineY;
       ctx.save();
-      ctx.shadowColor = "rgba(152,232,255,0.8)";
-      ctx.shadowBlur = 7;
+      ctx.shadowColor = "rgba(152,232,255,0.7)";
+      ctx.shadowBlur = 5;
       ctx.fillStyle = "rgba(126,206,255,0.2)";
       ctx.strokeStyle = "#d8f5ff";
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(centerX, topY);
       ctx.lineTo(centerX - size * 0.74, wingY);
-      ctx.lineTo(centerX - size * 0.36, baselineY - size * 0.38);
-      ctx.lineTo(centerX, baselineY - size * 0.16);
-      ctx.lineTo(centerX + size * 0.36, baselineY - size * 0.38);
+      ctx.lineTo(centerX - size * 0.34, baselineY - size * 0.44);
+      ctx.lineTo(centerX, baselineY - size * 0.2);
+      ctx.lineTo(centerX + size * 0.34, baselineY - size * 0.44);
       ctx.lineTo(centerX + size * 0.74, wingY);
       ctx.closePath();
       ctx.fill();
@@ -1019,9 +1019,9 @@
       ctx.font = "700 54px Trebuchet MS";
       ctx.fillStyle = "#d8f5ff";
       ctx.textAlign = "left";
-      const tracking = 1.2;
-      const shipWidth = 34;
-      const shipSize = 18;
+      const tracking = 1;
+      const shipWidth = 33;
+      const shipSize = 37;
       const chars = Array.from(title);
       let totalWidth = 0;
       for (let i = 0; i < chars.length; i += 1) {
@@ -1098,15 +1098,17 @@
       if (model.gameState === GAME_STATE.START) {
         const centerX = config.canvas.width / 2;
         const centerY = config.canvas.height / 2;
-        this.drawStartLogo(centerX, centerY - 120);
-        this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, centerY - 36);
+        // 3 visual blocks on start screen:
+        // 1) logo + title, 2) run info, 3) mode selection
+        this.drawStartLogo(centerX, centerY - 138);
+        this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, centerY - 54);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY - 10);
-        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 20);
-        const modeBottomY = this.drawModeSelector(model, centerY + 96);
+        ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY + 2);
+        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 36);
+        const modeBottomY = this.drawModeSelector(model, centerY + 126);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
-          ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 26);
+          ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
         }
       }
 
