@@ -864,7 +864,7 @@
       const { ctx, config } = this;
       const perf = model.performance;
       const panelW = 286;
-      const panelH = 164;
+      const panelH = 216;
       const panelX = config.canvas.width - panelW - 16;
       const panelY = 16;
 
@@ -891,29 +891,49 @@
         `Avg ${perf.avgFrameMs.toFixed(2)} ms | Avg FPS ${perf.avgFps.toFixed(1)}`,
         panelY + 56
       );
+      const updateTiming = perf.timings?.updateMs;
+      const renderTiming = perf.timings?.renderMs;
+      drawLine(
+        `Update avg/p95 ${updateTiming?.avg?.toFixed(2) ?? "0.00"}/${updateTiming?.p95?.toFixed(2) ?? "0.00"} ms`,
+        panelY + 74,
+        "rgba(188,230,255,0.93)"
+      );
+      drawLine(
+        `Render avg/p95 ${renderTiming?.avg?.toFixed(2) ?? "0.00"}/${renderTiming?.p95?.toFixed(2) ?? "0.00"} ms`,
+        panelY + 92,
+        "rgba(188,230,255,0.93)"
+      );
       drawLine(
         `Worst ${perf.maxFrameMs.toFixed(2)} ms | Steps ${perf.stepsLastFrame} (${perf.avgSteps.toFixed(2)} avg)`,
-        panelY + 74,
+        panelY + 110,
         "rgba(196,231,255,0.92)"
       );
       drawLine(
         `Obj P:${perf.objects.particles} B:${perf.objects.bullets}/${perf.objects.enemyBullets}`,
-        panelY + 96,
+        panelY + 128,
         "rgba(176,226,255,0.92)"
       );
       drawLine(
         `Obj U:${perf.objects.utilityEffects} A:${perf.objects.asteroids} UFO:${perf.objects.ufos}`,
-        panelY + 114,
+        panelY + 146,
         "rgba(176,226,255,0.92)"
+      );
+      const topSections = Object.entries(perf.timings?.sections || {})
+        .sort((a, b) => (b[1]?.avg ?? 0) - (a[1]?.avg ?? 0))
+        .slice(0, 2);
+      drawLine(
+        `Hot: ${(topSections[0]?.[0] || "-")} ${(topSections[0]?.[1]?.avg ?? 0).toFixed(2)} ms`,
+        panelY + 164,
+        "rgba(182,220,245,0.9)"
       );
       drawLine(
         `Dropped P:${perf.dropped?.particles ?? 0} B:${perf.dropped?.bullets ?? 0} E:${perf.dropped?.enemyBullets ?? 0} U:${perf.dropped?.utilityEffects ?? 0}`,
-        panelY + 132,
+        panelY + 182,
         "rgba(176,215,242,0.88)"
       );
       drawLine(
         `Quality ${String(perf.qualityLevel || "high").toUpperCase()} | Frames ${perf.frameCount}`,
-        panelY + 150,
+        panelY + 198,
         "rgba(156,209,236,0.88)"
       );
 

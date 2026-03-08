@@ -69,6 +69,7 @@
 
   let lastTimestamp = 0;
   let accumulator = 0;
+  const nowMs = () => (typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now());
 
   function frame(timestamp) {
     if (!lastTimestamp) {
@@ -90,6 +91,7 @@
 
     const fixedStep = GAME_CONFIG.simulation.fixedStepSeconds;
     let steps = 0;
+    const updateStart = nowMs();
 
     while (
       accumulator >= fixedStep &&
@@ -99,10 +101,12 @@
       accumulator -= fixedStep;
       steps += 1;
     }
+    const updateMs = nowMs() - updateStart;
 
-    game.recordFramePerformance(rawDelta, steps);
-
+    const renderStart = nowMs();
     game.render();
+    const renderMs = nowMs() - renderStart;
+    game.recordFramePerformance(rawDelta, steps, updateMs, renderMs);
     input.endFrame();
     requestAnimationFrame(frame);
   }

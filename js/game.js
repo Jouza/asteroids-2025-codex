@@ -58,6 +58,13 @@
   }
 
   function createPerformanceState(enabled = false) {
+    const createTimingBucket = () => ({
+      last: 0,
+      avg: 0,
+      max: 0,
+      p95: 0,
+      samples: []
+    });
     return {
       enabled,
       frameMs: 0,
@@ -92,6 +99,11 @@
         bullets: 0,
         enemyBullets: 0,
         utilityEffects: 0
+      },
+      timings: {
+        updateMs: createTimingBucket(),
+        renderMs: createTimingBucket(),
+        sections: {}
       }
     };
   }
@@ -1077,6 +1089,8 @@
 
     update(dt) {
       if (this.model.gameState !== GAME_STATE.PLAYING) return;
+      const perfEnabled = Boolean(this.model.performance?.enabled);
+      let sectionStart = perfEnabled ? this.getNowMs() : 0;
 
       this.model.runtimeSeconds += dt;
       this.model.telemetry.runTimeSeconds += dt;
@@ -1085,11 +1099,21 @@
       this.model.secondaryCooldown = Math.max(0, this.model.secondaryCooldown - dt);
       this.model.utilityCooldown = Math.max(0, this.model.utilityCooldown - dt);
       this.model.dashCooldown = Math.max(0, this.model.dashCooldown - dt);
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("cooldowns", now - sectionStart);
+        sectionStart = now;
+      }
 
       if (this.model.hitstopSeconds > 0) {
         this.model.hitstopSeconds = Math.max(0, this.model.hitstopSeconds - dt);
         this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
         this.enforceRuntimeGuards();
+        if (perfEnabled) {
+          const now = this.getNowMs();
+          this.recordSectionTiming("hitstop", now - sectionStart);
+          sectionStart = now;
+        }
         this.updateUiAlerts();
         this.hud.sync(this.model);
         return;
@@ -1099,17 +1123,40 @@
         const didFire = this.combatSystem.fireBullet();
         if (didFire) this.model.shootTimer = this.getCurrentBulletCooldown();
       }
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("fire_input", now - sectionStart);
+        sectionStart = now;
+      }
 
       this.updateComboTimer(dt);
       this.combatSystem.updateShip(dt);
       this.missionSystem.applyMissionEnvironmentalEffects(dt);
       this.updateShipResources(dt);
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("ship_and_resources", now - sectionStart);
+        sectionStart = now;
+      }
+
       this.combatSystem.updateBullets(dt);
       this.combatSystem.updateEnemyBullets(dt);
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("projectiles", now - sectionStart);
+        sectionStart = now;
+      }
+
       this.combatSystem.updateAsteroids(dt);
       this.enemySystem.updateUfos(dt);
       this.enemySystem.updateMiniBoss(dt);
       this.updateDotEffects(dt);
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("enemies_and_hazards", now - sectionStart);
+        sectionStart = now;
+      }
+
       if (this.model.gameState !== GAME_STATE.PLAYING) {
         this.hud.sync(this.model);
         return;
@@ -1118,17 +1165,32 @@
       this.combatSystem.handleBulletUfoCollisions();
       this.combatSystem.handleBulletMiniBossCollisions();
       this.combatSystem.handleShipThreatCollisions();
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("collisions", now - sectionStart);
+        sectionStart = now;
+      }
+
       this.combatSystem.updateParticles(dt);
       this.combatSystem.updateUtilityEffects(dt);
       this.missionSystem.updateMission(dt);
       this.model.flashMs = Math.max(0, this.model.flashMs - dt * 1000);
       this.enforceRuntimeGuards();
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("effects_and_mission", now - sectionStart);
+        sectionStart = now;
+      }
       this.updateUiAlerts();
 
       this.hud.sync(this.model);
+      if (perfEnabled) {
+        const now = this.getNowMs();
+        this.recordSectionTiming("hud_sync", now - sectionStart);
+      }
     }
 
-    recordFramePerformance(rawFrameSeconds, stepCount = 0) {
+    recordFramePerformance(rawFrameSeconds, stepCount = 0, updateMs = null, renderMs = null) {
       const perf = this.model.performance;
       if (!perf) return;
       const frameMs = Math.max(0, rawFrameSeconds * 1000);
@@ -1148,18 +1210,70 @@
       perf.objects.utilityEffects = this.model.utilityEffects.length;
       perf.objects.asteroids = this.model.asteroids.length;
       perf.objects.ufos = this.model.ufos.length;
+      if (Number.isFinite(updateMs)) this.recordTimingSample("updateMs", updateMs);
+      if (Number.isFinite(renderMs)) this.recordTimingSample("renderMs", renderMs);
       this.updateAdaptiveQuality(perf.frameMs);
+    }
+
+    getNowMs() {
+      if (typeof performance !== "undefined" && typeof performance.now === "function") return performance.now();
+      return Date.now();
+    }
+
+    updateTimingBucket(bucket, sample) {
+      if (!bucket || !Number.isFinite(sample)) return;
+      const alpha = 0.12;
+      bucket.last = sample;
+      bucket.avg = bucket.avg > 0 ? bucket.avg * (1 - alpha) + sample * alpha : sample;
+      bucket.max = Math.max(bucket.max * 0.995, sample);
+      bucket.samples.push(sample);
+      if (bucket.samples.length > 220) bucket.samples.shift();
+      const sorted = [...bucket.samples].sort((a, b) => a - b);
+      const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95));
+      bucket.p95 = sorted.length ? sorted[index] : 0;
+    }
+
+    recordTimingSample(metricKey, sample) {
+      const perf = this.model.performance;
+      if (!perf?.timings?.[metricKey]) return;
+      this.updateTimingBucket(perf.timings[metricKey], sample);
+    }
+
+    recordSectionTiming(sectionKey, sample) {
+      const perf = this.model.performance;
+      if (!perf?.timings) return;
+      if (!perf.timings.sections[sectionKey]) {
+        perf.timings.sections[sectionKey] = { last: 0, avg: 0, max: 0, p95: 0, samples: [] };
+      }
+      this.updateTimingBucket(perf.timings.sections[sectionKey], sample);
     }
 
     dumpPerformanceSnapshot() {
       const perf = this.model.performance;
       if (!perf) return;
+      const updateTiming = perf.timings?.updateMs || { avg: 0, max: 0, p95: 0 };
+      const renderTiming = perf.timings?.renderMs || { avg: 0, max: 0, p95: 0 };
+      const sectionEntries = Object.entries(perf.timings?.sections || {})
+        .map(([name, bucket]) => ({ name, avg: bucket.avg || 0, max: bucket.max || 0, p95: bucket.p95 || 0 }))
+        .sort((a, b) => b.avg - a.avg);
+      const top1 = sectionEntries[0];
+      const top2 = sectionEntries[1];
       const snapshot = {
         frameMs: Number(perf.frameMs.toFixed(3)),
         fps: Number(perf.fps.toFixed(2)),
         avgFrameMs: Number(perf.avgFrameMs.toFixed(3)),
         avgFps: Number(perf.avgFps.toFixed(2)),
         maxFrameMs: Number(perf.maxFrameMs.toFixed(3)),
+        updateAvgMs: Number(updateTiming.avg.toFixed(3)),
+        updateP95Ms: Number(updateTiming.p95.toFixed(3)),
+        updateMaxMs: Number(updateTiming.max.toFixed(3)),
+        renderAvgMs: Number(renderTiming.avg.toFixed(3)),
+        renderP95Ms: Number(renderTiming.p95.toFixed(3)),
+        renderMaxMs: Number(renderTiming.max.toFixed(3)),
+        hotspot1: top1?.name || "-",
+        hotspot1AvgMs: Number((top1?.avg || 0).toFixed(3)),
+        hotspot2: top2?.name || "-",
+        hotspot2AvgMs: Number((top2?.avg || 0).toFixed(3)),
         stepsLastFrame: perf.stepsLastFrame,
         avgSteps: Number(perf.avgSteps.toFixed(3)),
         qualityLevel: perf.qualityLevel,
