@@ -959,21 +959,33 @@
       ctx.arc(0, 0, 32, 0, Math.PI * 2);
       ctx.stroke();
 
-      ctx.strokeStyle = "rgba(255,229,161,0.95)";
-      ctx.lineWidth = 1.4;
+      // Logo uses the same triangular ship silhouette language as gameplay.
+      ctx.shadowColor = "rgba(146,225,255,0.92)";
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = "rgba(126,206,255,0.2)";
+      ctx.strokeStyle = "#d6f9ff";
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.moveTo(-17, 7);
-      ctx.lineTo(0, -16);
-      ctx.lineTo(17, 7);
-      ctx.moveTo(-10, 2);
-      ctx.lineTo(0, -7);
-      ctx.lineTo(10, 2);
+      ctx.moveTo(0, -16);
+      ctx.lineTo(-14, 10);
+      ctx.lineTo(-7, 4);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(7, 4);
+      ctx.lineTo(14, 10);
+      ctx.closePath();
+      ctx.fill();
       ctx.stroke();
 
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(6,18,34,0.85)";
+      ctx.strokeStyle = "rgba(255,229,161,0.95)";
+      ctx.lineWidth = 1.2;
+      ctx.fillRect(6, 10, 20, 12);
+      ctx.strokeRect(6, 10, 20, 12);
       ctx.fillStyle = "#ffe5a1";
-      ctx.font = "700 14px Trebuchet MS";
+      ctx.font = "700 10px Trebuchet MS";
       ctx.textAlign = "center";
-      ctx.fillText("86", 0, 24);
+      ctx.fillText("86", 16, 19);
 
       ctx.restore();
     }
@@ -1037,10 +1049,10 @@
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY - 10);
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 20);
-        const modeBottomY = this.drawModeSelector(model, centerY + 52);
+        const modeBottomY = this.drawModeSelector(model, centerY + 96);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
-          ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
+          ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 26);
         }
       }
 
