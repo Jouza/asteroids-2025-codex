@@ -57,6 +57,12 @@ body {
   letter-spacing: 0.045em;
 }
 
+.hud-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .hud-item {
   border: 1px solid rgba(83, 247, 255, 0.45);
   background: linear-gradient(180deg, rgba(7, 13, 23, 0.85), rgba(6, 10, 18, 0.78));
@@ -86,6 +92,54 @@ body {
   color: #9cefff;
   background: rgba(14, 24, 38, 0.9);
   cursor: help;
+}
+
+.resource-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.resource-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resource-label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #9cefff;
+  margin-right: auto;
+}
+
+.resource-track {
+  width: 100%;
+  height: 8px;
+  border: 1px solid rgba(83, 247, 255, 0.35);
+  background: rgba(8, 18, 30, 0.9);
+}
+
+.resource-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 110ms linear;
+}
+
+.fill-hull {
+  background: linear-gradient(90deg, #6bffd2, #7cf7ff);
+}
+
+.fill-shield {
+  background: linear-gradient(90deg, #7fb2ff, #7df0ff);
+}
+
+.fill-energy {
+  background: linear-gradient(90deg, #ffe085, #ffc46f);
+}
+
+.fill-heat {
+  background: linear-gradient(90deg, #ffb369, #ff6e7a);
 }
 
 .hud-value {

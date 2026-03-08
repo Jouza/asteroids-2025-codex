@@ -13,8 +13,14 @@
     constructor() {
       this.scoreEl = document.getElementById("score");
       this.creditsEl = document.getElementById("credits");
-      this.hullShieldEl = document.getElementById("hullShield");
-      this.energyHeatEl = document.getElementById("energyHeat");
+      this.hullValueEl = document.getElementById("hullValue");
+      this.shieldValueEl = document.getElementById("shieldValue");
+      this.energyValueEl = document.getElementById("energyValue");
+      this.heatValueEl = document.getElementById("heatValue");
+      this.hullBarEl = document.getElementById("hullBar");
+      this.shieldBarEl = document.getElementById("shieldBar");
+      this.energyBarEl = document.getElementById("energyBar");
+      this.heatBarEl = document.getElementById("heatBar");
       this.sectorEl = document.getElementById("sector");
       this.missionEl = document.getElementById("mission");
       this.setStatusEl = document.getElementById("setStatus");
@@ -56,18 +62,32 @@
       return value.length > maxLen ? `${value.slice(0, maxLen - 3)}...` : value;
     }
 
+    updateGauge(valueEl, barEl, current, max) {
+      const safeMax = Math.max(1, Number(max) || 1);
+      const safeCurrent = Math.max(0, Number(current) || 0);
+      const pct = Math.max(0, Math.min(1, safeCurrent / safeMax));
+      if (valueEl) valueEl.textContent = `${Math.ceil(safeCurrent)}/${Math.ceil(safeMax)}`;
+      if (barEl) barEl.style.width = `${(pct * 100).toFixed(1)}%`;
+    }
+
     sync(model) {
       const ship = model.ship;
-      const hull = ship ? `${Math.ceil(ship.hull)}/${ship.hullMax}` : "-/-";
-      const shield = ship ? `${Math.ceil(ship.shield)}/${ship.shieldMax}` : "-/-";
-      const energy = ship ? `${Math.ceil(ship.energy)}/${ship.energyMax}` : "-/-";
-      const heat = ship ? `${Math.ceil(ship.heat)}/${ship.heatMax}` : "-/-";
       const alerts = model.uiAlerts || {};
+      const hull = ship ? ship.hull : 0;
+      const hullMax = ship ? ship.hullMax : 1;
+      const shield = ship ? ship.shield : 0;
+      const shieldMax = ship ? ship.shieldMax : 1;
+      const energy = ship ? ship.energy : 0;
+      const energyMax = ship ? ship.energyMax : 1;
+      const heat = ship ? ship.heat : 0;
+      const heatMax = ship ? ship.heatMax : 1;
 
       this.scoreEl.textContent = String(model.score);
       this.creditsEl.textContent = String(model.credits);
-      this.hullShieldEl.textContent = `${hull}|${shield}`;
-      this.energyHeatEl.textContent = `${energy}|${heat}`;
+      this.updateGauge(this.hullValueEl, this.hullBarEl, hull, hullMax);
+      this.updateGauge(this.shieldValueEl, this.shieldBarEl, shield, shieldMax);
+      this.updateGauge(this.energyValueEl, this.energyBarEl, energy, energyMax);
+      this.updateGauge(this.heatValueEl, this.heatBarEl, heat, heatMax);
       this.sectorEl.textContent = String(model.sector);
       this.missionEl.textContent = this.truncate(model.currentMission?.label || "-", 14);
       this.setStatusEl.textContent = this.truncate(model.setStatusText || "No active set", 24);
@@ -78,10 +98,12 @@
       this.stateEl.textContent = STATE_LABELS[model.gameState] || "UNKNOWN";
 
       this.setHudItemState(
-        this.hullShieldEl,
-        alerts.lowHull ? "danger" : alerts.shieldBroken ? "warn" : "normal"
+        this.hullValueEl,
+        alerts.lowHull ? "danger" : "normal"
       );
-      this.setHudItemState(this.energyHeatEl, alerts.highHeat ? "danger" : alerts.lowEnergy ? "warn" : "normal");
+      this.setHudItemState(this.shieldValueEl, alerts.shieldBroken ? "warn" : "normal");
+      this.setHudItemState(this.energyValueEl, alerts.lowEnergy ? "warn" : "normal");
+      this.setHudItemState(this.heatValueEl, alerts.highHeat ? "danger" : "normal");
       this.setHudItemState(this.primaryStatusEl, alerts.dashReady ? "ready" : model.dashCooldown <= 1.2 ? "warn" : "normal");
       this.setHudItemState(
         this.secondaryStatusEl,
