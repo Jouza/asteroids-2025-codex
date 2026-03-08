@@ -1,5 +1,6 @@
 (() => {
   const { GAME_STATE } = window.Asteroids;
+  const tr = (key, params = {}) => (typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key);
 
   class Renderer {
     constructor(canvas, ctx, config) {
@@ -869,59 +870,67 @@
       if (model.gameState === GAME_STATE.START) {
         ctx.fillText("ASTEROIDS", config.canvas.width / 2, config.canvas.height / 2 - 36);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText("Stiskni Enter pro start", config.canvas.width / 2, config.canvas.height / 2 + 6);
-        ctx.fillText(`Seed runu: ${model.runSeed ?? "-"}`, config.canvas.width / 2, config.canvas.height / 2 + 40);
+        ctx.fillText(tr("overlay.press_enter_start"), config.canvas.width / 2, config.canvas.height / 2 + 6);
+        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), config.canvas.width / 2, config.canvas.height / 2 + 40);
         ctx.font = "600 18px Trebuchet MS";
         ctx.fillText(
-          `Mode: ${model.runMode === "endless" ? "ENDLESS" : "CAMPAIGN"}  (E toggle)`,
+          tr("overlay.mode", { mode: model.runMode === "endless" ? "ENDLESS" : "CAMPAIGN" }),
           config.canvas.width / 2,
           config.canvas.height / 2 + 68
         );
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
-          ctx.fillText("Endless unlock: clear campaign once", config.canvas.width / 2, config.canvas.height / 2 + 92);
+          ctx.fillText(tr("overlay.endless_unlock_hint"), config.canvas.width / 2, config.canvas.height / 2 + 92);
         }
       }
 
       if (model.gameState === GAME_STATE.GAME_OVER) {
-        ctx.fillText("GAME OVER", config.canvas.width / 2, config.canvas.height / 2 - 28);
+        ctx.fillText(tr("overlay.game_over"), config.canvas.width / 2, config.canvas.height / 2 - 28);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(`Skore: ${model.score}`, config.canvas.width / 2, config.canvas.height / 2 + 8);
+        ctx.fillText(tr("overlay.score", { score: model.score }), config.canvas.width / 2, config.canvas.height / 2 + 8);
         if (model.comboScoringEnabled) {
-          ctx.fillText(`Combo pri konci: x${model.comboMultiplier.toFixed(2)}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+          ctx.fillText(`End combo: x${model.comboMultiplier.toFixed(2)}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
         } else {
-          ctx.fillText(`Sektor dosazeny: ${model.sector}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
+          ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 42);
         }
-        ctx.fillText("Enter pro restart", config.canvas.width / 2, config.canvas.height / 2 + 76);
+        ctx.fillText(tr("overlay.enter_restart"), config.canvas.width / 2, config.canvas.height / 2 + 76);
       }
 
       if (model.gameState === GAME_STATE.VICTORY) {
         const summary = model.victorySummary || {};
-        ctx.fillText("VICTORY", config.canvas.width / 2, config.canvas.height / 2 - 54);
+        ctx.fillText(tr("overlay.victory"), config.canvas.width / 2, config.canvas.height / 2 - 54);
         ctx.font = "600 20px Trebuchet MS";
-        ctx.fillText(`Score: ${summary.score ?? model.score}`, config.canvas.width / 2, config.canvas.height / 2 - 18);
-        ctx.fillText(`Sector cleared: ${summary.sector ?? model.sector}`, config.canvas.width / 2, config.canvas.height / 2 + 8);
+        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), config.canvas.width / 2, config.canvas.height / 2 - 18);
+        ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? model.sector }), config.canvas.width / 2, config.canvas.height / 2 + 8);
         ctx.fillText(
-          `Build: ${summary.loadout?.primary || "-"} / ${summary.loadout?.secondary || "-"} / ${summary.loadout?.utility || "-"}`,
+          tr("overlay.build", {
+            primary: summary.loadout?.primary || "-",
+            secondary: summary.loadout?.secondary || "-",
+            utility: summary.loadout?.utility || "-"
+          }),
           config.canvas.width / 2,
           config.canvas.height / 2 + 34
         );
         ctx.font = "600 17px Trebuchet MS";
-        ctx.fillText(`Runtime: ${(summary.runtimeSeconds ?? model.runtimeSeconds).toFixed(1)}s`, config.canvas.width / 2, config.canvas.height / 2 + 60);
+        ctx.fillText(
+          tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? model.runtimeSeconds).toFixed(1) }),
+          config.canvas.width / 2,
+          config.canvas.height / 2 + 60
+        );
         ctx.fillText(
           model.endlessUnlocked
-            ? "Endless mode unlocked. Press E to switch mode."
-            : "Campaign complete.",
+            ? tr("overlay.endless_unlocked")
+            : tr("overlay.campaign_complete"),
           config.canvas.width / 2,
           config.canvas.height / 2 + 86
         );
-        ctx.fillText("Enter pro novy run", config.canvas.width / 2, config.canvas.height / 2 + 112);
+        ctx.fillText(tr("overlay.enter_new_run"), config.canvas.width / 2, config.canvas.height / 2 + 112);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {
-        ctx.fillText("PAUZA", config.canvas.width / 2, config.canvas.height / 2 - 16);
+        ctx.fillText(tr("overlay.pause"), config.canvas.width / 2, config.canvas.height / 2 - 16);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText("Stiskni P pro pokracovani", config.canvas.width / 2, config.canvas.height / 2 + 22);
+        ctx.fillText(tr("overlay.press_p_resume"), config.canvas.width / 2, config.canvas.height / 2 + 22);
       }
 
       if (model.gameState === GAME_STATE.HANGAR) {
@@ -1206,7 +1215,7 @@
             colW1 - 24
           );
         } else {
-          drawRow(detailX, detailY, "Neni vybrana polozka.", "rgba(216,245,255,0.72)", "600 13px Trebuchet MS", colW1 - 24);
+          drawRow(detailX, detailY, tr("render.hangar.no_selection"), "rgba(216,245,255,0.72)", "600 13px Trebuchet MS", colW1 - 24);
         }
 
         const buildX = colX2 + 12;
@@ -1354,7 +1363,7 @@
         ctx.textAlign = "center";
         ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Left/Right sekce | Up/Down vyber | Space akce | Enter start | Legacy fallback: 9/0", centerX, actionBarY + 16);
+        ctx.fillText(tr("render.hangar.action_hint"), centerX, actionBarY + 16);
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";

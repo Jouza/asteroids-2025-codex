@@ -19,6 +19,10 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function tr(key, params = {}) {
+    return typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key;
+  }
+
   function createTelemetryState(enabled = false) {
     return {
       enabled,
@@ -184,7 +188,7 @@
         flightModel: "arcade",
         dotEffects: [],
         hangar: {
-          message: "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K",
+          message: tr("game.hangar.controls"),
           lootCrate: [],
           selectionSource: "crate",
           selectionIndex: 0,
@@ -505,10 +509,10 @@
         this.model.gameState === GAME_STATE.VICTORY;
       if (this.input.wasPressed("KeyE") && canToggleRunMode) {
         if (!this.model.endlessUnlocked) {
-          this.model.hangar.message = "Endless mode is locked. Clear campaign once to unlock.";
+          this.model.hangar.message = tr("game.run_mode.locked");
         } else {
           this.model.runMode = this.model.runMode === "campaign" ? "endless" : "campaign";
-          this.model.hangar.message = `Run mode: ${this.model.runMode.toUpperCase()}`;
+          this.model.hangar.message = tr("game.run_mode.changed", { mode: this.model.runMode.toUpperCase() });
         }
         this.hud.sync(this.model);
       }
@@ -590,7 +594,7 @@
       if (!this.model.endlessUnlocked) {
         this.model.endlessUnlocked = true;
         this.model.unlocks.endlessMode = true;
-        this.model.hangar.message = "Campaign cleared. Endless mode unlocked.";
+        this.model.hangar.message = tr("game.unlock.endless");
       }
       this.endRun(GAME_STATE.VICTORY, "victory", "mission_complete");
     }
@@ -641,8 +645,7 @@
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
-      this.model.hangar.message =
-        "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K";
+      this.model.hangar.message = tr("game.hangar.controls");
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;
@@ -1710,8 +1713,8 @@
         this.model.hangar.lootCrate.push(drop);
       }
       this.model.hangar.message = isFinalEncounter
-        ? `Final boss down: +${creditsGain} credits, ${rewards.guaranteedDrops} guaranteed module`
-        : `Boss down: +${creditsGain} credits, ${rewards.guaranteedDrops} guaranteed module`;
+        ? tr("game.boss.final_down", { credits: creditsGain, drops: rewards.guaranteedDrops })
+        : tr("game.boss.down", { credits: creditsGain, drops: rewards.guaranteedDrops });
     }
 
     findClosestChainTarget(fromX, fromY, radius) {

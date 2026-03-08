@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -194,15 +194,15 @@
 <body>
   <main class="wrap">
     <div class="top">
-      <h1>STARFANG - Objektovy Help</h1>
-      <a class="back" href="./index.html">Zpet do hry</a>
+      <h1>STARFANG - Object Help</h1>
+      <a class="back" href="./index.html">Back to game</a>
     </div>
     <p class="hint">
-      Rychly prehled k tomu, co na obrazovce vidis. Kazda karta obsahuje ikonu, nazev, chovani a dopad do gameplaye.
+      Quick overview of what you see on screen. Each card includes icon, name, behavior, and gameplay impact.
     </p>
 
     <section class="section">
-      <h2>Combat ekonomika (sdileny zdroj)</h2>
+      <h2>Combat Economy (Shared Pool)</h2>
       <div class="grid">
         <article class="card">
           <div class="head">
@@ -212,37 +212,37 @@
               <div class="tag">Core system</div>
             </div>
           </div>
-          <p class="line">Strelba i aktivni schopnosti spotrebovavaji energii i cast stitu.</p>
-          <p class="impact"><strong>Dopad:</strong> cim vice strilis, tim niz je i obrana. Pri prazdnem stitu se akce blokuje.</p>
+          <p class="line">Firing and active abilities consume both energy and a portion of shield.</p>
+          <p class="impact"><strong>Impact:</strong> the more you fire, the lower your defense goes. Actions are blocked at zero shield.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path d="M7 22 L25 22" class="g-stroke"/><path d="M9 18 L15 10 L21 18" class="g-stroke"/></svg></div>
             <div>
-              <p class="name">Rozdilne drain faktory</p>
+              <p class="name">Different Drain Factors</p>
               <div class="tag">Balancing</div>
             </div>
           </div>
-          <p class="line">Primary ma nejmensi drain, secondary/utility vyssi, dash stredni.</p>
-          <p class="impact"><strong>Dopad:</strong> zachovana identita zbrani, ale s jasnym risk/reward tradeoff.</p>
+          <p class="line">Primary has the lowest drain, secondary/utility are higher, dash is mid.</p>
+          <p class="impact"><strong>Impact:</strong> weapon identity stays clear, with explicit risk/reward tradeoff.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
-      <h2>Zbrane a vystrely</h2>
+      <h2>Weapons and Shots</h2>
       <p class="small-hint">
-        Data jsou nacitana primo z herni konfigurace. Cisla proto odpovidaji aktualnimu balancu buildu.
+        Data is loaded directly from game configuration. Values match the current build balance.
         <br>
-        Pozn.: "DMG" je bazova hodnota zasahu (pred crit/resist modifikatory), "Range" je orientacni dolet projektilu.
+        Note: "DMG" is base hit value (before crit/resist modifiers), "Range" is approximate projectile travel.
       </p>
       <div id="weaponCards" class="grid"></div>
     </section>
 
     <section class="section">
-      <h2>Typy misi</h2>
+      <h2>Mission Types</h2>
       <p class="small-hint">
-        Mission order se cykli: <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. V campaign modu je mini_boss na finalnim sektoru oznacen jako <strong>FINAL BOSS</strong> (odlisny moveset a faze) a po jeho dojeti run konci stavem VICTORY.
+        Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> (distinct moveset and phases), and clearing it ends the run with VICTORY.
       </p>
       <div class="grid">
         <article class="card">
@@ -253,8 +253,8 @@
               <div class="tag">Hold timer + cleanup</div>
             </div>
           </div>
-          <p class="line">Prezij casovy limit. Po dobehnuti casu se cil prepne na vycisteni zbylych hrozeb.</p>
-          <p class="impact"><strong>Dopad:</strong> tempo management, kontrola prostoru a stabilni resource economy.</p>
+          <p class="line">Survive the time limit. After timer expires, objective switches to clearing remaining threats.</p>
+          <p class="impact"><strong>Impact:</strong> tempo management, space control, and stable resource economy.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -264,8 +264,8 @@
               <div class="tag">Kill quota</div>
             </div>
           </div>
-          <p class="line">Pln kvotu znicenych UFO. Spawn tempo i paralelni tlak roste se sektorem.</p>
-          <p class="impact"><strong>Dopad:</strong> priorita target focusu a cteni enemy rolí (support/sniper/kamikaze).</p>
+          <p class="line">Complete UFO kill quota. Spawn tempo and parallel pressure increase by sector.</p>
+          <p class="impact"><strong>Impact:</strong> target-priority execution and reading enemy roles (support/sniper/kamikaze).</p>
         </article>
         <article class="card">
           <div class="head">
@@ -275,8 +275,8 @@
               <div class="tag">Break quota</div>
             </div>
           </div>
-          <p class="line">Rozbij cilovy pocet asteroidu. Po splneni kvoty stale plati cleanup zbylych hrozeb.</p>
-          <p class="impact"><strong>Dopad:</strong> riziko preplneni areny, vyplati se chain/aoe loadout.</p>
+          <p class="line">Break target number of asteroids. After quota, cleanup of remaining threats still applies.</p>
+          <p class="impact"><strong>Impact:</strong> arena overflow risk; chain/AOE loadouts are efficient.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -286,19 +286,19 @@
               <div class="tag">Phase + weakpoint</div>
             </div>
           </div>
-          <p class="line">Boss fight s fazemi, weakpoint oknem a phase eventy. Kill boss + dohrat cleanup.</p>
-          <p class="impact"><strong>Dopad:</strong> burst okna vs. prezíti, spravne nacasovani utility a dashu.</p>
+          <p class="line">Boss fight with phases, weakpoint windows, and phase events. Kill boss, then finish cleanup.</p>
+          <p class="impact"><strong>Impact:</strong> burst-window discipline vs survival, with correct utility/dash timing.</p>
         </article>
       </div>
       <p class="small-hint">
-        Po prvnim clear campaign runu se odemkne endless mod. Na start obrazovce prepinas campaign/endless klavesou <strong>E</strong>.
+        Endless mode unlocks after your first campaign clear. On start screen, toggle campaign/endless with <strong>E</strong>.
       </p>
     </section>
 
     <section class="section">
-      <h2>Biomy</h2>
+      <h2>Biomes</h2>
       <p class="small-hint">
-        V kazdem sektoru se losuje biome. Biome urcuje atmosferu areny a muze pridat specificke hazard zony.
+        Each sector rolls a biome. Biome defines arena atmosphere and may add specific hazard zones.
       </p>
       <div class="grid">
         <article class="card">
@@ -309,8 +309,8 @@
               <div class="tag">Biome</div>
             </div>
           </div>
-          <p class="line">Standardni asteroidovy okraj pasu. Neutralni zona bez specialniho biome hazardu.</p>
-          <p class="impact"><strong>Dopad:</strong> nejcitelnejsi baseline pro cisty souboj a build porovnani.</p>
+          <p class="line">Standard asteroid belt edge. Neutral zone without special biome hazard.</p>
+          <p class="impact"><strong>Impact:</strong> cleanest baseline for combat and build comparison.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -320,8 +320,8 @@
               <div class="tag">Biome</div>
             </div>
           </div>
-          <p class="line">Vrakoviste plne trosek. Typicky pridava hazard <strong>Debris Field</strong>.</p>
-          <p class="impact"><strong>Dopad:</strong> zhorena mobilita, vyssi riziko kolizi a chip damage.</p>
+          <p class="line">Wreck zone filled with debris. Typically adds <strong>Debris Field</strong> hazard.</p>
+          <p class="impact"><strong>Impact:</strong> reduced mobility, higher collision risk, and chip damage.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -331,8 +331,8 @@
               <div class="tag">Biome</div>
             </div>
           </div>
-          <p class="line">Tezebni/prumyslova oblast s tepelnymi vystupy. Typicky pridava hazard <strong>Plasma Vent</strong>.</p>
-          <p class="impact"><strong>Dopad:</strong> rychly narust heatu a tlak na presnou pozici.</p>
+          <p class="line">Industrial refinery zone with thermal vents. Typically adds <strong>Plasma Vent</strong> hazard.</p>
+          <p class="impact"><strong>Impact:</strong> rapid heat gain and high positioning pressure.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -342,8 +342,8 @@
               <div class="tag">Biome</div>
             </div>
           </div>
-          <p class="line">Nabita ionizovana oblast. Sama o sobe je neutralni, casto se kombinuje s globalnimi mission modifiery.</p>
-          <p class="impact"><strong>Dopad:</strong> vizualni/atmosfericky tlak; pri kombinaci s <strong>Ion Storm</strong> roste resource stres.</p>
+          <p class="line">Charged ionized area. Neutral by itself, often paired with global mission modifiers.</p>
+          <p class="impact"><strong>Impact:</strong> visual/atmospheric pressure; combined with <strong>Ion Storm</strong> it increases resource stress.</p>
         </article>
       </div>
     </section>
@@ -355,23 +355,23 @@
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><path class="g-stroke" d="M8 24 L8 8 L24 8"/><path class="g-stroke" d="M10 20 L15 15 L19 17 L24 10"/></svg></div>
             <div>
-              <p class="name">XP a Level</p>
+              <p class="name">XP and Level</p>
               <div class="tag">Pilot progression</div>
             </div>
           </div>
-          <p class="line">Za score a dokonceni mise ziskavas XP. Po levelupu dostanes attribute point a kazde 2 levely i skill point.</p>
-          <p class="impact"><strong>Dopad:</strong> dlouhodoba progrese mezi sektory, ne jen okamzity loot.</p>
+          <p class="line">You gain XP from score and mission completion. Level-ups grant attribute points and every two levels also a skill point.</p>
+          <p class="impact"><strong>Impact:</strong> long-term progression between sectors, not only immediate loot spikes.</p>
         </article>
         <article class="card">
           <div class="head">
             <div class="icon"><svg viewBox="0 0 32 32" class="glyph"><circle class="g-stroke" cx="16" cy="16" r="10"/><path class="g-stroke" d="M16 6 L16 26 M6 16 L26 16"/></svg></div>
             <div>
-              <p class="name">Atributy</p>
+              <p class="name">Attributes</p>
               <div class="tag">Reflex / Systems / Grit / Instinct</div>
             </div>
           </div>
-          <p class="line">Reflex zlepsuje handling a cadenci, Systems regen/cooldowny, Grit odolnost, Instinct crit a damage ekonomiku.</p>
-          <p class="impact"><strong>Dopad:</strong> jasna role buildu uz od early game.</p>
+          <p class="line">Reflex improves handling and cadence, Systems improves regen/cooldowns, Grit improves toughness, Instinct improves crit and damage economy.</p>
+          <p class="impact"><strong>Impact:</strong> clear build identity from early game onward.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -381,8 +381,8 @@
               <div class="tag">Hangar controls</div>
             </div>
           </div>
-          <p class="line">V hangaru pouzij Left/Right pro sekce, Up/Down pro vyber a Space pro akci. V panelu Immediate Actions jsou dostupne i volby Sell selected a Salvage selected bez legacy klaves. Legacy klavesy T/Y/U/I/O/K a 9/0 zustavaji fallback.</p>
-          <p class="impact"><strong>Dopad:</strong> kontrolovana specializace bez chaotickych random buffu.</p>
+          <p class="line">In hangar, use Left/Right for sections, Up/Down for selection, and Space for action. Immediate Actions includes Sell selected and Salvage selected without legacy keys. Legacy keys T/Y/U/I/O/K and 9/0 remain fallback.</p>
+          <p class="impact"><strong>Impact:</strong> controlled specialization without chaotic random buffing.</p>
         </article>
       </div>
     </section>
@@ -399,11 +399,11 @@
             </div>
             <div>
               <p class="name">Normal Asteroid</p>
-              <div class="tag">Objekt</div>
+              <div class="tag">Object</div>
             </div>
           </div>
-          <p class="line">Klasicky asteroid. Po zasahu se stipe na mensi kusy.</p>
-          <p class="impact"><strong>Dopad:</strong> neutralni threat, <span class="ok">dobry zdroj score/lootu</span>.</p>
+          <p class="line">Classic asteroid. Splits into smaller parts on hit.</p>
+          <p class="impact"><strong>Impact:</strong> neutral threat, <span class="ok">good source of score/loot</span>.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -415,11 +415,11 @@
             </div>
             <div>
               <p class="name">Magnetic Asteroid</p>
-              <div class="tag">Objekt</div>
+              <div class="tag">Object</div>
             </div>
           </div>
-          <p class="line">Pritahuje lod v blizkem radiusu a kazi ti trajektorii.</p>
-          <p class="impact"><strong>Dopad:</strong> horsi manevrovani, <span class="bad">riziko kolize</span>.</p>
+          <p class="line">Pulls the ship in close radius and distorts trajectory.</p>
+          <p class="impact"><strong>Impact:</strong> weaker maneuvering and <span class="bad">higher collision risk</span>.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -431,29 +431,29 @@
             </div>
             <div>
               <p class="name">Volatile Asteroid</p>
-              <div class="tag">Objekt</div>
+              <div class="tag">Object</div>
             </div>
           </div>
-          <p class="line">Po zniceni dela blast, ktery muze retezit dalsi zasahy.</p>
-          <p class="impact"><strong>Dopad:</strong> AOE hazard, ale i <span class="ok">takticka zbran proti packum</span>.</p>
+          <p class="line">On destruction, triggers a blast that can chain additional hits.</p>
+          <p class="impact"><strong>Impact:</strong> AOE hazard, but also <span class="ok">a tactical weapon against packs</span>.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
-      <h2>UFO Typy</h2>
+      <h2>UFO Types</h2>
       <div class="grid">
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><path class="g-stroke" d="M10 15 C13 11,19 11,22 15"/></svg></div><div><p class="name">Hunter</p><div class="tag">Nepritel</div></div></div><p class="line">Tlak na kratkou az stredni vzdalenost.</p><p class="impact"><strong>Dopad:</strong> stabilni DPS hrozba.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><circle class="g-stroke" cx="16" cy="16" r="8"/></svg></div><div><p class="name">Sniper</p><div class="tag">Nepritel</div></div></div><p class="line">Drzi si distanci a pali presne strely.</p><p class="impact"><strong>Dopad:</strong> punish za statickou pozici.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><path class="g-stroke" d="M6 16 L10 13 M26 16 L22 13"/></svg></div><div><p class="name">Swarm</p><div class="tag">Nepritel</div></div></div><p class="line">Rychly oblet a tlak po kruznici.</p><p class="impact"><strong>Dopad:</strong> zahltit pri horsim aimu.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="17" rx="10.5" ry="5.2"/><path d="M16 22 L12 28 L20 28 Z" fill="rgba(255,136,120,0.42)" stroke="#ffb89f" stroke-width="1.1"/></svg></div><div><p class="name">Kamikaze</p><div class="tag">Nepritel</div></div></div><p class="line">Snazi se kolidovat, po kontaktu detonuje.</p><p class="impact"><strong>Dopad:</strong> burst damage v melee.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="8" cy="10" r="2.2" fill="rgba(145,255,188,0.4)" stroke="#baffd4" stroke-width="1"/></svg></div><div><p class="name">Support</p><div class="tag">Nepritel</div></div></div><p class="line">Leci ostatni UFO jednotky.</p><p class="impact"><strong>Dopad:</strong> prodluzuje boj, priorita focus target.</p></article>
-        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="24" cy="10" r="2.4" fill="rgba(255,200,136,0.42)" stroke="#ffd8a8" stroke-width="1"/></svg></div><div><p class="name">Mine Layer</p><div class="tag">Nepritel</div></div></div><p class="line">Klade miny a kontroluje prostor.</p><p class="impact"><strong>Dopad:</strong> zoning, nuti k prepozicovani.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><path class="g-stroke" d="M10 15 C13 11,19 11,22 15"/></svg></div><div><p class="name">Hunter</p><div class="tag">Enemy</div></div></div><p class="line">Close- to mid-range pressure.</p><p class="impact"><strong>Impact:</strong> stable DPS threat.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="11" ry="5.5"/><circle class="g-stroke" cx="16" cy="16" r="8"/></svg></div><div><p class="name">Sniper</p><div class="tag">Enemy</div></div></div><p class="line">Keeps distance and fires precise shots.</p><p class="impact"><strong>Impact:</strong> punishes static positioning.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><path class="g-stroke" d="M6 16 L10 13 M26 16 L22 13"/></svg></div><div><p class="name">Swarm</p><div class="tag">Enemy</div></div></div><p class="line">Fast orbit and circular pressure.</p><p class="impact"><strong>Impact:</strong> can overwhelm weak aim tracking.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="17" rx="10.5" ry="5.2"/><path d="M16 22 L12 28 L20 28 Z" fill="rgba(255,136,120,0.42)" stroke="#ffb89f" stroke-width="1.1"/></svg></div><div><p class="name">Kamikaze</p><div class="tag">Enemy</div></div></div><p class="line">Attempts collision and detonates on contact.</p><p class="impact"><strong>Impact:</strong> melee burst damage.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="8" cy="10" r="2.2" fill="rgba(145,255,188,0.4)" stroke="#baffd4" stroke-width="1"/></svg></div><div><p class="name">Support</p><div class="tag">Enemy</div></div></div><p class="line">Heals nearby UFO units.</p><p class="impact"><strong>Impact:</strong> extends fights, high focus-target priority.</p></article>
+        <article class="card"><div class="head"><div class="icon"><svg viewBox="0 0 32 32" class="glyph"><ellipse class="g-ufo" cx="16" cy="18" rx="10.5" ry="5.2"/><circle cx="24" cy="10" r="2.4" fill="rgba(255,200,136,0.42)" stroke="#ffd8a8" stroke-width="1"/></svg></div><div><p class="name">Mine Layer</p><div class="tag">Enemy</div></div></div><p class="line">Deploys mines and controls space.</p><p class="impact"><strong>Impact:</strong> zoning pressure, forces repositioning.</p></article>
       </div>
     </section>
 
     <section class="section">
-      <h2>Hazard Zony</h2>
+      <h2>Hazard Zones</h2>
       <div class="grid">
         <article class="card">
           <div class="head">
@@ -463,8 +463,8 @@
               <div class="tag">Biome Hazard (Wreck Graveyard)</div>
             </div>
           </div>
-          <p class="line">Sfera trosek. Uvnitr zpomaluje lod a periodicky udeluje damage.</p>
-          <p class="impact"><strong>Dopad:</strong> <span class="bad">ztrata mobility</span> + chip damage.</p>
+          <p class="line">Debris sphere. Slows the ship inside and applies periodic damage.</p>
+          <p class="impact"><strong>Impact:</strong> <span class="bad">mobility loss</span> + chip damage.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -474,8 +474,8 @@
               <div class="tag">Biome Hazard (Refinery Complex)</div>
             </div>
           </div>
-          <p class="line">Pulzujici tepelna zona. Zveda heat a dava termalni tick damage.</p>
-          <p class="impact"><strong>Dopad:</strong> rychly overheat, omezeni strelby/schopnosti.</p>
+          <p class="line">Pulsing thermal zone. Increases heat and applies thermal tick damage.</p>
+          <p class="impact"><strong>Impact:</strong> rapid overheat and action limitations.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -485,8 +485,8 @@
               <div class="tag">Mission Modifier</div>
             </div>
           </div>
-          <p class="line">Tahne lod i asteroidy smerem ke stredu anomaly. V jadru je tah zjemneny, aby nevznikal hard-lock.</p>
-          <p class="impact"><strong>Dopad:</strong> trha trajektorii a vytvari kolizni situace; unik delas drzenim <strong>thrustu</strong> (ArrowUp) nebo <strong>boostu</strong> (Shift) smerem ven z jadra.</p>
+          <p class="line">Pulls ship and asteroids toward anomaly center. Pull is softened in the core to avoid hard-lock behavior.</p>
+          <p class="impact"><strong>Impact:</strong> trajectory distortion and collision setups; escape by holding <strong>thrust</strong> (ArrowUp) or <strong>boost</strong> (Shift) outward from the core.</p>
         </article>
         <article class="card">
           <div class="head">
@@ -496,8 +496,8 @@
               <div class="tag">Mission Modifier</div>
             </div>
           </div>
-          <p class="line">Snizuje regen stitu a pomalu ho vybija.</p>
-          <p class="impact"><strong>Dopad:</strong> slabsi sustain, vyssi tlak na vyhybani.</p>
+          <p class="line">Reduces shield regen and slowly drains shield.</p>
+          <p class="impact"><strong>Impact:</strong> weaker sustain and higher dodge pressure.</p>
         </article>
       </div>
     </section>
@@ -508,8 +508,10 @@
   <script src="./js/balance-data.js"></script>
   <script src="./js/balance-presets.js"></script>
   <script src="./js/config.js"></script>
+  <script src="./js/i18n.js"></script>
   <script>
     (() => {
+      if (window.Asteroids?.i18n) window.Asteroids.i18n.applyTranslations(document);
       const cfg = window.Asteroids?.GAME_CONFIG;
       const mount = document.getElementById("weaponCards");
       if (!cfg?.loadout || !mount) return;
@@ -718,3 +720,4 @@
   </script>
 </body>
 </html>
+

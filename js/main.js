@@ -1,5 +1,6 @@
 (() => {
   const { AudioSystem, GAME_CONFIG, Game, Hud, InputController, Renderer } = window.Asteroids;
+  const i18n = window.Asteroids.i18n;
 
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
@@ -51,6 +52,7 @@
   window.addEventListener("keydown", unlockAudio);
   window.addEventListener("pointerdown", unlockAudio);
   loadAudioSettings();
+  if (i18n) i18n.applyTranslations(document);
   syncVolumeUi();
   let lastAudioState = `${audio.getVolume()}|${audio.isMuted()}`;
   if (volumeSlider) {

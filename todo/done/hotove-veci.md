@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Localization baseline (P0)
+  - [x] Runtime UI switched to English
+  - [x] Help page switched to English
+  - [x] i18n dictionary layer added (`js/i18n.js`) for future language packs
+
 - [x] Run completion / win-state milestone
   - [x] Final encounter: final boss varianta na campaign final sektoru + jasna podminka "run dokoncen"
   - [x] Victory flow: obrazovka dokonceni runu + summary buildu/progrese

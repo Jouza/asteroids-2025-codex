@@ -1,4 +1,8 @@
 (() => {
+  function tr(key, params = {}) {
+    return typeof window.Asteroids?.t === "function" ? window.Asteroids.t(key, params) : key;
+  }
+
   class HangarSystem {
     constructor(game) {
       this.game = game;
@@ -52,7 +56,7 @@
       const idx = this.navSections.indexOf(h.navSection);
       const next = (idx + step + this.navSections.length) % this.navSections.length;
       h.navSection = this.navSections[next];
-      g.model.hangar.message = `Sekce: ${h.navSection.toUpperCase()} | Up/Down vyber | Space akce`;
+      g.model.hangar.message = tr("hangar.section", { section: h.navSection.toUpperCase() });
     }
 
     moveNavCursor(step) {
@@ -61,7 +65,7 @@
       if (h.navSection === "shop") {
         const size = this.getShopActionCount();
         h.shopIndex = (h.shopIndex + step + size) % size;
-        g.model.hangar.message = `Shop volba ${h.shopIndex + 1}/${size} | Space akce`;
+        g.model.hangar.message = tr("hangar.shop.choice", { index: h.shopIndex + 1, total: size });
         return;
       }
       if (h.navSection === "loot") {
@@ -74,13 +78,13 @@
         if (h.pilotCursor <= 3) {
           h.pilotAttrIndex = h.pilotCursor;
           const attr = g.getPilotAttributeOrder()[h.pilotCursor];
-          g.model.hangar.message = `Pilot attr: ${attr.toUpperCase()} | Space upgrade`;
+          g.model.hangar.message = tr("hangar.pilot.attr", { attr: attr.toUpperCase() });
         } else if (h.pilotCursor === 4) {
           const perk = g.getPilotSelectedPerk();
-          g.model.hangar.message = `Pilot perk: ${perk?.label || "-"} | Space dalsi perk`;
+          g.model.hangar.message = tr("hangar.pilot.perk", { perk: perk?.label || "-" });
         } else {
           const perk = g.getPilotSelectedPerk();
-          g.model.hangar.message = `Pilot unlock: ${perk?.label || "-"} | Space unlock`;
+          g.model.hangar.message = tr("hangar.pilot.unlock", { perk: perk?.label || "-" });
         }
       }
     }
@@ -131,7 +135,7 @@
       g.model.gameState = window.Asteroids.GAME_STATE.PLAYING;
       g.missionSystem.startMission(g.model.sector);
       g.model.hangar.message =
-        "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K";
+        tr("game.hangar.controls");
       g.saveProfile("sector_start");
     }
 
@@ -149,7 +153,7 @@
       g.model.bullets = [];
       g.model.utilityEffects = [];
       g.model.hangar.message =
-        "Hangar: Left/Right sekce, Up/Down vyber, Space akce, Enter start. Legacy: 1-3/4/5/R/6/7/8/9/0/T/Y/U/I/O/K";
+        tr("game.hangar.controls");
       g.model.hangar.navSection = "shop";
       g.model.hangar.shopIndex = 0;
       g.model.hangar.pilotCursor = 0;
@@ -163,7 +167,7 @@
       if (!item) return;
 
       if (g.model.credits < item.cost) {
-        g.model.hangar.message = "Nedostatek credits.";
+        g.model.hangar.message = tr("hangar.no_credits");
         return;
       }
 
@@ -245,7 +249,7 @@
       const crateLen = h.lootCrate.length;
       const invLen = g.model.inventory.length;
       if (crateLen <= 0 && invLen <= 0) {
-        g.model.hangar.message = "Neni co vybirat.";
+        g.model.hangar.message = tr("hangar.nothing_to_select");
         return;
       }
 
@@ -285,7 +289,7 @@
       const g = this.game;
       const entry = this.getSelectedEntry();
       if (!entry) {
-        g.model.hangar.message = "Neni vybrany modul.";
+        g.model.hangar.message = tr("hangar.no_selected_module");
         return;
       }
 
@@ -330,7 +334,7 @@
       const g = this.game;
       const entry = this.getSelectedEntry();
       if (!entry) {
-        g.model.hangar.message = "Neni vybrany modul.";
+        g.model.hangar.message = tr("hangar.no_selected_module");
         return;
       }
       const removed = this.removeEntry(entry);
@@ -338,7 +342,7 @@
       const gain = removed.sellValue ?? 0;
       g.model.credits += gain;
       this.clampSelection();
-      g.model.hangar.message = `Prodano: ${removed.name} (+${gain} cr)`;
+      g.model.hangar.message = tr("hangar.sold", { name: removed.name, credits: gain });
       g.saveProfile("hangar_sell");
     }
 
@@ -346,7 +350,7 @@
       const g = this.game;
       const entry = this.getSelectedEntry();
       if (!entry) {
-        g.model.hangar.message = "Neni vybrany modul.";
+        g.model.hangar.message = tr("hangar.no_selected_module");
         return;
       }
       const removed = this.removeEntry(entry);
@@ -356,7 +360,7 @@
       g.model.salvageParts += parts;
       g.model.credits += parts * g.config.economy.salvageToCredits;
       this.clampSelection();
-      g.model.hangar.message = `Rozebrano: ${removed.name} (+${parts} parts)`;
+      g.model.hangar.message = tr("hangar.salvaged", { name: removed.name, parts });
       g.saveProfile("hangar_salvage");
     }
 
@@ -367,7 +371,7 @@
         slotName === "primary" ? "primaryId" : slotName === "secondary" ? "secondaryId" : "utilityId";
       const unlockedIds = Object.keys(unlockedMap).filter((id) => unlockedMap[id]);
       if (unlockedIds.length === 0) {
-        g.model.hangar.message = "Neni odemcena zadna varianta.";
+        g.model.hangar.message = tr("hangar.no_variant_unlocked");
         return;
       }
 
@@ -382,7 +386,7 @@
           : slotName === "secondary"
             ? g.model.loadout.secondaryLabel
             : g.model.loadout.utilityLabel;
-      g.model.hangar.message = `Aktivni ${slotName}: ${label}`;
+      g.model.hangar.message = tr("hangar.active_slot", { slot: slotName, label });
       g.saveProfile("hangar_loadout");
     }
 

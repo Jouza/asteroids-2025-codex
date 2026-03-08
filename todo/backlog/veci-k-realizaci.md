@@ -2,6 +2,7 @@
 
 ## Aktualni fokus
 
+- [x] Localization baseline (P0): full EN + i18n dictionary infrastructure
 - [x] Unikatni final boss archetyp (odlisny move-set/faze oproti mini-boss)
 - [ ] Kratky dev test protocol (co otestovat po vetsi zmene)
 - [ ] Jednoducha smoke stranka/scenar pro manualni QA mimo hlavni run

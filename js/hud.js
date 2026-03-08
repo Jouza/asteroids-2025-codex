@@ -1,13 +1,13 @@
 (() => {
   const { APP_META, GAME_STATE } = window.Asteroids;
 
-  const STATE_LABELS = {
-    [GAME_STATE.START]: "START",
-    [GAME_STATE.PLAYING]: "PLAYING",
-    [GAME_STATE.HANGAR]: "HANGAR",
-    [GAME_STATE.PAUSED]: "PAUSED",
-    [GAME_STATE.GAME_OVER]: "GAME OVER",
-    [GAME_STATE.VICTORY]: "VICTORY"
+  const stateLabelKeyByState = {
+    [GAME_STATE.START]: "state.start",
+    [GAME_STATE.PLAYING]: "state.playing",
+    [GAME_STATE.HANGAR]: "state.hangar",
+    [GAME_STATE.PAUSED]: "state.paused",
+    [GAME_STATE.GAME_OVER]: "state.game_over",
+    [GAME_STATE.VICTORY]: "state.victory"
   };
 
   class Hud {
@@ -96,7 +96,8 @@
       this.primaryStatusEl.textContent = `${model.loadout.primaryLabel} D:${this.formatUrgentCooldown(model.dashCooldown)}`;
       this.secondaryStatusEl.textContent = `${model.loadout.secondaryLabel} ${this.formatUrgentCooldown(model.secondaryCooldown)}`;
       this.utilityStatusEl.textContent = `${model.loadout.utilityLabel} ${this.formatUrgentCooldown(model.utilityCooldown)}`;
-      this.stateEl.textContent = STATE_LABELS[model.gameState] || "UNKNOWN";
+      const stateKey = stateLabelKeyByState[model.gameState];
+      this.stateEl.textContent = stateKey && typeof window.Asteroids?.t === "function" ? window.Asteroids.t(stateKey) : "UNKNOWN";
 
       this.setHudItemState(
         this.hullValueEl,

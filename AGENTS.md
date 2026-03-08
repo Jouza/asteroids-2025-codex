@@ -39,6 +39,8 @@ TODO:
 - Keep TODO structure:
   - active items in `todo/backlog/*`
   - completed items in `todo/done/hotove-veci.md`
+- Localization rule:
+  - user-facing UI/help strings should go through i18n keys (`js/i18n.js`) instead of new hardcoded text.
 
 ## Working on Larger Changes
 

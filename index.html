@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asteroids MVP</title>
+  <title>STARFANG</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="game-shell">
     <section class="layout">
       <section class="play-column">
-        <canvas id="gameCanvas" width="960" height="720" aria-label="Asteroids hra"></canvas>
+        <canvas id="gameCanvas" width="960" height="720" aria-label="STARFANG game"></canvas>
       </section>
 
       <aside class="status-column">
         <header class="hud">
-          <div class="hud-item resource-item tip" data-tip="Hull: zakladni odolnost lodi. Pri nule je run konec.">
+          <div class="hud-item resource-item tip" data-tip="Hull: base ship durability. At zero, the run ends.">
             <div class="resource-head">
               <span class="hud-icon" title="Hull" aria-label="Hull">H</span>
               <span class="resource-label">Hull</span>
@@ -23,7 +23,7 @@
             </div>
             <div class="resource-track"><div id="hullBar" class="resource-fill fill-hull"></div></div>
           </div>
-          <div class="hud-item resource-item tip" data-tip="Shield: regenerujici vrstva. Ve sdilenem modelu se spotrebovava i strelbou.">
+          <div class="hud-item resource-item tip" data-tip="Shield: regenerating layer. In shared-pool model, firing also drains shield.">
             <div class="resource-head">
               <span class="hud-icon" title="Shield" aria-label="Shield">S</span>
               <span class="resource-label">Shield</span>
@@ -31,7 +31,7 @@
             </div>
             <div class="resource-track"><div id="shieldBar" class="resource-fill fill-shield"></div></div>
           </div>
-          <div class="hud-item resource-item tip" data-tip="Energy: palivo zbrani/schopnosti.">
+          <div class="hud-item resource-item tip" data-tip="Energy: resource for weapons and abilities.">
             <div class="resource-head">
               <span class="hud-icon" title="Energy" aria-label="Energy">E</span>
               <span class="resource-label">Energy</span>
@@ -39,7 +39,7 @@
             </div>
             <div class="resource-track"><div id="energyBar" class="resource-fill fill-energy"></div></div>
           </div>
-          <div class="hud-item resource-item tip" data-tip="Heat: prehrivani. Vysoka hodnota zpomaluje palbu a omezuje schopnosti.">
+          <div class="hud-item resource-item tip" data-tip="Heat: overheating. High heat slows fire rate and limits actions.">
             <div class="resource-head">
               <span class="hud-icon" title="Heat" aria-label="Heat">T</span>
               <span class="resource-label">Heat</span>
@@ -47,53 +47,49 @@
             </div>
             <div class="resource-track"><div id="heatBar" class="resource-fill fill-heat"></div></div>
           </div>
-          <div class="hud-item tip" data-tip="Primary. Kazdy vystrel snizi energii i stit.">
-            <span class="hud-icon" title="Primary: hlavni zbran a dash cooldown." aria-label="Primary Weapon">P</span><span id="primaryStatus" class="hud-value">Auto</span>
+          <div class="hud-item tip" data-tip="Primary: each shot consumes both energy and shield.">
+            <span class="hud-icon" title="Primary weapon and dash cooldown status." aria-label="Primary Weapon">P</span><span id="primaryStatus" class="hud-value">Auto</span>
           </div>
-          <div class="hud-item tip" data-tip="Secondary. Vyssi drain stitu/energie nez primary.">
-            <span class="hud-icon" title="Secondary: sekundarni schopnost (X)." aria-label="Secondary Ability">S</span><span id="secondaryStatus" class="hud-value">Ready</span>
+          <div class="hud-item tip" data-tip="Secondary: higher shield/energy drain than primary.">
+            <span class="hud-icon" title="Secondary ability (X)." aria-label="Secondary Ability">S</span><span id="secondaryStatus" class="hud-value">Ready</span>
           </div>
-          <div class="hud-item tip" data-tip="Utility. Nejsilnejsi efekt, nejvyssi spotreba stitu/energie.">
-            <span class="hud-icon" title="Utility: takticka schopnost (C)." aria-label="Utility Ability">U</span><span id="utilityStatus" class="hud-value">Ready</span>
-          </div>
-          <div class="hud-pair">
-            <div class="hud-item tip" data-tip="Mission. Aktivni cil sektoru.">
-              <span class="hud-icon" title="Mission: aktualni cil mise." aria-label="Mission">M</span><span id="mission" class="hud-value">-</span>
-            </div>
-            <div class="hud-item tip" data-tip="Sector. Aktualni uroven runu.">
-              <span class="hud-icon" title="Sector: cislo aktualniho sektoru." aria-label="Sector">O</span><span id="sector" class="hud-value">1</span>
-            </div>
+          <div class="hud-item tip" data-tip="Utility: strongest effect, highest shield/energy cost.">
+            <span class="hud-icon" title="Utility ability (C)." aria-label="Utility Ability">U</span><span id="utilityStatus" class="hud-value">Ready</span>
           </div>
           <div class="hud-pair">
-            <div class="hud-item tip" data-tip="Credits. Mena pro nakupy v hangaru.">
-              <span class="hud-icon" title="Credits: mena pro shop v hangaru." aria-label="Credits">C</span><span id="credits" class="hud-value">0</span>
+            <div class="hud-item tip" data-tip="Mission: current sector objective.">
+              <span class="hud-icon" title="Mission: current objective." aria-label="Mission">M</span><span id="mission" class="hud-value">-</span>
             </div>
-            <div class="hud-item tip" data-tip="Score. Body za run.">
-              <span class="hud-icon" title="Score: body v aktualnim runu." aria-label="Score">S</span><span id="score" class="hud-value">0</span>
+            <div class="hud-item tip" data-tip="Sector: current run level.">
+              <span class="hud-icon" title="Sector index." aria-label="Sector">O</span><span id="sector" class="hud-value">1</span>
             </div>
           </div>
-          <div class="hud-item tip" data-tip="Set status. Aktivni set bonusy vybavy.">
-            <span class="hud-icon" title="Set status: aktivni bonusy vybavy." aria-label="Set Status">T</span><span id="setStatus" class="hud-value">No active set</span>
+          <div class="hud-pair">
+            <div class="hud-item tip" data-tip="Credits: currency for hangar purchases.">
+              <span class="hud-icon" title="Credits for hangar shop." aria-label="Credits">C</span><span id="credits" class="hud-value">0</span>
+            </div>
+            <div class="hud-item tip" data-tip="Score: points earned this run.">
+              <span class="hud-icon" title="Current run score." aria-label="Score">S</span><span id="score" class="hud-value">0</span>
+            </div>
           </div>
-          <div class="hud-item tip volume-control" data-tip="Hlasitost efektu.">
-            <span class="hud-icon" title="Audio: hlasitost zvukovych efektu." aria-label="Audio Volume">A</span>
-            <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Hlasitost zvuku">
+          <div class="hud-item tip" data-tip="Set status: active equipment set bonuses.">
+            <span class="hud-icon" title="Active set bonuses." aria-label="Set Status">T</span><span id="setStatus" class="hud-value">No active set</span>
+          </div>
+          <div class="hud-item tip volume-control" data-tip="SFX volume.">
+            <span class="hud-icon" title="Audio volume." aria-label="Audio Volume">A</span>
+            <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" aria-label="Audio volume">
             <span id="volumeValue" class="hud-value">60%</span>
           </div>
-          <div class="hud-item tip" data-tip="Flight mode. Arcade nebo Sim Lite.">
-            <span class="hud-icon" title="Flight mode: Arcade nebo Sim Lite." aria-label="Flight Mode">F</span><span id="flightMode" class="hud-value">ARCADE</span>
+          <div class="hud-item tip" data-tip="Flight mode: Arcade or Sim Lite.">
+            <span class="hud-icon" title="Flight mode: Arcade or Sim Lite." aria-label="Flight Mode">F</span><span id="flightMode" class="hud-value">ARCADE</span>
           </div>
-          <div class="hud-item state tip" id="stateLabel" data-tip="Stav hry.">START</div>
-          <div class="hud-item version tip" id="versionBadge" data-tip="Build verze.">NEW BUILD</div>
+          <div class="hud-item state tip" id="stateLabel" data-tip="Game state.">START</div>
+          <div class="hud-item version tip" id="versionBadge" data-tip="Build version.">NEW BUILD</div>
         </header>
 
         <footer class="help">
-          <strong><a class="help-link" href="./help.html" target="_blank" rel="noopener noreferrer">HELP: seznam objektu a hazardu</a></strong><br>
-          Ovladani: <strong>&larr;/&rarr;</strong> rotace, <strong>&uarr;</strong> tah, <strong>Mezernik</strong> strelba,
-          <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> prepnout letovy model,
-          <strong>X</strong> sekundarni, <strong>C</strong> utilita, <strong>E</strong> prepnout campaign/endless (po unlocku), <strong>M</strong> mute, <strong>P</strong> pauza, <strong>Enter</strong> start/restart.
-          Hangar: <strong>&larr;/&rarr;</strong> sekce, <strong>&uarr;/&darr;</strong> vyber, <strong>Mezernik</strong> akce, <strong>Enter</strong> pokracovat.
-          V sekci Immediate Actions lze pres Space i <strong>Sell/Salvage selected</strong>. Legacy zkratky zustavaji fallback: <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.
+          <strong><a class="help-link" href="./help.html" target="_blank" rel="noopener noreferrer" data-i18n="index.help_link">HELP: objects and hazards reference</a></strong><br>
+          <span data-i18n="index.controls">Controls: Left/Right rotate, Up thrust, Space fire, Shift boost, V dash, F switch flight model, X secondary, C utility, E toggle campaign/endless (after unlock), M mute, P pause, Enter start/restart. Hangar: Left/Right section, Up/Down select, Space action, Enter continue. In Immediate Actions, Space also supports Sell/Salvage selected. Legacy fallback: 1/2/3, 4/5/R, 6/7/8/9/0, T/Y/U/I/O/K.</span>
         </footer>
       </aside>
     </section>
@@ -104,6 +100,7 @@
   <script src="js/balance-data.js"></script>
   <script src="js/balance-presets.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/rng.js"></script>
   <script src="js/entities.js"></script>
   <script src="js/input.js"></script>
