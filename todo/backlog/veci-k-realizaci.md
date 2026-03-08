@@ -4,7 +4,7 @@
 
 - [ ] Performance & runtime budget
   - [ ] Adaptive quality budget pro particles/effects pri FPS dropu
-  - [ ] Frame-time / perf overlay pro dev rezim
+  - [x] Frame-time / perf overlay pro dev rezim
   - [ ] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
   - [ ] Profiling pass (CPU hot paths update/render smycky)
 - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)

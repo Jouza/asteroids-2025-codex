@@ -57,6 +57,28 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function createPerformanceState(enabled = false) {
+    return {
+      enabled,
+      frameMs: 0,
+      fps: 0,
+      avgFrameMs: 0,
+      avgFps: 0,
+      maxFrameMs: 0,
+      stepsLastFrame: 0,
+      avgSteps: 0,
+      frameCount: 0,
+      objects: {
+        particles: 0,
+        bullets: 0,
+        enemyBullets: 0,
+        utilityEffects: 0,
+        asteroids: 0,
+        ufos: 0
+      }
+    };
+  }
+
   function createDefaultPilotProgression() {
     return {
       level: 1,
@@ -245,6 +267,7 @@
         pilot: createDefaultPilotProgression(),
         salvageParts: 0,
         telemetry: createTelemetryState(false),
+        performance: createPerformanceState(false),
         profile: createDefaultProfile(),
         uiAlerts: {
           lowHull: false,
@@ -492,6 +515,9 @@
       if (this.input.wasPressed("F3")) {
         this.model.telemetry.enabled = !this.model.telemetry.enabled;
       }
+      if (this.input.wasPressed("F4")) {
+        this.model.performance.enabled = !this.model.performance.enabled;
+      }
       if (this.input.wasPressed("KeyF")) {
         this.toggleFlightModel();
       }
@@ -614,6 +640,7 @@
 
     resetGame(seed) {
       const telemetryEnabled = this.model.telemetry.enabled;
+      const performanceEnabled = this.model.performance.enabled;
       this.model.score = 0;
       this.model.credits = 0;
       this.model.sector = 1;
@@ -660,6 +687,7 @@
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
+      this.model.performance = createPerformanceState(performanceEnabled);
       this.model.uiAlerts = {
         lowHull: false,
         lowEnergy: false,
@@ -1076,6 +1104,28 @@
       this.updateUiAlerts();
 
       this.hud.sync(this.model);
+    }
+
+    recordFramePerformance(rawFrameSeconds, stepCount = 0) {
+      const perf = this.model.performance;
+      if (!perf) return;
+      const frameMs = Math.max(0, rawFrameSeconds * 1000);
+      const fps = rawFrameSeconds > 0 ? 1 / rawFrameSeconds : 0;
+      const alpha = 0.12;
+      perf.frameMs = frameMs;
+      perf.fps = fps;
+      perf.avgFrameMs = perf.avgFrameMs > 0 ? perf.avgFrameMs * (1 - alpha) + frameMs * alpha : frameMs;
+      perf.avgFps = perf.avgFps > 0 ? perf.avgFps * (1 - alpha) + fps * alpha : fps;
+      perf.maxFrameMs = Math.max(perf.maxFrameMs * 0.995, frameMs);
+      perf.stepsLastFrame = stepCount;
+      perf.avgSteps = perf.avgSteps > 0 ? perf.avgSteps * (1 - alpha) + stepCount * alpha : stepCount;
+      perf.frameCount += 1;
+      perf.objects.particles = this.model.particles.length;
+      perf.objects.bullets = this.model.bullets.length;
+      perf.objects.enemyBullets = this.model.enemyBullets.length;
+      perf.objects.utilityEffects = this.model.utilityEffects.length;
+      perf.objects.asteroids = this.model.asteroids.length;
+      perf.objects.ufos = this.model.ufos.length;
     }
 
     getCurrentFlightProfile() {

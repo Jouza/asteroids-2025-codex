@@ -26,6 +26,7 @@
       this.drawFlash(model.flashMs);
       this.drawMissionStatus(model);
       this.drawTelemetry(model);
+      this.drawPerformanceOverlay(model);
 
       if (model.gameState !== GAME_STATE.PLAYING) {
         this.drawOverlay(model);
@@ -854,6 +855,63 @@
       ctx.font = "500 12px Trebuchet MS";
       ctx.fillStyle = "rgba(183,221,247,0.85)";
       ctx.fillText(`Canvas ${config.canvas.width}x${config.canvas.height}`, panelX + 14, panelY + panelH - 12);
+      ctx.restore();
+    }
+
+    drawPerformanceOverlay(model) {
+      if (!model.performance?.enabled) return;
+
+      const { ctx, config } = this;
+      const perf = model.performance;
+      const panelW = 286;
+      const panelH = 148;
+      const panelX = config.canvas.width - panelW - 16;
+      const panelY = 16;
+
+      const drawLine = (text, y, color = "rgba(216,245,255,0.95)") => {
+        ctx.fillStyle = color;
+        ctx.fillText(text, panelX + 10, y);
+      };
+
+      ctx.save();
+      ctx.fillStyle = "rgba(5,14,26,0.82)";
+      ctx.fillRect(panelX, panelY, panelW, panelH);
+      ctx.strokeStyle = "rgba(126,228,255,0.58)";
+      ctx.lineWidth = 1.1;
+      ctx.strokeRect(panelX, panelY, panelW, panelH);
+      ctx.textAlign = "left";
+      ctx.font = "600 12px Trebuchet MS";
+
+      drawLine("PERF OVERLAY [F4]", panelY + 18, "rgba(178,239,255,1)");
+      drawLine(
+        `Frame ${perf.frameMs.toFixed(2)} ms | FPS ${perf.fps.toFixed(1)}`,
+        panelY + 38
+      );
+      drawLine(
+        `Avg ${perf.avgFrameMs.toFixed(2)} ms | Avg FPS ${perf.avgFps.toFixed(1)}`,
+        panelY + 56
+      );
+      drawLine(
+        `Worst ${perf.maxFrameMs.toFixed(2)} ms | Steps ${perf.stepsLastFrame} (${perf.avgSteps.toFixed(2)} avg)`,
+        panelY + 74,
+        "rgba(196,231,255,0.92)"
+      );
+      drawLine(
+        `Obj P:${perf.objects.particles} B:${perf.objects.bullets}/${perf.objects.enemyBullets}`,
+        panelY + 96,
+        "rgba(176,226,255,0.92)"
+      );
+      drawLine(
+        `Obj U:${perf.objects.utilityEffects} A:${perf.objects.asteroids} UFO:${perf.objects.ufos}`,
+        panelY + 114,
+        "rgba(176,226,255,0.92)"
+      );
+      drawLine(
+        `Quality baseline | Frames ${perf.frameCount}`,
+        panelY + 132,
+        "rgba(156,209,236,0.88)"
+      );
+
       ctx.restore();
     }
 

@@ -100,6 +100,8 @@
       steps += 1;
     }
 
+    game.recordFramePerformance(rawDelta, steps);
+
     game.render();
     input.endFrame();
     requestAnimationFrame(frame);
