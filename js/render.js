@@ -1984,75 +1984,44 @@
         }
 
         const statusX = bottomColX1 + 12;
-        let statusY = bottomRowY + 52;
-        drawRow(statusX, statusY, `Mission: ${model.currentMission?.label || nextMissionType.toUpperCase()}`, "#d8f5ff", "600 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(statusX, statusY, `Sector: ${model.sector}  |  Credits: ${model.credits}`, "#d8f5ff", "500 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(statusX, statusY, `Score: ${model.score}  |  Salvage: ${model.salvageParts}`, "#d8f5ff", "500 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(statusX, statusY, `Set: ${model.setStatusText || "No active set"}`, "#b8f6ff", "500 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(statusX, statusY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(statusX, statusY, `Pilot L${pilot.level || 1} | Perks ${unlockedPerkIds.size}/${pilotPerks.length}`, "#9fe3ff", "500 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(statusX, statusY, tr("render.hangar.pilot_summary_open_hint"), "#9fe3ff", "600 12px Trebuchet MS", bottomColW1 - 24);
-        statusY += 16;
-        drawRow(
-          statusX,
-          statusY,
-          tr("render.hangar.metric_primary_cd", { seconds: formatSeconds(activePrimary.cooldownSeconds * tuningMultiplier) }),
-          "#9fe3ff",
-          "500 12px Trebuchet MS",
-          bottomColW1 - 24
-        );
-        statusY += 16;
-        drawRow(
-          statusX,
-          statusY,
-          tr("render.hangar.metric_secondary_cd", { seconds: formatSeconds(activeSecondary.cooldownSeconds) }),
-          "#9fe3ff",
-          "500 12px Trebuchet MS",
-          bottomColW1 - 24
-        );
-        statusY += 16;
-        drawRow(
-          statusX,
-          statusY,
-          tr("render.hangar.metric_utility_cd", { seconds: formatSeconds(activeUtility.cooldownSeconds) }),
-          "#9fe3ff",
-          "500 12px Trebuchet MS",
-          bottomColW1 - 24
-        );
-        statusY += 16;
+        const statusTopY = bottomRowY + 52;
+        const statusInnerW = bottomColW1 - 24;
+        const statusGap = 16;
+        const statusColGap = 18;
+        const statusColW = Math.floor((statusInnerW - statusColGap) / 2);
+        const statusLeftX = statusX;
+        const statusRightX = statusX + statusColW + statusColGap;
+
+        let statusLeftY = statusTopY;
+        drawRow(statusLeftX, statusLeftY, `Mission: ${model.currentMission?.label || nextMissionType.toUpperCase()}`, "#d8f5ff", "600 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, `Sector ${model.sector} | Cr ${model.credits}`, "#d8f5ff", "500 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, `Score ${model.score} | Salv ${model.salvageParts}`, "#d8f5ff", "500 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, `Set: ${truncate(model.setStatusText || "No active set", 24)}`, "#b8f6ff", "500 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, `Pilot L${pilot.level || 1} | Perks ${unlockedPerkIds.size}/${pilotPerks.length}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, "J: Pilot Console", "#9fe3ff", "600 12px Trebuchet MS", statusColW);
+
         const shared = config.ship.sharedPool || {};
         const pDrain = (activePrimary.energyCost || 0) * (shared.primaryShieldCostFactor ?? 0);
         const sDrain = (activeSecondary.energyCost || 0) * (shared.secondaryShieldCostFactor ?? 0);
         const uDrain = (activeUtility.energyCost || 0) * (shared.utilityShieldCostFactor ?? 0);
-        drawRow(
-          statusX,
-          statusY,
-          tr("render.hangar.metric_shared_drain", {
-            primary: pDrain.toFixed(1),
-            secondary: sDrain.toFixed(1),
-            utility: uDrain.toFixed(1)
-          }),
-          "#9fe3ff",
-          "500 12px Trebuchet MS",
-          bottomColW1 - 24
-        );
-        statusY += 16;
-        drawRow(
-          statusX,
-          statusY,
-          tr("render.hangar.metric_tuning", { tuning: tuningMultiplier.toFixed(2), shots: maxShots }),
-          "#9fe3ff",
-          "500 12px Trebuchet MS",
-          bottomColW1 - 24
-        );
-        statusY += 16;
-        drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS", bottomColW1 - 24);
+
+        let statusRightY = statusTopY;
+        drawRow(statusRightX, statusRightY, `P CD ${formatSeconds(activePrimary.cooldownSeconds * tuningMultiplier)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusRightY += statusGap;
+        drawRow(statusRightX, statusRightY, `S CD ${formatSeconds(activeSecondary.cooldownSeconds)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusRightY += statusGap;
+        drawRow(statusRightX, statusRightY, `U CD ${formatSeconds(activeUtility.cooldownSeconds)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusRightY += statusGap;
+        drawRow(statusRightX, statusRightY, `Drain P/S/U ${pDrain.toFixed(1)}/${sDrain.toFixed(1)}/${uDrain.toFixed(1)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusRightY += statusGap;
+        drawRow(statusRightX, statusRightY, `Tuning x${tuningMultiplier.toFixed(2)} | Shots ${maxShots}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
 
         const actionBarY = bottomRowY + bottomRowH + 10;
         ctx.fillStyle = "rgba(4,12,24,0.88)";
