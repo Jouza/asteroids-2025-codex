@@ -14,24 +14,15 @@
 - [ ] Endgame / replayability
   - [ ] Bounty board
   - [ ] Mutatory
-  - [ ] Endless sektor
+  - [x] Endless sektor (run loop bez finalniho win-state)
   - [ ] Boss rush
 
 - [ ] Help / codex vrstva
   - [x] Samostatna help stranka s objekty, hazardy, chovanim a dopadem
   - [x] Odkaz z hlavni hry na help stranku
   - [x] Sekce zbrani s parametry a ingame vizualizaci vystrelu (data-driven z GAME_CONFIG)
+  - [x] Sekce typu misi a vysvetleni run loopu (survive -> ufo_hunt -> asteroid_storm -> mini_boss)
   - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
-
-- [ ] UI / HUD polish
-  - [x] Dvousloupcovy layout (hra vlevo, status panel vpravo) bez horizontal scrollu
-  - [x] Prioritizace panelu podle gameplaye (combat -> ekonomika -> nastaveni)
-  - [x] Emoji ikonky + tooltipy na ikony (vyznam a popis)
-  - [x] Hangar ovladani sjednoceno na sipky + Space (legacy zkratky jako fallback)
-  - [x] Hangar matrix readability pass (spacing/font density/truncation pro 1366x768 a 1920x1080)
-  - [x] Full inventory flow: Sell/Salvage dostupne i pres Arrow+Space (Immediate Actions), ne jen pres legacy 9/0
-  - [x] Selection list orientace: Item X/Y + scroll indikator pri dlouhem seznamu
-  - [x] Jemne doladeni Immediate Actions na 1366x768 (nizsi hustota + skupinove oddeleni voleb)
 
 - [ ] Audio UX controls
   - [x] Mute toggle (M)

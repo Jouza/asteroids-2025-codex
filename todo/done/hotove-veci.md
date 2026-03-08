@@ -1,5 +1,15 @@
 # Hotove veci
 
+- [x] UI / HUD polish
+  - [x] Dvousloupcovy layout (hra vlevo, status panel vpravo) bez horizontal scrollu
+  - [x] Prioritizace panelu podle gameplaye (combat -> ekonomika -> nastaveni)
+  - [x] Emoji ikonky + tooltipy na ikony (vyznam a popis)
+  - [x] Hangar ovladani sjednoceno na sipky + Space (legacy zkratky jako fallback)
+  - [x] Hangar matrix readability pass (spacing/font density/truncation pro 1366x768 a 1920x1080)
+  - [x] Full inventory flow: Sell/Salvage dostupne i pres Arrow+Space (Immediate Actions), ne jen pres legacy 9/0
+  - [x] Selection list orientace: Item X/Y + scroll indikator pri dlouhem seznamu
+  - [x] Jemne doladeni Immediate Actions na 1366x768 (nizsi hustota + skupinove oddeleni voleb)
+
 - [x] Manualni UX QA pass hangaru (crate+inventory stress)
   - [x] P1: Pri plnem inventory byl flow blokovany bez legacy 9/0; doplneno Sell/Salvage do Arrow+Space Immediate Actions
   - [x] P2: V Selection listu doplnena orientace (Item X/Y + scroll indikator) pro 30+ polozek
