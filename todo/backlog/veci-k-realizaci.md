@@ -2,11 +2,6 @@
 
 ## Aktualni fokus
 
-- [x] Performance & runtime budget
-  - [x] Adaptive quality budget pro particles/effects pri FPS dropu
-  - [x] Frame-time / perf overlay pro dev rezim
-  - [x] Guard proti memory growth pri dlouhem runu (particles, bullets, utility efekty)
-  - [x] Profiling pass (CPU hot paths update/render smycky)
 - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
 - [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
 
