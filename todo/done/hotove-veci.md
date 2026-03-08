@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Hangar UX 2.0 readability pass
+  - [x] Pilot panel pouziva jmeno/callsign pilota jako hlavni titul
+  - [x] Shop & Ops sekce seskupena na Sustain / Weapon Progression / Loadout / Inventory Ops
+  - [x] Weapon Progression zobrazuje aktualni `Cooldown Lv` a `Magazine Lv` (X/Y)
+  - [x] Horni run souhrn doplnen o progression line + max shots
+  - [x] Spodni hint je kontextovy podle aktivni sekce (loot/shop/pilot)
+
 - [x] Runtime/UI cleanup follow-up
   - [x] Odstranen mrtvy start-overlay renderer kod (`drawIdentitySelector`, `drawModeSelector`)
   - [x] Vycišteny stale i18n klice po sjednoceni Run setup UI

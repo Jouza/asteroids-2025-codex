@@ -1424,10 +1424,10 @@
         const panelGap = 12;
         const layoutX = 68;
         const layoutW = config.canvas.width - layoutX * 2;
-        const topRowY = 136;
-        const topRowH = 278;
+        const topRowY = 150;
+        const topRowH = 250;
         const bottomRowY = topRowY + topRowH + panelGap;
-        const bottomRowH = 188;
+        const bottomRowH = 220;
         const totalGap = panelGap * 2;
         const colW0 = Math.floor((layoutW - totalGap) * 0.34);
         const colW1 = Math.floor((layoutW - totalGap) * 0.34);
@@ -1477,6 +1477,17 @@
           pilotPerks.length > 0 ? Math.max(0, Math.min(hangar.pilotPerkIndex || 0, pilotPerks.length - 1)) : 0;
         const selectedPerk = pilotPerks[selectedPerkIndex] || null;
         const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
+        const selectedPilotCallsign = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
+        const fireRateLevel = Math.max(0, Math.floor(model.upgrades?.fireRateLevel || 0));
+        const magazineLevel = Math.max(0, Math.floor(model.upgrades?.magazineLevel || 0));
+        const fireRateMax = Math.max(1, Math.floor(config.hangar.maxFireRateLevel || 1));
+        const magazineMax = Math.max(1, Math.floor(config.hangar.maxMagazineLevel || 1));
+        const tuningMultiplier = Math.pow(config.hangar.fireRateFactorPerLevel, fireRateLevel);
+        const sectorBonus = Math.min(
+          config.bullet.sectorBonusMax,
+          Math.floor((model.sector - 1) / config.bullet.sectorBonusEverySectors)
+        );
+        const maxShots = config.bullet.maxActive + magazineLevel + sectorBonus;
 
         const truncate = (value, maxLen = 38) => {
           if (!value) return "-";
@@ -1565,6 +1576,15 @@
           );
         };
 
+        const drawSectionHeader = (x, y, text, maxWidth) => {
+          drawRow(x, y, text, "#ffd785", "700 12px Trebuchet MS", maxWidth);
+          ctx.strokeStyle = "rgba(63,207,255,0.24)";
+          ctx.beginPath();
+          ctx.moveTo(x, y + 4);
+          ctx.lineTo(x + maxWidth, y + 4);
+          ctx.stroke();
+        };
+
         const getWindowStart = (len, selected, rows, centerOffset) =>
           Math.max(0, Math.min(selected - centerOffset, Math.max(0, len - rows)));
 
@@ -1589,12 +1609,25 @@
           centerX,
           topY + 30
         );
+        ctx.font = "600 15px Trebuchet MS";
+        ctx.fillStyle = "#9fe3ff";
+        ctx.fillText(
+          tr("render.hangar.progress_line", {
+            cooldown: fireRateLevel,
+            cooldownMax: fireRateMax,
+            mag: magazineLevel,
+            magMax: magazineMax,
+            shots: maxShots
+          }),
+          centerX,
+          topY + 52
+        );
 
         drawPanel(colX0, topRowY, colW0, topRowH, "SELECTION LIST", navSection === "loot");
         drawPanel(colX1, topRowY, colW1, topRowH, "SELECTED DETAIL", navSection === "loot");
         drawPanel(colX2, topRowY, colW2, topRowH, "BUILD SNAPSHOT");
-        drawPanel(colX0, bottomRowY, colW0, bottomRowH, "IMMEDIATE ACTIONS", navSection === "shop");
-        drawPanel(colX1, bottomRowY, colW1, bottomRowH, "PILOT", navSection === "pilot");
+        drawPanel(colX0, bottomRowY, colW0, bottomRowH, "SHOP & OPS", navSection === "shop");
+        drawPanel(colX1, bottomRowY, colW1, bottomRowH, truncate(selectedPilotCallsign.toUpperCase(), 32), navSection === "pilot");
         drawPanel(colX2, bottomRowY, colW2, bottomRowH, "RUN/STATUS");
 
         const selX = colX0 + 12;
@@ -1631,7 +1664,9 @@
         const listBarX = colX0 + colW0 - 11;
         for (let i = 0; i < listRows; i += 1) {
           const item = merged[listStart + i];
-          if (!item) {
+          if (!item && merged.length === 0 && i === 0) {
+            drawSelectableRow(selX, selY, colW0 - 22, tr("render.hangar.empty_selection"), false, "rgba(216,245,255,0.7)");
+          } else if (!item) {
             drawSelectableRow(selX, selY, colW0 - 22, "-", false, "rgba(216,245,255,0.38)");
           } else {
             const rarity = rarityById[item.entry.rarity];
@@ -1724,52 +1759,55 @@
 
         const actX = colX0 + 12;
         let actY = bottomRowY + 52;
-        const shopRows = [];
+        const actionRows = [];
+        const pushHeader = (label) => actionRows.push({ type: "header", label });
+        const pushAction = (label, color, actionIndex) => actionRows.push({ type: "action", label, color, actionIndex });
+        pushHeader(tr("render.hangar.shop_group_sustain"));
         for (let i = 0; i < config.hangar.items.length; i += 1) {
           const item = config.hangar.items[i];
           const canAfford = model.credits >= item.cost;
-          shopRows.push({
-            label: `${item.title} ${item.cost}cr`,
-            color: canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)",
-            group: "shop"
-          });
+          let label = `${item.title} ${item.cost}cr`;
+          if (item.id === "fire_rate") {
+            label = `${item.title} [Lv ${fireRateLevel}/${fireRateMax}] ${item.cost}cr`;
+          } else if (item.id === "magazine") {
+            label = `${item.title} [Lv ${magazineLevel}/${magazineMax}] ${item.cost}cr`;
+          }
+          pushAction(label, canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)", i);
+          if (item.id === "repair") pushHeader(tr("render.hangar.shop_group_progression"));
         }
-        shopRows.push({ label: `Primary: ${model.loadout.primaryLabel}`, color: "#ffd785", group: "loadout" });
-        shopRows.push({ label: `Secondary: ${model.loadout.secondaryLabel}`, color: "#ffd785", group: "loadout" });
-        shopRows.push({ label: `Utility: ${model.loadout.utilityLabel}`, color: "#ffd785", group: "loadout" });
-        shopRows.push({
-          label: `Sell selected (+${selectedModule?.sellValue ?? 0}cr)`,
-          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
-          group: "loot"
-        });
-        shopRows.push({
-          label: `Salvage selected (+${selectedModule?.salvageValue ?? 0} parts)`,
-          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
-          group: "loot"
-        });
-        const rowStep = 15;
-        for (let i = 0; i < shopRows.length; i += 1) {
-          const row = shopRows[i];
+        pushHeader(tr("render.hangar.shop_group_loadout"));
+        const loadoutBaseIndex = config.hangar.items.length;
+        pushAction(`Primary: ${model.loadout.primaryLabel}`, "#ffd785", loadoutBaseIndex);
+        pushAction(`Secondary: ${model.loadout.secondaryLabel}`, "#ffd785", loadoutBaseIndex + 1);
+        pushAction(`Utility: ${model.loadout.utilityLabel}`, "#ffd785", loadoutBaseIndex + 2);
+        pushHeader(tr("render.hangar.shop_group_inventory"));
+        pushAction(
+          `Sell selected (+${selectedModule?.sellValue ?? 0}cr)`,
+          selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
+          loadoutBaseIndex + 3
+        );
+        pushAction(
+          `Salvage selected (+${selectedModule?.salvageValue ?? 0} parts)`,
+          selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
+          loadoutBaseIndex + 4
+        );
+        const rowStep = 14;
+        for (let i = 0; i < actionRows.length; i += 1) {
+          const row = actionRows[i];
+          if (row.type === "header") {
+            drawSectionHeader(actX, actY, row.label, colW0 - 24);
+            actY += 16;
+            continue;
+          }
           drawSelectableRow(
             actX,
             actY,
             colW0 - 22,
             row.label,
-            navSection === "shop" && shopIndex === i,
+            navSection === "shop" && shopIndex === row.actionIndex,
             row.color
           );
-          const nextRow = shopRows[i + 1];
-          if (nextRow && nextRow.group !== row.group) {
-            const dividerY = actY + 5;
-            ctx.strokeStyle = "rgba(63,207,255,0.32)";
-            ctx.beginPath();
-            ctx.moveTo(actX, dividerY);
-            ctx.lineTo(colX0 + colW0 - 12, dividerY);
-            ctx.stroke();
-            actY += rowStep + 3;
-          } else {
-            actY += rowStep;
-          }
+          actY += rowStep;
         }
 
         const pilotX = colX1 + 12;
@@ -1820,7 +1858,7 @@
           );
           pilotY += 14;
         }
-        drawRow(pilotX, pilotY + 6, "Space: upgrade/unlock | pilot section active", "#9fe3ff", "500 11px Trebuchet MS", colW1 - 24);
+        drawRow(pilotX, pilotY + 6, tr("render.hangar.pilot_hint"), "#9fe3ff", "500 11px Trebuchet MS", colW1 - 24);
 
         const statusX = colX2 + 12;
         let statusY = bottomRowY + 52;
@@ -1834,11 +1872,9 @@
         statusY += 16;
         drawRow(statusX, statusY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", colW2 - 24);
         statusY += 20;
-        drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Tuning: x${tuningMultiplier.toFixed(2)}  |  Max shots: ${maxShots}`, "#9fe3ff", "500 12px Trebuchet MS", colW2 - 24);
         statusY += 16;
-        drawRow(statusX, statusY, "Left/Right panel | Up/Down row", "#d8f5ff", "500 11px Trebuchet MS", colW2 - 24);
-        statusY += 14;
-        drawRow(statusX, statusY, "Space confirm | Enter start | Legacy 9/0", "#d8f5ff", "500 11px Trebuchet MS", colW2 - 24);
+        drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS", colW2 - 24);
 
         const actionBarY = bottomRowY + bottomRowH + 10;
         ctx.fillStyle = "rgba(4,12,24,0.88)";
@@ -1848,7 +1884,12 @@
         ctx.textAlign = "center";
         ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText(tr("render.hangar.action_hint"), centerX, actionBarY + 16);
+        const sectionHintById = {
+          loot: tr("render.hangar.context_hint_loot"),
+          shop: tr("render.hangar.context_hint_shop"),
+          pilot: tr("render.hangar.context_hint_pilot")
+        };
+        ctx.fillText(sectionHintById[navSection] || tr("render.hangar.action_hint"), centerX, actionBarY + 16);
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";
