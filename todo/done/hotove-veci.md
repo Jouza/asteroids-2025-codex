@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Help content generator (data-driven)
+  - [x] `help.html` sekce/karty uz nejsou rucni staticky HTML obsah
+  - [x] Mission/Biome/UFO/Asteroid/Hazard karty se skladaji z `GAME_CONFIG`/`ASTEROID_TYPES`
+  - [x] Weapon sekce zustava data-driven z loadout dat a sdili jednotny render pipeline
+  - [x] i18n texty jsou pouzite pres key-based lookup pri runtime renderu
+
 - [x] Hangar UX 2.0 readability pass
   - [x] Pilot panel pouziva jmeno/callsign pilota jako hlavni titul
   - [x] Shop & Ops sekce seskupena na Sustain / Weapon Progression / Loadout / Inventory Ops

@@ -1,9 +1,5 @@
 # Veci k realizaci
 
-## Aktualni fokus
-
-- [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
-
 ## Dalsi chybejici temata (zatim neevidovana)
 
 - [ ] Biome identity 2.0 (audio + rewards)
@@ -51,7 +47,6 @@
   - [x] Sekce zbrani s parametry a ingame vizualizaci vystrelu (data-driven z GAME_CONFIG)
   - [x] Sekce typu misi a vysvetleni run loopu (survive -> ufo_hunt -> asteroid_storm -> mini_boss)
   - [x] Seznam vsech biomu (Belt Fringe, Wreck Graveyard, Refinery Complex, Ion Field) s kratkym popisem
-  - [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
 
 - [ ] Audio UX controls
   - [x] Mute toggle (M)
