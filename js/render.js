@@ -1429,7 +1429,7 @@
         const summary = model.missionCompleteSummary || {};
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
-        this.drawOverlayBlock(cx, cy + 20, 520, 178);
+        this.drawOverlayBlock(cx, cy + 24, 520, 196);
         ctx.fillStyle = "#d8f5ff";
         ctx.font = "700 38px Trebuchet MS";
         ctx.fillText(tr("overlay.mission_complete"), cx, cy - 26);
@@ -1437,15 +1437,15 @@
         ctx.fillStyle = "rgba(216,245,255,0.96)";
         ctx.fillText(
           tr("overlay.mission_complete_congrats", {
-            pilot: summary.pilot || "-",
-            sector: summary.sector ?? model.sector
+            pilot: summary.pilot || "-"
           }),
           cx,
-          cy + 16
+          cy + 12
         );
-        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy + 50);
+        ctx.fillText(tr("overlay.mission_complete_sector", { sector: summary.sector ?? model.sector }), cx, cy + 44);
+        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy + 76);
         ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr("overlay.mission_complete_next"), cx, cy + 84);
+        ctx.fillText(tr("overlay.mission_complete_next"), cx, cy + 108);
       }
 
       if (model.gameState === GAME_STATE.HANGAR) {
