@@ -744,14 +744,21 @@
 
       if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
-        const topY = 86;
-        const panelY = 146;
-        const panelH = 468;
-        const panelGap = 14;
-        const panelW = Math.floor((config.canvas.width - 92 * 2 - panelGap * 2) / 3);
-        const panelX0 = 92;
-        const panelX1 = panelX0 + panelW + panelGap;
-        const panelX2 = panelX1 + panelW + panelGap;
+        const topY = 84;
+        const panelGap = 12;
+        const layoutX = 68;
+        const layoutW = config.canvas.width - layoutX * 2;
+        const topRowY = 136;
+        const topRowH = 292;
+        const bottomRowY = topRowY + topRowH + panelGap;
+        const bottomRowH = 174;
+        const totalGap = panelGap * 2;
+        const colW0 = Math.floor((layoutW - totalGap) * 0.34);
+        const colW1 = Math.floor((layoutW - totalGap) * 0.34);
+        const colW2 = layoutW - colW0 - colW1 - totalGap;
+        const colX0 = layoutX;
+        const colX1 = colX0 + colW0 + panelGap;
+        const colX2 = colX1 + colW1 + panelGap;
         const hangar = model.hangar;
         const lootCrate = hangar.lootCrate || [];
         const inventory = model.inventory || [];
@@ -795,7 +802,7 @@
         const selectedPerk = pilotPerks[selectedPerkIndex] || null;
         const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
 
-        const truncate = (value, maxLen = 36) => {
+        const truncate = (value, maxLen = 38) => {
           if (!value) return "-";
           return value.length > maxLen ? `${value.slice(0, maxLen - 3)}...` : value;
         };
@@ -876,222 +883,193 @@
           topY + 30
         );
 
-        drawPanel(panelX0, panelY, panelW, panelH, "SHOP", navSection === "shop");
-        drawPanel(panelX1, panelY, panelW, panelH, "LOADOUT/PILOT", navSection === "pilot");
-        drawPanel(panelX2, panelY, panelW, panelH, "LOOT", navSection === "loot");
+        drawPanel(colX0, topRowY, colW0, topRowH, "SELECTION LIST", navSection === "loot");
+        drawPanel(colX1, topRowY, colW1, topRowH, "SELECTED DETAIL", navSection === "loot");
+        drawPanel(colX2, topRowY, colW2, topRowH, "BUILD SNAPSHOT");
+        drawPanel(colX0, bottomRowY, colW0, bottomRowH, "IMMEDIATE ACTIONS", navSection === "shop");
+        drawPanel(colX1, bottomRowY, colW1, bottomRowH, "PILOT", navSection === "pilot");
+        drawPanel(colX2, bottomRowY, colW2, bottomRowH, "RUN/STATUS");
 
-        const leftX = panelX0 + 12;
-        let leftY = panelY + 54;
+        const selX = colX0 + 12;
+        let selY = topRowY + 52;
+        drawRow(selX, selY, `Source: ${selectedSource.toUpperCase()}  (Crate ${lootCrate.length} | Inv ${inventory.length})`, "#9fe3ff", "600 12px Trebuchet MS");
+        selY += 20;
+        drawRow(selX, selY, "Up/Down select  |  Space take/equip", "#d8f5ff", "600 12px Trebuchet MS");
+        selY += 20;
+        const merged = [
+          ...lootCrate.map((entry, idx) => ({ source: "crate", entry, idx })),
+          ...inventory.map((entry, idx) => ({ source: "inventory", entry, idx }))
+        ];
+        const mergedIndex = selectedSource === "crate" ? selectedIndex : lootCrate.length + selectedIndex;
+        const listRows = 11;
+        const listStart = getWindowStart(merged.length, mergedIndex, listRows, 4);
+        for (let i = 0; i < listRows; i += 1) {
+          const item = merged[listStart + i];
+          if (!item) {
+            drawSelectableRow(selX, selY, colW0 - 22, "-", false, "rgba(216,245,255,0.38)");
+          } else {
+            const rarity = rarityById[item.entry.rarity];
+            const prefix = item.source === "crate" ? "C" : "I";
+            const selected = selectedSource === item.source && selectedIndex === item.idx;
+            drawSelectableRow(
+              selX,
+              selY,
+              colW0 - 22,
+              `[${prefix}] ${formatModuleShort(item.entry)}`,
+              selected,
+              rarity?.color || "#d8f5ff"
+            );
+          }
+          selY += 18;
+        }
+
+        const detailX = colX1 + 12;
+        let detailY = topRowY + 52;
+        if (selectedModule) {
+          const equippedSameSlot = equipment[selectedModule.slot] || null;
+          const dHull = formatPctDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"));
+          const dShield = formatPctDelta(readMod(selectedModule, "shieldPct"), readMod(equippedSameSlot, "shieldPct"));
+          const dDmg = formatPctDelta(readMod(selectedModule, "primaryDamagePct"), readMod(equippedSameSlot, "primaryDamagePct"));
+          const dCd = formatPctDelta(readMod(selectedModule, "primaryCooldownPct"), readMod(equippedSameSlot, "primaryCooldownPct"), true);
+          drawRow(detailX, detailY, truncate(selectedModule.name, 30), "#ffd785", "700 14px Trebuchet MS");
+          detailY += 18;
+          drawRow(detailX, detailY, `Slot ${slotLabels[selectedModule.slot] || selectedModule.slot} | ${selectedModule.rarityLabel}`, "#9fe3ff", "500 12px Trebuchet MS");
+          detailY += 18;
+          drawRow(detailX, detailY, "Current -> New", "#d8f5ff", "600 12px Trebuchet MS");
+          detailY += 18;
+          drawRow(detailX, detailY, `Hull ${dHull.text}`, dHull.color, "500 13px Trebuchet MS");
+          drawRow(detailX + 84, detailY, `Shield ${dShield.text}`, dShield.color, "500 13px Trebuchet MS");
+          detailY += 18;
+          drawRow(detailX, detailY, `Damage ${dDmg.text}`, dDmg.color, "500 13px Trebuchet MS");
+          drawRow(detailX + 112, detailY, `Cooldown ${dCd.text}`, dCd.color, "500 13px Trebuchet MS");
+          detailY += 20;
+          if (selectedModule.affixes?.length) {
+            drawRow(detailX, detailY, `Affix: ${truncate(selectedModule.affixes[0].name, 28)}`, "#b8f6ff", "500 12px Trebuchet MS");
+            detailY += 16;
+          }
+          drawRow(detailX, detailY, `Sell ${selectedModule.sellValue}cr | Salvage ${selectedModule.salvageValue}`, "#d8f5ff", "500 12px Trebuchet MS");
+        } else {
+          drawRow(detailX, detailY, "Neni vybrana polozka.", "rgba(216,245,255,0.72)", "600 13px Trebuchet MS");
+        }
+
+        const buildX = colX2 + 12;
+        let buildY = topRowY + 52;
+        drawRow(buildX, buildY, `P: ${activePrimary.label} (${activePrimary.role})`, "#a7f2ff", "600 13px Trebuchet MS");
+        buildY += 18;
+        drawRow(buildX, buildY, `S: ${activeSecondary.label} (${activeSecondary.role})`, "#a7f2ff", "600 13px Trebuchet MS");
+        buildY += 18;
+        drawRow(buildX, buildY, `U: ${activeUtility.label} (${activeUtility.role})`, "#a7f2ff", "600 13px Trebuchet MS");
+        buildY += 22;
+        drawRow(buildX, buildY, "Equipped", "#ffd785", "700 13px Trebuchet MS");
+        buildY += 18;
+        for (const slot of Object.keys(slotLabels)) {
+          drawRow(buildX, buildY, `${slotLabels[slot]}: ${truncate(equipment[slot]?.name || "-", 20)}`, "#d8f5ff", "500 12px Trebuchet MS");
+          buildY += 16;
+        }
+        buildY += 4;
+        const activeSets = model.activeSets || [];
+        const setText = activeSets.length ? activeSets.map((entry) => `${entry.label} ${entry.count}/3`).join(" | ") : "No active set";
+        drawRow(buildX, buildY, `Set: ${truncate(setText, 26)}`, "#b8f6ff", "600 12px Trebuchet MS");
+
+        const actX = colX0 + 12;
+        let actY = bottomRowY + 52;
         for (let i = 0; i < config.hangar.items.length; i += 1) {
           const item = config.hangar.items[i];
           const canAfford = model.credits >= item.cost;
           drawSelectableRow(
-            leftX,
-            leftY,
-            panelW - 22,
-            `${i + 1}. ${truncate(item.title, 23)} ${item.cost}cr`,
+            actX,
+            actY,
+            colW0 - 22,
+            `${i + 1}. ${truncate(item.title, 24)} ${item.cost}cr`,
             navSection === "shop" && shopIndex === i,
             canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)"
           );
-          leftY += 24;
+          actY += 18;
         }
-        leftY += 8;
-        drawSelectableRow(
-          leftX,
-          leftY,
-          panelW - 22,
-          `4. Primary: ${model.loadout.primaryLabel}`,
-          navSection === "shop" && shopIndex === 3,
-          "#ffd785"
-        );
-        leftY += 22;
-        drawSelectableRow(
-          leftX,
-          leftY,
-          panelW - 22,
-          `5. Secondary: ${model.loadout.secondaryLabel}`,
-          navSection === "shop" && shopIndex === 4,
-          "#ffd785"
-        );
-        leftY += 22;
-        drawSelectableRow(
-          leftX,
-          leftY,
-          panelW - 22,
-          `R. Utility: ${model.loadout.utilityLabel}`,
-          navSection === "shop" && shopIndex === 5,
-          "#ffd785"
-        );
-        leftY += 28;
+        drawSelectableRow(actX, actY, colW0 - 22, `4. Primary: ${model.loadout.primaryLabel}`, navSection === "shop" && shopIndex === 3, "#ffd785");
+        actY += 18;
+        drawSelectableRow(actX, actY, colW0 - 22, `5. Secondary: ${model.loadout.secondaryLabel}`, navSection === "shop" && shopIndex === 4, "#ffd785");
+        actY += 18;
+        drawSelectableRow(actX, actY, colW0 - 22, `R. Utility: ${model.loadout.utilityLabel}`, navSection === "shop" && shopIndex === 5, "#ffd785");
+        actY += 20;
+        drawRow(actX, actY, "Space = context action | Legacy: 9/0 = sell/salvage", "#d8f5ff", "500 11px Trebuchet MS");
+
+        const pilotX = colX1 + 12;
+        let pilotY = bottomRowY + 52;
         drawRow(
-          leftX,
-          leftY,
-          `Levels FR ${model.upgrades.fireRateLevel} | MAG ${model.upgrades.magazineLevel}`,
-          "#9fe3ff"
-        );
-
-        const midX = panelX1 + 12;
-        let midY = panelY + 54;
-        drawRow(midX, midY, `P: ${activePrimary.label} (${activePrimary.role})`, "#a7f2ff");
-        midY += 21;
-        drawRow(midX, midY, `S: ${activeSecondary.label} (${activeSecondary.role})`, "#a7f2ff");
-        midY += 21;
-        drawRow(midX, midY, `U: ${activeUtility.label} (${activeUtility.role})`, "#a7f2ff");
-        midY += 26;
-        drawRow(midX, midY, `P CD ${activePrimary.cooldownSeconds.toFixed(2)}s  ${truncate(activePrimary.effectText, 24)}`, "#d8f5ff", "500 13px Trebuchet MS");
-        midY += 20;
-        drawRow(midX, midY, `S CD ${activeSecondary.cooldownSeconds.toFixed(1)}s  ${truncate(activeSecondary.effectText, 24)}`, "#d8f5ff", "500 13px Trebuchet MS");
-        midY += 20;
-        drawRow(midX, midY, `U CD ${activeUtility.cooldownSeconds.toFixed(1)}s  ${truncate(activeUtility.effectText, 24)}`, "#d8f5ff", "500 13px Trebuchet MS");
-        midY += 28;
-
-        drawRow(midX, midY, "Equipped", "#ffd785", "600 14px Trebuchet MS");
-        midY += 20;
-        for (const slot of Object.keys(slotLabels)) {
-          drawRow(midX, midY, `${slotLabels[slot]}: ${truncate(equipment[slot]?.name || "-", 22)}`, "#d8f5ff", "500 13px Trebuchet MS");
-          midY += 18;
-        }
-        midY += 6;
-        const activeSets = model.activeSets || [];
-        const setText = activeSets.length
-          ? activeSets.map((entry) => `${entry.label} ${entry.count}/3`).join(" | ")
-          : "No active set";
-        drawRow(midX, midY, `Sets: ${truncate(setText, 30)}`, "#b8f6ff", "600 13px Trebuchet MS");
-        midY += 24;
-
-        const pilotLevel = pilot.level || 1;
-        const pilotXp = Math.floor(pilot.xp || 0);
-        const pilotXpToNext = Math.max(1, Math.floor(pilot.xpToNext || 1));
-        drawRow(
-          midX,
-          midY,
-          `Pilot L${pilotLevel}  XP ${pilotXp}/${pilotXpToNext}  A:${pilot.attributePoints || 0} S:${pilot.skillPoints || 0}`,
+          pilotX,
+          pilotY,
+          `L${pilot.level || 1} XP ${Math.floor(pilot.xp || 0)}/${Math.floor(pilot.xpToNext || 1)}  A:${pilot.attributePoints || 0} S:${pilot.skillPoints || 0}`,
           "#ffd785",
-          "600 13px Trebuchet MS"
+          "600 12px Trebuchet MS"
         );
-        midY += 19;
+        pilotY += 18;
         for (let i = 0; i < pilotAttrOrder.length; i += 1) {
           const key = pilotAttrOrder[i];
           const selected = (hangar.pilotAttrIndex || 0) === i;
           const navSelected = navSection === "pilot" && pilotCursor === i;
           const value = Math.floor(pilotAttrs[key] || 0);
           drawRow(
-            midX + i * 68,
-            midY,
+            pilotX + i * 70,
+            pilotY,
             `${navSelected ? ">" : selected ? "*" : ""}${pilotAttrLabels[key]}:${value}`,
             navSelected ? "#ffe7a8" : selected ? "#b8f6ff" : "#d8f5ff",
-            "500 12px Trebuchet MS"
+            "500 11px Trebuchet MS"
           );
         }
-        midY += 18;
+        pilotY += 18;
         if (selectedPerk) {
           const perkUnlocked = unlockedPerkIds.has(selectedPerk.id);
           drawRow(
-            midX,
-            midY,
+            pilotX,
+            pilotY,
             `${navSection === "pilot" && pilotCursor === 4 ? ">" : ""}Perk ${selectedPerkIndex + 1}/${pilotPerks.length}: ${selectedPerk.label} (${selectedPerk.branch})`,
             navSection === "pilot" && pilotCursor === 4 ? "#ffe7a8" : perkUnlocked ? "#9bf5bb" : "#d8f5ff",
-            "600 12px Trebuchet MS"
+            "600 11px Trebuchet MS"
           );
-          midY += 16;
+          pilotY += 14;
           drawRow(
-            midX,
-            midY,
+            pilotX,
+            pilotY,
             `${navSection === "pilot" && pilotCursor === 5 ? ">" : ""}Req ${formatPerkRequirements(selectedPerk)}  [${perkUnlocked ? "Unlocked" : "Lock"}]`,
             navSection === "pilot" && pilotCursor === 5
               ? "#ffe7a8"
               : perkUnlocked
                 ? "#9bf5bb"
                 : "rgba(216,245,255,0.78)",
-            "500 12px Trebuchet MS"
+            "500 11px Trebuchet MS"
           );
-          midY += 18;
+          pilotY += 14;
         }
+        drawRow(pilotX, pilotY + 6, "Space: upgrade/unlock | pilot section active", "#9fe3ff", "500 11px Trebuchet MS");
 
-        if (selectedModule) {
-          const equippedSameSlot = equipment[selectedModule.slot] || null;
-          const dHull = formatPctDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"));
-          const dShield = formatPctDelta(readMod(selectedModule, "shieldPct"), readMod(equippedSameSlot, "shieldPct"));
-          const dDmg = formatPctDelta(
-            readMod(selectedModule, "primaryDamagePct"),
-            readMod(equippedSameSlot, "primaryDamagePct")
-          );
-          const dCd = formatPctDelta(
-            readMod(selectedModule, "primaryCooldownPct"),
-            readMod(equippedSameSlot, "primaryCooldownPct"),
-            true
-          );
-          drawRow(midX, midY, `Selected: ${truncate(selectedModule.name, 24)}`, "#d8f5ff", "600 13px Trebuchet MS");
-          midY += 18;
-          drawRow(midX, midY, `Hull ${dHull.text}`, dHull.color, "500 13px Trebuchet MS");
-          drawRow(midX + 68, midY, `Shield ${dShield.text}`, dShield.color, "500 13px Trebuchet MS");
-          drawRow(midX + 152, midY, `Dmg ${dDmg.text}`, dDmg.color, "500 13px Trebuchet MS");
-          drawRow(midX + 218, midY, `CD ${dCd.text}`, dCd.color, "500 13px Trebuchet MS");
-        }
+        const statusX = colX2 + 12;
+        let statusY = bottomRowY + 52;
+        drawRow(statusX, statusY, `Mission: ${model.currentMission?.label || nextMissionType.toUpperCase()}`, "#d8f5ff", "600 12px Trebuchet MS");
+        statusY += 16;
+        drawRow(statusX, statusY, `Sector: ${model.sector}  |  Credits: ${model.credits}`, "#d8f5ff", "500 12px Trebuchet MS");
+        statusY += 16;
+        drawRow(statusX, statusY, `Score: ${model.score}  |  Salvage: ${model.salvageParts}`, "#d8f5ff", "500 12px Trebuchet MS");
+        statusY += 16;
+        drawRow(statusX, statusY, `Set: ${truncate(model.setStatusText || "No active set", 24)}`, "#b8f6ff", "500 12px Trebuchet MS");
+        statusY += 16;
+        drawRow(statusX, statusY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS");
+        statusY += 20;
+        drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS");
+        statusY += 16;
+        drawRow(statusX, statusY, "Left/Right panel | Up/Down row", "#d8f5ff", "500 11px Trebuchet MS");
+        statusY += 14;
+        drawRow(statusX, statusY, "Space confirm | Enter start | Legacy 9/0", "#d8f5ff", "500 11px Trebuchet MS");
 
-        const rightX = panelX2 + 12;
-        let rightY = panelY + 54;
-        drawRow(rightX, rightY, "Up/Down Select  Space Take/Equip", "#d8f5ff", "600 12px Trebuchet MS");
-        rightY += 16;
-        drawRow(rightX, rightY, "Legacy: 9 Sell  0 Salvage", "#d8f5ff", "600 12px Trebuchet MS");
-        rightY += 24;
-        drawRow(rightX, rightY, `Crate (${lootCrate.length})`, "#a7f2ff", "700 14px Trebuchet MS");
-        rightY += 18;
-
-        const crateRows = 5;
-        const crateStart = selectedSource === "crate" ? getWindowStart(lootCrate.length, selectedIndex, crateRows, 2) : 0;
-        for (let i = 0; i < crateRows; i += 1) {
-          const itemIndex = crateStart + i;
-          const module = lootCrate[itemIndex];
-          if (!module) {
-            drawSelectableRow(rightX, rightY, panelW - 22, "-", false, "rgba(216,245,255,0.38)");
-          } else {
-            const rarity = rarityById[module.rarity];
-            drawSelectableRow(
-              rightX,
-              rightY,
-              panelW - 22,
-              formatModuleShort(module),
-              selectedSource === "crate" && selectedIndex === itemIndex,
-              rarity?.color || "#d8f5ff"
-            );
-          }
-          rightY += 18;
-        }
-
-        rightY += 10;
-        drawRow(rightX, rightY, `Inventory (${inventory.length}/${config.loot.maxInventoryItems})`, "#a7f2ff", "700 14px Trebuchet MS");
-        rightY += 18;
-        const invRows = 7;
-        const invStart = selectedSource === "inventory" ? getWindowStart(inventory.length, selectedIndex, invRows, 3) : 0;
-        for (let i = 0; i < invRows; i += 1) {
-          const itemIndex = invStart + i;
-          const module = inventory[itemIndex];
-          if (!module) {
-            drawSelectableRow(rightX, rightY, panelW - 22, "-", false, "rgba(216,245,255,0.38)");
-          } else {
-            const rarity = rarityById[module.rarity];
-            drawSelectableRow(
-              rightX,
-              rightY,
-              panelW - 22,
-              formatModuleShort(module),
-              selectedSource === "inventory" && selectedIndex === itemIndex,
-              rarity?.color || "#d8f5ff"
-            );
-          }
-          rightY += 18;
-        }
-
-        const actionBarY = panelY + panelH + 10;
+        const actionBarY = bottomRowY + bottomRowH + 10;
         ctx.fillStyle = "rgba(4,12,24,0.88)";
-        ctx.fillRect(panelX0, actionBarY, panelW * 3 + panelGap * 2, 24);
+        ctx.fillRect(layoutX, actionBarY, layoutW, 24);
         ctx.strokeStyle = "rgba(63,207,255,0.45)";
-        ctx.strokeRect(panelX0, actionBarY, panelW * 3 + panelGap * 2, 24);
+        ctx.strokeRect(layoutX, actionBarY, layoutW, 24);
         ctx.textAlign = "center";
         ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Left/Right sekce | Up/Down vyber | Space akce | Enter start | Legacy: 9 sell, 0 salvage", centerX, actionBarY + 16);
+        ctx.fillText("Left/Right sekce | Up/Down vyber | Space akce | Enter start | Legacy: 9/0 pro sell/salvage", centerX, actionBarY + 16);
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";
