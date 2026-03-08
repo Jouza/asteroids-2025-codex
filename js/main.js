@@ -57,19 +57,38 @@
     }
   }
 
-  function formatReqLine(perk) {
-    if (!perk) return "-";
-    const parts = [`L${perk.levelReq ?? 1}`];
-    const req = perk.requires || {};
-    for (const key of Object.keys(req)) parts.push(`${key.toUpperCase()}:${req[key]}`);
-    return parts.join(" ");
-  }
-
   function createEl(tag, className, text) {
     const el = document.createElement(tag);
     if (className) el.className = className;
     if (text != null) el.textContent = String(text);
     return el;
+  }
+
+  function createPilotPortraitSvg(pilotId = "buzz_calder") {
+    const palettes = {
+      buzz_calder: { ring: "#9be8ff", core: "#d8f5ff", accent: "#ffd79a" },
+      neo_mercer: { ring: "#87f4c4", core: "#d8f5ff", accent: "#8ecbff" },
+      boba_vane: { ring: "#ffd79a", core: "#f2fff8", accent: "#9be8ff" },
+      luke_ryder: { ring: "#a8d7ff", core: "#e8f8ff", accent: "#ffe7a8" },
+      marty_carter: { ring: "#b8f7ff", core: "#e8fcff", accent: "#ffcf8c" },
+      max_steel: { ring: "#7fe4ff", core: "#d8f5ff", accent: "#ffb08a" }
+    };
+    const palette = palettes[pilotId] || palettes.buzz_calder;
+    return `
+      <svg viewBox="0 0 120 120" class="pilot-portrait-svg" aria-hidden="true">
+        <defs>
+          <radialGradient id="pilotGlow" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="${palette.core}" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="${palette.ring}" stop-opacity="0.06"/>
+          </radialGradient>
+        </defs>
+        <circle cx="60" cy="60" r="46" fill="url(#pilotGlow)" stroke="${palette.ring}" stroke-width="2"/>
+        <path d="M60 20 L82 64 L60 54 L38 64 Z" fill="rgba(166,232,255,0.14)" stroke="${palette.core}" stroke-width="2" />
+        <path d="M60 22 L60 54" stroke="${palette.core}" stroke-width="1.6" />
+        <path d="M45 68 L33 84 M75 68 L87 84" stroke="${palette.accent}" stroke-width="2" stroke-linecap="round" />
+        <circle cx="60" cy="56" r="3" fill="${palette.accent}" />
+      </svg>
+    `;
   }
 
   function renderPilotModal() {
@@ -86,45 +105,73 @@
     const perks = game.getPilotPerkDefs();
     const unlocked = new Set(pilot.unlockedPerks || []);
     const selectedPilot = game.getSelectedIdentityPilot();
+    const pilotId = selectedPilot?.id || "buzz_calder";
     const pilotName = selectedPilot
       ? (i18n?.t ? i18n.t(`identity.pilot.${selectedPilot.id}.callsign`) : selectedPilot.id)
       : "-";
+    const pilotBio = tr(`help.pilot.${pilotId}.bio`);
+    const level = Math.floor(pilot.level || 1);
+    const xp = Math.floor(pilot.xp || 0);
+    const xpToNext = Math.max(1, Math.floor(pilot.xpToNext || 1));
+    const attrPoints = Math.floor(pilot.attributePoints || 0);
+    const skillPoints = Math.floor(pilot.skillPoints || 0);
+
+    const hero = createEl("section", "pilot-modal-card pilot-hero-card");
+    const portraitWrap = createEl("div", "pilot-portrait-wrap");
+    portraitWrap.innerHTML = createPilotPortraitSvg(pilotId);
+    hero.appendChild(portraitWrap);
+
+    const heroContent = createEl("div", "pilot-hero-content");
+    heroContent.appendChild(createEl("p", "pilot-hero-name", pilotName));
+    heroContent.appendChild(createEl("p", "pilot-hero-bio", pilotBio));
+    const heroStats = createEl("div", "pilot-hero-stats");
+    heroStats.appendChild(createEl("span", "pilot-chip", `${tr("index.pilot_modal.level_short")} ${level}`));
+    heroStats.appendChild(createEl("span", "pilot-chip", `${tr("index.pilot_modal.attr_short")} ${attrPoints}`));
+    heroStats.appendChild(createEl("span", "pilot-chip", `${tr("index.pilot_modal.skill_short")} ${skillPoints}`));
+    heroContent.appendChild(heroStats);
+    heroContent.appendChild(createEl("p", "pilot-hero-xp", `${tr("index.pilot_modal.xp_short")} ${xp}/${xpToNext}`));
+    const xpTrack = createEl("div", "pilot-track");
+    const xpFill = createEl("div", "pilot-track-fill");
+    xpFill.style.width = `${Math.max(0, Math.min(100, (xp / xpToNext) * 100)).toFixed(1)}%`;
+    xpTrack.appendChild(xpFill);
+    heroContent.appendChild(xpTrack);
+    hero.appendChild(heroContent);
+    pilotModalContent.appendChild(hero);
 
     const summary = createEl("section", "pilot-modal-card");
     summary.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.summary_title")));
-    summary.appendChild(
-      createEl(
-        "div",
-        "pilot-stat",
-        `${pilotName} | ${tr("index.pilot_modal.level_line", {
-          level: pilot.level || 1,
-          xp: Math.floor(pilot.xp || 0),
-          next: Math.floor(pilot.xpToNext || 1),
-          attr: pilot.attributePoints || 0,
-          skill: pilot.skillPoints || 0
-        })}`
-      )
-    );
+    summary.appendChild(createEl("div", "pilot-stat", tr("index.pilot_modal.level_line", { level, xp, next: xpToNext, attr: attrPoints, skill: skillPoints })));
     pilotModalContent.appendChild(summary);
 
     const attrsCard = createEl("section", "pilot-modal-card");
     attrsCard.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.attributes_title")));
     const attrGrid = createEl("div", "pilot-modal-grid");
     for (const key of game.getPilotAttributeOrder()) {
-      const row = createEl("div", "pilot-action-row");
-      const label = createEl("span", "", `${key.toUpperCase()} ${Math.floor(attrs[key] || 0)}`);
+      const value = Math.floor(attrs[key] || 0);
+      const cap = Math.max(1, Math.floor(game.config.pilot?.attributeCaps?.[key] || 10));
+      const canUpgrade = isHangar && attrPoints > 0 && value < cap;
+      const row = createEl("div", "pilot-attr-card");
+      const head = createEl("div", "pilot-attr-head");
+      head.appendChild(createEl("span", "pilot-attr-name", tr(`pilot.attribute.${key}.name`)));
+      head.appendChild(createEl("span", "pilot-attr-value", `${value}/${cap}`));
+      row.appendChild(head);
+      const track = createEl("div", "pilot-track");
+      const fill = createEl("div", "pilot-track-fill");
+      fill.style.width = `${Math.max(0, Math.min(100, (value / cap) * 100)).toFixed(1)}%`;
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(createEl("p", "pilot-attr-desc", tr(`pilot.attribute.${key}.desc`)));
+      row.appendChild(createEl("p", "pilot-attr-effect", tr(`pilot.attribute.${key}.effect`)));
       const btn = createEl("button", "pilot-action-btn", tr("index.pilot_modal.upgrade"));
       btn.type = "button";
-      btn.disabled = !isHangar;
+      btn.disabled = !canUpgrade;
       btn.addEventListener("click", () => {
-        if (!isHangar) return;
+        if (!canUpgrade) return;
         game.spendPilotAttributePoint(key);
         hud.sync(game.model);
         renderPilotModal();
       });
-      row.appendChild(label);
       row.appendChild(btn);
-      row.appendChild(createEl("span", "", ""));
       attrGrid.appendChild(row);
     }
     attrsCard.appendChild(attrGrid);
@@ -133,11 +180,43 @@
     const perksCard = createEl("section", "pilot-modal-card");
     perksCard.appendChild(createEl("h3", "pilot-modal-title", tr("index.pilot_modal.perks_title")));
     for (const perk of perks) {
-      const row = createEl("div", "pilot-action-row");
-      const reqLine = `${tr("index.pilot_modal.req_prefix")} ${formatReqLine(perk)}`;
-      const label = createEl("span", "", `${perk.label} (${perk.branch}) | ${reqLine}`);
+      const row = createEl("div", "pilot-perk-card");
+      const titleRow = createEl("div", "pilot-perk-head");
+      titleRow.appendChild(createEl("span", "pilot-perk-name", `${perk.label} (${String(perk.branch || "").toUpperCase()})`));
       const unlockedNow = unlocked.has(perk.id);
       const canUnlock = isHangar && game.canUnlockPilotPerk(perk);
+      const reqAttrKey = Object.keys(perk.requires || {})[0] || "reflex";
+      const reqAttrValue = Math.floor(perk.requires?.[reqAttrKey] || 0);
+      const currentAttr = Math.floor(attrs[reqAttrKey] || 0);
+      const reqLevel = Math.floor(perk.levelReq || 1);
+      const levelOk = level >= reqLevel;
+      const attrOk = currentAttr >= reqAttrValue;
+      let statusKey = "index.pilot_modal.status_missing";
+      if (unlockedNow) statusKey = "index.pilot_modal.status_unlocked";
+      else if (levelOk && attrOk && isHangar) statusKey = "index.pilot_modal.status_ready";
+      titleRow.appendChild(createEl("span", `pilot-perk-status ${levelOk && attrOk ? "ok" : "warn"}`, tr(statusKey)));
+      row.appendChild(titleRow);
+      row.appendChild(createEl("p", "pilot-perk-desc", tr(`pilot.perk.${perk.id}.desc`)));
+
+      const reqGrid = createEl("div", "pilot-perk-req-grid");
+      reqGrid.appendChild(createEl("div", `pilot-perk-req ${levelOk ? "ok" : "warn"}`, `${tr("index.pilot_modal.required")}: ${tr("index.pilot_modal.req_level", { level: reqLevel })}`));
+      reqGrid.appendChild(createEl("div", "pilot-perk-req", `${tr("index.pilot_modal.current")}: ${tr("index.pilot_modal.req_level", { level })}`));
+      reqGrid.appendChild(
+        createEl(
+          "div",
+          `pilot-perk-req ${attrOk ? "ok" : "warn"}`,
+          `${tr("index.pilot_modal.required")}: ${tr("index.pilot_modal.req_attr", { attr: tr(`pilot.attribute.${reqAttrKey}.name`), value: reqAttrValue })}`
+        )
+      );
+      reqGrid.appendChild(
+        createEl(
+          "div",
+          "pilot-perk-req",
+          `${tr("index.pilot_modal.current")}: ${tr("index.pilot_modal.req_attr", { attr: tr(`pilot.attribute.${reqAttrKey}.name`), value: currentAttr })}`
+        )
+      );
+      row.appendChild(reqGrid);
+
       const btn = createEl(
         "button",
         "pilot-action-btn",
@@ -151,9 +230,7 @@
         hud.sync(game.model);
         renderPilotModal();
       });
-      row.appendChild(label);
       row.appendChild(btn);
-      row.appendChild(createEl("span", "", ""));
       perksCard.appendChild(row);
     }
     pilotModalContent.appendChild(perksCard);

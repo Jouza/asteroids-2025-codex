@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Pilot Console UX overhaul (hero + RPG readability)
+  - [x] Rozsireny modal layout (sirsi panel) s hero hlavickou: velke jmeno pilota, portrait slot, bio, XP progress
+  - [x] Attributes prevedeny na karty s progress bary, popisem vyznamu a dopadu levelovani
+  - [x] Perky prepracovany na karty s popisem benefitu, `Required vs Current` metrikami a stavovym indikatoru
+  - [x] Opraven hint text: upgrade se ridi pres Pilot Console (v hangar fazi), ne textem zavadejicim flow
+  - [x] Texty a popisy sdileny pres i18n keys a znovu pouzity i v help sekcich (attributes/perks reference)
+
 - [x] Roguelike fresh-run reset policy
   - [x] Kazdy novy run zacina od nuly v progresi (pilot XP/atributy/perky, salvage, equipment/inventory, weapon progression, loadout)
   - [x] Zachovana identita vybrana v Run setup (pilot + ship), flight model a rezimove unlocky

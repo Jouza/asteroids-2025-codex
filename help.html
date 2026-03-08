@@ -558,6 +558,91 @@
         section.appendChild(grid);
       };
 
+      const appendPilotAttributeReferenceSection = () => {
+        const section = appendSection({
+          titleKey: "help.section.pilot_attributes_ref",
+          hintKey: "help.section.pilot_attributes_ref_hint"
+        });
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        const order = ["reflex", "systems", "grit", "instinct"];
+        for (const key of order) {
+          const card = document.createElement("article");
+          card.className = "card identity-card";
+          const head = document.createElement("div");
+          head.className = "head";
+          const iconNode = document.createElement("div");
+          iconNode.className = "icon";
+          iconNode.innerHTML = iconSvg("pilot");
+          const titleWrap = document.createElement("div");
+          const name = document.createElement("p");
+          name.className = "name";
+          name.textContent = tr(`pilot.attribute.${key}.name`);
+          const tag = document.createElement("div");
+          tag.className = "tag";
+          const cap = Math.max(1, Math.floor(cfg.pilot?.attributeCaps?.[key] || 25));
+          tag.textContent = `Cap ${cap}`;
+          titleWrap.appendChild(name);
+          titleWrap.appendChild(tag);
+          head.appendChild(iconNode);
+          head.appendChild(titleWrap);
+          const line = document.createElement("p");
+          line.className = "line";
+          line.textContent = tr(`pilot.attribute.${key}.desc`);
+          const impact = document.createElement("p");
+          impact.className = "impact";
+          impact.innerHTML = `<strong>Level impact:</strong> ${tr(`pilot.attribute.${key}.effect`)}`;
+          card.appendChild(head);
+          card.appendChild(line);
+          card.appendChild(impact);
+          grid.appendChild(card);
+        }
+        section.appendChild(grid);
+      };
+
+      const appendPilotPerkReferenceSection = () => {
+        const section = appendSection({
+          titleKey: "help.section.pilot_perks_ref",
+          hintKey: "help.section.pilot_perks_ref_hint"
+        });
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        const perks = cfg.pilot?.perks || [];
+        for (const perk of perks) {
+          const card = document.createElement("article");
+          card.className = "card identity-card";
+          const head = document.createElement("div");
+          head.className = "head";
+          const iconNode = document.createElement("div");
+          iconNode.className = "icon";
+          iconNode.innerHTML = iconSvg("pilot");
+          const titleWrap = document.createElement("div");
+          const name = document.createElement("p");
+          name.className = "name";
+          name.textContent = `${perk.label} (${String(perk.branch || "").toUpperCase()})`;
+          const tag = document.createElement("div");
+          tag.className = "tag";
+          const reqAttrKey = Object.keys(perk.requires || {})[0] || "reflex";
+          const reqAttrVal = Math.floor(perk.requires?.[reqAttrKey] || 0);
+          tag.textContent = `Req L${Math.floor(perk.levelReq || 1)} | ${tr(`pilot.attribute.${reqAttrKey}.name`)} ${reqAttrVal}`;
+          titleWrap.appendChild(name);
+          titleWrap.appendChild(tag);
+          head.appendChild(iconNode);
+          head.appendChild(titleWrap);
+          const line = document.createElement("p");
+          line.className = "line";
+          line.textContent = tr(`pilot.perk.${perk.id}.desc`);
+          const impact = document.createElement("p");
+          impact.className = "impact";
+          impact.innerHTML = `<strong>Modifiers:</strong> ${formatModifierLine(perk.modifiers || {})}`;
+          card.appendChild(head);
+          card.appendChild(line);
+          card.appendChild(impact);
+          grid.appendChild(card);
+        }
+        section.appendChild(grid);
+      };
+
       appendSection({
         titleKey: "help.section.combat_economy",
         cards: ["shared_pool", "drain_factors", "salvage_loop", "flight_models"]
@@ -599,6 +684,8 @@
         titleKey: "help.section.pilot_rpg",
         cards: ["pilot_xp", "pilot_attributes", "pilot_perk_unlock"]
       });
+      appendPilotAttributeReferenceSection();
+      appendPilotPerkReferenceSection();
 
       appendSection({
         titleKey: "help.section.pilot_identity",
