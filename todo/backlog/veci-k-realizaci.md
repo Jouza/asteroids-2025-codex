@@ -1,12 +1,5 @@
 # Veci k realizaci
 
-## Nova priorita (P0)
-
-- [ ] Run completion / win-state milestone
-  - [ ] Final encounter: full boss (ne mini-boss) a jasna podminka "run dokoncen"
-  - [ ] Victory flow: obrazovka dokonceni runu + shrnuti buildu/progrese
-  - [ ] Odemknuti Endless modu po prvnim uspesnem dojeti runu
-
 ## Dalsi chybejici temata (zatim neevidovana)
 
 - [ ] Biome identity 2.0 (audio + rewards)

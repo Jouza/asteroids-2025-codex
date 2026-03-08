@@ -193,6 +193,7 @@
         label: type.toUpperCase(),
         objectiveText: "",
         completed: false,
+        isFinalEncounter: false,
         biomeIntroTimer: 1.9,
         difficulty,
         ...context
@@ -282,10 +283,15 @@
       }
 
       if (type === "mini_boss") {
-        const hp = Math.round(
+        const isFinalEncounter = typeof g.isFinalEncounter === "function" ? g.isFinalEncounter() : false;
+        const hpBase = Math.round(
           (missionCfg.miniBoss.hpBase + (level - 1) * missionCfg.miniBoss.hpStep) * (0.95 + difficulty * 0.2)
         );
-        g.model.currentMission.label = "MINI BOSS";
+        const hp = Math.round(
+          hpBase * (isFinalEncounter ? g.config.run.finalBossHpMultiplier ?? 1 : 1)
+        );
+        g.model.currentMission.isFinalEncounter = isFinalEncounter;
+        g.model.currentMission.label = isFinalEncounter ? "FINAL BOSS" : "MINI BOSS";
         g.model.currentMission.objectiveText = `Destroy boss (${hp} HP)`;
         g.enemySystem.spawnMiniBoss(hp);
         this.spawnAsteroidPack(
@@ -459,8 +465,13 @@
 
       if (mission.completed && !g.model.sectorCompletionHandled) {
         g.onMissionCompleted();
-        g.model.sectorCompletionHandled = true;
-        g.model.sectorTimerMs = 0;
+        if (typeof g.onMissionCompletionResolved === "function") {
+          const stoppedByEndState = g.onMissionCompletionResolved();
+          if (stoppedByEndState) return;
+        } else {
+          g.model.sectorCompletionHandled = true;
+          g.model.sectorTimerMs = 0;
+        }
       }
     }
   }

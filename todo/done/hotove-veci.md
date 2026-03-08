@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Run completion / win-state milestone
+  - [x] Final encounter: final boss varianta na campaign final sektoru + jasna podminka "run dokoncen"
+  - [x] Victory flow: obrazovka dokonceni runu + summary buildu/progrese
+  - [x] Odemknuti Endless modu po prvnim uspesnem dojeti runu
+
 - [x] UI / HUD polish
   - [x] Dvousloupcovy layout (hra vlevo, status panel vpravo) bez horizontal scrollu
   - [x] Prioritizace panelu podle gameplaye (combat -> ekonomika -> nastaveni)

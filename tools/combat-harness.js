@@ -364,6 +364,38 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(15151);
+    const finalSector = gameA.config.run.finalSector;
+    gameA.model.sector = finalSector;
+    gameA.missionSystem.startMission(finalSector);
+    gameA.model.miniBoss = null;
+    gameA.model.asteroids = [];
+    gameA.model.ufos = [];
+    gameA.model.enemyBullets = [];
+    gameA.missionSystem.updateMission(1 / 60);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.VICTORY, "Campaign final encounter should end in VICTORY");
+    assert(gameA.model.endlessUnlocked, "Campaign clear should unlock endless mode");
+    assert(gameA.model.unlocks.endlessMode, "Endless unlock should persist in progression unlocks");
+  });
+
+  tests.push(() => {
+    gameA.startGame(16161);
+    const finalSector = gameA.config.run.finalSector;
+    gameA.model.endlessUnlocked = true;
+    gameA.model.unlocks.endlessMode = true;
+    gameA.model.runMode = "endless";
+    gameA.model.sector = finalSector;
+    gameA.missionSystem.startMission(finalSector);
+    gameA.model.miniBoss = null;
+    gameA.model.asteroids = [];
+    gameA.model.ufos = [];
+    gameA.model.enemyBullets = [];
+    gameA.missionSystem.updateMission(1 / 60);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.PLAYING, "Endless mode should continue after final-sector boss");
+    assert(gameA.model.sectorCompletionHandled, "Endless mode should route mission completion to hangar flow");
+  });
+
+  tests.push(() => {
     gameA.startGame(11111);
     const ship = gameA.model.ship;
     ship.invulnMs = 0;

@@ -856,6 +856,16 @@
         ctx.font = "600 22px Trebuchet MS";
         ctx.fillText("Stiskni Enter pro start", config.canvas.width / 2, config.canvas.height / 2 + 6);
         ctx.fillText(`Seed runu: ${model.runSeed ?? "-"}`, config.canvas.width / 2, config.canvas.height / 2 + 40);
+        ctx.font = "600 18px Trebuchet MS";
+        ctx.fillText(
+          `Mode: ${model.runMode === "endless" ? "ENDLESS" : "CAMPAIGN"}  (E toggle)`,
+          config.canvas.width / 2,
+          config.canvas.height / 2 + 68
+        );
+        if (!model.endlessUnlocked) {
+          ctx.font = "500 15px Trebuchet MS";
+          ctx.fillText("Endless unlock: clear campaign once", config.canvas.width / 2, config.canvas.height / 2 + 92);
+        }
       }
 
       if (model.gameState === GAME_STATE.GAME_OVER) {
@@ -868,6 +878,29 @@
           ctx.fillText(`Sektor dosazeny: ${model.sector}`, config.canvas.width / 2, config.canvas.height / 2 + 42);
         }
         ctx.fillText("Enter pro restart", config.canvas.width / 2, config.canvas.height / 2 + 76);
+      }
+
+      if (model.gameState === GAME_STATE.VICTORY) {
+        const summary = model.victorySummary || {};
+        ctx.fillText("VICTORY", config.canvas.width / 2, config.canvas.height / 2 - 54);
+        ctx.font = "600 20px Trebuchet MS";
+        ctx.fillText(`Score: ${summary.score ?? model.score}`, config.canvas.width / 2, config.canvas.height / 2 - 18);
+        ctx.fillText(`Sector cleared: ${summary.sector ?? model.sector}`, config.canvas.width / 2, config.canvas.height / 2 + 8);
+        ctx.fillText(
+          `Build: ${summary.loadout?.primary || "-"} / ${summary.loadout?.secondary || "-"} / ${summary.loadout?.utility || "-"}`,
+          config.canvas.width / 2,
+          config.canvas.height / 2 + 34
+        );
+        ctx.font = "600 17px Trebuchet MS";
+        ctx.fillText(`Runtime: ${(summary.runtimeSeconds ?? model.runtimeSeconds).toFixed(1)}s`, config.canvas.width / 2, config.canvas.height / 2 + 60);
+        ctx.fillText(
+          model.endlessUnlocked
+            ? "Endless mode unlocked. Press E to switch mode."
+            : "Campaign complete.",
+          config.canvas.width / 2,
+          config.canvas.height / 2 + 86
+        );
+        ctx.fillText("Enter pro novy run", config.canvas.width / 2, config.canvas.height / 2 + 112);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {

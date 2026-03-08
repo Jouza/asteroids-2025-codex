@@ -93,7 +93,8 @@
             pulse_bomb: true,
             emp_pulse: true,
             shield_dome: true
-          }
+          },
+          endlessMode: false
         },
         upgrades: {
           fireRateLevel: 0,
@@ -177,6 +178,9 @@
         missionUfoKills: 0,
         missionAsteroidKills: 0,
         currentMission: null,
+        runMode: "campaign",
+        endlessUnlocked: false,
+        victorySummary: null,
         flightModel: "arcade",
         dotEffects: [],
         hangar: {
@@ -214,7 +218,8 @@
             pulse_bomb: true,
             emp_pulse: true,
             shield_dome: true
-          }
+          },
+          endlessMode: false
         },
         upgrades: {
           fireRateLevel: 0,
@@ -318,6 +323,9 @@
         progression.unlocks?.secondary
       );
       safe.progression.unlocks.utility = mergeUnlockMap(defaults.progression.unlocks.utility, progression.unlocks?.utility);
+      safe.progression.unlocks.endlessMode = Boolean(
+        progression.unlocks?.endlessMode ?? defaults.progression.unlocks.endlessMode
+      );
 
       safe.progression.upgrades.fireRateLevel = this.clamp(
         Math.floor(Number(progression.upgrades?.fireRateLevel) || 0),
@@ -426,6 +434,8 @@
       this.model.equipment = deepClone(progression.equipment);
       this.model.salvageParts = progression.salvageParts;
       this.model.pilot = deepClone(progression.pilot || createDefaultPilotProgression());
+      this.model.endlessUnlocked = Boolean(progression.unlocks?.endlessMode);
+      if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.syncLoadoutLabels();
       this.refreshSetState();
     }
@@ -489,6 +499,20 @@
         return;
       }
 
+      const canToggleRunMode =
+        this.model.gameState === GAME_STATE.START ||
+        this.model.gameState === GAME_STATE.GAME_OVER ||
+        this.model.gameState === GAME_STATE.VICTORY;
+      if (this.input.wasPressed("KeyE") && canToggleRunMode) {
+        if (!this.model.endlessUnlocked) {
+          this.model.hangar.message = "Endless mode is locked. Clear campaign once to unlock.";
+        } else {
+          this.model.runMode = this.model.runMode === "campaign" ? "endless" : "campaign";
+          this.model.hangar.message = `Run mode: ${this.model.runMode.toUpperCase()}`;
+        }
+        this.hud.sync(this.model);
+      }
+
       if (this.input.wasPressed("KeyP")) {
         if (this.model.gameState === GAME_STATE.PLAYING) this.model.gameState = GAME_STATE.PAUSED;
         else if (this.model.gameState === GAME_STATE.PAUSED) this.model.gameState = GAME_STATE.PLAYING;
@@ -498,7 +522,7 @@
       if (this.input.wasPressed("Enter")) {
         if (this.model.gameState === GAME_STATE.START) {
           this.startGame(this.model.runSeed ?? generateRunSeed());
-        } else if (this.model.gameState === GAME_STATE.GAME_OVER) {
+        } else if (this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY) {
           this.startGame(generateRunSeed());
         }
       }
@@ -520,13 +544,65 @@
       this.hud.sync(this.model);
     }
 
-    endGame() {
+    endRun(state, saveReason, soundCue) {
       this.updateProfileStatsOnRunEnd();
-      this.saveProfile("game_over");
+      this.saveProfile(saveReason);
       this.input.reset();
-      this.model.gameState = GAME_STATE.GAME_OVER;
-      this.audio.play("ui_game_over");
+      this.model.gameState = state;
+      this.audio.play(soundCue);
       this.hud.sync(this.model);
+    }
+
+    endGame() {
+      this.endRun(GAME_STATE.GAME_OVER, "game_over", "ui_game_over");
+    }
+
+    isCampaignMode() {
+      return this.model.runMode === "campaign";
+    }
+
+    isFinalEncounter() {
+      if (!this.isCampaignMode()) return false;
+      const runCfg = this.config.run || {};
+      const finalSector = Math.max(1, Math.floor(runCfg.finalSector ?? 4));
+      const missionType = runCfg.finalMissionType || "mini_boss";
+      return this.model.sector >= finalSector && this.model.currentMission?.type === missionType;
+    }
+
+    buildVictorySummary() {
+      return {
+        score: this.model.score,
+        sector: this.model.sector,
+        runtimeSeconds: this.model.runtimeSeconds,
+        loadout: {
+          primary: this.model.loadout.primaryLabel,
+          secondary: this.model.loadout.secondaryLabel,
+          utility: this.model.loadout.utilityLabel
+        },
+        salvageParts: this.model.salvageParts,
+        missionsCompleted: this.model.telemetry.completedMissions,
+        miniBossKills: this.model.telemetry.kills.miniBosses
+      };
+    }
+
+    completeRunVictory() {
+      this.model.victorySummary = this.buildVictorySummary();
+      if (!this.model.endlessUnlocked) {
+        this.model.endlessUnlocked = true;
+        this.model.unlocks.endlessMode = true;
+        this.model.hangar.message = "Campaign cleared. Endless mode unlocked.";
+      }
+      this.endRun(GAME_STATE.VICTORY, "victory", "mission_complete");
+    }
+
+    onMissionCompletionResolved() {
+      if (this.isFinalEncounter()) {
+        this.completeRunVictory();
+        return true;
+      }
+      this.model.sectorCompletionHandled = true;
+      this.model.sectorTimerMs = 0;
+      return false;
     }
 
     resetGame(seed) {
@@ -561,6 +637,8 @@
       this.model.missionUfoKills = 0;
       this.model.missionAsteroidKills = 0;
       this.model.currentMission = null;
+      this.model.victorySummary = null;
+      if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
       this.model.hangar.message =
@@ -1613,8 +1691,12 @@
       const boss = this.model.miniBoss;
       if (!boss) return;
       const rewards = this.config.mission.miniBoss.rewards;
-      const creditsGain = rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep;
-      this.registerScore(rewards.scoreReward, true);
+      const isFinalEncounter = this.model.currentMission?.isFinalEncounter;
+      const rewardMultiplier = isFinalEncounter ? this.config.run.finalBossRewardMultiplier ?? 1 : 1;
+      const creditsGain = Math.round(
+        (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) * rewardMultiplier
+      );
+      this.registerScore(Math.round(rewards.scoreReward * rewardMultiplier), true);
       this.model.credits += creditsGain;
       this.model.telemetry.creditsEarned += creditsGain;
       this.model.telemetry.kills.miniBosses += 1;
@@ -1627,7 +1709,9 @@
         const drop = this.createModuleDrop();
         this.model.hangar.lootCrate.push(drop);
       }
-      this.model.hangar.message = `Boss down: +${creditsGain} credits, ${rewards.guaranteedDrops} guaranteed module`;
+      this.model.hangar.message = isFinalEncounter
+        ? `Final boss down: +${creditsGain} credits, ${rewards.guaranteedDrops} guaranteed module`
+        : `Boss down: +${creditsGain} credits, ${rewards.guaranteedDrops} guaranteed module`;
     }
 
     findClosestChainTarget(fromX, fromY, radius) {

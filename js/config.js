@@ -8,7 +8,8 @@
     PLAYING: "playing",
     HANGAR: "hangar",
     PAUSED: "paused",
-    GAME_OVER: "game_over"
+    GAME_OVER: "game_over",
+    VICTORY: "victory"
   };
 
   const GAME_CONFIG = {
@@ -606,6 +607,12 @@
       graceMs: 1100,
       speedScaleStep: 0.11,
       splitScalePerSector: 0.09
+    },
+    run: {
+      finalSector: 4,
+      finalMissionType: "mini_boss",
+      finalBossHpMultiplier: 1.45,
+      finalBossRewardMultiplier: 1.35
     },
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
