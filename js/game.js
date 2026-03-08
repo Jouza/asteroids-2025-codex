@@ -719,6 +719,7 @@
     }
 
     startGame(seed = this.model.runSeed ?? generateRunSeed()) {
+      this.resetProgressionForFreshRun();
       this.resetGame(seed);
       this.updateProfileStatsOnRunStart();
       this.saveProfile("run_start");
@@ -726,6 +727,24 @@
       this.model.gameState = GAME_STATE.PLAYING;
       this.audio.play("ui_start");
       this.hud.sync(this.model);
+    }
+
+    resetProgressionForFreshRun() {
+      const defaults = createDefaultProfile().progression;
+      const profile = this.model.profile?.progression;
+      if (!profile) return;
+      const selectedIdentity = deepClone(this.model.identity || profile.identity || defaults.identity);
+      const selectedFlightModel = this.model.flightModel === "sim_lite" ? "sim_lite" : "arcade";
+      const unlocks = deepClone(profile.unlocks || defaults.unlocks);
+      profile.flightModel = selectedFlightModel;
+      profile.loadout = deepClone(defaults.loadout);
+      profile.unlocks = unlocks;
+      profile.upgrades = deepClone(defaults.upgrades);
+      profile.inventory = [];
+      profile.equipment = deepClone(defaults.equipment);
+      profile.identity = selectedIdentity;
+      profile.salvageParts = 0;
+      profile.pilot = createDefaultPilotProgression();
     }
 
     trySetRunMode(mode) {

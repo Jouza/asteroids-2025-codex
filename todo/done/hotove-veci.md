@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Roguelike fresh-run reset policy
+  - [x] Kazdy novy run zacina od nuly v progresi (pilot XP/atributy/perky, salvage, equipment/inventory, weapon progression, loadout)
+  - [x] Zachovana identita vybrana v Run setup (pilot + ship), flight model a rezimove unlocky
+  - [x] Reset je navazan na `Start` runu, ne na prechod mezi sektory
+
 - [x] Overlay flow consistency pass (Game Over -> Victory-style)
   - [x] `GAME OVER` overlay sjednocen na modal summary layout (bez inline Run setup listu)
   - [x] `Enter` na `GAME OVER` uz neprovadi okamzity restart, ale vraci na `START` stejne jako `VICTORY`
