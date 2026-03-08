@@ -749,9 +749,9 @@
         const layoutX = 68;
         const layoutW = config.canvas.width - layoutX * 2;
         const topRowY = 136;
-        const topRowH = 292;
+        const topRowH = 278;
         const bottomRowY = topRowY + topRowH + panelGap;
-        const bottomRowH = 174;
+        const bottomRowH = 188;
         const totalGap = panelGap * 2;
         const colW0 = Math.floor((layoutW - totalGap) * 0.34);
         const colW1 = Math.floor((layoutW - totalGap) * 0.34);
@@ -1054,20 +1054,24 @@
           const canAfford = model.credits >= item.cost;
           shopRows.push({
             label: `${item.title} ${item.cost}cr`,
-            color: canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+            color: canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)",
+            group: "shop"
           });
         }
-        shopRows.push({ label: `Primary: ${model.loadout.primaryLabel}`, color: "#ffd785" });
-        shopRows.push({ label: `Secondary: ${model.loadout.secondaryLabel}`, color: "#ffd785" });
-        shopRows.push({ label: `Utility: ${model.loadout.utilityLabel}`, color: "#ffd785" });
+        shopRows.push({ label: `Primary: ${model.loadout.primaryLabel}`, color: "#ffd785", group: "loadout" });
+        shopRows.push({ label: `Secondary: ${model.loadout.secondaryLabel}`, color: "#ffd785", group: "loadout" });
+        shopRows.push({ label: `Utility: ${model.loadout.utilityLabel}`, color: "#ffd785", group: "loadout" });
         shopRows.push({
           label: `Sell selected (+${selectedModule?.sellValue ?? 0}cr)`,
-          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
+          group: "loot"
         });
         shopRows.push({
           label: `Salvage selected (+${selectedModule?.salvageValue ?? 0} parts)`,
-          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
+          group: "loot"
         });
+        const rowStep = 15;
         for (let i = 0; i < shopRows.length; i += 1) {
           const row = shopRows[i];
           drawSelectableRow(
@@ -1078,7 +1082,18 @@
             navSection === "shop" && shopIndex === i,
             row.color
           );
-          actY += 14;
+          const nextRow = shopRows[i + 1];
+          if (nextRow && nextRow.group !== row.group) {
+            const dividerY = actY + 5;
+            ctx.strokeStyle = "rgba(63,207,255,0.32)";
+            ctx.beginPath();
+            ctx.moveTo(actX, dividerY);
+            ctx.lineTo(colX0 + colW0 - 12, dividerY);
+            ctx.stroke();
+            actY += rowStep + 3;
+          } else {
+            actY += rowStep;
+          }
         }
 
         const pilotX = colX1 + 12;
