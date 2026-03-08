@@ -2,10 +2,9 @@
 
 ## Aktualni fokus
 
-- [x] Localization baseline (P0): full EN + i18n dictionary infrastructure
-- [x] Unikatni final boss archetyp (odlisny move-set/faze oproti mini-boss)
-- [x] Kratky dev test protocol (co otestovat po vetsi zmene)
-- [x] Jednoducha smoke stranka/scenar pro manualni QA mimo hlavni run
+- [ ] i18n coverage pass: dodelat zbyvajici EN literaly v `index.html`/`help.html` na translation keys
+- [ ] Data-driven generovani help obsahu z content dat (misto rucniho HTML)
+- [ ] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
 
 ## Dalsi chybejici temata (zatim neevidovana)
 

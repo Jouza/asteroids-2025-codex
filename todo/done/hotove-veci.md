@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Localization hardening follow-up
+  - [x] Runtime gameplay/HUD/mission/hangar text paths dovedeny na i18n keys
+  - [x] Doplnen EN key coverage v `js/i18n.js` pro mission/HUD/hangar statusy
+  - [x] Safe EN fallback formatovani pro runtime text i bez plneho i18n bootstrapu (harness kompatibilita)
+
 - [x] Dev / testing protocol baseline
   - [x] Kratky "dev test protocol" doplnen do `docs/regression-checklist.md`
   - [x] Smoke scenar "Campaign to Victory + Endless Unlock" doplnen pro manualni QA
