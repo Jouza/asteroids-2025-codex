@@ -1091,7 +1091,7 @@
       ctx.textAlign = "center";
       ctx.font = "600 16px Trebuchet MS";
       ctx.fillStyle = "#bfeeff";
-      ctx.fillText(tr("overlay.settings_title"), centerX, topY - 12);
+      ctx.fillText(tr("overlay.settings_title"), centerX, topY - 16);
 
       for (let i = 0; i < rows.length; i += 1) {
         const row = rows[i];
@@ -1212,15 +1212,26 @@
       if (model.gameState === GAME_STATE.START) {
         const centerX = config.canvas.width / 2;
         const centerY = config.canvas.height / 2;
-        this.drawOverlayBlock(centerX, centerY - 116, 430, 152);
-        this.drawStartLogo(centerX, centerY - 138);
-        this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, centerY - 54);
-        this.drawOverlayBlock(centerX, centerY + 22, 430, 86);
+
+        // Center the whole START stack as one block.
+        const logoY = centerY - 112;
+        const titleY = centerY - 28;
+        const infoPressY = centerY + 18;
+        const infoSeedY = centerY + 50;
+        const setupTopY = centerY + 96;
+        const setupPanelHeight = 176;
+        const setupCenterY = setupTopY + setupPanelHeight / 2;
+
+        this.drawStartLogo(centerX, logoY);
+        this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, titleY);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(tr("overlay.press_enter_start"), centerX, centerY + 2);
-        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, centerY + 36);
-        this.drawOverlayBlock(centerX, centerY + 192, 430, 176);
-        const modeBottomY = this.drawRunSettingsList(model, centerY + 126);
+        ctx.fillStyle = "#d8f5ff";
+        ctx.fillText(tr("overlay.press_enter_start"), centerX, infoPressY);
+        ctx.fillStyle = "rgba(210,239,255,0.94)";
+        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, infoSeedY);
+
+        this.drawOverlayBlock(centerX, setupCenterY, 430, setupPanelHeight);
+        const modeBottomY = this.drawRunSettingsList(model, setupTopY + 24);
         if (!model.endlessUnlocked) {
           ctx.font = "500 15px Trebuchet MS";
           ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
