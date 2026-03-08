@@ -1025,26 +1025,38 @@
 
         const actX = colX0 + 12;
         let actY = bottomRowY + 52;
+        const shopRows = [];
         for (let i = 0; i < config.hangar.items.length; i += 1) {
           const item = config.hangar.items[i];
           const canAfford = model.credits >= item.cost;
+          shopRows.push({
+            label: `${item.title} ${item.cost}cr`,
+            color: canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+          });
+        }
+        shopRows.push({ label: `Primary: ${model.loadout.primaryLabel}`, color: "#ffd785" });
+        shopRows.push({ label: `Secondary: ${model.loadout.secondaryLabel}`, color: "#ffd785" });
+        shopRows.push({ label: `Utility: ${model.loadout.utilityLabel}`, color: "#ffd785" });
+        shopRows.push({
+          label: `Sell selected (+${selectedModule?.sellValue ?? 0}cr)`,
+          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+        });
+        shopRows.push({
+          label: `Salvage selected (+${selectedModule?.salvageValue ?? 0} parts)`,
+          color: selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+        });
+        for (let i = 0; i < shopRows.length; i += 1) {
+          const row = shopRows[i];
           drawSelectableRow(
             actX,
             actY,
             colW0 - 22,
-            `${i + 1}. ${truncate(item.title, 24)} ${item.cost}cr`,
+            row.label,
             navSection === "shop" && shopIndex === i,
-            canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)"
+            row.color
           );
-          actY += 17;
+          actY += 14;
         }
-        drawSelectableRow(actX, actY, colW0 - 22, `4. Primary: ${model.loadout.primaryLabel}`, navSection === "shop" && shopIndex === 3, "#ffd785");
-        actY += 18;
-        drawSelectableRow(actX, actY, colW0 - 22, `5. Secondary: ${model.loadout.secondaryLabel}`, navSection === "shop" && shopIndex === 4, "#ffd785");
-        actY += 18;
-        drawSelectableRow(actX, actY, colW0 - 22, `R. Utility: ${model.loadout.utilityLabel}`, navSection === "shop" && shopIndex === 5, "#ffd785");
-        actY += 20;
-        drawRow(actX, actY, "Space = context action | Legacy: 9/0 = sell/salvage", "#d8f5ff", "500 11px Trebuchet MS", colW0 - 24);
 
         const pilotX = colX1 + 12;
         let pilotY = bottomRowY + 52;
@@ -1122,7 +1134,7 @@
         ctx.textAlign = "center";
         ctx.font = "600 13px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText("Left/Right sekce | Up/Down vyber | Space akce | Enter start | Legacy: 9/0 pro sell/salvage", centerX, actionBarY + 16);
+        ctx.fillText("Left/Right sekce | Up/Down vyber | Space akce | Enter start | Legacy fallback: 9/0", centerX, actionBarY + 16);
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";

@@ -5,6 +5,10 @@
       this.navSections = ["shop", "loot", "pilot"];
     }
 
+    getShopActionCount() {
+      return this.game.config.hangar.items.length + 5;
+    }
+
     handleHangarInput() {
       const g = this.game;
       this.ensureNavState();
@@ -37,6 +41,8 @@
       const h = this.game.model.hangar;
       if (!h.navSection || !this.navSections.includes(h.navSection)) h.navSection = "shop";
       if (!Number.isInteger(h.shopIndex)) h.shopIndex = 0;
+      const shopSize = this.getShopActionCount();
+      if (h.shopIndex < 0 || h.shopIndex >= shopSize) h.shopIndex = 0;
       if (!Number.isInteger(h.pilotCursor)) h.pilotCursor = 0;
     }
 
@@ -53,7 +59,7 @@
       const g = this.game;
       const h = g.model.hangar;
       if (h.navSection === "shop") {
-        const size = g.config.hangar.items.length + 3;
+        const size = this.getShopActionCount();
         h.shopIndex = (h.shopIndex + step + size) % size;
         g.model.hangar.message = `Shop volba ${h.shopIndex + 1}/${size} | Space akce`;
         return;
@@ -83,13 +89,17 @@
       const g = this.game;
       const h = g.model.hangar;
       if (h.navSection === "shop") {
-        if (h.shopIndex <= 2) {
+        const hangarItemsCount = g.config.hangar.items.length;
+        if (h.shopIndex < hangarItemsCount) {
           this.purchaseHangarItem(h.shopIndex);
           return;
         }
-        if (h.shopIndex === 3) this.cycleLoadoutSlot("primary");
-        else if (h.shopIndex === 4) this.cycleLoadoutSlot("secondary");
-        else this.cycleLoadoutSlot("utility");
+        const actionIndex = h.shopIndex - hangarItemsCount;
+        if (actionIndex === 0) this.cycleLoadoutSlot("primary");
+        else if (actionIndex === 1) this.cycleLoadoutSlot("secondary");
+        else if (actionIndex === 2) this.cycleLoadoutSlot("utility");
+        else if (actionIndex === 3) this.sellSelected();
+        else if (actionIndex === 4) this.salvageSelected();
         return;
       }
       if (h.navSection === "loot") {
