@@ -1019,17 +1019,22 @@
       ctx.fillStyle = "#d8f5ff";
       ctx.textAlign = "left";
       const chars = Array.from(title);
-      const totalWidth = ctx.measureText(title).width;
+      const rightPaddingAfterShip = 5;
+      const shipCount = chars.reduce((acc, ch) => acc + (ch === "A" ? 1 : 0), 0);
+      const totalWidth = ctx.measureText(title).width + shipCount * rightPaddingAfterShip;
       const startX = centerX - totalWidth / 2;
       const measuredAscent = ctx.measureText("A").actualBoundingBoxAscent || 36;
       const logoAspect = 28 / 26;
+      let shipsBefore = 0;
 
       for (let i = 0; i < chars.length; i += 1) {
         const ch = chars[i];
         const prefix = title.slice(0, i);
         const prefixWithChar = title.slice(0, i + 1);
-        const x = startX + ctx.measureText(prefix).width;
-        const nextX = startX + ctx.measureText(prefixWithChar).width;
+        const baseX = ctx.measureText(prefix).width;
+        const baseNextX = ctx.measureText(prefixWithChar).width;
+        const x = startX + baseX + shipsBefore * rightPaddingAfterShip;
+        const nextX = startX + baseNextX + shipsBefore * rightPaddingAfterShip;
         const charWidth = Math.max(1, nextX - x);
         if (ch === "A") {
           const shipWidth = Math.min(charWidth * 1.08, charWidth + 4);
@@ -1041,6 +1046,7 @@
             strokeStyle: "#d6f9ff",
             lineWidth: 1.8
           });
+          shipsBefore += 1;
         } else {
           ctx.fillText(ch, x, baselineY);
         }
