@@ -48,6 +48,9 @@
         event.code === "KeyK" ||
         event.code === "KeyP" ||
         event.code === "KeyM" ||
+        event.code === "KeyE" ||
+        event.code === "KeyB" ||
+        event.code === "KeyN" ||
         event.code === "F3" ||
         event.code === "KeyF" ||
         event.code === "KeyV" ||
