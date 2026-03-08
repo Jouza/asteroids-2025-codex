@@ -320,6 +320,7 @@
         identity: createDefaultIdentitySelection(),
         identityStatusText: tr("hud.identity_unknown"),
         overlaySettingsRow: 0,
+        uiModal: null,
         salvageParts: 0,
         telemetry: createTelemetryState(false),
         performance: createPerformanceState(false),
@@ -371,6 +372,10 @@
 
     clamp(value, min, max) {
       return clamp(value, min, max);
+    }
+
+    setUiModal(modalId = null) {
+      this.model.uiModal = modalId || null;
     }
 
     getDefaultProfile() {

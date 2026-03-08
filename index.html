@@ -80,15 +80,10 @@
           <div class="hud-item tip" data-i18n-tip="index.tip.identity">
             <span class="hud-icon" data-i18n-title="index.icon.identity.title" data-i18n-aria-label="index.icon.identity.aria">I</span><span id="identityStatus" class="hud-value" data-i18n="hud.identity_unknown">-</span>
           </div>
-          <div class="hud-item tip volume-control" data-i18n-tip="index.tip.audio_volume">
+          <div id="audioQuickOpen" class="hud-item tip actionable" data-i18n-tip="index.tip.audio_open">
             <span class="hud-icon" data-i18n-title="index.icon.audio.title" data-i18n-aria-label="index.icon.audio.aria">A</span>
-            <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="60" data-i18n-aria-label="index.volume_aria">
-            <span id="volumeValue" class="hud-value">60%</span>
-          </div>
-          <div class="hud-item tip volume-control" data-i18n-tip="index.tip.ambient_volume">
-            <span class="hud-icon" data-i18n-title="index.icon.ambient.title" data-i18n-aria-label="index.icon.ambient.aria">B</span>
-            <input id="ambientSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="40" data-i18n-aria-label="index.ambient_volume_aria">
-            <span id="ambientValue" class="hud-value">40%</span>
+            <span id="audioStatus" class="hud-value" data-i18n="index.audio_summary_default">SFX 60% | Amb 40%</span>
+            <span class="hud-kbd">G</span>
           </div>
           <div class="hud-item tip" data-i18n-tip="index.tip.flight_mode">
             <span class="hud-icon" data-i18n-title="index.icon.flight_mode.title" data-i18n-aria-label="index.icon.flight_mode.aria">F</span><span id="flightMode" class="hud-value" data-i18n="hud.flight_arcade">ARCADE</span>
@@ -99,11 +94,33 @@
 
         <footer class="help">
           <strong><a class="help-link" href="./help.html" target="_blank" rel="noopener noreferrer" data-i18n="index.help_link">HELP: objects and hazards reference</a></strong><br>
-          <span data-i18n-html="index.controls_html"></span>
+          <span data-i18n-html="index.controls_compact_html"></span>
         </footer>
       </aside>
     </section>
   </main>
+
+  <div id="audioModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="audioModalTitle">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel">
+      <header class="modal-header">
+        <h2 id="audioModalTitle" data-i18n="index.audio_modal.title">Audio Settings</h2>
+        <button id="audioModalClose" class="modal-close" type="button" data-i18n="index.audio_modal.close">Close</button>
+      </header>
+      <p class="modal-hint" data-i18n="index.audio_modal.hint">Adjust SFX and ambient cue mix. Press G or Esc to close.</p>
+      <div class="modal-row">
+        <label for="volumeSlider" data-i18n="index.audio_modal.master">SFX volume</label>
+        <input id="volumeSlider" class="modal-slider" type="range" min="0" max="100" step="1" value="60" data-i18n-aria-label="index.volume_aria">
+        <span id="volumeValue" class="modal-value">60%</span>
+      </div>
+      <div class="modal-row">
+        <label for="ambientSlider" data-i18n="index.audio_modal.ambient">Ambient cue volume</label>
+        <input id="ambientSlider" class="modal-slider" type="range" min="0" max="100" step="1" value="40" data-i18n-aria-label="index.ambient_volume_aria">
+        <span id="ambientValue" class="modal-value">40%</span>
+      </div>
+      <p class="modal-muted-hint" data-i18n="index.audio_modal.mute_hint">Mute toggle: M</p>
+    </section>
+  </div>
 
   <script src="js/version.js"></script>
   <script src="js/content-data.js"></script>

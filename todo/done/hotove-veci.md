@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] HUD/panel clarity refactor (Phase 1+2)
+  - [x] Right panel declutter: odstraneny trvale audio slidery z HUD, nahrazeny kompaktnim audio summary radkem
+  - [x] Help footer vpravo zkracen na compact controls hint (bez dlouheho odstavce)
+  - [x] Audio settings modal: otevreni klavesou `G` nebo klikem, zavreni `G`/`Esc`/backdrop
+  - [x] Modal flow je focus-safe: pri otevrenem modalu se nepropisuje gameplay input a nastaveni se dale persistuje do localStorage
+
 - [x] Onboarding + action gate feedback (MVP)
   - [x] Start overlay obsahuje kratky Quick Start onboarding pro shared pool economy
   - [x] Start overlay ma responzivni vertikalni stack (compact/normal/large) s garantovanym spacingem mezi bloky

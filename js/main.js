@@ -15,6 +15,28 @@
   const volumeValue = document.getElementById("volumeValue");
   const ambientSlider = document.getElementById("ambientSlider");
   const ambientValue = document.getElementById("ambientValue");
+  const audioStatus = document.getElementById("audioStatus");
+  const audioQuickOpen = document.getElementById("audioQuickOpen");
+  const audioModal = document.getElementById("audioModal");
+  const audioModalClose = document.getElementById("audioModalClose");
+  const audioModalBackdrop = audioModal ? audioModal.querySelector(".modal-backdrop") : null;
+
+  let audioModalOpen = false;
+
+  function setAudioModalOpen(open) {
+    audioModalOpen = Boolean(open) && Boolean(audioModal);
+    if (audioModal) {
+      audioModal.classList.toggle("hidden", !audioModalOpen);
+      audioModal.setAttribute("aria-hidden", audioModalOpen ? "false" : "true");
+    }
+    if (typeof game.setUiModal === "function") {
+      game.setUiModal(audioModalOpen ? "audio" : null);
+    }
+    if (audioModalOpen) {
+      input.reset();
+      if (volumeSlider) volumeSlider.focus();
+    }
+  }
 
   function loadAudioSettings() {
     try {
@@ -45,15 +67,20 @@
   }
 
   function syncVolumeUi() {
+    const sfxPercent = Math.round(audio.getVolume() * 100);
+    const ambientPercent = Math.round(audio.getAmbientVolume() * 100);
     if (volumeSlider && volumeValue) {
-      const percent = Math.round(audio.getVolume() * 100);
-      volumeSlider.value = String(percent);
-      volumeValue.textContent = `${percent}%`;
+      volumeSlider.value = String(sfxPercent);
+      volumeValue.textContent = `${sfxPercent}%`;
     }
     if (ambientSlider && ambientValue) {
-      const percent = Math.round(audio.getAmbientVolume() * 100);
-      ambientSlider.value = String(percent);
-      ambientValue.textContent = `${percent}%`;
+      ambientSlider.value = String(ambientPercent);
+      ambientValue.textContent = `${ambientPercent}%`;
+    }
+    if (audioStatus) {
+      audioStatus.textContent = audio.isMuted()
+        ? i18n.t("index.audio_summary_muted", { sfx: sfxPercent, ambient: ambientPercent })
+        : i18n.t("index.audio_summary", { sfx: sfxPercent, ambient: ambientPercent });
     }
   }
 
@@ -84,6 +111,28 @@
       lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
     });
   }
+  if (audioQuickOpen) {
+    audioQuickOpen.addEventListener("click", () => setAudioModalOpen(true));
+  }
+  if (audioModalClose) {
+    audioModalClose.addEventListener("click", () => setAudioModalOpen(false));
+  }
+  if (audioModalBackdrop) {
+    audioModalBackdrop.addEventListener("click", () => setAudioModalOpen(false));
+  }
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.code === "KeyG") {
+        setAudioModalOpen(!audioModalOpen);
+        event.preventDefault();
+      } else if (event.code === "Escape" && audioModalOpen) {
+        setAudioModalOpen(false);
+        event.preventDefault();
+      }
+    },
+    true
+  );
 
   input.attach();
   game.initGame();
@@ -101,6 +150,12 @@
     lastTimestamp = timestamp;
     const frameDelta = game.applyFrameDelta(rawDelta);
 
+    if (audioModalOpen) {
+      game.render();
+      input.endFrame();
+      requestAnimationFrame(frame);
+      return;
+    }
     game.handleMetaInput();
     const currentAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
     if (currentAudioState !== lastAudioState) {
