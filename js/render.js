@@ -1589,6 +1589,7 @@
           Math.max(0, Math.min(selected - centerOffset, Math.max(0, len - rows)));
 
         const readMod = (module, key) => module?.modifiers?.[key] ?? 0;
+        const formatSeconds = (value) => `${Number(value).toFixed(2)}s`;
         const formatPctDelta = (next, current, invert = false) => {
           const d = (next - current) * 100;
           const good = invert ? d < 0 : d > 0;
@@ -1699,10 +1700,33 @@
         let detailY = topRowY + 52;
         if (selectedModule) {
           const equippedSameSlot = equipment[selectedModule.slot] || null;
+          const deltaHull = (readMod(selectedModule, "hullPct") - readMod(equippedSameSlot, "hullPct")) * 100;
+          const deltaShield = (readMod(selectedModule, "shieldPct") - readMod(equippedSameSlot, "shieldPct")) * 100;
+          const deltaDmg =
+            (readMod(selectedModule, "primaryDamagePct") - readMod(equippedSameSlot, "primaryDamagePct")) * 100;
+          const deltaCd =
+            (readMod(selectedModule, "primaryCooldownPct") - readMod(equippedSameSlot, "primaryCooldownPct")) * 100;
           const dHull = formatPctDelta(readMod(selectedModule, "hullPct"), readMod(equippedSameSlot, "hullPct"));
           const dShield = formatPctDelta(readMod(selectedModule, "shieldPct"), readMod(equippedSameSlot, "shieldPct"));
-          const dDmg = formatPctDelta(readMod(selectedModule, "primaryDamagePct"), readMod(equippedSameSlot, "primaryDamagePct"));
-          const dCd = formatPctDelta(readMod(selectedModule, "primaryCooldownPct"), readMod(equippedSameSlot, "primaryCooldownPct"), true);
+          const dDmg = formatPctDelta(
+            readMod(selectedModule, "primaryDamagePct"),
+            readMod(equippedSameSlot, "primaryDamagePct")
+          );
+          const dCd = formatPctDelta(
+            readMod(selectedModule, "primaryCooldownPct"),
+            readMod(equippedSameSlot, "primaryCooldownPct"),
+            true
+          );
+          const netScore = deltaHull * 0.55 + deltaShield * 0.55 + deltaDmg * 1.1 - deltaCd * 1.0;
+          let decisionKey = "render.hangar.net.sidegrade";
+          let decisionColor = "#d8f5ff";
+          if (netScore >= 1.0) {
+            decisionKey = "render.hangar.net.gain";
+            decisionColor = "#9bf5bb";
+          } else if (netScore <= -1.0) {
+            decisionKey = "render.hangar.net.loss";
+            decisionColor = "#ff9ea5";
+          }
           drawRow(detailX, detailY, selectedModule.name, "#ffd785", "700 14px Trebuchet MS", colW1 - 24);
           detailY += 18;
           drawRow(
@@ -1726,6 +1750,17 @@
             drawRow(detailX, detailY, `Affix: ${truncate(selectedModule.affixes[0].name, 28)}`, "#b8f6ff", "500 12px Trebuchet MS");
             detailY += 16;
           }
+          drawRow(detailX, detailY, tr(decisionKey), decisionColor, "700 12px Trebuchet MS", colW1 - 24);
+          detailY += 16;
+          drawRow(
+            detailX,
+            detailY,
+            tr("render.hangar.net.score", { score: netScore.toFixed(1) }),
+            "rgba(216,245,255,0.85)",
+            "500 12px Trebuchet MS",
+            colW1 - 24
+          );
+          detailY += 16;
           drawRow(
             detailX,
             detailY,
@@ -1871,8 +1906,59 @@
         drawRow(statusX, statusY, `Set: ${model.setStatusText || "No active set"}`, "#b8f6ff", "500 12px Trebuchet MS", colW2 - 24);
         statusY += 16;
         drawRow(statusX, statusY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", colW2 - 24);
-        statusY += 20;
-        drawRow(statusX, statusY, `Tuning: x${tuningMultiplier.toFixed(2)}  |  Max shots: ${maxShots}`, "#9fe3ff", "500 12px Trebuchet MS", colW2 - 24);
+        statusY += 16;
+        drawRow(
+          statusX,
+          statusY,
+          tr("render.hangar.metric_primary_cd", { seconds: formatSeconds(activePrimary.cooldownSeconds * tuningMultiplier) }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          colW2 - 24
+        );
+        statusY += 16;
+        drawRow(
+          statusX,
+          statusY,
+          tr("render.hangar.metric_secondary_cd", { seconds: formatSeconds(activeSecondary.cooldownSeconds) }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          colW2 - 24
+        );
+        statusY += 16;
+        drawRow(
+          statusX,
+          statusY,
+          tr("render.hangar.metric_utility_cd", { seconds: formatSeconds(activeUtility.cooldownSeconds) }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          colW2 - 24
+        );
+        statusY += 16;
+        const shared = config.ship.sharedPool || {};
+        const pDrain = (activePrimary.energyCost || 0) * (shared.primaryShieldCostFactor ?? 0);
+        const sDrain = (activeSecondary.energyCost || 0) * (shared.secondaryShieldCostFactor ?? 0);
+        const uDrain = (activeUtility.energyCost || 0) * (shared.utilityShieldCostFactor ?? 0);
+        drawRow(
+          statusX,
+          statusY,
+          tr("render.hangar.metric_shared_drain", {
+            primary: pDrain.toFixed(1),
+            secondary: sDrain.toFixed(1),
+            utility: uDrain.toFixed(1)
+          }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          colW2 - 24
+        );
+        statusY += 16;
+        drawRow(
+          statusX,
+          statusY,
+          tr("render.hangar.metric_tuning", { tuning: tuningMultiplier.toFixed(2), shots: maxShots }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          colW2 - 24
+        );
         statusY += 16;
         drawRow(statusX, statusY, `Active section: ${navSection.toUpperCase()}`, "#ffd785", "600 12px Trebuchet MS", colW2 - 24);
 

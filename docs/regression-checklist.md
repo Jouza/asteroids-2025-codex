@@ -82,6 +82,19 @@ Cil: rychle overit novy win-state, final boss flow a persist odemknuti Endless.
 - Proved quick restart runu a potvrd:
   - Campaign i Endless flow jde normalne spustit.
 
+## 2.2) Smoke scenar: Hangar readability + decisions (3-5 min)
+
+Cil: overit, ze novy Hangar 2.0 dava hraci jasny signal o progresu a equip rozhodnuti.
+
+- Vstup do hangaru po misi a over:
+  - v hlavicce je progression line (`Cooldown Lv`, `Magazine Lv`, `Max shots`).
+- V `Shop & Ops` nakup 1x `Weapon Tuning` a 1x `Magazine Upgrade`:
+  - levely se okamzite propisou do radku akce i do progression line nahore.
+- V `Selected Detail` vyber modul a over:
+  - je videt verdict `Net gain / Net neutral / Net loss` + `Net score`.
+- V `Run/Status` over:
+  - vidis `Primary/Secondary/Utility CD` + `Shield drain P/S/U`.
+
 ## 3) Balancing sanity check
 
 - Zmeny cisel delat primarne v `js/balance-data.js`.
