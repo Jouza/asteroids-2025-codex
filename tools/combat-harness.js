@@ -100,7 +100,7 @@ function assert(condition, message) {
 function runTests() {
   const sharedStorage = createStorageMock();
   const AsteroidsA = createRuntime(sharedStorage);
-  const gameA = createGame(AsteroidsA);
+  let gameA = createGame(AsteroidsA);
 
   const tests = [];
 
@@ -117,6 +117,25 @@ function runTests() {
     assert(gameB.model.loadout.primaryId === "rail_lance", "Profile did not persist primary loadout");
     assert(gameB.model.salvageParts === 17, "Profile did not persist salvage parts");
     assert(gameB.model.inventory.length >= 1, "Profile did not persist inventory");
+  });
+
+  tests.push(() => {
+    const profile = gameA.getDefaultProfile();
+    profile.progression.identity = {
+      pilotId: "legacy_unknown_pilot",
+      shipId: "legacy_unknown_ship"
+    };
+    sharedStorage.setItem("starfang_profile_v1", JSON.stringify(profile));
+
+    const AsteroidsB = createRuntime(sharedStorage);
+    const gameB = createGame(AsteroidsB);
+    assert(gameB.model.identity.pilotId === "buzz_calder", "Invalid pilot id should migrate to supported default");
+    assert(gameB.model.identity.shipId === "viper_mk2", "Invalid ship id should migrate to supported default");
+    assert(
+      gameB.model.hangar.message === "game.identity.migrated_default" ||
+        gameB.model.hangar.message.includes("Legacy identity reset"),
+      "Identity migration should show one-time profile migration notice"
+    );
   });
 
   tests.push(() => {
@@ -233,6 +252,56 @@ function runTests() {
     assert(input.wasPressed("KeyM"), "KeyM should be tracked");
     assert(input.wasPressed("ArrowDown"), "ArrowDown should be tracked");
     assert(input.wasPressed("Space"), "Space should be tracked");
+  });
+
+  tests.push(() => {
+    gameA.startGame(17171);
+    gameA.model.gameState = AsteroidsA.GAME_STATE.HANGAR;
+    gameA.model.credits = 5000;
+    gameA.model.ship.hull = Math.max(1, gameA.model.ship.hullMax - 40);
+    gameA.model.ship.shield = Math.max(1, gameA.model.ship.shieldMax - 40);
+    gameA.model.upgrades.fireRateLevel = 0;
+    gameA.model.upgrades.magazineLevel = 0;
+    gameA.model.hangar.navSection = "shop";
+
+    const pressSpaceAt = (index) => {
+      gameA.model.hangar.shopIndex = index;
+      gameA.input.wasPressed = (code) => code === "Space";
+      gameA.hangarSystem.handleHangarInput();
+      gameA.input.wasPressed = () => false;
+    };
+
+    const shopSize = gameA.config.hangar.items.length + 5;
+
+    const prevHull = gameA.model.ship.hull;
+    pressSpaceAt(0); // repair
+    assert(gameA.model.ship.hull > prevHull, "Shop index 0 should map to repair action");
+
+    pressSpaceAt(1); // fire_rate
+    assert(gameA.model.upgrades.fireRateLevel === 1, "Shop index 1 should map to weapon tuning");
+
+    pressSpaceAt(2); // magazine
+    assert(gameA.model.upgrades.magazineLevel === 1, "Shop index 2 should map to magazine upgrade");
+
+    const prevPrimary = gameA.model.loadout.primaryId;
+    pressSpaceAt(3); // primary cycle
+    assert(gameA.model.loadout.primaryId !== prevPrimary, "Shop index 3 should map to primary loadout cycle");
+
+    gameA.model.hangar.selectionSource = "inventory";
+    gameA.model.hangar.selectionIndex = 0;
+    gameA.model.inventory = [gameA.createModuleDrop()];
+    const creditsBeforeSell = gameA.model.credits;
+    pressSpaceAt(6); // sell selected
+    assert(gameA.model.inventory.length === 0, "Shop index 6 should sell selected inventory module");
+    assert(gameA.model.credits > creditsBeforeSell, "Selling selected module should grant credits");
+
+    gameA.model.inventory = [gameA.createModuleDrop()];
+    gameA.model.hangar.selectionSource = "inventory";
+    gameA.model.hangar.selectionIndex = 0;
+    const salvageBefore = gameA.model.salvageParts;
+    pressSpaceAt(shopSize - 1); // salvage selected (last action row)
+    assert(gameA.model.inventory.length === 0, "Shop index 7 should salvage selected inventory module");
+    assert(gameA.model.salvageParts > salvageBefore, "Salvaging selected module should grant salvage parts");
   });
 
   tests.push(() => {
@@ -464,6 +533,25 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.model.gameState = AsteroidsA.GAME_STATE.VICTORY;
+    gameA.model.overlaySettingsRow = 2;
+    gameA.model.runSeed = 1234;
+    gameA.model.victorySummary = gameA.buildVictorySummary();
+    let enterConsumed = false;
+    gameA.input.wasPressed = (code) => {
+      if (code !== "Enter") return false;
+      if (enterConsumed) return false;
+      enterConsumed = true;
+      return true;
+    };
+    gameA.handleMetaInput();
+    gameA.input.wasPressed = () => false;
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.START, "Enter on VICTORY should route to START overlay");
+    assert(gameA.model.overlaySettingsRow === 0, "Victory confirmation should reset run-setup row selection");
+    assert(gameA.model.runSeed !== 1234, "Victory confirmation should generate a fresh run seed");
+  });
+
+  tests.push(() => {
     gameA.startGame(11111);
     const ship = gameA.model.ship;
     ship.invulnMs = 0;
@@ -566,6 +654,8 @@ function runTests() {
 
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
+    sharedStorage.clear();
+    gameA = createGame(AsteroidsA);
     tests[i]();
     passed += 1;
     console.log(`[PASS] Test ${i + 1}/${tests.length}`);
