@@ -1730,10 +1730,34 @@
           return { text: `${d >= 0 ? "+" : ""}${d.toFixed(1)}%`, color };
         };
 
-        ctx.textAlign = "center";
         ctx.fillStyle = "#d8f5ff";
+        ctx.textAlign = "left";
         ctx.font = "700 42px Trebuchet MS";
-        ctx.fillText("HANGAR", centerX, topY);
+        ctx.fillText("HANGAR", layoutX, topY);
+        const headerChipY = topY - 4;
+        const headerChipW = 280;
+        const headerChipGap = 10;
+        const shipChipX = layoutX + layoutW - headerChipW;
+        const pilotChipX = shipChipX - headerChipGap - headerChipW;
+        const drawHeaderChip = (x, label, value) => {
+          ctx.fillStyle = "rgba(5,16,30,0.82)";
+          ctx.fillRect(x, headerChipY, headerChipW, 24);
+          ctx.strokeStyle = "rgba(63,207,255,0.44)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, headerChipY, headerChipW, 24);
+          ctx.fillStyle = "#9fe3ff";
+          ctx.font = "700 12px Trebuchet MS";
+          ctx.textAlign = "left";
+          ctx.fillText(`${label}:`, x + 8, headerChipY + 16);
+          ctx.fillStyle = "#d8f5ff";
+          ctx.font = "600 12px Trebuchet MS";
+          const valueText = fitText(value, "600 12px Trebuchet MS", headerChipW - 60);
+          ctx.fillText(valueText, x + 52, headerChipY + 16);
+        };
+        drawHeaderChip(pilotChipX, "Pilot", selectedPilotCallsign);
+        drawHeaderChip(shipChipX, "Ship", selectedShipName);
+
+        ctx.textAlign = "center";
         ctx.font = "600 19px Trebuchet MS";
         const missionOrder = config.mission.order;
         const nextMissionType = missionOrder[model.sector % missionOrder.length];
@@ -1754,13 +1778,6 @@
           }),
           centerX,
           topY + 52
-        );
-        ctx.font = "600 14px Trebuchet MS";
-        ctx.fillStyle = "rgba(216,245,255,0.92)";
-        ctx.fillText(
-          `${tr("render.hangar.identity_pilot", { pilot: selectedPilotCallsign })}   |   ${tr("render.hangar.identity_ship", { ship: selectedShipName })}`,
-          centerX,
-          topY + 72
         );
 
         drawPanel(colX0, topRowY, colW0, topRowH, "SELECTION LIST", navSection === "loot");
