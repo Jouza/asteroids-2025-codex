@@ -31,6 +31,7 @@ Prubezny checklist pro realizaci noveho smeru.
   - [x] Prioritizace panelu podle gameplaye (combat -> ekonomika -> nastaveni)
   - [x] Emoji ikonky + tooltipy na ikony (vyznam a popis)
   - [x] Hangar ovladani sjednoceno na sipky + Space (legacy zkratky jako fallback)
+  - [x] Hangar matrix readability pass (spacing/font density/truncation pro 1366x768 a 1920x1080)
   - [ ] Jemne doladeni na mensich rozlisenich (hustota, zalamovani textu)
 
 - [ ] Audio UX controls
