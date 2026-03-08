@@ -741,7 +741,7 @@
           weight: 0.28,
           unlockSector: 2,
           shieldRegenMul: 0.25,
-          shieldDrainPerSecond: 4.5
+          shieldDrainPerSecond: 2.8
         },
         low_visibility: {
           label: "Low Visibility",

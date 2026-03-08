@@ -304,6 +304,40 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(8282);
+    const ship = gameA.model.ship;
+    const primary = gameA.getPrimarySpec();
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "ion_storm",
+      modifierLabel: "Ion Storm",
+      modifierEffects: {
+        shieldRegenMul: 0.25,
+        shieldDrainPerSecond: gameA.config.missionDirector.modifiers.ion_storm.shieldDrainPerSecond
+      }
+    };
+    ship.shield = 0;
+    ship.energy = ship.energyMax;
+    ship.heat = 0;
+    ship.lastDamageAt = -999;
+    gameA.model.runtimeSeconds = 10;
+    for (let i = 0; i < 360; i += 1) {
+      gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+      gameA.updateShipResources(1 / 60);
+      gameA.model.runtimeSeconds += 1 / 60;
+    }
+    const shieldCost = gameA.getSharedPoolShieldCost("primary", primary.energyCost);
+    assert(
+      ship.shield >= shieldCost,
+      `Ion storm should not hard-lock player at 0 shield forever (shield=${ship.shield.toFixed(3)} cost=${shieldCost.toFixed(3)} regen=${gameA.config.ship.shieldRegenPerSecond} mul=${gameA.model.currentMission.modifierEffects.shieldRegenMul} drain=${gameA.model.currentMission.modifierEffects.shieldDrainPerSecond})`
+    );
+    assert(gameA.canFirePrimary(), "Primary fire should recover after ion storm shield starvation");
+  });
+
+  tests.push(() => {
     gameA.startGame(9191);
     gameA.model.ship.invulnMs = 0;
     const before = gameA.model.hitstopSeconds;
