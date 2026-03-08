@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Help identity + salvage clarity pass
+  - [x] Doplnena explicitni karta `Salvage Loop` (salvage parts + credit konverze 1 part = 9 cr)
+  - [x] Pridana samostatna data-driven sekce `Pilots (Roster)` s callsigny, referencemi a kratkymi bio popisy
+  - [x] Pridana samostatna data-driven sekce `Ship Frames (Visual + Role)` s vizualni siluetou kazde lodi a flavor bonusy
+  - [x] Nove help texty pokryte pres i18n keys (bez hardcoded UI stringu)
+
 - [x] HUD/panel clarity refactor (Phase 1+2)
   - [x] Right panel declutter: odstraneny trvale audio slidery z HUD, nahrazeny kompaktnim audio summary radkem
   - [x] Help footer vpravo zkracen na compact controls hint (bez dlouheho odstavce)

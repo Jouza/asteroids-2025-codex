@@ -254,6 +254,14 @@
       "help.back_to_game": "Back to game",
       "help.page_hint": "Quick overview of what you see on screen. Each card includes icon, name, behavior, and gameplay impact.",
       "help.section.combat_economy": "Combat Economy (Shared Pool)",
+      "help.section.pilot_roster": "Pilots (Roster)",
+      "help.section.pilot_roster_hint":
+        "Each pilot has a pop-culture reference and a short fantasy profile. Pick the one you want to roleplay.",
+      "help.section.ship_frames": "Ship Frames (Visual + Role)",
+      "help.section.ship_frames_hint":
+        "Frames are shown with their in-game silhouette style. Role stays lightweight so loadout still decides the run.",
+      "help.identity.ship_tag": "Ship frame",
+      "help.identity.flavor_bonus": "Flavor bonus",
       "help.section.weapons": "Weapons and Shots",
       "help.section.weapons_hint":
         "Data is loaded directly from game configuration. Values match the current build balance.<br>Note: \"DMG\" is base hit value (before crit/resist modifiers), \"Range\" is approximate projectile travel.",
@@ -281,6 +289,12 @@
       "help.card.shared_pool.tag": "Core system",
       "help.card.shared_pool.line": "Firing and active abilities consume both energy and a portion of shield.",
       "help.card.shared_pool.impact": "<strong>Impact:</strong> the more you fire, the lower your defense goes. Actions are blocked at zero shield.",
+      "help.card.salvage_loop.name": "Salvage Loop",
+      "help.card.salvage_loop.tag": "Hangar economy",
+      "help.card.salvage_loop.line":
+        "In Shop & Ops -> Inventory, <strong>Salvage selected</strong> dismantles the chosen module, grants salvage parts, and also converts them to credits using economy ratio (<strong>1 part = 9 cr</strong> in current balance).",
+      "help.card.salvage_loop.impact":
+        "<strong>Impact:</strong> salvage is a real fallback economy path when gear is weak, duplicate, or inventory is full.",
       "help.card.drain_factors.name": "Different Drain Factors",
       "help.card.drain_factors.tag": "Balancing",
       "help.card.drain_factors.line": "Primary has the lowest drain, secondary/utility are higher, dash is mid.",
@@ -378,20 +392,40 @@
         "<strong>Impact:</strong> players can self-identify with a frame archetype while keeping balancing in a safe 5-10% range.",
       "identity.pilot.buzz_calder.callsign": "Buzz \"Not A Toy\" Calder",
       "identity.pilot.buzz_calder.reference": "Reference to Buzz Lightyear from Toy Story.",
+      "help.pilot.buzz_calder.bio":
+        "Frontline showman with calm nerves under pressure. He commits to close engagements and keeps the run upbeat even when the arena gets chaotic.",
       "identity.pilot.neo_mercer.callsign": "Neo \"Wrong Pill\" Mercer",
       "identity.pilot.neo_mercer.reference": "From Neo in The Matrix; twists red/blue pill into a joke.",
+      "help.pilot.neo_mercer.bio":
+        "Precision duelist focused on timing windows and clean execution. He reads patterns quickly and turns small openings into decisive kills.",
       "identity.pilot.boba_vane.callsign": "Boba \"Invoice\" Vane",
       "identity.pilot.boba_vane.reference": "Based on Boba Fett from Star Wars; bounty-for-money joke.",
+      "help.pilot.boba_vane.bio":
+        "Contract-minded hunter who always plays for efficient value. He prioritizes profitable targets and stable tempo over flashy risks.",
       "identity.pilot.luke_ryder.callsign": "Luke \"Almost Bullseye\" Ryder",
       "identity.pilot.luke_ryder.reference": "Refers to Luke Skywalker and the Death Star trench run.",
+      "help.pilot.luke_ryder.bio":
+        "Idealist pilot chasing impossible lines through heavy fire. Strong identity for players who like clutch runs and last-second saves.",
       "identity.pilot.marty_carter.callsign": "Marty \"Flux\" Carter",
       "identity.pilot.marty_carter.reference": "From Marty McFly; \"Flux\" points to Flux Capacitor.",
+      "help.pilot.marty_carter.bio":
+        "Improvisation specialist with fast decision changes mid-fight. He fits aggressive players who constantly adapt routing and cooldown usage.",
       "identity.pilot.max_steel.callsign": "Max \"Mad Orbit\" Steel",
       "identity.pilot.max_steel.reference": "Inspired by Mad Max, adapted into a space-pilot nickname.",
+      "help.pilot.max_steel.bio":
+        "Relentless brawler built for momentum and pressure. He excels when you stay active, rotate hard, and force enemies off their plan.",
       "identity.ship.viper_mk2.name": "Viper MK-II",
+      "help.ship.viper_mk2.bio":
+        "Fast interceptor silhouette with sharp entry angles. Built for high-tempo repositioning and aggressive chase lines.",
       "identity.ship.bastion_frame.name": "Bastion Frame",
+      "help.ship.bastion_frame.bio":
+        "Heavy wedge profile with stable center mass. Best for controlled pushes, safer trades, and durable frontline positioning.",
       "identity.ship.revenant_frame.name": "Revenant Frame",
+      "help.ship.revenant_frame.bio":
+        "Predatory strike form tuned for pressure windows. Designed for burst-centric pilots who want fights decided quickly.",
       "identity.ship.helix_frame.name": "Helix Frame",
+      "help.ship.helix_frame.bio":
+        "Balanced technical frame with clean geometry. Good for sustained rotations, utility cadence, and long-sector consistency.",
       "help.card.asteroid_normal.name": "Normal Asteroid",
       "help.card.asteroid_normal.tag": "Object",
       "help.card.asteroid_normal.line": "Classic asteroid. Splits into smaller parts on hit.",
