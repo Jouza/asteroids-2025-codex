@@ -1297,6 +1297,27 @@
         ctx.fillText(tr("overlay.press_p_resume"), config.canvas.width / 2, config.canvas.height / 2 + 22);
       }
 
+      if (model.gameState === GAME_STATE.MISSION_COMPLETE) {
+        const summary = model.missionCompleteSummary || {};
+        const cx = config.canvas.width / 2;
+        const cy = config.canvas.height / 2;
+        this.drawOverlayBlock(cx, cy + 20, 520, 178);
+        ctx.fillText(tr("overlay.mission_complete"), cx, cy - 26);
+        ctx.font = "600 22px Trebuchet MS";
+        ctx.fillStyle = "rgba(216,245,255,0.96)";
+        ctx.fillText(
+          tr("overlay.mission_complete_congrats", {
+            pilot: summary.pilot || "-",
+            sector: summary.sector ?? model.sector
+          }),
+          cx,
+          cy + 16
+        );
+        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy + 50);
+        ctx.fillStyle = "rgba(255,231,168,0.95)";
+        ctx.fillText(tr("overlay.mission_complete_next"), cx, cy + 84);
+      }
+
       if (model.gameState === GAME_STATE.HANGAR) {
         const centerX = config.canvas.width / 2;
         const topY = 84;

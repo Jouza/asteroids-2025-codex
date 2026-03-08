@@ -10,6 +10,7 @@
   const stateLabelKeyByState = {
     [GAME_STATE.START]: "state.start",
     [GAME_STATE.PLAYING]: "state.playing",
+    [GAME_STATE.MISSION_COMPLETE]: "state.mission_complete",
     [GAME_STATE.HANGAR]: "state.hangar",
     [GAME_STATE.PAUSED]: "state.paused",
     [GAME_STATE.GAME_OVER]: "state.game_over",

@@ -247,6 +247,7 @@
         runMode: "campaign",
         endlessUnlocked: false,
         victorySummary: null,
+        missionCompleteSummary: null,
         flightModel: "arcade",
         dotEffects: [],
         hangar: {
@@ -613,6 +614,10 @@
       if (this.input.wasPressed("Enter")) {
         if (this.model.gameState === GAME_STATE.START) {
           this.startGame(this.model.runSeed ?? generateRunSeed());
+        } else if (this.model.gameState === GAME_STATE.MISSION_COMPLETE) {
+          this.input.reset();
+          this.hangarSystem.enterHangarPhase();
+          this.hud.sync(this.model);
         } else if (this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY) {
           this.startGame(generateRunSeed());
         }
@@ -711,9 +716,27 @@
         this.completeRunVictory();
         return true;
       }
+      if (!this.isCampaignMode()) {
+        this.model.sectorCompletionHandled = true;
+        this.model.sectorTimerMs = 0;
+        return false;
+      }
+      this.model.missionCompleteSummary = this.buildMissionCompleteSummary();
+      this.model.gameState = GAME_STATE.MISSION_COMPLETE;
       this.model.sectorCompletionHandled = true;
       this.model.sectorTimerMs = 0;
+      this.input.reset();
+      this.hud.sync(this.model);
       return false;
+    }
+
+    buildMissionCompleteSummary() {
+      const selectedPilot = this.getSelectedIdentityPilot();
+      return {
+        sector: this.model.sector,
+        score: this.model.score,
+        pilot: selectedPilot ? tr(`identity.pilot.${selectedPilot.id}.callsign`) : "-"
+      };
     }
 
     resetGame(seed) {
@@ -750,6 +773,7 @@
       this.model.missionAsteroidKills = 0;
       this.model.currentMission = null;
       this.model.victorySummary = null;
+      this.model.missionCompleteSummary = null;
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];

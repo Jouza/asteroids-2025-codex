@@ -6,6 +6,7 @@
   const GAME_STATE = {
     START: "start",
     PLAYING: "playing",
+    MISSION_COMPLETE: "mission_complete",
     HANGAR: "hangar",
     PAUSED: "paused",
     GAME_OVER: "game_over",

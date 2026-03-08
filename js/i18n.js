@@ -5,6 +5,7 @@
     en: {
       "state.start": "START",
       "state.playing": "PLAYING",
+      "state.mission_complete": "MISSION COMPLETE",
       "state.hangar": "HANGAR",
       "state.paused": "PAUSED",
       "state.game_over": "GAME OVER",
@@ -32,6 +33,9 @@
       "overlay.enter_restart": "Press Enter to restart",
       "overlay.pause": "PAUSED",
       "overlay.press_p_resume": "Press P to resume",
+      "overlay.mission_complete": "OBJECTIVE COMPLETE",
+      "overlay.mission_complete_congrats": "Great flying, {pilot}. Sector {sector} cleared.",
+      "overlay.mission_complete_next": "Press Enter to enter hangar",
       "overlay.victory": "VICTORY",
       "overlay.sector_cleared": "Sector cleared: {sector}",
       "overlay.build": "Build: {primary} / {secondary} / {utility}",
@@ -166,7 +170,7 @@
       "index.icon.flight_mode.aria": "Flight Mode",
       "index.help_link": "HELP: objects and hazards reference",
       "index.controls_html":
-        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Run setup (Start/Game Over/Victory):</strong> <strong>Up/Down</strong> select row (Mode/Pilot/Ship), <strong>Left/Right</strong> change value, <strong>E</strong> quick mode toggle. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
+        "<strong>Controls:</strong> <strong>Left/Right</strong> rotate, <strong>Up</strong> thrust, <strong>Space</strong> fire, <strong>Shift</strong> boost, <strong>V</strong> dash, <strong>F</strong> switch flight model, <strong>X</strong> secondary, <strong>C</strong> utility, <strong>M</strong> mute, <strong>P</strong> pause, <strong>Enter</strong> start/restart. <strong>Run setup (Start/Game Over/Victory):</strong> <strong>Up/Down</strong> select row (Mode/Pilot/Ship), <strong>Left/Right</strong> change value, <strong>E</strong> quick mode toggle. <strong>Campaign objective complete:</strong> confirm sector clear with <strong>Enter</strong> to enter hangar. <strong>Dev perf:</strong> <strong>B</strong> overlay, <strong>N</strong> snapshot to console. <strong>Hangar:</strong> <strong>Left/Right</strong> section, <strong>Up/Down</strong> select, <strong>Space</strong> action, <strong>Enter</strong> continue. In Immediate Actions, <strong>Space</strong> also supports <strong>Sell/Salvage selected</strong>. <strong>Legacy fallback:</strong> <strong>1/2/3</strong>, <strong>4/5/R</strong>, <strong>6/7/8/9/0</strong>, <strong>T/Y/U/I/O/K</strong>.",
       "help.document_title": "STARFANG - Help",
       "help.title": "STARFANG Help",
       "help.page_title": "STARFANG - Object Help",
