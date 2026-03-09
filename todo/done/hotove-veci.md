@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Hangar selection list equip flow bugfix
+  - [x] `Space` na crate item v `Selection List` ted equipuje okamzite (bez mezikroku "presun do inventory")
+  - [x] Pri swapu equip slotu se predchozi modul presune do inventory (pokud je misto), jinak akce bezpecne blokovana
+  - [x] Pridan harness test pro tento flow, aby se bug nevracel
+
 - [x] Endless pacing pass po unlocku
   - [x] Endless tuning vrstva od sektoru 5: vyssi difficulty, rychlejsi spawn intervaly, vyssi objective pressure
   - [x] Anti-snowball ekonomika v endless: kreditovy damping pro kill rewards, biome event credits a mini-boss credits

@@ -275,17 +275,28 @@
       }
 
       if (entry.source === "crate") {
-        if (g.model.inventory.length >= g.config.loot.maxInventoryItems) {
+        const module = entry.item;
+        const slot = module.slot;
+        const previous = g.model.equipment[slot];
+        const needsInventorySlot = Boolean(previous);
+        if (needsInventorySlot && g.model.inventory.length >= g.config.loot.maxInventoryItems) {
           g.model.hangar.message = tr("hangar.inventory_full");
           return;
         }
         g.model.hangar.lootCrate.splice(entry.index, 1);
-        g.model.inventory.push(entry.item);
-        g.model.hangar.selectionSource = "inventory";
-        g.model.hangar.selectionIndex = g.model.inventory.length - 1;
+        g.model.equipment[slot] = module;
+        if (previous) {
+          g.model.inventory.push(previous);
+          g.model.hangar.selectionSource = "inventory";
+          g.model.hangar.selectionIndex = g.model.inventory.length - 1;
+        } else {
+          g.model.hangar.selectionSource = "crate";
+        }
+        g.refreshSetState();
+        g.initializeShipResources(g.model.ship);
         this.clampSelection();
-        g.model.hangar.message = tr("hangar.taken", { name: entry.item.name });
-        g.saveProfile("hangar_take");
+        g.model.hangar.message = tr("hangar.equipped", { slot, name: module.name });
+        g.saveProfile("hangar_equip_from_crate");
         return;
       }
 

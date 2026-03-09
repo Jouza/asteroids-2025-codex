@@ -306,6 +306,27 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(27272);
+    gameA.model.gameState = AsteroidsA.GAME_STATE.HANGAR;
+    const drop = gameA.createModuleDrop();
+    drop.slot = "hull";
+    drop.name = "Harness Hull";
+    gameA.model.hangar.lootCrate = [drop];
+    gameA.model.inventory = [];
+    gameA.model.equipment.hull = null;
+    gameA.model.hangar.navSection = "loot";
+    gameA.model.hangar.selectionSource = "crate";
+    gameA.model.hangar.selectionIndex = 0;
+
+    gameA.input.wasPressed = (code) => code === "Space";
+    gameA.hangarSystem.handleHangarInput();
+    gameA.input.wasPressed = () => false;
+
+    assert(gameA.model.equipment.hull?.name === "Harness Hull", "Space on crate item should equip immediately");
+    assert(gameA.model.hangar.lootCrate.length === 0, "Equipped crate item should be removed from crate");
+  });
+
+  tests.push(() => {
     gameA.startGame(5151);
     gameA.model.sector = 5;
     gameA.model.enemyBullets = [];
