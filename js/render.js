@@ -1379,11 +1379,17 @@
       const centerX = config.canvas.width / 2;
       const pilotId = model.identity?.pilotId;
       const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
+      const difficultyId = model.runDifficultyId || "normal";
       const rows = [
         {
           id: "mode",
           label: tr("overlay.settings_mode"),
           value: model.runMode === "campaign" ? tr("game.run_mode.campaign") : tr("game.run_mode.endless")
+        },
+        {
+          id: "difficulty",
+          label: tr("overlay.settings_difficulty"),
+          value: tr(`game.difficulty.${difficultyId}`)
         },
         {
           id: "pilot",
@@ -2134,6 +2140,8 @@
         drawRow(statusLeftX, statusLeftY, `Set: ${truncate(model.setStatusText || "No active set", 24)}`, "#b8f6ff", "500 12px Trebuchet MS", statusColW);
         statusLeftY += statusGap;
         drawRow(statusLeftX, statusLeftY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusLeftY += statusGap;
+        drawRow(statusLeftX, statusLeftY, `Diff: ${tr(`game.difficulty.${model.runDifficultyId || "normal"}`)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
         statusLeftY += statusGap;
         drawRow(statusLeftX, statusLeftY, `Pilot L${pilot.level || 1} | Perks ${unlockedPerkIds.size}/${pilotPerks.length}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
         statusLeftY += statusGap;

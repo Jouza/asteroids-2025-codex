@@ -645,7 +645,7 @@ function runTests() {
 
   tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
-    gameA.model.overlaySettingsRow = 3;
+    gameA.model.overlaySettingsRow = 4;
     gameA.model.flightModel = "arcade";
     gameA.adjustSelectedOverlaySetting(1);
     assert(gameA.model.flightModel === "sim_lite", "Run setup flight row should switch to SIM LITE");
@@ -655,6 +655,35 @@ function runTests() {
     );
     gameA.adjustSelectedOverlaySetting(-1);
     assert(gameA.model.flightModel === "arcade", "Run setup flight row should switch back to ARCADE");
+  });
+
+  tests.push(() => {
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.overlaySettingsRow = 1;
+    gameA.model.runDifficultyId = "normal";
+    gameA.adjustSelectedOverlaySetting(1);
+    assert(gameA.model.runDifficultyId === "veteran", "Run setup difficulty row should cycle to VETERAN");
+    assert(
+      gameA.model.profile.progression.runDifficultyId === "veteran",
+      "Selected difficulty should persist into profile progression"
+    );
+    gameA.adjustSelectedOverlaySetting(1);
+    assert(gameA.model.runDifficultyId === "ace", "Run setup difficulty row should cycle to ACE");
+    gameA.adjustSelectedOverlaySetting(-1);
+    assert(gameA.model.runDifficultyId === "veteran", "Run setup difficulty row should cycle back from ACE");
+  });
+
+  tests.push(() => {
+    gameA.model.runDifficultyId = "rookie";
+    const rookie = gameA.getRunDifficultyMultipliers();
+    gameA.model.runDifficultyId = "normal";
+    const normal = gameA.getRunDifficultyMultipliers();
+    gameA.model.runDifficultyId = "ace";
+    const ace = gameA.getRunDifficultyMultipliers();
+    assert(rookie.enemyDamageTakenMul < normal.enemyDamageTakenMul, "Rookie should reduce incoming enemy damage");
+    assert(ace.enemyDamageTakenMul > normal.enemyDamageTakenMul, "Ace should increase incoming enemy damage");
+    assert(rookie.economyCreditsMul > normal.economyCreditsMul, "Rookie should boost credits economy");
+    assert(ace.economyCreditsMul < normal.economyCreditsMul, "Ace should reduce credits economy");
   });
 
   tests.push(() => {

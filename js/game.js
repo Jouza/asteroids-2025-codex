@@ -146,6 +146,7 @@
       updatedAt: Date.now(),
       progression: {
         flightModel: "arcade",
+        runDifficultyId: "normal",
         loadout: {
           primaryId: "auto_cannon",
           secondaryId: "missile_burst",
@@ -258,6 +259,7 @@
         victorySummary: null,
         missionCompleteSummary: null,
         flightModel: "arcade",
+        runDifficultyId: "normal",
         dotEffects: [],
         pointer: {
           x: 0,
@@ -421,6 +423,12 @@
         progression.flightModel === "sim_lite" || progression.flightModel === "arcade"
           ? progression.flightModel
           : defaults.progression.flightModel;
+      const difficultyDefs = this.getRunDifficultyDefs();
+      const fallbackDifficultyId = difficultyDefs.find((entry) => entry.id === defaults.progression.runDifficultyId)?.id || "normal";
+      const requestedDifficultyId = progression.runDifficultyId;
+      safe.progression.runDifficultyId = difficultyDefs.some((entry) => entry.id === requestedDifficultyId)
+        ? requestedDifficultyId
+        : fallbackDifficultyId;
 
       const validPrimary = this.config.loadout.primary[progression.loadout?.primaryId];
       const validSecondary = this.config.loadout.secondary[progression.loadout?.secondaryId];
@@ -560,6 +568,7 @@
     captureProgressionSnapshot() {
       return {
         flightModel: this.model.flightModel,
+        runDifficultyId: this.model.runDifficultyId,
         loadout: {
           primaryId: this.model.loadout.primaryId,
           secondaryId: this.model.loadout.secondaryId,
@@ -578,6 +587,11 @@
     applyProfileToModel(profile) {
       const progression = profile.progression;
       this.model.flightModel = progression.flightModel === "sim_lite" ? "sim_lite" : "arcade";
+      const difficultyDefs = this.getRunDifficultyDefs();
+      const fallbackDifficultyId = difficultyDefs.find((entry) => entry.id === "normal")?.id || difficultyDefs[0]?.id || "normal";
+      this.model.runDifficultyId = difficultyDefs.some((entry) => entry.id === progression.runDifficultyId)
+        ? progression.runDifficultyId
+        : fallbackDifficultyId;
       this.model.loadout.primaryId = progression.loadout.primaryId;
       this.model.loadout.secondaryId = progression.loadout.secondaryId;
       this.model.loadout.utilityId = progression.loadout.utilityId;
@@ -735,8 +749,10 @@
       if (!profile) return;
       const selectedIdentity = deepClone(this.model.identity || profile.identity || defaults.identity);
       const selectedFlightModel = this.model.flightModel === "sim_lite" ? "sim_lite" : "arcade";
+      const selectedDifficultyId = this.model.runDifficultyId || profile.runDifficultyId || defaults.runDifficultyId;
       const unlocks = deepClone(profile.unlocks || defaults.unlocks);
       profile.flightModel = selectedFlightModel;
+      profile.runDifficultyId = selectedDifficultyId;
       profile.loadout = deepClone(defaults.loadout);
       profile.unlocks = unlocks;
       profile.upgrades = deepClone(defaults.upgrades);
@@ -997,7 +1013,7 @@
     }
 
     getOverlaySettingRows() {
-      return ["mode", "pilot", "ship", "flight"];
+      return ["mode", "difficulty", "pilot", "ship", "flight"];
     }
 
     cycleOverlaySettingsRow(direction = 1) {
@@ -1025,7 +1041,70 @@
       }
       if (row === "flight") {
         this.trySetFlightModel(direction < 0 ? "arcade" : "sim_lite");
+        return;
       }
+      if (row === "difficulty") {
+        this.cycleRunDifficulty(direction);
+      }
+    }
+
+    getRunDifficultyDefs() {
+      const defs = this.config.run?.difficultyPresets;
+      if (!Array.isArray(defs) || !defs.length) {
+        return [
+          {
+            id: "normal",
+            pressureMul: 1,
+            enemyDamageTakenMul: 1,
+            playerDamageMul: 1,
+            economyCreditsMul: 1,
+            economySalvageMul: 1,
+            lootDropMul: 1,
+            hazardIntensityMul: 1
+          }
+        ];
+      }
+      return defs;
+    }
+
+    getRunDifficultyProfile() {
+      const defs = this.getRunDifficultyDefs();
+      const fallback = defs.find((entry) => entry.id === "normal") || defs[0];
+      return defs.find((entry) => entry.id === this.model.runDifficultyId) || fallback;
+    }
+
+    getRunDifficultyMultipliers() {
+      const profile = this.getRunDifficultyProfile();
+      return {
+        id: profile.id || "normal",
+        pressureMul: this.clamp(Number(profile.pressureMul) || 1, 0.6, 2),
+        enemyDamageTakenMul: this.clamp(Number(profile.enemyDamageTakenMul) || 1, 0.4, 2.2),
+        playerDamageMul: this.clamp(Number(profile.playerDamageMul) || 1, 0.4, 2.2),
+        economyCreditsMul: this.clamp(Number(profile.economyCreditsMul) || 1, 0.35, 2),
+        economySalvageMul: this.clamp(Number(profile.economySalvageMul) || 1, 0.35, 2),
+        lootDropMul: this.clamp(Number(profile.lootDropMul) || 1, 0.35, 2),
+        hazardIntensityMul: this.clamp(Number(profile.hazardIntensityMul) || 1, 0.35, 2)
+      };
+    }
+
+    cycleRunDifficulty(direction = 1) {
+      const defs = this.getRunDifficultyDefs();
+      if (!defs.length) return false;
+      const currentIndex = defs.findIndex((entry) => entry.id === this.model.runDifficultyId);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (safeIndex + direction + defs.length) % defs.length;
+      return this.trySetRunDifficulty(defs[nextIndex].id);
+    }
+
+    trySetRunDifficulty(id, { saveProfile = true } = {}) {
+      const defs = this.getRunDifficultyDefs();
+      if (!defs.some((entry) => entry.id === id)) return false;
+      if (this.model.runDifficultyId === id) return false;
+      this.model.runDifficultyId = id;
+      this.model.hangar.message = tr("game.run_difficulty.changed", { difficulty: tr(`game.difficulty.${id}`) });
+      if (saveProfile) this.saveProfile("run_difficulty_change");
+      this.hud.sync(this.model);
+      return true;
     }
 
     trySetFlightModel(mode, { saveProfile = true } = {}) {
@@ -1343,7 +1422,8 @@
 
     getPlayerDamageMultiplier() {
       const modifiers = this.getModuleModifiers();
-      return Math.max(0.2, 1 + (modifiers.primaryDamagePct ?? 0));
+      const runDiff = this.getRunDifficultyMultipliers();
+      return Math.max(0.2, (1 + (modifiers.primaryDamagePct ?? 0)) * runDiff.playerDamageMul);
     }
 
     rollWeighted(items, weightGetter) {
@@ -1439,6 +1519,8 @@
       if (source === "asteroid") chance = lootCfg.asteroid[detail] ?? 0;
       else if (source === "ufo") chance = lootCfg.ufo[detail] ?? 0;
       else if (source === "miniBoss") chance = lootCfg.miniBoss;
+      chance *= this.getRunDifficultyMultipliers().lootDropMul;
+      chance = this.clamp(chance, 0, 1);
       if (this.rng() > chance) return;
 
       const drop = this.createModuleDrop();
@@ -1913,13 +1995,14 @@
       if (!resolved) return false;
       const hasDot = Boolean(event.dotDuration && event.dotDps);
       if (resolved.damage <= 0 && !hasDot) return false;
+      const runDiff = this.getRunDifficultyMultipliers();
 
       if (resolved.damage > 0) {
         ship.lastDamageAt = this.model.runtimeSeconds;
         if (overrides.applyHitInvulnerability !== false) {
           ship.invulnMs = Math.max(ship.invulnMs, this.config.ship.hitInvulnerabilityMs);
         }
-        let remaining = resolved.damage;
+        let remaining = resolved.damage * runDiff.enemyDamageTakenMul;
         const shieldAbsorb = Math.min(ship.shield, remaining);
         ship.shield -= shieldAbsorb;
         remaining -= shieldAbsorb;
@@ -2047,6 +2130,7 @@
       const scoreMissionMult = this.config.mission.rewards.scoreByType[missionType] ?? 1;
       const creditsMissionMult = this.config.mission.rewards.creditsByType[missionType] ?? 1;
       const modifiers = this.getModuleModifiers();
+      const runDiff = this.getRunDifficultyMultipliers();
       const comboMultiplier = this.model.comboScoringEnabled ? this.model.comboMultiplier : 1;
       const scored = Math.round(basePoints * comboMultiplier * scoreMissionMult);
       this.model.score += scored;
@@ -2059,7 +2143,8 @@
             this.config.economy.creditsPerScore *
             creditsMissionMult *
             (1 + (modifiers.creditsGainPct ?? 0)) *
-            economyMul
+            economyMul *
+            runDiff.economyCreditsMul
         )
       );
       this.model.credits += creditsGain;
@@ -2126,16 +2211,17 @@
 
     formatBiomeEventBonuses(event) {
       if (!event) return "";
+      const runDiff = this.getRunDifficultyMultipliers();
       const parts = [];
       if ((event.credits ?? 0) > 0) {
         parts.push(
           tr("mission.event.bonus.credits", {
-            value: Math.floor((event.credits ?? 0) * this.getEndlessCreditsMultiplier())
+            value: Math.floor((event.credits ?? 0) * this.getEndlessCreditsMultiplier() * runDiff.economyCreditsMul)
           })
         );
       }
       if ((event.salvageParts ?? 0) > 0) {
-        parts.push(tr("mission.event.bonus.salvage", { value: Math.floor(event.salvageParts) }));
+        parts.push(tr("mission.event.bonus.salvage", { value: Math.floor(event.salvageParts * runDiff.economySalvageMul) }));
       }
       if ((event.energy ?? 0) !== 0) parts.push(tr("mission.event.bonus.energy", { value: Math.floor(event.energy) }));
       if ((event.shield ?? 0) !== 0) parts.push(tr("mission.event.bonus.shield", { value: Math.floor(event.shield) }));
@@ -2153,14 +2239,15 @@
       if (!event || typeof event !== "object") return;
       const ship = this.model.ship;
       const economyMul = this.getEndlessCreditsMultiplier();
+      const runDiff = this.getRunDifficultyMultipliers();
 
       if ((event.credits ?? 0) > 0) {
-        const gain = Math.max(0, Math.floor(event.credits * economyMul));
+        const gain = Math.max(0, Math.floor(event.credits * economyMul * runDiff.economyCreditsMul));
         this.model.credits += gain;
         this.model.telemetry.creditsEarned += gain;
       }
       if ((event.salvageParts ?? 0) > 0) {
-        this.model.salvageParts += Math.max(0, Math.floor(event.salvageParts));
+        this.model.salvageParts += Math.max(0, Math.floor(event.salvageParts * runDiff.economySalvageMul));
       }
       if (ship) {
         if ((event.energy ?? 0) !== 0) ship.energy = this.clamp(ship.energy + event.energy, 0, ship.energyMax);
@@ -2542,8 +2629,12 @@
       const isFinalEncounter = this.model.currentMission?.isFinalEncounter;
       const rewardMultiplier = isFinalEncounter ? this.config.run.finalBossRewardMultiplier ?? 1 : 1;
       const economyMul = this.getEndlessCreditsMultiplier();
+      const runDiff = this.getRunDifficultyMultipliers();
       const creditsGain = Math.round(
-        (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) * rewardMultiplier * economyMul
+        (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) *
+          rewardMultiplier *
+          economyMul *
+          runDiff.economyCreditsMul
       );
       this.registerScore(Math.round(rewards.scoreReward * rewardMultiplier), true);
       this.model.credits += creditsGain;

@@ -348,7 +348,8 @@
       const removed = this.removeEntry(entry);
       if (!removed) return;
       const modifiers = g.getModuleModifiers();
-      const parts = Math.max(1, Math.round((removed.salvageValue ?? 0) * (1 + (modifiers.salvageYieldPct ?? 0))));
+      const diffMul = typeof g.getRunDifficultyMultipliers === "function" ? g.getRunDifficultyMultipliers().economySalvageMul ?? 1 : 1;
+      const parts = Math.max(1, Math.round((removed.salvageValue ?? 0) * (1 + (modifiers.salvageYieldPct ?? 0)) * diffMul));
       g.model.salvageParts += parts;
       g.model.credits += parts * g.config.economy.salvageToCredits;
       this.clampSelection();

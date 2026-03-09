@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Start run difficulty presets (Rookie/Normal/Veteran/Ace)
+  - [x] Nova `Difficulty` volba v unified `Run setup` (Mode/Difficulty/Pilot/Ship/Flight)
+  - [x] Persist vybrane obtiznosti do profilu + aplikace na startu runu
+  - [x] Multipliery obtiznosti napojeny na pressure/spawn pacing, incoming/outgoing damage, economy, drop chance a hazard intensity
+  - [x] Help doplnen o sekci vysvetlujici rozdily obtiznosti
+  - [x] Harness testy: run-setup diff row + persistence + sanity monotonicity multipliers
+
 - [x] Hangar selection list equip flow bugfix
   - [x] `Space` na crate item v `Selection List` ted equipuje okamzite (bez mezikroku "presun do inventory")
   - [x] Pri swapu equip slotu se predchozi modul presune do inventory (pokud je misto), jinak akce bezpecne blokovana

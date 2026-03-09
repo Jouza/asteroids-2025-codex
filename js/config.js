@@ -658,6 +658,48 @@
     run: {
       finalSector: 4,
       finalMissionType: "mini_boss",
+      difficultyPresets: [
+        {
+          id: "rookie",
+          pressureMul: 0.9,
+          enemyDamageTakenMul: 0.82,
+          playerDamageMul: 1.1,
+          economyCreditsMul: 1.12,
+          economySalvageMul: 1.1,
+          lootDropMul: 1.08,
+          hazardIntensityMul: 0.86
+        },
+        {
+          id: "normal",
+          pressureMul: 1.0,
+          enemyDamageTakenMul: 1.0,
+          playerDamageMul: 1.0,
+          economyCreditsMul: 1.0,
+          economySalvageMul: 1.0,
+          lootDropMul: 1.0,
+          hazardIntensityMul: 1.0
+        },
+        {
+          id: "veteran",
+          pressureMul: 1.12,
+          enemyDamageTakenMul: 1.15,
+          playerDamageMul: 0.94,
+          economyCreditsMul: 0.94,
+          economySalvageMul: 0.92,
+          lootDropMul: 0.94,
+          hazardIntensityMul: 1.1
+        },
+        {
+          id: "ace",
+          pressureMul: 1.24,
+          enemyDamageTakenMul: 1.28,
+          playerDamageMul: 0.88,
+          economyCreditsMul: 0.88,
+          economySalvageMul: 0.86,
+          lootDropMul: 0.9,
+          hazardIntensityMul: 1.2
+        }
+      ],
       finalBossHpMultiplier: 1.45,
       finalBossRewardMultiplier: 1.35,
       finalBoss: {
@@ -982,7 +1024,7 @@
   }
 
   function applyContentDataOverrides(config, overrides) {
-    const allowlist = ["mission", "ufo", "loot", "missionDirector"];
+    const allowlist = ["mission", "ufo", "loot", "missionDirector", "run"];
     for (const key of allowlist) {
       if (!(key in overrides)) continue;
       if (!isObject(overrides[key])) continue;
@@ -1010,7 +1052,8 @@
       { ok: config.mission.survive.baseDurationSeconds >= 5, msg: "mission.survive.baseDurationSeconds too low" },
       { ok: config.mission.ufoHunt.maxConcurrentCap >= 1, msg: "mission.ufoHunt.maxConcurrentCap must be >= 1" },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
-      { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" }
+      { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
+      { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {

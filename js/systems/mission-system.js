@@ -284,7 +284,8 @@
       const type = this.getMissionTypeByIndex(missionIndex);
       const level = g.model.sector;
       const endless = this.getEndlessTuning(level);
-      const difficulty = this.getMissionDifficulty(level) * endless.difficultyMul;
+      const runDiff = typeof g.getRunDifficultyMultipliers === "function" ? g.getRunDifficultyMultipliers() : { pressureMul: 1 };
+      const difficulty = this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1);
       const context = this.buildMissionContext(level);
       g.model.currentMission = {
         type,
@@ -424,9 +425,12 @@
       const ship = g.model.ship;
       if (!mission || !ship) return;
       const effects = mission.modifierEffects || {};
+      const runDiff =
+        typeof g.getRunDifficultyMultipliers === "function" ? g.getRunDifficultyMultipliers() : { hazardIntensityMul: 1 };
+      const hazardMul = runDiff.hazardIntensityMul ?? 1;
 
       if ((effects.shieldDrainPerSecond ?? 0) > 0) {
-        ship.shield = Math.max(0, ship.shield - effects.shieldDrainPerSecond * dt);
+        ship.shield = Math.max(0, ship.shield - effects.shieldDrainPerSecond * hazardMul * dt);
       }
 
       const anomaly = mission.gravityAnomaly;
@@ -448,7 +452,8 @@
           const maxAccel =
             maxAccelOverride ??
             (entity === ship ? anomaly.maxShipPullAccel ?? 210 : anomaly.maxAsteroidPullAccel ?? 130);
-          const accelUncapped = ((anomaly.pullStrength * falloff) / Math.max(24, dist)) * scalar * coreFactor * escapeFactor;
+          const accelUncapped =
+            ((anomaly.pullStrength * falloff) / Math.max(24, dist)) * scalar * coreFactor * escapeFactor * hazardMul;
           const accel = Math.min(maxAccel, Math.max(0, accelUncapped));
           const dirX = dx / dist;
           const dirY = dy / dist;
@@ -509,7 +514,7 @@
           ship.vy *= slowFactor;
           if (hazard.tickTimer <= 0) {
             g.applyDamageToShip("asteroid_collision", {
-              baseDamage: hazard.tickDamage,
+              baseDamage: hazard.tickDamage * hazardMul,
               critChance: 0,
               critMultiplier: 1.0
             });
@@ -519,7 +524,7 @@
           ship.heat = Math.min(ship.heatMax, ship.heat + hazard.heatPerSecond * dt);
           if (hazard.tickTimer <= 0) {
             g.applyDamageToShip("enemy_mine", {
-              baseDamage: hazard.tickDamage,
+              baseDamage: hazard.tickDamage * hazardMul,
               damageType: "dot_thermal",
               critChance: 0,
               bypassInvulnerability: true,
@@ -540,14 +545,14 @@
           if (!pulseActive) continue;
           const angularDrag = Math.pow(hazard.angularDragMul ?? 1, dt * 60);
           ship.angularVelocity *= angularDrag;
-          const cooldownPressure = Math.max(0, hazard.jamCooldownPerSecond || 0) * dt;
+          const cooldownPressure = Math.max(0, hazard.jamCooldownPerSecond || 0) * hazardMul * dt;
           g.model.shootTimer += cooldownPressure;
           g.model.secondaryCooldown += cooldownPressure * 0.6;
           g.model.utilityCooldown += cooldownPressure * 0.45;
           g.model.dashCooldown += cooldownPressure * 0.55;
           if (hazard.tickTimer <= 0) {
             g.applyDamageToShip("enemy_bullet_support", {
-              baseDamage: hazard.tickDamage,
+              baseDamage: hazard.tickDamage * hazardMul,
               critChance: 0,
               critMultiplier: 1
             });
