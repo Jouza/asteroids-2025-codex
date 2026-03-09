@@ -2079,21 +2079,24 @@
         const actionRows = [];
         const pushHeader = (label) => actionRows.push({ type: "header", label });
         const pushAction = (label, color, actionIndex) => actionRows.push({ type: "action", label, color, actionIndex });
+        const shopItems =
+          Array.isArray(hangar.shopItems) && hangar.shopItems.length > 0 ? hangar.shopItems : config.hangar.items;
         pushHeader(tr("render.hangar.shop_group_sustain"));
-        for (let i = 0; i < config.hangar.items.length; i += 1) {
-          const item = config.hangar.items[i];
-          const canAfford = model.credits >= item.cost;
-          let label = `${item.title} ${item.cost}cr`;
+        for (let i = 0; i < shopItems.length; i += 1) {
+          const item = shopItems[i];
+          const itemCost = item.resolvedCost ?? item.cost;
+          const canAfford = model.credits >= itemCost;
+          let label = `${item.title} ${itemCost}cr`;
           if (item.id === "fire_rate") {
-            label = `${item.title} [Lv ${fireRateLevel}/${fireRateMax}] ${item.cost}cr`;
+            label = `${item.title} [Lv ${fireRateLevel}/${fireRateMax}] ${itemCost}cr`;
           } else if (item.id === "magazine") {
-            label = `${item.title} [Lv ${magazineLevel}/${magazineMax}] ${item.cost}cr`;
+            label = `${item.title} [Lv ${magazineLevel}/${magazineMax}] ${itemCost}cr`;
           }
           pushAction(label, canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)", i);
           if (item.id === "repair") pushHeader(tr("render.hangar.shop_group_progression"));
         }
         pushHeader(tr("render.hangar.shop_group_loadout"));
-        const loadoutBaseIndex = config.hangar.items.length;
+        const loadoutBaseIndex = shopItems.length;
         pushAction(`Primary: ${model.loadout.primaryLabel}`, "#ffd785", loadoutBaseIndex);
         pushAction(`Secondary: ${model.loadout.secondaryLabel}`, "#ffd785", loadoutBaseIndex + 1);
         pushAction(`Utility: ${model.loadout.utilityLabel}`, "#ffd785", loadoutBaseIndex + 2);

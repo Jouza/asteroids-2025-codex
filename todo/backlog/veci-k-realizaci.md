@@ -21,11 +21,11 @@
   - [x] 2 frakce na start
   - [x] Data model + config (faction definice, rep limity, default profil migrace)
   - [x] Reputation gain/loss (mission start/clear + biome event hooky)
-  - [ ] Frakcni rewardy + odlisne nabidky shopu
+  - [x] Frakcni rewardy + odlisne nabidky shopu
   - [ ] Hangar/UI status reputace + i18n coverage
   - [ ] Harness coverage: reputation clamp limity
   - [x] Harness coverage: persistence + gain/loss flow
-  - [ ] Harness coverage: shop rozdily podle reputace
+  - [x] Harness coverage: shop rozdily podle reputace
 
 - [ ] Frakce a reputace (Phase 2+ rozsireni)
   - [ ] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)

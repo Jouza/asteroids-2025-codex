@@ -19,7 +19,12 @@
       missionStartRepGain: 1,
       missionCompleteRepGain: 3,
       biomeEventRepGain: 1,
-      rivalRepLossOnGainMul: 0.5
+      rivalRepLossOnGainMul: 0.5,
+      rewardCreditsPerRep100: 0.12,
+      rewardSalvagePerRep100: 0.1,
+      shopBiasThresholdRep: 15,
+      shopPriceInfluencePerRep100: 0.14,
+      shopPenaltyInfluencePerRep100: 0.06
     },
     run: {
       difficultyPresets: [

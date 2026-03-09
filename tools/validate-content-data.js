@@ -33,6 +33,18 @@ function validateContentData(contentData, issues) {
   if (Number.isFinite(repMin) && Number.isFinite(repMax)) {
     assert(repMin <= repMax, "faction repMin must be <= repMax", issues);
   }
+  const rewardCreditsPerRep100 = Number(contentData.faction?.rewardCreditsPerRep100);
+  const rewardSalvagePerRep100 = Number(contentData.faction?.rewardSalvagePerRep100);
+  assert(
+    Number.isFinite(rewardCreditsPerRep100) && rewardCreditsPerRep100 >= 0,
+    "faction.rewardCreditsPerRep100 must be >= 0",
+    issues
+  );
+  assert(
+    Number.isFinite(rewardSalvagePerRep100) && rewardSalvagePerRep100 >= 0,
+    "faction.rewardSalvagePerRep100 must be >= 0",
+    issues
+  );
 
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);

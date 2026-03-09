@@ -276,7 +276,7 @@ function runTests() {
       gameA.input.wasPressed = () => false;
     };
 
-    const shopSize = gameA.config.hangar.items.length + 5;
+    const shopSize = gameA.hangarSystem.getShopActionCount();
 
     const prevHull = gameA.model.ship.hull;
     pressSpaceAt(0); // repair
@@ -649,6 +649,42 @@ function runTests() {
     gameA.onMissionCompleted();
     const after = gameA.getFactionReputation(missionFaction);
     assert(after > before, "Mission completion should increase active biome faction reputation");
+  });
+
+  tests.push(() => {
+    gameA.startGame(43434);
+    gameA.model.comboScoringEnabled = false;
+    gameA.model.currentMission = {
+      type: "survive",
+      biomeFactionId: "helix_union"
+    };
+    gameA.model.factions.helix_union = 70;
+    gameA.model.credits = 0;
+    gameA.registerScore(100, false);
+    const highRepCredits = gameA.model.credits;
+
+    gameA.model.factions.helix_union = -70;
+    gameA.model.credits = 0;
+    gameA.registerScore(100, false);
+    const lowRepCredits = gameA.model.credits;
+
+    assert(highRepCredits > lowRepCredits, "Higher faction reputation should increase mission credit rewards");
+  });
+
+  tests.push(() => {
+    gameA.model.factions.helix_union = 60;
+    gameA.model.factions.drift_cartel = -10;
+    const helixShop = gameA.getHangarShopItems();
+    gameA.model.factions.helix_union = -10;
+    gameA.model.factions.drift_cartel = 60;
+    const cartelShop = gameA.getHangarShopItems();
+
+    assert(helixShop[0]?.id !== cartelShop[0]?.id, "Dominant faction should change hangar shop offer ordering");
+    assert(
+      helixShop.find((item) => item.id === "fire_rate")?.resolvedCost !==
+        cartelShop.find((item) => item.id === "fire_rate")?.resolvedCost,
+      "Dominant faction should alter resolved shop item costs"
+    );
   });
 
   tests.push(() => {

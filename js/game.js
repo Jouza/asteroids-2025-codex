@@ -276,6 +276,7 @@
         },
         hangar: {
           message: tr("game.hangar.controls"),
+          shopItems: [],
           lootCrate: [],
           selectionSource: "crate",
           selectionIndex: 0,
@@ -498,6 +499,76 @@
         this.saveProfile(options.saveReason || "faction_reputation_change");
       }
       return totalApplied;
+    }
+
+    getDominantFactionState() {
+      const defs = this.getFactionDefs();
+      if (!defs.length) return null;
+      let best = null;
+      for (const faction of defs) {
+        const rep = this.getFactionReputation(faction.id);
+        if (!best || rep > best.rep) best = { ...faction, rep };
+      }
+      return best;
+    }
+
+    getFactionRewardMultipliers(factionId = this.model.currentMission?.biomeFactionId || null) {
+      if (!factionId) return { creditsMul: 1, salvageMul: 1 };
+      const rep = this.getFactionReputation(factionId);
+      const influence = this.clamp(rep / 100, -1, 1);
+      const creditsScale = Number(this.config.faction?.rewardCreditsPerRep100) || 0;
+      const salvageScale = Number(this.config.faction?.rewardSalvagePerRep100) || 0;
+      return {
+        creditsMul: this.clamp(1 + influence * creditsScale, 0.75, 1.35),
+        salvageMul: this.clamp(1 + influence * salvageScale, 0.75, 1.35)
+      };
+    }
+
+    getFactionShopItemCost(itemId, baseCost) {
+      const defs = this.getFactionDefs();
+      let multiplier = 1;
+      const priceScale = Number(this.config.faction?.shopPriceInfluencePerRep100) || 0.14;
+      const penaltyScale = Number(this.config.faction?.shopPenaltyInfluencePerRep100) || 0.06;
+      for (const faction of defs) {
+        const influence = this.clamp(this.getFactionReputation(faction.id) / 100, -1, 1);
+        if (Math.abs(influence) <= 0.0001) continue;
+        if (faction.shopBias === "precision") {
+          if (itemId === "fire_rate" || itemId === "magazine") multiplier *= 1 - influence * priceScale;
+          else if (itemId === "repair") multiplier *= 1 + influence * penaltyScale;
+        } else if (faction.shopBias === "scrap") {
+          if (itemId === "repair") multiplier *= 1 - influence * priceScale;
+          else if (itemId === "fire_rate" || itemId === "magazine") multiplier *= 1 + influence * penaltyScale;
+        }
+      }
+      const clampedMultiplier = this.clamp(multiplier, 0.7, 1.4);
+      return Math.max(1, Math.round((Number(baseCost) || 0) * clampedMultiplier));
+    }
+
+    getHangarShopItems() {
+      const baseItems = Array.isArray(this.config.hangar?.items) ? this.config.hangar.items : [];
+      const items = baseItems.map((item, index) => ({
+        ...item,
+        baseIndex: index,
+        resolvedCost: this.getFactionShopItemCost(item.id, item.cost)
+      }));
+      const dominant = this.getDominantFactionState();
+      const threshold = Math.max(0, Number(this.config.faction?.shopBiasThresholdRep) || 15);
+      if (!dominant || dominant.rep < threshold) return items;
+      let priorityMap = null;
+      if (dominant.shopBias === "precision") {
+        priorityMap = { fire_rate: 0, magazine: 1, repair: 2 };
+      } else if (dominant.shopBias === "scrap") {
+        priorityMap = { repair: 0, magazine: 1, fire_rate: 2 };
+      }
+      if (!priorityMap) return items;
+      return items
+        .slice()
+        .sort((a, b) => {
+          const aPriority = priorityMap[a.id] ?? 100;
+          const bPriority = priorityMap[b.id] ?? 100;
+          if (aPriority !== bPriority) return aPriority - bPriority;
+          return a.baseIndex - b.baseIndex;
+        });
     }
 
     sanitizeModule(module) {
@@ -1017,6 +1088,7 @@
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
       this.model.hangar.message = tr("game.hangar.controls");
+      this.model.hangar.shopItems = [];
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;
@@ -2252,6 +2324,7 @@
       const creditsMissionMult = this.config.mission.rewards.creditsByType[missionType] ?? 1;
       const modifiers = this.getModuleModifiers();
       const runDiff = this.getRunDifficultyMultipliers();
+      const factionReward = this.getFactionRewardMultipliers();
       const comboMultiplier = this.model.comboScoringEnabled ? this.model.comboMultiplier : 1;
       const scored = Math.round(basePoints * comboMultiplier * scoreMissionMult);
       this.model.score += scored;
@@ -2265,7 +2338,8 @@
             creditsMissionMult *
             (1 + (modifiers.creditsGainPct ?? 0)) *
             economyMul *
-            runDiff.economyCreditsMul
+            runDiff.economyCreditsMul *
+            factionReward.creditsMul
         )
       );
       this.model.credits += creditsGain;
@@ -2337,16 +2411,23 @@
     formatBiomeEventBonuses(event) {
       if (!event) return "";
       const runDiff = this.getRunDifficultyMultipliers();
+      const factionReward = this.getFactionRewardMultipliers();
       const parts = [];
       if ((event.credits ?? 0) > 0) {
         parts.push(
           tr("mission.event.bonus.credits", {
-            value: Math.floor((event.credits ?? 0) * this.getEndlessCreditsMultiplier() * runDiff.economyCreditsMul)
+            value: Math.floor(
+              (event.credits ?? 0) * this.getEndlessCreditsMultiplier() * runDiff.economyCreditsMul * factionReward.creditsMul
+            )
           })
         );
       }
       if ((event.salvageParts ?? 0) > 0) {
-        parts.push(tr("mission.event.bonus.salvage", { value: Math.floor(event.salvageParts * runDiff.economySalvageMul) }));
+        parts.push(
+          tr("mission.event.bonus.salvage", {
+            value: Math.floor(event.salvageParts * runDiff.economySalvageMul * factionReward.salvageMul)
+          })
+        );
       }
       if ((event.energy ?? 0) !== 0) parts.push(tr("mission.event.bonus.energy", { value: Math.floor(event.energy) }));
       if ((event.shield ?? 0) !== 0) parts.push(tr("mission.event.bonus.shield", { value: Math.floor(event.shield) }));
@@ -2365,14 +2446,18 @@
       const ship = this.model.ship;
       const economyMul = this.getEndlessCreditsMultiplier();
       const runDiff = this.getRunDifficultyMultipliers();
+      const factionReward = this.getFactionRewardMultipliers();
 
       if ((event.credits ?? 0) > 0) {
-        const gain = Math.max(0, Math.floor(event.credits * economyMul * runDiff.economyCreditsMul));
+        const gain = Math.max(0, Math.floor(event.credits * economyMul * runDiff.economyCreditsMul * factionReward.creditsMul));
         this.model.credits += gain;
         this.model.telemetry.creditsEarned += gain;
       }
       if ((event.salvageParts ?? 0) > 0) {
-        this.model.salvageParts += Math.max(0, Math.floor(event.salvageParts * runDiff.economySalvageMul));
+        this.model.salvageParts += Math.max(
+          0,
+          Math.floor(event.salvageParts * runDiff.economySalvageMul * factionReward.salvageMul)
+        );
       }
       if (ship) {
         if ((event.energy ?? 0) !== 0) ship.energy = this.clamp(ship.energy + event.energy, 0, ship.energyMax);
@@ -2764,11 +2849,13 @@
       const rewardMultiplier = isFinalEncounter ? this.config.run.finalBossRewardMultiplier ?? 1 : 1;
       const economyMul = this.getEndlessCreditsMultiplier();
       const runDiff = this.getRunDifficultyMultipliers();
+      const factionReward = this.getFactionRewardMultipliers();
       const creditsGain = Math.round(
         (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) *
           rewardMultiplier *
           economyMul *
-          runDiff.economyCreditsMul
+          runDiff.economyCreditsMul *
+          factionReward.creditsMul
       );
       this.registerScore(Math.round(rewards.scoreReward * rewardMultiplier), true);
       this.model.credits += creditsGain;

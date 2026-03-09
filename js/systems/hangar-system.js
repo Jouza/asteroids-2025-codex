@@ -12,8 +12,30 @@
       this.navSections = ["shop", "loot"];
     }
 
+    getShopItems() {
+      const g = this.game;
+      const fallback = Array.isArray(g.config.hangar.items) ? g.config.hangar.items : [];
+      if (typeof g.getHangarShopItems === "function") {
+        const resolved = g.getHangarShopItems();
+        if (Array.isArray(resolved) && resolved.length > 0) return resolved;
+      }
+      return fallback;
+    }
+
+    refreshShopOffers() {
+      const g = this.game;
+      g.model.hangar.shopItems = this.getShopItems().map((item) => ({
+        id: item.id,
+        title: item.title,
+        cost: item.cost,
+        resolvedCost: item.resolvedCost ?? item.cost
+      }));
+    }
+
     getShopActionCount() {
-      return this.game.config.hangar.items.length + 5;
+      const offers = this.game.model.hangar.shopItems;
+      const offerCount = Array.isArray(offers) && offers.length > 0 ? offers.length : this.getShopItems().length;
+      return offerCount + 5;
     }
 
     handleHangarInput() {
@@ -46,6 +68,7 @@
 
     ensureNavState() {
       const h = this.game.model.hangar;
+      if (!Array.isArray(h.shopItems) || h.shopItems.length === 0) this.refreshShopOffers();
       if (!h.navSection || !this.navSections.includes(h.navSection)) h.navSection = "shop";
       if (!Number.isInteger(h.shopIndex)) h.shopIndex = 0;
       const shopSize = this.getShopActionCount();
@@ -135,16 +158,21 @@
       g.model.hangar.navSection = "shop";
       g.model.hangar.shopIndex = 0;
       g.model.hangar.pilotCursor = 0;
+      this.refreshShopOffers();
       this.clampSelection();
       g.saveProfile("sector_complete");
     }
 
     purchaseHangarItem(index) {
       const g = this.game;
-      const item = g.config.hangar.items[index];
+      const offers = Array.isArray(g.model.hangar.shopItems) && g.model.hangar.shopItems.length > 0
+        ? g.model.hangar.shopItems
+        : this.getShopItems();
+      const item = offers[index];
       if (!item) return;
+      const resolvedCost = Math.max(0, Math.floor(Number(item.resolvedCost ?? item.cost) || 0));
 
-      if (g.model.credits < item.cost) {
+      if (g.model.credits < resolvedCost) {
         g.model.hangar.message = tr("hangar.no_credits");
         return;
       }
@@ -166,7 +194,7 @@
         return;
       }
 
-      g.model.credits -= item.cost;
+      g.model.credits -= resolvedCost;
       if (item.id === "repair") {
         if (
           g.model.ship &&
@@ -349,7 +377,12 @@
       if (!removed) return;
       const modifiers = g.getModuleModifiers();
       const diffMul = typeof g.getRunDifficultyMultipliers === "function" ? g.getRunDifficultyMultipliers().economySalvageMul ?? 1 : 1;
-      const parts = Math.max(1, Math.round((removed.salvageValue ?? 0) * (1 + (modifiers.salvageYieldPct ?? 0)) * diffMul));
+      const factionMul =
+        typeof g.getFactionRewardMultipliers === "function" ? g.getFactionRewardMultipliers(g.getDominantFactionState()?.id).salvageMul : 1;
+      const parts = Math.max(
+        1,
+        Math.round((removed.salvageValue ?? 0) * (1 + (modifiers.salvageYieldPct ?? 0)) * diffMul * factionMul)
+      );
       g.model.salvageParts += parts;
       g.model.credits += parts * g.config.economy.salvageToCredits;
       this.clampSelection();

@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Frakce a reputace (MVP) - slice 3 (rewardy + shop)
+  - [x] Reward ekonomika navazana na reputaci aktivni frakce (mission credits, biome event credits/salvage, mini-boss credits)
+  - [x] Hangar shop nabidka je biasovana podle dominantni frakce (poradi sustain/progression voleb)
+  - [x] Hangar shop ceny jsou reputacne modulovane per item (`resolvedCost`)
+  - [x] Harness coverage pro reward scaling podle reputace + shop order/cost rozdily
+
 - [x] Frakce a reputace (MVP) - slice 1+2
   - [x] Pridane 2 vychozi frakce (`helix_union`, `drift_cartel`) do content/config vrstvy
   - [x] Profil rozsireny o persistovanou reputaci frakci (`progression.factions`) + migrace starsich save
