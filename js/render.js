@@ -1374,13 +1374,9 @@
       return startY + (lines.length - 1) * lineHeight;
     }
 
-    drawRunSettingsList(model, centerY) {
-      const { ctx, config } = this;
-      const centerX = config.canvas.width / 2;
-      const pilotId = model.identity?.pilotId;
-      const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
+    getRunSettingsRows(model) {
       const difficultyId = model.runDifficultyId || "normal";
-      const rows = [
+      return [
         {
           id: "mode",
           label: tr("overlay.settings_mode"),
@@ -1407,6 +1403,14 @@
           value: model.flightModel === "sim_lite" ? tr("hud.flight_sim_lite") : tr("hud.flight_arcade")
         }
       ];
+    }
+
+    drawRunSettingsList(model, centerY) {
+      const { ctx, config } = this;
+      const centerX = config.canvas.width / 2;
+      const pilotId = model.identity?.pilotId;
+      const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
+      const rows = this.getRunSettingsRows(model);
       const selected = Math.max(0, Math.min(rows.length - 1, model.overlaySettingsRow ?? 0));
       const rowW = 382;
       const rowH = 30;
@@ -1489,7 +1493,9 @@
         const seedToOnboarding = compact ? 24 : large ? 32 : 28;
         const onboardingRowGap = compact ? 16 : large ? 20 : 18;
         const onboardingToSetup = compact ? 30 : large ? 38 : 34;
-        const setupPanelHeight = compact ? 206 : large ? 224 : 214;
+        const setupRows = this.getRunSettingsRows(model).length;
+        const setupPanelHeightBase = compact ? 206 : large ? 224 : 214;
+        const setupPanelHeight = setupPanelHeightBase + Math.max(0, setupRows - 4) * 38;
         const edgeMargin = 26;
         const extraBottomReserve = model.endlessUnlocked ? 8 : 36;
 
