@@ -2,14 +2,6 @@
 
 ## Dalsi chybejici temata (zatim neevidovana)
 
-- [x] Biome identity 2.0 (audio + rewards)
-  - [x] Biome-specificky ambient layer a warning SFX variace
-  - [x] Biome-specificke mini reward/event hooky (aby biome nebyl jen vizualni)
-
-- [ ] New player onboarding
-  - [x] Kratky tutorial flow pro shared shield-energy model
-  - [x] Contextual hinty pro "proc nejde akce" (shield gate / heat gate / cooldown)
-
 - [ ] Accessibility / readability options
   - [ ] Colorblind-safe rezim pro hazard a resource warning barvy
   - [ ] UI scale / font scale volba pro slabsi citelnost na mensich displejich
@@ -41,21 +33,11 @@
   - [x] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
   - [x] Endless pacing pass po unlocku (skalovani, anti-snowball ekonomika, delka runu)
 
-- [ ] Help / codex vrstva
-  - [x] Samostatna help stranka s objekty, hazardy, chovanim a dopadem
-  - [x] Odkaz z hlavni hry na help stranku
-  - [x] Sekce zbrani s parametry a ingame vizualizaci vystrelu (data-driven z GAME_CONFIG)
-  - [x] Sekce typu misi a vysvetleni run loopu (survive -> ufo_hunt -> asteroid_storm -> mini_boss)
-  - [x] Seznam vsech biomu (Belt Fringe, Wreck Graveyard, Refinery Complex, Ion Field) s kratkym popisem
-
 - [ ] Audio UX controls
   - [x] Mute toggle (M)
   - [x] Ovladas hlasitosti v UI
   - [x] Persist nastaveni hlasitosti/mute do localStorage
   - [ ] Samostatne volume bus pro UI/gameplay warningy (pokrocilejsi mix)
-
-- [ ] Dev / testing workflow
-  - [x] Preset `dev_fasttrack` pro rychly pruchod hrou
 
 - [ ] Security / backend readiness
   - [ ] Leaderboard backend input validace (strict schema, initials A-Z, score range)

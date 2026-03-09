@@ -5,6 +5,9 @@
   - [x] Harness doplnen o runtime testy dopadu obtiznosti (hazard shield drain, salvage yield, loot drop threshold)
   - [x] Overeno gate: `validate-runtime-syntax`, `combat-harness`, `validate-content-data`
 
+- [x] Dev / testing workflow
+  - [x] Preset `dev_fasttrack` pro rychly pruchod hrou
+
 - [x] Start run difficulty presets (Rookie/Normal/Veteran/Ace)
   - [x] Nova `Difficulty` volba v unified `Run setup` (Mode/Difficulty/Pilot/Ship/Flight)
   - [x] Persist vybrane obtiznosti do profilu + aplikace na startu runu
