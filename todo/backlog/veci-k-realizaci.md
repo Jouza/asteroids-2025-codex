@@ -22,8 +22,8 @@
   - [x] Data model + config (faction definice, rep limity, default profil migrace)
   - [x] Reputation gain/loss (mission start/clear + biome event hooky)
   - [x] Frakcni rewardy + odlisne nabidky shopu
-  - [ ] Hangar/UI status reputace + i18n coverage
-  - [ ] Harness coverage: reputation clamp limity
+  - [x] Hangar/UI status reputace + i18n coverage
+  - [x] Harness coverage: reputation clamp limity
   - [x] Harness coverage: persistence + gain/loss flow
   - [x] Harness coverage: shop rozdily podle reputace
 

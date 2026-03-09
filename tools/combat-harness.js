@@ -144,6 +144,19 @@ function runTests() {
   });
 
   tests.push(() => {
+    const profile = gameA.getDefaultProfile();
+    profile.progression.factions = {
+      helix_union: 999,
+      drift_cartel: -999
+    };
+    sharedStorage.setItem("starfang_profile_v1", JSON.stringify(profile));
+    const AsteroidsB = createRuntime(sharedStorage);
+    const gameB = createGame(AsteroidsB);
+    assert(gameB.model.factions.helix_union <= 100, "Faction reputation should clamp to configured max bound");
+    assert(gameB.model.factions.drift_cartel >= -100, "Faction reputation should clamp to configured min bound");
+  });
+
+  tests.push(() => {
     gameA.startGame(12345);
     gameA.model.missionTimer = 0;
     gameA.model.asteroids = [

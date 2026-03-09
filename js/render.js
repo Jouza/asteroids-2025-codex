@@ -1729,6 +1729,12 @@
         const unlockedPerkIds = new Set(pilot.unlockedPerks || []);
         const selectedPilotCallsign = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
         const selectedShipId = model.identity?.shipId || "viper_mk2";
+        const formatSigned = (value) => {
+          const num = Math.floor(Number(value) || 0);
+          if (num > 0) return `+${num}`;
+          return String(num);
+        };
+        const factionRep = model.factions || {};
         const fireRateLevel = Math.max(0, Math.floor(model.upgrades?.fireRateLevel || 0));
         const magazineLevel = Math.max(0, Math.floor(model.upgrades?.magazineLevel || 0));
         const fireRateMax = Math.max(1, Math.floor(config.hangar.maxFireRateLevel || 1));
@@ -2154,6 +2160,30 @@
           statusLeftX,
           statusLeftY,
           tr("hud.status.difficulty", { difficulty: tr(`game.difficulty.${model.runDifficultyId || "normal"}`) }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          statusColW
+        );
+        statusLeftY += statusGap;
+        drawRow(
+          statusLeftX,
+          statusLeftY,
+          tr("hud.status.faction_rep", {
+            faction: tr("game.faction.helix_union"),
+            rep: formatSigned(factionRep.helix_union)
+          }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          statusColW
+        );
+        statusLeftY += statusGap;
+        drawRow(
+          statusLeftX,
+          statusLeftY,
+          tr("hud.status.faction_rep", {
+            faction: tr("game.faction.drift_cartel"),
+            rep: formatSigned(factionRep.drift_cartel)
+          }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
           statusColW

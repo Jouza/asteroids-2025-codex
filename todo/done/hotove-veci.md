@@ -1,5 +1,9 @@
 # Hotove veci
 
+- [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
+  - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
+  - [x] Doplnen harness test na clamp reputace pri loadu profilu
+
 - [x] Frakce a reputace (MVP) - slice 3 (rewardy + shop)
   - [x] Reward ekonomika navazana na reputaci aktivni frakce (mission credits, biome event credits/salvage, mini-boss credits)
   - [x] Hangar shop nabidka je biasovana podle dominantni frakce (poradi sustain/progression voleb)

@@ -62,6 +62,7 @@
       "game.faction.reason.mission_complete": "mission complete",
       "game.faction.reason.biome_event": "biome event",
       "hud.status.difficulty": "Diff: {difficulty}",
+      "hud.status.faction_rep": "Rep {faction}: {rep}",
       "game.identity.pilot_changed": "Pilot selected: {pilot}",
       "game.identity.ship_changed": "Ship selected: {ship}",
       "game.identity.migrated_default": "Legacy identity reset to a supported pilot/ship. Review Run setup.",
