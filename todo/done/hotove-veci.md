@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Frakce a reputace (MVP) - slice 1+2
+  - [x] Pridane 2 vychozi frakce (`helix_union`, `drift_cartel`) do content/config vrstvy
+  - [x] Profil rozsireny o persistovanou reputaci frakci (`progression.factions`) + migrace starsich save
+  - [x] Reputation gain/loss hooky napojeny na mission start, mission complete a biome mini event
+  - [x] Rival-loss pravidlo: gain u aktivni frakce snizuje reputaci konkurence
+  - [x] Harness testy doplneny pro reputation persistence a mission gain flow
+
 - [x] Difficulty follow-up: i18n + harness runtime coverage
   - [x] HUD status radek pro obtiznost presunut z hardcoded textu na i18n key (`hud.status.difficulty`)
   - [x] Harness doplnen o runtime testy dopadu obtiznosti (hazard shield drain, salvage yield, loot drop threshold)

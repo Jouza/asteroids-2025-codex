@@ -20,6 +20,20 @@ function validateContentData(contentData, issues) {
   assert(contentData && typeof contentData === "object", "CONTENT_DATA must be an object", issues);
   if (!contentData || typeof contentData !== "object") return;
 
+  const factionDefs = contentData.faction?.definitions;
+  assert(Array.isArray(factionDefs) && factionDefs.length >= 2, "faction.definitions must contain at least 2 factions", issues);
+  if (Array.isArray(factionDefs)) {
+    for (const [index, faction] of factionDefs.entries()) {
+      assert(typeof faction.id === "string" && faction.id.length > 0, `faction[${index}] id is required`, issues);
+    }
+  }
+  const repMin = Number(contentData.faction?.repMin);
+  const repMax = Number(contentData.faction?.repMax);
+  assert(Number.isFinite(repMin) && Number.isFinite(repMax), "faction reputation bounds must be numeric", issues);
+  if (Number.isFinite(repMin) && Number.isFinite(repMax)) {
+    assert(repMin <= repMax, "faction repMin must be <= repMax", issues);
+  }
+
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);
   assert(Array.isArray(missionOrder) && missionOrder.length > 0, "mission.order must be a non-empty array", issues);

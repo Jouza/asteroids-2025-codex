@@ -1,6 +1,26 @@
 (() => {
   window.Asteroids = window.Asteroids || {};
   window.Asteroids.CONTENT_DATA = {
+    faction: {
+      definitions: [
+        {
+          id: "helix_union",
+          color: "#73d5ff",
+          shopBias: "precision"
+        },
+        {
+          id: "drift_cartel",
+          color: "#ff9a66",
+          shopBias: "scrap"
+        }
+      ],
+      repMin: -100,
+      repMax: 100,
+      missionStartRepGain: 1,
+      missionCompleteRepGain: 3,
+      biomeEventRepGain: 1,
+      rivalRepLossOnGainMul: 0.5
+    },
     run: {
       difficultyPresets: [
         {
@@ -59,12 +79,14 @@
         {
           id: "belt",
           label: "Belt Fringe",
-          weight: 0.3
+          weight: 0.3,
+          factionId: "helix_union"
         },
         {
           id: "graveyard",
           label: "Wreck Graveyard",
           weight: 0.28,
+          factionId: "drift_cartel",
           hazards: {
             type: "debris_field",
             minCount: 2,
@@ -80,6 +102,7 @@
           id: "refinery",
           label: "Refinery Complex",
           weight: 0.24,
+          factionId: "helix_union",
           hazards: {
             type: "plasma_vent",
             minCount: 1,
@@ -94,7 +117,8 @@
         {
           id: "ion_field",
           label: "Ion Field",
-          weight: 0.18
+          weight: 0.18,
+          factionId: "drift_cartel"
         }
       ],
       modifiers: {

@@ -140,6 +140,13 @@
     };
   }
 
+  function createDefaultFactionProgression() {
+    return {
+      helix_union: 0,
+      drift_cartel: 0
+    };
+  }
+
   function createDefaultProfile() {
     return {
       schemaVersion: PROFILE_SCHEMA_VERSION,
@@ -183,6 +190,7 @@
           engine: null,
           chipset: null
         },
+        factions: createDefaultFactionProgression(),
         identity: createDefaultIdentitySelection(),
         salvageParts: 0,
         pilot: createDefaultPilotProgression()
@@ -318,6 +326,7 @@
         },
         activeSets: [],
         setStatusText: tr("hud.no_active_set"),
+        factions: createDefaultFactionProgression(),
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
         identityStatusText: tr("hud.identity_unknown"),
@@ -382,6 +391,113 @@
 
     getDefaultProfile() {
       return createDefaultProfile();
+    }
+
+    getFactionDefs() {
+      const defs = this.config.faction?.definitions;
+      if (!Array.isArray(defs) || !defs.length) {
+        return [
+          { id: "helix_union", color: "#73d5ff", shopBias: "precision" },
+          { id: "drift_cartel", color: "#ff9a66", shopBias: "scrap" }
+        ];
+      }
+      return defs.filter((entry) => entry && typeof entry.id === "string" && entry.id.length > 0);
+    }
+
+    getFactionRepBounds() {
+      const minCfg = Number(this.config.faction?.repMin);
+      const maxCfg = Number(this.config.faction?.repMax);
+      const min = Number.isFinite(minCfg) ? Math.floor(minCfg) : -100;
+      const max = Number.isFinite(maxCfg) ? Math.floor(maxCfg) : 100;
+      return { min: Math.min(min, max), max: Math.max(min, max) };
+    }
+
+    sanitizeFactionProgression(rawFactions) {
+      const safeRaw = rawFactions && typeof rawFactions === "object" ? rawFactions : {};
+      const defs = this.getFactionDefs();
+      const bounds = this.getFactionRepBounds();
+      const result = {};
+      for (const faction of defs) {
+        const value = Math.floor(Number(safeRaw[faction.id]) || 0);
+        result[faction.id] = this.clamp(value, bounds.min, bounds.max);
+      }
+      return result;
+    }
+
+    getFactionReputation(factionId) {
+      if (!factionId) return 0;
+      const factions = this.model.factions && typeof this.model.factions === "object" ? this.model.factions : {};
+      return Math.floor(Number(factions[factionId]) || 0);
+    }
+
+    formatSignedInteger(value) {
+      const number = Math.floor(Number(value) || 0);
+      if (number > 0) return `+${number}`;
+      return String(number);
+    }
+
+    addFactionReputation(factionId, delta, options = {}) {
+      const defs = this.getFactionDefs();
+      if (!defs.some((entry) => entry.id === factionId)) return 0;
+      const deltaInt = Math.floor(Number(delta) || 0);
+      if (deltaInt === 0) return 0;
+      const bounds = this.getFactionRepBounds();
+      const before = this.getFactionReputation(factionId);
+      const after = this.clamp(before + deltaInt, bounds.min, bounds.max);
+      const applied = after - before;
+      if (applied === 0) return 0;
+
+      this.model.factions = this.model.factions && typeof this.model.factions === "object" ? this.model.factions : {};
+      this.model.factions[factionId] = after;
+
+      const reasonKey = options.reasonKey || "game.faction.reason.mission_start";
+      if (options.announce !== false) {
+        this.model.hangar.message = tr("game.faction.rep_changed", {
+          faction: tr(`game.faction.${factionId}`),
+          delta: this.formatSignedInteger(applied),
+          reason: tr(reasonKey)
+        });
+        this.hud.sync(this.model);
+      }
+      if (options.saveProfile !== false) {
+        this.saveProfile(options.saveReason || "faction_reputation_change");
+      }
+      return applied;
+    }
+
+    applyMissionFactionReputation(baseDelta, reasonKey, options = {}) {
+      const missionFactionId = this.model.currentMission?.biomeFactionId;
+      if (!missionFactionId) return 0;
+      const gain = Math.floor(Number(baseDelta) || 0);
+      if (gain === 0) return 0;
+
+      let totalApplied = 0;
+      const primaryApplied = this.addFactionReputation(missionFactionId, gain, {
+        reasonKey,
+        announce: options.announce,
+        saveProfile: false
+      });
+      totalApplied += Math.abs(primaryApplied);
+      if (primaryApplied > 0) {
+        const rivalLossMul = Math.max(0, Number(this.config.faction?.rivalRepLossOnGainMul) || 0);
+        if (rivalLossMul > 0) {
+          const rivalLoss = Math.max(1, Math.round(primaryApplied * rivalLossMul));
+          for (const faction of this.getFactionDefs()) {
+            if (faction.id === missionFactionId) continue;
+            const appliedLoss = this.addFactionReputation(faction.id, -rivalLoss, {
+              reasonKey,
+              announce: false,
+              saveProfile: false
+            });
+            totalApplied += Math.abs(appliedLoss);
+          }
+        }
+      }
+
+      if (totalApplied > 0 && options.saveProfile !== false) {
+        this.saveProfile(options.saveReason || "faction_reputation_change");
+      }
+      return totalApplied;
     }
 
     sanitizeModule(module) {
@@ -522,6 +638,7 @@
       safe.progression.pilot.unlockedPerks = Array.isArray(pilotRaw.unlockedPerks)
         ? pilotRaw.unlockedPerks.filter((id) => validPerkIds.has(id))
         : [];
+      safe.progression.factions = this.sanitizeFactionProgression(progression.factions);
 
       safe.stats.runsPlayed = Math.max(0, Math.floor(Number(stats.runsPlayed) || 0));
       safe.stats.totalPlaySeconds = Math.max(0, Number(stats.totalPlaySeconds) || 0);
@@ -578,6 +695,7 @@
         upgrades: deepClone(this.model.upgrades),
         inventory: deepClone(this.model.inventory),
         equipment: deepClone(this.model.equipment),
+        factions: deepClone(this.model.factions),
         identity: deepClone(this.model.identity),
         salvageParts: this.model.salvageParts,
         pilot: deepClone(this.model.pilot)
@@ -599,6 +717,7 @@
       this.model.upgrades = deepClone(progression.upgrades);
       this.model.inventory = deepClone(progression.inventory);
       this.model.equipment = deepClone(progression.equipment);
+      this.model.factions = this.sanitizeFactionProgression(progression.factions);
       this.model.identity = deepClone(progression.identity || createDefaultIdentitySelection());
       this.model.salvageParts = progression.salvageParts;
       this.model.pilot = deepClone(progression.pilot || createDefaultPilotProgression());
@@ -750,6 +869,7 @@
       const selectedIdentity = deepClone(this.model.identity || profile.identity || defaults.identity);
       const selectedFlightModel = this.model.flightModel === "sim_lite" ? "sim_lite" : "arcade";
       const selectedDifficultyId = this.model.runDifficultyId || profile.runDifficultyId || defaults.runDifficultyId;
+      const selectedFactions = deepClone(this.model.factions || profile.factions || defaults.factions);
       const unlocks = deepClone(profile.unlocks || defaults.unlocks);
       profile.flightModel = selectedFlightModel;
       profile.runDifficultyId = selectedDifficultyId;
@@ -758,6 +878,7 @@
       profile.upgrades = deepClone(defaults.upgrades);
       profile.inventory = [];
       profile.equipment = deepClone(defaults.equipment);
+      profile.factions = selectedFactions;
       profile.identity = selectedIdentity;
       profile.salvageParts = 0;
       profile.pilot = createDefaultPilotProgression();
@@ -2190,6 +2311,10 @@
         biomeId: mission.biomeId,
         missionAudioProfile: mission.biomeAudio
       });
+      this.applyMissionFactionReputation(this.config.faction?.missionStartRepGain ?? 0, "game.faction.reason.mission_start", {
+        announce: false,
+        saveReason: "faction_mission_start"
+      });
       this.applyBiomeMiniEvent();
       this.refreshPowerAudit();
 
@@ -2263,6 +2388,10 @@
       }
 
       mission.biomeMiniEventApplied = true;
+      this.applyMissionFactionReputation(this.config.faction?.biomeEventRepGain ?? 0, "game.faction.reason.biome_event", {
+        announce: false,
+        saveReason: "faction_biome_event"
+      });
       const eventName = tr(`mission.event.${event.id}`);
       const bonusSummary = this.formatBiomeEventBonuses(event);
       mission.biomeEventText = tr("mission.event.triggered", { event: eventName, bonus: bonusSummary || "-" });
@@ -2294,6 +2423,11 @@
       const missionType = this.model.currentMission?.type ?? active.type;
       const xpBonus = this.config.pilot.xp.missionBonusByType[missionType] ?? 0;
       this.grantPilotXp(xpBonus, "mission");
+      this.applyMissionFactionReputation(
+        this.config.faction?.missionCompleteRepGain ?? 0,
+        "game.faction.reason.mission_complete",
+        { announce: true, saveReason: "faction_mission_complete" }
+      );
     }
 
     getCurrentBulletCooldown() {

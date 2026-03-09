@@ -198,6 +198,7 @@
       return {
         biomeId: biome.id,
         biomeLabel: biome.label,
+        biomeFactionId: biome.factionId || null,
         biomeAudio: biome.audio || null,
         biomeMiniEvent: biome.miniEvent || null,
         biomeMiniEventApplied: false,

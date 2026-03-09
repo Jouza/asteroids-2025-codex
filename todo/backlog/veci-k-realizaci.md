@@ -18,12 +18,14 @@
   - [ ] Rozsireni tree na 10-12+ perku + branch synergie
 
 - [ ] Frakce a reputace (MVP)
-  - [ ] 2 frakce na start
-  - [ ] Data model + config (faction definice, rep limity, default profil migrace)
-  - [ ] Reputation gain/loss (mission start/clear + biome event hooky)
+  - [x] 2 frakce na start
+  - [x] Data model + config (faction definice, rep limity, default profil migrace)
+  - [x] Reputation gain/loss (mission start/clear + biome event hooky)
   - [ ] Frakcni rewardy + odlisne nabidky shopu
   - [ ] Hangar/UI status reputace + i18n coverage
-  - [ ] Harness coverage (persist, clamp, gain/loss flow, shop rozdily podle reputace)
+  - [ ] Harness coverage: reputation clamp limity
+  - [x] Harness coverage: persistence + gain/loss flow
+  - [ ] Harness coverage: shop rozdily podle reputace
 
 - [ ] Frakce a reputace (Phase 2+ rozsireni)
   - [ ] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)

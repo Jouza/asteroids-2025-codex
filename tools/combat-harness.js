@@ -109,6 +109,8 @@ function runTests() {
     gameA.model.upgrades.fireRateLevel = 3;
     gameA.model.loadout.primaryId = "rail_lance";
     gameA.model.salvageParts = 17;
+    gameA.model.factions.helix_union = 9;
+    gameA.model.factions.drift_cartel = -4;
     gameA.model.inventory = [gameA.createModuleDrop()];
     gameA.saveProfile("harness_profile_roundtrip");
 
@@ -117,6 +119,8 @@ function runTests() {
     assert(gameB.model.upgrades.fireRateLevel === 3, "Profile did not persist fireRateLevel");
     assert(gameB.model.loadout.primaryId === "rail_lance", "Profile did not persist primary loadout");
     assert(gameB.model.salvageParts === 17, "Profile did not persist salvage parts");
+    assert(gameB.model.factions.helix_union === 9, "Profile did not persist HELIX UNION reputation");
+    assert(gameB.model.factions.drift_cartel === -4, "Profile did not persist DRIFT CARTEL reputation");
     assert(gameB.model.inventory.length >= 1, "Profile did not persist inventory");
   });
 
@@ -622,6 +626,29 @@ function runTests() {
       "Endless mode should show mission-complete confirmation before hangar"
     );
     assert(gameA.model.sectorCompletionHandled, "Endless mode should route mission completion to hangar flow");
+  });
+
+  tests.push(() => {
+    gameA.model.factions.helix_union = 0;
+    gameA.model.factions.drift_cartel = 0;
+    gameA.startGame(40404);
+    const missionFaction = gameA.model.currentMission?.biomeFactionId;
+    assert(typeof missionFaction === "string" && missionFaction.length > 0, "Mission should resolve biome faction id");
+    assert(
+      gameA.getFactionReputation(missionFaction) >= 1,
+      "Mission start should increase reputation for the active biome faction"
+    );
+  });
+
+  tests.push(() => {
+    gameA.model.factions.helix_union = 0;
+    gameA.model.factions.drift_cartel = 0;
+    gameA.startGame(41414);
+    const missionFaction = gameA.model.currentMission?.biomeFactionId;
+    const before = gameA.getFactionReputation(missionFaction);
+    gameA.onMissionCompleted();
+    const after = gameA.getFactionReputation(missionFaction);
+    assert(after > before, "Mission completion should increase active biome faction reputation");
   });
 
   tests.push(() => {

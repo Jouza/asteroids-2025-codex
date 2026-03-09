@@ -655,6 +655,18 @@
       speedScaleStep: 0.11,
       splitScalePerSector: 0.09
     },
+    faction: {
+      definitions: [
+        { id: "helix_union", color: "#73d5ff", shopBias: "precision" },
+        { id: "drift_cartel", color: "#ff9a66", shopBias: "scrap" }
+      ],
+      repMin: -100,
+      repMax: 100,
+      missionStartRepGain: 1,
+      missionCompleteRepGain: 3,
+      biomeEventRepGain: 1,
+      rivalRepLossOnGainMul: 0.5
+    },
     run: {
       finalSector: 4,
       finalMissionType: "mini_boss",
@@ -1024,7 +1036,7 @@
   }
 
   function applyContentDataOverrides(config, overrides) {
-    const allowlist = ["mission", "ufo", "loot", "missionDirector", "run"];
+    const allowlist = ["mission", "ufo", "loot", "missionDirector", "run", "faction"];
     for (const key of allowlist) {
       if (!(key in overrides)) continue;
       if (!isObject(overrides[key])) continue;
@@ -1053,7 +1065,9 @@
       { ok: config.mission.ufoHunt.maxConcurrentCap >= 1, msg: "mission.ufoHunt.maxConcurrentCap must be >= 1" },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
-      { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" }
+      { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" },
+      { ok: Array.isArray(config.faction?.definitions) && config.faction.definitions.length >= 2, msg: "faction.definitions missing" },
+      { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {
