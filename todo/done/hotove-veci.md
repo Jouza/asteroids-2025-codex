@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Difficulty follow-up: i18n + harness runtime coverage
+  - [x] HUD status radek pro obtiznost presunut z hardcoded textu na i18n key (`hud.status.difficulty`)
+  - [x] Harness doplnen o runtime testy dopadu obtiznosti (hazard shield drain, salvage yield, loot drop threshold)
+  - [x] Overeno gate: `validate-runtime-syntax`, `combat-harness`, `validate-content-data`
+
 - [x] Start run difficulty presets (Rookie/Normal/Veteran/Ace)
   - [x] Nova `Difficulty` volba v unified `Run setup` (Mode/Difficulty/Pilot/Ship/Flight)
   - [x] Persist vybrane obtiznosti do profilu + aplikace na startu runu
