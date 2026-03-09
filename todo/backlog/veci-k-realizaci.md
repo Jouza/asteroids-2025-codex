@@ -19,8 +19,21 @@
 
 - [ ] Frakce a reputace (MVP)
   - [ ] 2 frakce na start
-  - [ ] Reputation gain/loss
+  - [ ] Data model + config (faction definice, rep limity, default profil migrace)
+  - [ ] Reputation gain/loss (mission start/clear + biome event hooky)
   - [ ] Frakcni rewardy + odlisne nabidky shopu
+  - [ ] Hangar/UI status reputace + i18n coverage
+  - [ ] Harness coverage (persist, clamp, gain/loss flow, shop rozdily podle reputace)
+
+- [ ] Frakce a reputace (Phase 2+ rozsireni)
+  - [ ] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)
+  - [ ] Neutral/black-market vendor jako treti obchodni vrstva
+  - [ ] Reputation thresholdy (`-20/0/+20/+50`) s odemykatelnymi pasivy
+  - [ ] Contraband mechanika (silny item za reputacni/bounty riziko)
+  - [ ] Frakcni varianty mission cilu bez nove mission architektury
+  - [ ] Frakcni module sety a affix identity pro buildcraft
+  - [ ] End-of-run faction summary (timeline reputace + unlocky)
+  - [ ] Anti-snowball guard pro reputaci (sector cap + diminishing returns)
 
 - [ ] Endgame / replayability
   - [ ] Bounty board
