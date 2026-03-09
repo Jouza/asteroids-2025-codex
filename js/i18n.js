@@ -55,6 +55,7 @@
       "game.difficulty.normal": "NORMAL",
       "game.difficulty.veteran": "VETERAN",
       "game.difficulty.ace": "ACE",
+      "hud.status.difficulty": "Diff: {difficulty}",
       "game.identity.pilot_changed": "Pilot selected: {pilot}",
       "game.identity.ship_changed": "Ship selected: {ship}",
       "game.identity.migrated_default": "Legacy identity reset to a supported pilot/ship. Review Run setup.",

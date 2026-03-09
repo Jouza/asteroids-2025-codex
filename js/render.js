@@ -2147,7 +2147,14 @@
         statusLeftY += statusGap;
         drawRow(statusLeftX, statusLeftY, `Flight: ${model.flightModel === "sim_lite" ? "SIM LITE" : "ARCADE"}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
         statusLeftY += statusGap;
-        drawRow(statusLeftX, statusLeftY, `Diff: ${tr(`game.difficulty.${model.runDifficultyId || "normal"}`)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        drawRow(
+          statusLeftX,
+          statusLeftY,
+          tr("hud.status.difficulty", { difficulty: tr(`game.difficulty.${model.runDifficultyId || "normal"}`) }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          statusColW
+        );
         statusLeftY += statusGap;
         drawRow(statusLeftX, statusLeftY, `Pilot L${pilot.level || 1} | Perks ${unlockedPerkIds.size}/${pilotPerks.length}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
         statusLeftY += statusGap;

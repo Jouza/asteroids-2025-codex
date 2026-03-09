@@ -687,6 +687,119 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(51515);
+    const ship = gameA.model.ship;
+    gameA.model.currentMission = {
+      modifierEffects: { shieldDrainPerSecond: 20 },
+      gravityAnomaly: null,
+      biomeHazards: []
+    };
+    ship.shield = 120;
+
+    gameA.model.runDifficultyId = "rookie";
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1.0);
+    const rookieShieldLoss = 120 - ship.shield;
+
+    ship.shield = 120;
+    gameA.model.runDifficultyId = "ace";
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1.0);
+    const aceShieldLoss = 120 - ship.shield;
+
+    assert(aceShieldLoss > rookieShieldLoss, "Ace should apply stronger hazard shield-drain pressure than Rookie");
+  });
+
+  tests.push(() => {
+    gameA.startGame(52525);
+    const moduleTemplate = {
+      uid: "h-salvage",
+      slot: "primary",
+      rarity: "common",
+      rarityLabel: "Common",
+      color: "#ddd",
+      name: "Harness Scrap",
+      baseName: "Harness Scrap",
+      affixes: [],
+      modifiers: {},
+      sellValue: 1,
+      salvageValue: 10
+    };
+    gameA.model.hangar.selectionSource = "inventory";
+    gameA.model.hangar.selectionIndex = 0;
+
+    gameA.model.runDifficultyId = "rookie";
+    gameA.model.inventory = [{ ...moduleTemplate, uid: "h-salvage-r" }];
+    gameA.model.salvageParts = 0;
+    gameA.hangarSystem.salvageSelected();
+    const rookieParts = gameA.model.salvageParts;
+
+    gameA.model.runDifficultyId = "ace";
+    gameA.model.inventory = [{ ...moduleTemplate, uid: "h-salvage-a" }];
+    gameA.model.salvageParts = 0;
+    gameA.hangarSystem.salvageSelected();
+    const aceParts = gameA.model.salvageParts;
+
+    assert(rookieParts > aceParts, "Rookie should yield more salvage parts than Ace for the same module");
+  });
+
+  tests.push(() => {
+    gameA.startGame(53535);
+    const dropCfg = gameA.config.loot.dropChance;
+    const cases = [];
+    for (const detail of Object.keys(dropCfg.asteroid || {})) {
+      cases.push({ source: "asteroid", detail, baseChance: dropCfg.asteroid[detail] ?? 0 });
+    }
+    for (const detail of Object.keys(dropCfg.ufo || {})) {
+      cases.push({ source: "ufo", detail, baseChance: dropCfg.ufo[detail] ?? 0 });
+    }
+    cases.push({ source: "miniBoss", detail: undefined, baseChance: dropCfg.miniBoss ?? 0 });
+
+    gameA.model.runDifficultyId = "rookie";
+    const rookieMul = gameA.getRunDifficultyMultipliers().lootDropMul;
+    gameA.model.runDifficultyId = "ace";
+    const aceMul = gameA.getRunDifficultyMultipliers().lootDropMul;
+
+    let selected = null;
+    for (const item of cases) {
+      const rookieChance = Math.max(0, Math.min(1, item.baseChance * rookieMul));
+      const aceChance = Math.max(0, Math.min(1, item.baseChance * aceMul));
+      if (rookieChance > aceChance && aceChance > 0 && rookieChance < 1) {
+        selected = { ...item, rookieChance, aceChance };
+        break;
+      }
+    }
+    assert(selected, "Harness could not find a loot source where Rookie and Ace drop chances differ");
+
+    const threshold = (selected.rookieChance + selected.aceChance) / 2;
+    gameA.rng = () => threshold;
+    gameA.createModuleDrop = () => ({
+      uid: "h-loot",
+      slot: "primary",
+      rarity: "common",
+      rarityLabel: "Common",
+      color: "#ddd",
+      name: "Harness Drop",
+      baseName: "Harness Drop",
+      affixes: [],
+      modifiers: {},
+      sellValue: 1,
+      salvageValue: 1
+    });
+
+    gameA.model.hangar.lootCrate = [];
+    gameA.model.runDifficultyId = "rookie";
+    gameA.tryDropModule(selected.source, selected.detail);
+    const rookieDrops = gameA.model.hangar.lootCrate.length;
+
+    gameA.model.hangar.lootCrate = [];
+    gameA.model.runDifficultyId = "ace";
+    gameA.tryDropModule(selected.source, selected.detail);
+    const aceDrops = gameA.model.hangar.lootCrate.length;
+
+    assert(rookieDrops === 1, "Rookie should pass the selected loot-drop threshold case");
+    assert(aceDrops === 0, "Ace should fail the selected loot-drop threshold case");
+  });
+
+  tests.push(() => {
     gameA.startGame(11111);
     const ship = gameA.model.ship;
     ship.invulnMs = 0;
