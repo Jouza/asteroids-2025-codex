@@ -361,7 +361,6 @@
     const frameDelta = game.applyFrameDelta(rawDelta);
 
     if (activeModal) {
-      if (activeModal === "pilot") renderPilotModal();
       game.render();
       input.endFrame();
       requestAnimationFrame(frame);
