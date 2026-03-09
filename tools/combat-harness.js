@@ -517,6 +517,53 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(8484);
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "gravity_anomaly",
+      modifierLabel: "Gravity Anomaly",
+      modifierEffects: {},
+      gravityAnomaly: {
+        x: 480,
+        y: 360,
+        radius: 300,
+        pullStrength: 14800,
+        coreRadius: 62,
+        maxShipPullAccel: 210,
+        maxAsteroidPullAccel: 130
+      }
+    };
+    const ufo = {
+      mode: "hunter",
+      x: 482,
+      y: 360,
+      vx: 0,
+      vy: 0,
+      radius: gameA.config.ufo.radius,
+      hp: 40,
+      maxHp: 40
+    };
+    gameA.model.ufos = [ufo];
+    const dt = 1 / 60;
+    let escapeImpulseDetected = false;
+    for (let i = 0; i < 240; i += 1) {
+      gameA.missionSystem.applyMissionEnvironmentalEffects(dt);
+      const offsetX = ufo.x - gameA.model.currentMission.gravityAnomaly.x;
+      const offsetY = ufo.y - gameA.model.currentMission.gravityAnomaly.y;
+      const velOutward = offsetX * ufo.vx + offsetY * ufo.vy;
+      if (velOutward > 120) escapeImpulseDetected = true;
+      ufo.x += ufo.vx * dt;
+      ufo.y += ufo.vy * dt;
+    }
+    const distFromCenter = Math.hypot(ufo.x - 480, ufo.y - 360);
+    assert(escapeImpulseDetected, "Gravity anomaly should apply anti-stuck escape impulse for UFO in core");
+    assert(distFromCenter > 45, `UFO should not stay stuck in anomaly core (dist=${distFromCenter.toFixed(2)})`);
+  });
+
+  tests.push(() => {
     gameA.startGame(9191);
     gameA.model.ship.invulnMs = 0;
     const before = gameA.model.hitstopSeconds;

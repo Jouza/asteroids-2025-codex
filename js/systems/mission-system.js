@@ -431,7 +431,7 @@
 
       const anomaly = mission.gravityAnomaly;
       if (anomaly) {
-        const applyPull = (entity, scalar = 1) => {
+        const applyPull = (entity, scalar = 1, maxAccelOverride = null) => {
           const dx = anomaly.x - entity.x;
           const dy = anomaly.y - entity.y;
           const rawDist = Math.hypot(dx, dy);
@@ -445,7 +445,9 @@
             entity === ship &&
             (g.input.isDown("ArrowUp") || g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight"));
           const escapeFactor = thrusting ? anomaly.escapeThrustPullMultiplier ?? 0.6 : 1;
-          const maxAccel = entity === ship ? anomaly.maxShipPullAccel ?? 210 : anomaly.maxAsteroidPullAccel ?? 130;
+          const maxAccel =
+            maxAccelOverride ??
+            (entity === ship ? anomaly.maxShipPullAccel ?? 210 : anomaly.maxAsteroidPullAccel ?? 130);
           const accelUncapped = ((anomaly.pullStrength * falloff) / Math.max(24, dist)) * scalar * coreFactor * escapeFactor;
           const accel = Math.min(maxAccel, Math.max(0, accelUncapped));
           const dirX = dx / dist;
@@ -456,6 +458,34 @@
 
         applyPull(ship, 1);
         for (const asteroid of g.model.asteroids) applyPull(asteroid, 0.42);
+        const ufoPullScalar = anomaly.ufoPullScalar ?? 0.32;
+        const ufoMaxPullAccel = anomaly.maxUfoPullAccel ?? 92;
+        const coreRadius = Math.max(16, anomaly.coreRadius ?? 60);
+        const ufoCoreEscapeRadius = Math.max(16, anomaly.ufoCoreEscapeRadius ?? coreRadius * 0.62);
+        const ufoCoreEscapeSeconds = Math.max(0.1, anomaly.ufoCoreEscapeSeconds ?? 0.7);
+        const ufoEscapeCooldownSeconds = Math.max(0.12, anomaly.ufoEscapeCooldownSeconds ?? 1.05);
+        const ufoEscapeImpulse = Math.max(10, anomaly.ufoEscapeImpulse ?? 126);
+        const ufoTangentialImpulse = Math.max(0, anomaly.ufoTangentialImpulse ?? 88);
+        for (const ufo of g.model.ufos) {
+          applyPull(ufo, ufoPullScalar, ufoMaxPullAccel);
+          ufo.anomalyEscapeCooldown = Math.max(0, (ufo.anomalyEscapeCooldown ?? 0) - dt);
+          const offsetX = ufo.x - anomaly.x;
+          const offsetY = ufo.y - anomaly.y;
+          const distToCenter = Math.hypot(offsetX, offsetY);
+          const insideCore = distToCenter <= ufoCoreEscapeRadius + (ufo.radius ?? 0);
+          ufo.anomalyCoreTimer = insideCore ? (ufo.anomalyCoreTimer ?? 0) + dt : 0;
+          if (ufo.anomalyCoreTimer < ufoCoreEscapeSeconds || ufo.anomalyEscapeCooldown > 0) continue;
+          const angleOut = Math.atan2(offsetY || 0.0001, offsetX || 0.0001);
+          const tangentSign = (ufo.mode === "swarm" || ufo.mode === "kamikaze" ? 1 : -1) * (g.rng() < 0.5 ? -1 : 1);
+          const tangentAngle = angleOut + tangentSign * (Math.PI * 0.5);
+          const impulseScale = 0.9 + g.rng() * 0.2;
+          ufo.vx += Math.cos(angleOut) * ufoEscapeImpulse * impulseScale;
+          ufo.vy += Math.sin(angleOut) * ufoEscapeImpulse * impulseScale;
+          ufo.vx += Math.cos(tangentAngle) * ufoTangentialImpulse * impulseScale;
+          ufo.vy += Math.sin(tangentAngle) * ufoTangentialImpulse * impulseScale;
+          ufo.anomalyCoreTimer = 0;
+          ufo.anomalyEscapeCooldown = ufoEscapeCooldownSeconds;
+        }
       }
 
       const hazards = mission.biomeHazards || [];
