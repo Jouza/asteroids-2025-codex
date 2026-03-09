@@ -378,6 +378,29 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(7272);
+    gameA.model.sector = 10;
+    gameA.model.runMode = "campaign";
+    gameA.missionSystem.startMission(2);
+    const campaignBudget = gameA.model.missionSpawnBudget;
+    const campaignInterval = gameA.model.currentMission.spawnIntervalSeconds;
+    const campaignConcurrent = gameA.model.currentMission.maxConcurrentUfos;
+    assert(gameA.getEndlessCreditsMultiplier() === 1, "Campaign credits multiplier should stay at 1.0");
+
+    gameA.model.runMode = "endless";
+    gameA.missionSystem.startMission(2);
+    const endlessBudget = gameA.model.missionSpawnBudget;
+    const endlessInterval = gameA.model.currentMission.spawnIntervalSeconds;
+    const endlessConcurrent = gameA.model.currentMission.maxConcurrentUfos;
+    const endlessCreditsMul = gameA.getEndlessCreditsMultiplier();
+
+    assert(endlessBudget >= campaignBudget, "Endless pacing should not reduce objective budget at high sectors");
+    assert(endlessInterval < campaignInterval, "Endless pacing should increase spawn pressure via shorter interval");
+    assert(endlessConcurrent >= campaignConcurrent, "Endless pacing should not reduce concurrent UFO pressure");
+    assert(endlessCreditsMul < 1, "Endless economy should damp credits at high sectors");
+  });
+
+  tests.push(() => {
     gameA.startGame(8181);
     gameA.model.currentMission = {
       type: "survive",

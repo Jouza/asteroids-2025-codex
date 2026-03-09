@@ -43,6 +43,50 @@
       return 1;
     }
 
+    getEndlessTuning(level) {
+      const g = this.game;
+      const endlessCfg = g.config.mission?.endless || {};
+      if (g.model.runMode !== "endless") {
+        return {
+          difficultyMul: 1,
+          spawnIntervalMul: 1,
+          objectiveMul: 1,
+          surviveTimerMul: 1,
+          extraConcurrent: 0
+        };
+      }
+      const startSector = Math.max(1, Math.floor(endlessCfg.startSector ?? 5));
+      const sectorDepth = Math.max(0, level - startSector);
+      const difficultyBonus = Math.min(
+        Math.max(0, endlessCfg.maxDifficultyBonus ?? 0.5),
+        sectorDepth * Math.max(0, endlessCfg.difficultyBonusPerSector ?? 0.04)
+      );
+      const spawnReduction = Math.min(
+        Math.max(0, endlessCfg.maxSpawnIntervalReduction ?? 0.28),
+        sectorDepth * Math.max(0, endlessCfg.spawnIntervalReductionPerSector ?? 0.02)
+      );
+      const objectiveBonus = Math.min(
+        Math.max(0, endlessCfg.maxObjectiveBudgetBonus ?? 0.24),
+        sectorDepth * Math.max(0, endlessCfg.objectiveBudgetBonusPerSector ?? 0.02)
+      );
+      const timerReduction = Math.min(
+        Math.max(0, endlessCfg.maxSurviveTimerReduction ?? 0.22),
+        sectorDepth * Math.max(0, endlessCfg.surviveTimerReductionPerSector ?? 0.02)
+      );
+      const extraEvery = Math.max(1, Math.floor(endlessCfg.extraConcurrentEverySectors ?? 3));
+      const extraConcurrent = Math.min(
+        Math.max(0, Math.floor(endlessCfg.extraConcurrentCap ?? 2)),
+        Math.floor(sectorDepth / extraEvery)
+      );
+      return {
+        difficultyMul: 1 + difficultyBonus,
+        spawnIntervalMul: 1 - spawnReduction,
+        objectiveMul: 1 + objectiveBonus,
+        surviveTimerMul: 1 - timerReduction,
+        extraConcurrent
+      };
+    }
+
     pickWeighted(entries, fallback) {
       const g = this.game;
       const valid = entries.filter((entry) => (entry.weight ?? 0) > 0);
@@ -239,7 +283,8 @@
       const g = this.game;
       const type = this.getMissionTypeByIndex(missionIndex);
       const level = g.model.sector;
-      const difficulty = this.getMissionDifficulty(level);
+      const endless = this.getEndlessTuning(level);
+      const difficulty = this.getMissionDifficulty(level) * endless.difficultyMul;
       const context = this.buildMissionContext(level);
       g.model.currentMission = {
         type,
@@ -269,7 +314,7 @@
       if (type === "survive") {
         const baseDuration =
           missionCfg.survive.baseDurationSeconds + (level - 1) * missionCfg.survive.durationStepSeconds;
-        g.model.missionTimer = Math.max(9, this.applyMissionVariance(baseDuration / difficulty, 0.08));
+        g.model.missionTimer = Math.max(9, this.applyMissionVariance((baseDuration / difficulty) * endless.surviveTimerMul, 0.08));
         g.model.missionSpawnTimer = 0.1;
         g.enemySystem.scheduleNextUfoSpawn();
         const spawnLargeBase = level >= missionCfg.survive.extraLargeEverySectors ? 2 : 1 + (difficulty >= 1.2 ? 1 : 0);
@@ -283,6 +328,7 @@
           level
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.72, difficulty);
+        g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.label = tr("mission.label.survive");
         g.model.currentMission.objectiveText = tr("mission.hold_for", { seconds: g.model.missionTimer.toFixed(0) });
       }
@@ -290,13 +336,17 @@
       if (type === "ufo_hunt") {
         const baseKills =
           missionCfg.ufoHunt.baseKills + Math.floor((level - 1) / 2) * missionCfg.ufoHunt.killStep;
-        g.model.missionSpawnBudget = Math.max(1, Math.round(this.applyMissionVariance(baseKills * difficulty, 0.1)));
+        g.model.missionSpawnBudget = Math.max(
+          1,
+          Math.round(this.applyMissionVariance(baseKills * difficulty * endless.objectiveMul, 0.1))
+        );
         g.model.missionSpawnTimer = 0.2;
         g.model.currentMission.maxConcurrentUfos = Math.min(
-          missionCfg.ufoHunt.maxConcurrentCap,
+          missionCfg.ufoHunt.maxConcurrentCap + endless.extraConcurrent,
           missionCfg.ufoHunt.maxConcurrentUfos +
             Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEverySectors) +
-            (difficulty >= 1.25 ? 1 : 0)
+            (difficulty >= 1.25 ? 1 : 0) +
+            endless.extraConcurrent
         );
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.ufoHunt.spawnIntervalSeconds,
@@ -305,6 +355,7 @@
           level
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
+        g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.label = tr("mission.label.ufo_hunt");
         g.model.currentMission.objectiveText = tr("mission.destroy_ufos", { kills: 0, target: g.model.missionSpawnBudget });
       }
@@ -312,7 +363,10 @@
       if (type === "asteroid_storm") {
         const baseTarget =
           missionCfg.asteroidStorm.baseTarget + (level - 1) * missionCfg.asteroidStorm.targetStep;
-        g.model.missionSpawnBudget = Math.max(6, Math.round(this.applyMissionVariance(baseTarget * difficulty, 0.1)));
+        g.model.missionSpawnBudget = Math.max(
+          6,
+          Math.round(this.applyMissionVariance(baseTarget * difficulty * endless.objectiveMul, 0.1))
+        );
         const initialLarge =
           missionCfg.asteroidStorm.initialLargeCount + Math.floor((level - 1) / 4) + (difficulty >= 1.2 ? 1 : 0);
         const initialMedium =
@@ -329,6 +383,7 @@
           level
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
+        g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.label = tr("mission.label.asteroid_storm");
         g.model.currentMission.objectiveText = tr("mission.break_asteroids", {
           kills: 0,

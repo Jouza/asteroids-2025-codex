@@ -761,6 +761,21 @@
           asteroid_storm: 1.06,
           mini_boss: 1.16
         }
+      },
+      endless: {
+        startSector: 5,
+        difficultyBonusPerSector: 0.045,
+        maxDifficultyBonus: 0.5,
+        spawnIntervalReductionPerSector: 0.025,
+        maxSpawnIntervalReduction: 0.3,
+        objectiveBudgetBonusPerSector: 0.02,
+        maxObjectiveBudgetBonus: 0.24,
+        surviveTimerReductionPerSector: 0.02,
+        maxSurviveTimerReduction: 0.22,
+        extraConcurrentEverySectors: 3,
+        extraConcurrentCap: 2,
+        creditsDampingPerSector: 0.06,
+        minCreditsMultiplier: 0.55
       }
     },
     missionDirector: {

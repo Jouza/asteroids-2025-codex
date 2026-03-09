@@ -2051,13 +2051,30 @@
       const scored = Math.round(basePoints * comboMultiplier * scoreMissionMult);
       this.model.score += scored;
       this.model.telemetry.scoreEarned += scored;
+      const economyMul = this.getEndlessCreditsMultiplier();
       const creditsGain = Math.max(
         this.config.economy.minCreditsPerKill,
-        Math.floor(basePoints * this.config.economy.creditsPerScore * creditsMissionMult * (1 + (modifiers.creditsGainPct ?? 0)))
+        Math.floor(
+          basePoints *
+            this.config.economy.creditsPerScore *
+            creditsMissionMult *
+            (1 + (modifiers.creditsGainPct ?? 0)) *
+            economyMul
+        )
       );
       this.model.credits += creditsGain;
       this.model.telemetry.creditsEarned += creditsGain;
       this.grantPilotXp(basePoints * this.config.pilot.xp.perScore, "score");
+    }
+
+    getEndlessCreditsMultiplier(sector = this.model.sector) {
+      if (this.model.runMode !== "endless") return 1;
+      const endlessCfg = this.config.mission?.endless || {};
+      const startSector = Math.max(1, Math.floor(endlessCfg.startSector ?? 5));
+      const sectorDepth = Math.max(0, sector - startSector);
+      const damping = sectorDepth * Math.max(0, endlessCfg.creditsDampingPerSector ?? 0.06);
+      const minMul = this.clamp(Number(endlessCfg.minCreditsMultiplier ?? 0.55), 0.1, 1);
+      return this.clamp(1 - damping, minMul, 1);
     }
 
     recordPrimaryShot() {
@@ -2110,7 +2127,13 @@
     formatBiomeEventBonuses(event) {
       if (!event) return "";
       const parts = [];
-      if ((event.credits ?? 0) > 0) parts.push(tr("mission.event.bonus.credits", { value: Math.floor(event.credits) }));
+      if ((event.credits ?? 0) > 0) {
+        parts.push(
+          tr("mission.event.bonus.credits", {
+            value: Math.floor((event.credits ?? 0) * this.getEndlessCreditsMultiplier())
+          })
+        );
+      }
       if ((event.salvageParts ?? 0) > 0) {
         parts.push(tr("mission.event.bonus.salvage", { value: Math.floor(event.salvageParts) }));
       }
@@ -2129,9 +2152,10 @@
       const event = mission.biomeMiniEvent;
       if (!event || typeof event !== "object") return;
       const ship = this.model.ship;
+      const economyMul = this.getEndlessCreditsMultiplier();
 
       if ((event.credits ?? 0) > 0) {
-        const gain = Math.max(0, Math.floor(event.credits));
+        const gain = Math.max(0, Math.floor(event.credits * economyMul));
         this.model.credits += gain;
         this.model.telemetry.creditsEarned += gain;
       }
@@ -2517,8 +2541,9 @@
       const rewards = this.config.mission.miniBoss.rewards;
       const isFinalEncounter = this.model.currentMission?.isFinalEncounter;
       const rewardMultiplier = isFinalEncounter ? this.config.run.finalBossRewardMultiplier ?? 1 : 1;
+      const economyMul = this.getEndlessCreditsMultiplier();
       const creditsGain = Math.round(
-        (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) * rewardMultiplier
+        (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) * rewardMultiplier * economyMul
       );
       this.registerScore(Math.round(rewards.scoreReward * rewardMultiplier), true);
       this.model.credits += creditsGain;

@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Endless pacing pass po unlocku
+  - [x] Endless tuning vrstva od sektoru 5: vyssi difficulty, rychlejsi spawn intervaly, vyssi objective pressure
+  - [x] Anti-snowball ekonomika v endless: kreditovy damping pro kill rewards, biome event credits a mini-boss credits
+  - [x] Harness coverage pro endless pacing/economy (budget/interval/concurrency/credits multiplier)
+
 - [x] Pilot Console UX overhaul (hero + RPG readability)
   - [x] Rozsireny modal layout (sirsi panel) s hero hlavickou: velke jmeno pilota, portrait slot, bio, XP progress
   - [x] Attributes prevedeny na karty s progress bary, popisem vyznamu a dopadu levelovani

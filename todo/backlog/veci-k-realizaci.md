@@ -39,7 +39,7 @@
   - [ ] Samostatna reward tabulka pro final clear (clear bonus/meta reward)
   - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
   - [x] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
-  - [ ] Endless pacing pass po unlocku (skalovani, anti-snowball ekonomika, delka runu)
+  - [x] Endless pacing pass po unlocku (skalovani, anti-snowball ekonomika, delka runu)
 
 - [ ] Help / codex vrstva
   - [x] Samostatna help stranka s objekty, hazardy, chovanim a dopadem
