@@ -35,7 +35,7 @@
     getShopActionCount() {
       const offers = this.game.model.hangar.shopItems;
       const offerCount = Array.isArray(offers) && offers.length > 0 ? offers.length : this.getShopItems().length;
-      return offerCount + 5;
+      return offerCount + 6;
     }
 
     handleHangarInput() {
@@ -104,7 +104,10 @@
       const g = this.game;
       const h = g.model.hangar;
       if (h.navSection === "shop") {
-        const hangarItemsCount = g.config.hangar.items.length;
+        const offers = Array.isArray(g.model.hangar.shopItems) && g.model.hangar.shopItems.length > 0
+          ? g.model.hangar.shopItems
+          : this.getShopItems();
+        const hangarItemsCount = offers.length;
         if (h.shopIndex < hangarItemsCount) {
           this.purchaseHangarItem(h.shopIndex);
           return;
@@ -113,8 +116,9 @@
         if (actionIndex === 0) this.cycleLoadoutSlot("primary");
         else if (actionIndex === 1) this.cycleLoadoutSlot("secondary");
         else if (actionIndex === 2) this.cycleLoadoutSlot("utility");
-        else if (actionIndex === 3) this.sellSelected();
-        else if (actionIndex === 4) this.salvageSelected();
+        else if (actionIndex === 3) this.cycleFactionIntelSelection(1);
+        else if (actionIndex === 4) this.sellSelected();
+        else if (actionIndex === 5) this.salvageSelected();
         return;
       }
       if (h.navSection === "loot") {
@@ -414,6 +418,12 @@
             : g.model.loadout.utilityLabel;
       g.model.hangar.message = tr("hangar.active_slot", { slot: slotName, label });
       g.saveProfile("hangar_loadout");
+    }
+
+    cycleFactionIntelSelection(step = 1) {
+      const g = this.game;
+      if (typeof g.cycleFactionIntel !== "function") return;
+      g.cycleFactionIntel(step);
     }
 
     changePilotAttributeSelection(step) {

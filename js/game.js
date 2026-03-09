@@ -190,6 +190,7 @@
           engine: null,
           chipset: null
         },
+        factionIntelId: "balanced",
         factions: createDefaultFactionProgression(),
         identity: createDefaultIdentitySelection(),
         salvageParts: 0,
@@ -277,6 +278,7 @@
         hangar: {
           message: tr("game.hangar.controls"),
           shopItems: [],
+          factionIntelId: "balanced",
           lootCrate: [],
           selectionSource: "crate",
           selectionIndex: 0,
@@ -405,6 +407,46 @@
       return defs.filter((entry) => entry && typeof entry.id === "string" && entry.id.length > 0);
     }
 
+    getFactionIntelDefs() {
+      const defs = this.config.faction?.intelOptions;
+      if (!Array.isArray(defs) || !defs.length) {
+        return [
+          { id: "balanced", pressureMul: 1, creditsMul: 1, salvageMul: 1, reputationDelta: {} },
+          { id: "helix_contract", pressureMul: 1.06, creditsMul: 1.12, salvageMul: 0.9, reputationDelta: { helix_union: 2, drift_cartel: -1 } },
+          { id: "drift_contract", pressureMul: 1.06, creditsMul: 0.9, salvageMul: 1.12, reputationDelta: { helix_union: -1, drift_cartel: 2 } }
+        ];
+      }
+      return defs.filter((entry) => entry && typeof entry.id === "string" && entry.id.length > 0);
+    }
+
+    sanitizeFactionIntelId(id) {
+      const defs = this.getFactionIntelDefs();
+      const fallback = defs.find((entry) => entry.id === "balanced")?.id || defs[0]?.id || "balanced";
+      if (!id) return fallback;
+      return defs.some((entry) => entry.id === id) ? id : fallback;
+    }
+
+    getSelectedFactionIntelProfile() {
+      const defs = this.getFactionIntelDefs();
+      const selectedId = this.sanitizeFactionIntelId(this.model.hangar?.factionIntelId);
+      return defs.find((entry) => entry.id === selectedId) || defs[0];
+    }
+
+    cycleFactionIntel(direction = 1) {
+      const defs = this.getFactionIntelDefs();
+      if (!defs.length) return false;
+      const currentId = this.sanitizeFactionIntelId(this.model.hangar?.factionIntelId);
+      const currentIndex = defs.findIndex((entry) => entry.id === currentId);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (safeIndex + direction + defs.length) % defs.length;
+      const next = defs[nextIndex];
+      this.model.hangar.factionIntelId = next.id;
+      this.model.hangar.message = tr("game.faction.intel_changed", { intel: tr(`game.faction.intel.${next.id}`) });
+      this.saveProfile("faction_intel_change");
+      this.hud.sync(this.model);
+      return true;
+    }
+
     getFactionRepBounds() {
       const minCfg = Number(this.config.faction?.repMin);
       const maxCfg = Number(this.config.faction?.repMax);
@@ -524,6 +566,39 @@
       };
     }
 
+    getFactionIntelRewardMultipliers() {
+      const intel = this.model.currentMission?.intelProfile || this.getSelectedFactionIntelProfile();
+      return {
+        creditsMul: this.clamp(Number(intel?.creditsMul) || 1, 0.7, 1.5),
+        salvageMul: this.clamp(Number(intel?.salvageMul) || 1, 0.7, 1.5)
+      };
+    }
+
+    applyMissionFactionIntelReputation() {
+      const mission = this.model.currentMission;
+      if (!mission || mission.intelRepApplied) return 0;
+      const intel = mission.intelProfile || this.getSelectedFactionIntelProfile();
+      const repDelta = intel?.reputationDelta;
+      if (!repDelta || typeof repDelta !== "object") {
+        mission.intelRepApplied = true;
+        return 0;
+      }
+      let total = 0;
+      for (const faction of this.getFactionDefs()) {
+        const delta = Math.floor(Number(repDelta[faction.id]) || 0);
+        if (delta === 0) continue;
+        const applied = this.addFactionReputation(faction.id, delta, {
+          reasonKey: "game.faction.reason.intel_contract",
+          announce: false,
+          saveProfile: false
+        });
+        total += Math.abs(applied);
+      }
+      mission.intelRepApplied = true;
+      if (total > 0) this.saveProfile("faction_intel_contract");
+      return total;
+    }
+
     getFactionShopItemCost(itemId, baseCost) {
       const defs = this.getFactionDefs();
       let multiplier = 1;
@@ -616,6 +691,7 @@
       safe.progression.runDifficultyId = difficultyDefs.some((entry) => entry.id === requestedDifficultyId)
         ? requestedDifficultyId
         : fallbackDifficultyId;
+      safe.progression.factionIntelId = this.sanitizeFactionIntelId(progression.factionIntelId);
 
       const validPrimary = this.config.loadout.primary[progression.loadout?.primaryId];
       const validSecondary = this.config.loadout.secondary[progression.loadout?.secondaryId];
@@ -757,6 +833,7 @@
       return {
         flightModel: this.model.flightModel,
         runDifficultyId: this.model.runDifficultyId,
+        factionIntelId: this.model.hangar.factionIntelId,
         loadout: {
           primaryId: this.model.loadout.primaryId,
           secondaryId: this.model.loadout.secondaryId,
@@ -781,6 +858,7 @@
       this.model.runDifficultyId = difficultyDefs.some((entry) => entry.id === progression.runDifficultyId)
         ? progression.runDifficultyId
         : fallbackDifficultyId;
+      this.model.hangar.factionIntelId = this.sanitizeFactionIntelId(progression.factionIntelId);
       this.model.loadout.primaryId = progression.loadout.primaryId;
       this.model.loadout.secondaryId = progression.loadout.secondaryId;
       this.model.loadout.utilityId = progression.loadout.utilityId;
@@ -940,10 +1018,12 @@
       const selectedIdentity = deepClone(this.model.identity || profile.identity || defaults.identity);
       const selectedFlightModel = this.model.flightModel === "sim_lite" ? "sim_lite" : "arcade";
       const selectedDifficultyId = this.model.runDifficultyId || profile.runDifficultyId || defaults.runDifficultyId;
+      const selectedIntelId = this.sanitizeFactionIntelId(this.model.hangar?.factionIntelId || profile.factionIntelId);
       const selectedFactions = deepClone(this.model.factions || profile.factions || defaults.factions);
       const unlocks = deepClone(profile.unlocks || defaults.unlocks);
       profile.flightModel = selectedFlightModel;
       profile.runDifficultyId = selectedDifficultyId;
+      profile.factionIntelId = selectedIntelId;
       profile.loadout = deepClone(defaults.loadout);
       profile.unlocks = unlocks;
       profile.upgrades = deepClone(defaults.upgrades);
@@ -2325,6 +2405,7 @@
       const modifiers = this.getModuleModifiers();
       const runDiff = this.getRunDifficultyMultipliers();
       const factionReward = this.getFactionRewardMultipliers();
+      const intelReward = this.getFactionIntelRewardMultipliers();
       const comboMultiplier = this.model.comboScoringEnabled ? this.model.comboMultiplier : 1;
       const scored = Math.round(basePoints * comboMultiplier * scoreMissionMult);
       this.model.score += scored;
@@ -2339,7 +2420,8 @@
             (1 + (modifiers.creditsGainPct ?? 0)) *
             economyMul *
             runDiff.economyCreditsMul *
-            factionReward.creditsMul
+            factionReward.creditsMul *
+            intelReward.creditsMul
         )
       );
       this.model.credits += creditsGain;
@@ -2385,6 +2467,7 @@
         biomeId: mission.biomeId,
         missionAudioProfile: mission.biomeAudio
       });
+      this.applyMissionFactionIntelReputation();
       this.applyMissionFactionReputation(this.config.faction?.missionStartRepGain ?? 0, "game.faction.reason.mission_start", {
         announce: false,
         saveReason: "faction_mission_start"
@@ -2412,12 +2495,17 @@
       if (!event) return "";
       const runDiff = this.getRunDifficultyMultipliers();
       const factionReward = this.getFactionRewardMultipliers();
+      const intelReward = this.getFactionIntelRewardMultipliers();
       const parts = [];
       if ((event.credits ?? 0) > 0) {
         parts.push(
           tr("mission.event.bonus.credits", {
             value: Math.floor(
-              (event.credits ?? 0) * this.getEndlessCreditsMultiplier() * runDiff.economyCreditsMul * factionReward.creditsMul
+              (event.credits ?? 0) *
+                this.getEndlessCreditsMultiplier() *
+                runDiff.economyCreditsMul *
+                factionReward.creditsMul *
+                intelReward.creditsMul
             )
           })
         );
@@ -2425,7 +2513,7 @@
       if ((event.salvageParts ?? 0) > 0) {
         parts.push(
           tr("mission.event.bonus.salvage", {
-            value: Math.floor(event.salvageParts * runDiff.economySalvageMul * factionReward.salvageMul)
+            value: Math.floor(event.salvageParts * runDiff.economySalvageMul * factionReward.salvageMul * intelReward.salvageMul)
           })
         );
       }
@@ -2447,16 +2535,20 @@
       const economyMul = this.getEndlessCreditsMultiplier();
       const runDiff = this.getRunDifficultyMultipliers();
       const factionReward = this.getFactionRewardMultipliers();
+      const intelReward = this.getFactionIntelRewardMultipliers();
 
       if ((event.credits ?? 0) > 0) {
-        const gain = Math.max(0, Math.floor(event.credits * economyMul * runDiff.economyCreditsMul * factionReward.creditsMul));
+        const gain = Math.max(
+          0,
+          Math.floor(event.credits * economyMul * runDiff.economyCreditsMul * factionReward.creditsMul * intelReward.creditsMul)
+        );
         this.model.credits += gain;
         this.model.telemetry.creditsEarned += gain;
       }
       if ((event.salvageParts ?? 0) > 0) {
         this.model.salvageParts += Math.max(
           0,
-          Math.floor(event.salvageParts * runDiff.economySalvageMul * factionReward.salvageMul)
+          Math.floor(event.salvageParts * runDiff.economySalvageMul * factionReward.salvageMul * intelReward.salvageMul)
         );
       }
       if (ship) {
@@ -2850,12 +2942,14 @@
       const economyMul = this.getEndlessCreditsMultiplier();
       const runDiff = this.getRunDifficultyMultipliers();
       const factionReward = this.getFactionRewardMultipliers();
+      const intelReward = this.getFactionIntelRewardMultipliers();
       const creditsGain = Math.round(
         (rewards.creditsBase + Math.max(0, this.model.sector - 1) * rewards.creditsStep) *
           rewardMultiplier *
           economyMul *
           runDiff.economyCreditsMul *
-          factionReward.creditsMul
+          factionReward.creditsMul *
+          intelReward.creditsMul
       );
       this.registerScore(Math.round(rewards.scoreReward * rewardMultiplier), true);
       this.model.credits += creditsGain;

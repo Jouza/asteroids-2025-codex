@@ -17,18 +17,8 @@
   - [x] MVP: Skill perky + unlock flow v hangaru
   - [ ] Rozsireni tree na 10-12+ perku + branch synergie
 
-- [ ] Frakce a reputace (MVP)
-  - [x] 2 frakce na start
-  - [x] Data model + config (faction definice, rep limity, default profil migrace)
-  - [x] Reputation gain/loss (mission start/clear + biome event hooky)
-  - [x] Frakcni rewardy + odlisne nabidky shopu
-  - [x] Hangar/UI status reputace + i18n coverage
-  - [x] Harness coverage: reputation clamp limity
-  - [x] Harness coverage: persistence + gain/loss flow
-  - [x] Harness coverage: shop rozdily podle reputace
-
 - [ ] Frakce a reputace (Phase 2+ rozsireni)
-  - [ ] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)
+  - [x] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)
   - [ ] Neutral/black-market vendor jako treti obchodni vrstva
   - [ ] Reputation thresholdy (`-20/0/+20/+50`) s odemykatelnymi pasivy
   - [ ] Contraband mechanika (silny item za reputacni/bounty riziko)

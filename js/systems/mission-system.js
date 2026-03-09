@@ -286,7 +286,12 @@
       const level = g.model.sector;
       const endless = this.getEndlessTuning(level);
       const runDiff = typeof g.getRunDifficultyMultipliers === "function" ? g.getRunDifficultyMultipliers() : { pressureMul: 1 };
-      const difficulty = this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1);
+      const intelProfile =
+        typeof g.getSelectedFactionIntelProfile === "function"
+          ? g.getSelectedFactionIntelProfile()
+          : { id: "balanced", pressureMul: 1, creditsMul: 1, salvageMul: 1, reputationDelta: {} };
+      const intelPressureMul = Number(intelProfile.pressureMul) || 1;
+      const difficulty = this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1) * intelPressureMul;
       const context = this.buildMissionContext(level);
       g.model.currentMission = {
         type,
@@ -296,6 +301,8 @@
         isFinalEncounter: false,
         biomeIntroTimer: 1.9,
         difficulty,
+        intelProfile,
+        intelRepApplied: false,
         ...context
       };
       g.model.missionTimer = 0;

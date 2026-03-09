@@ -2106,16 +2106,23 @@
         pushAction(`Primary: ${model.loadout.primaryLabel}`, "#ffd785", loadoutBaseIndex);
         pushAction(`Secondary: ${model.loadout.secondaryLabel}`, "#ffd785", loadoutBaseIndex + 1);
         pushAction(`Utility: ${model.loadout.utilityLabel}`, "#ffd785", loadoutBaseIndex + 2);
+        pushHeader(tr("render.hangar.shop_group_intel"));
+        const intelId = hangar.factionIntelId || "balanced";
+        pushAction(
+          tr("render.hangar.intel_choice", { intel: tr(`game.faction.intel.${intelId}`) }),
+          "#ffd785",
+          loadoutBaseIndex + 3
+        );
         pushHeader(tr("render.hangar.shop_group_inventory"));
         pushAction(
           `Sell selected (+${selectedModule?.sellValue ?? 0}cr)`,
           selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
-          loadoutBaseIndex + 3
+          loadoutBaseIndex + 4
         );
         pushAction(
           `Salvage selected (+${selectedModule?.salvageValue ?? 0} parts)`,
           selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
-          loadoutBaseIndex + 4
+          loadoutBaseIndex + 5
         );
         const rowStep = 14;
         for (let i = 0; i < actionRows.length; i += 1) {

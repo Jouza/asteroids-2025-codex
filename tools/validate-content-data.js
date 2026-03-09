@@ -45,6 +45,16 @@ function validateContentData(contentData, issues) {
     "faction.rewardSalvagePerRep100 must be >= 0",
     issues
   );
+  const intelOptions = contentData.faction?.intelOptions;
+  assert(Array.isArray(intelOptions) && intelOptions.length >= 1, "faction.intelOptions must be non-empty", issues);
+  if (Array.isArray(intelOptions)) {
+    for (const [index, intel] of intelOptions.entries()) {
+      assert(typeof intel.id === "string" && intel.id.length > 0, `faction.intelOptions[${index}] id is required`, issues);
+      assert(Number.isFinite(Number(intel.pressureMul)) && Number(intel.pressureMul) > 0, `intel ${intel.id} pressureMul must be > 0`, issues);
+      assert(Number.isFinite(Number(intel.creditsMul)) && Number(intel.creditsMul) > 0, `intel ${intel.id} creditsMul must be > 0`, issues);
+      assert(Number.isFinite(Number(intel.salvageMul)) && Number(intel.salvageMul) > 0, `intel ${intel.id} salvageMul must be > 0`, issues);
+    }
+  }
 
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);

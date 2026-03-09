@@ -24,7 +24,30 @@
       rewardSalvagePerRep100: 0.1,
       shopBiasThresholdRep: 15,
       shopPriceInfluencePerRep100: 0.14,
-      shopPenaltyInfluencePerRep100: 0.06
+      shopPenaltyInfluencePerRep100: 0.06,
+      intelOptions: [
+        {
+          id: "balanced",
+          pressureMul: 1.0,
+          creditsMul: 1.0,
+          salvageMul: 1.0,
+          reputationDelta: {}
+        },
+        {
+          id: "helix_contract",
+          pressureMul: 1.06,
+          creditsMul: 1.12,
+          salvageMul: 0.9,
+          reputationDelta: { helix_union: 2, drift_cartel: -1 }
+        },
+        {
+          id: "drift_contract",
+          pressureMul: 1.06,
+          creditsMul: 0.9,
+          salvageMul: 1.12,
+          reputationDelta: { helix_union: -1, drift_cartel: 2 }
+        }
+      ]
     },
     run: {
       difficultyPresets: [

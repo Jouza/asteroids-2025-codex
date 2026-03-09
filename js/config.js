@@ -670,7 +670,30 @@
       rewardSalvagePerRep100: 0.1,
       shopBiasThresholdRep: 15,
       shopPriceInfluencePerRep100: 0.14,
-      shopPenaltyInfluencePerRep100: 0.06
+      shopPenaltyInfluencePerRep100: 0.06,
+      intelOptions: [
+        {
+          id: "balanced",
+          pressureMul: 1.0,
+          creditsMul: 1.0,
+          salvageMul: 1.0,
+          reputationDelta: {}
+        },
+        {
+          id: "helix_contract",
+          pressureMul: 1.06,
+          creditsMul: 1.12,
+          salvageMul: 0.9,
+          reputationDelta: { helix_union: 2, drift_cartel: -1 }
+        },
+        {
+          id: "drift_contract",
+          pressureMul: 1.06,
+          creditsMul: 0.9,
+          salvageMul: 1.12,
+          reputationDelta: { helix_union: -1, drift_cartel: 2 }
+        }
+      ]
     },
     run: {
       finalSector: 4,
@@ -1072,7 +1095,8 @@
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
       { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" },
       { ok: Array.isArray(config.faction?.definitions) && config.faction.definitions.length >= 2, msg: "faction.definitions missing" },
-      { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" }
+      { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" },
+      { ok: Array.isArray(config.faction?.intelOptions) && config.faction.intelOptions.length >= 1, msg: "faction.intelOptions missing" }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {

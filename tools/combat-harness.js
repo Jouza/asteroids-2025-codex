@@ -109,6 +109,7 @@ function runTests() {
     gameA.model.upgrades.fireRateLevel = 3;
     gameA.model.loadout.primaryId = "rail_lance";
     gameA.model.salvageParts = 17;
+    gameA.model.hangar.factionIntelId = "drift_contract";
     gameA.model.factions.helix_union = 9;
     gameA.model.factions.drift_cartel = -4;
     gameA.model.inventory = [gameA.createModuleDrop()];
@@ -119,6 +120,7 @@ function runTests() {
     assert(gameB.model.upgrades.fireRateLevel === 3, "Profile did not persist fireRateLevel");
     assert(gameB.model.loadout.primaryId === "rail_lance", "Profile did not persist primary loadout");
     assert(gameB.model.salvageParts === 17, "Profile did not persist salvage parts");
+    assert(gameB.model.hangar.factionIntelId === "drift_contract", "Profile did not persist selected faction intel");
     assert(gameB.model.factions.helix_union === 9, "Profile did not persist HELIX UNION reputation");
     assert(gameB.model.factions.drift_cartel === -4, "Profile did not persist DRIFT CARTEL reputation");
     assert(gameB.model.inventory.length >= 1, "Profile did not persist inventory");
@@ -305,12 +307,16 @@ function runTests() {
     pressSpaceAt(3); // primary cycle
     assert(gameA.model.loadout.primaryId !== prevPrimary, "Shop index 3 should map to primary loadout cycle");
 
+    const intelBefore = gameA.model.hangar.factionIntelId;
+    pressSpaceAt(6); // intel cycle
+    assert(gameA.model.hangar.factionIntelId !== intelBefore, "Shop index 6 should cycle faction intel choice");
+
     gameA.model.hangar.selectionSource = "inventory";
     gameA.model.hangar.selectionIndex = 0;
     gameA.model.inventory = [gameA.createModuleDrop()];
     const creditsBeforeSell = gameA.model.credits;
-    pressSpaceAt(6); // sell selected
-    assert(gameA.model.inventory.length === 0, "Shop index 6 should sell selected inventory module");
+    pressSpaceAt(7); // sell selected
+    assert(gameA.model.inventory.length === 0, "Shop index 7 should sell selected inventory module");
     assert(gameA.model.credits > creditsBeforeSell, "Selling selected module should grant credits");
 
     gameA.model.inventory = [gameA.createModuleDrop()];
@@ -318,7 +324,7 @@ function runTests() {
     gameA.model.hangar.selectionIndex = 0;
     const salvageBefore = gameA.model.salvageParts;
     pressSpaceAt(shopSize - 1); // salvage selected (last action row)
-    assert(gameA.model.inventory.length === 0, "Shop index 7 should salvage selected inventory module");
+    assert(gameA.model.inventory.length === 0, "Shop index 8 should salvage selected inventory module");
     assert(gameA.model.salvageParts > salvageBefore, "Salvaging selected module should grant salvage parts");
   });
 
@@ -682,6 +688,45 @@ function runTests() {
     const lowRepCredits = gameA.model.credits;
 
     assert(highRepCredits > lowRepCredits, "Higher faction reputation should increase mission credit rewards");
+  });
+
+  tests.push(() => {
+    gameA.startGame(44444);
+    gameA.model.comboScoringEnabled = false;
+    gameA.model.factions.helix_union = 0;
+    gameA.model.factions.drift_cartel = 0;
+    gameA.model.currentMission = {
+      type: "survive",
+      biomeFactionId: "helix_union",
+      intelProfile: { id: "balanced", pressureMul: 1, creditsMul: 1, salvageMul: 1, reputationDelta: {} }
+    };
+    gameA.model.credits = 0;
+    gameA.registerScore(1200, false);
+    const balancedCredits = gameA.model.credits;
+
+    gameA.model.currentMission.intelProfile = {
+      id: "helix_contract",
+      pressureMul: 1.06,
+      creditsMul: 1.12,
+      salvageMul: 0.9,
+      reputationDelta: { helix_union: 2, drift_cartel: -1 }
+    };
+    gameA.model.credits = 0;
+    gameA.registerScore(1200, false);
+    const helixIntelCredits = gameA.model.credits;
+
+    assert(helixIntelCredits > balancedCredits, "HELIX intel contract should increase mission credit rewards");
+  });
+
+  tests.push(() => {
+    gameA.startGame(45454);
+    gameA.model.hangar.factionIntelId = "balanced";
+    gameA.missionSystem.startMission(1);
+    const balancedDifficulty = gameA.model.currentMission?.difficulty ?? 1;
+    gameA.model.hangar.factionIntelId = "helix_contract";
+    gameA.missionSystem.startMission(1);
+    const intelDifficulty = gameA.model.currentMission?.difficulty ?? 1;
+    assert(intelDifficulty > balancedDifficulty, "Faction intel contract should increase mission pressure");
   });
 
   tests.push(() => {
