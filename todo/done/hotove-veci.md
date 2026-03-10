@@ -66,6 +66,12 @@
   - [x] `contrabandHeat` navazuje na bounty ekonomiku (vyssi reward multipliery + vyssi reroll cost)
   - [x] Harness coverage pro faction bias, heat reroll pressure a faction rep dopad claimu
 
+- [x] Endgame / replayability - Mutatory (MVP) slice 1
+  - [x] Run setup rozsireny o `Mutator` preset row (Start/Game Over/Victory) s persistentni volbou
+  - [x] Data-driven `mission.mutators` katalog (STANDARD / VOLATILE SPACE / SCAVENGER CODE / BLACKOUT PROTOCOL)
+  - [x] Mutator multiplikatory slouceny s obtiznosti pro pressure, incoming/outgoing damage, economy, loot a hazards
+  - [x] Help/i18n/harness/validace pokryti pro mutator flow
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

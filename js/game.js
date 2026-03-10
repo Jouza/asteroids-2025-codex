@@ -154,6 +154,7 @@
       progression: {
         flightModel: "arcade",
         runDifficultyId: "normal",
+        runMutatorId: "standard",
         shopVendorId: "faction",
         loadout: {
           primaryId: "auto_cannon",
@@ -272,6 +273,7 @@
         missionCompleteSummary: null,
         flightModel: "arcade",
         runDifficultyId: "normal",
+        runMutatorId: "standard",
         dotEffects: [],
         pointer: {
           x: 0,
@@ -1002,6 +1004,12 @@
       safe.progression.runDifficultyId = difficultyDefs.some((entry) => entry.id === requestedDifficultyId)
         ? requestedDifficultyId
         : fallbackDifficultyId;
+      const mutatorDefs = this.getRunMutatorDefs();
+      const fallbackMutatorId = mutatorDefs.find((entry) => entry.id === defaults.progression.runMutatorId)?.id || "standard";
+      const requestedMutatorId = progression.runMutatorId;
+      safe.progression.runMutatorId = mutatorDefs.some((entry) => entry.id === requestedMutatorId)
+        ? requestedMutatorId
+        : fallbackMutatorId;
       safe.progression.shopVendorId = this.sanitizeHangarVendorId(progression.shopVendorId);
       safe.progression.factionIntelId = this.sanitizeFactionIntelId(progression.factionIntelId);
 
@@ -1150,6 +1158,7 @@
       return {
         flightModel: this.model.flightModel,
         runDifficultyId: this.model.runDifficultyId,
+        runMutatorId: this.model.runMutatorId,
         shopVendorId: this.model.hangar.shopVendorId,
         factionIntelId: this.model.hangar.factionIntelId,
         loadout: {
@@ -1177,6 +1186,11 @@
       this.model.runDifficultyId = difficultyDefs.some((entry) => entry.id === progression.runDifficultyId)
         ? progression.runDifficultyId
         : fallbackDifficultyId;
+      const mutatorDefs = this.getRunMutatorDefs();
+      const fallbackMutatorId = mutatorDefs.find((entry) => entry.id === "standard")?.id || mutatorDefs[0]?.id || "standard";
+      this.model.runMutatorId = mutatorDefs.some((entry) => entry.id === progression.runMutatorId)
+        ? progression.runMutatorId
+        : fallbackMutatorId;
       this.model.hangar.shopVendorId = this.sanitizeHangarVendorId(progression.shopVendorId);
       this.model.hangar.factionIntelId = this.sanitizeFactionIntelId(progression.factionIntelId);
       this.model.loadout.primaryId = progression.loadout.primaryId;
@@ -1343,6 +1357,7 @@
       const selectedIdentity = deepClone(this.model.identity || profile.identity || defaults.identity);
       const selectedFlightModel = this.model.flightModel === "sim_lite" ? "sim_lite" : "arcade";
       const selectedDifficultyId = this.model.runDifficultyId || profile.runDifficultyId || defaults.runDifficultyId;
+      const selectedMutatorId = this.model.runMutatorId || profile.runMutatorId || defaults.runMutatorId;
       const selectedShopVendorId = this.sanitizeHangarVendorId(this.model.hangar?.shopVendorId || profile.shopVendorId);
       const selectedIntelId = this.sanitizeFactionIntelId(this.model.hangar?.factionIntelId || profile.factionIntelId);
       const selectedFactions = deepClone(this.model.factions || profile.factions || defaults.factions);
@@ -1350,6 +1365,7 @@
       const unlocks = deepClone(profile.unlocks || defaults.unlocks);
       profile.flightModel = selectedFlightModel;
       profile.runDifficultyId = selectedDifficultyId;
+      profile.runMutatorId = selectedMutatorId;
       profile.shopVendorId = selectedShopVendorId;
       profile.factionIntelId = selectedIntelId;
       profile.loadout = deepClone(defaults.loadout);
@@ -1639,7 +1655,7 @@
     }
 
     getOverlaySettingRows() {
-      return ["mode", "difficulty", "pilot", "ship", "flight"];
+      return ["mode", "difficulty", "mutator", "pilot", "ship", "flight"];
     }
 
     cycleOverlaySettingsRow(direction = 1) {
@@ -1671,6 +1687,10 @@
       }
       if (row === "difficulty") {
         this.cycleRunDifficulty(direction);
+        return;
+      }
+      if (row === "mutator") {
+        this.cycleRunMutator(direction);
       }
     }
 
@@ -1701,16 +1721,48 @@
 
     getRunDifficultyMultipliers() {
       const profile = this.getRunDifficultyProfile();
+      const mutator = this.getRunMutatorProfile();
       return {
         id: profile.id || "normal",
-        pressureMul: this.clamp(Number(profile.pressureMul) || 1, 0.6, 2),
-        enemyDamageTakenMul: this.clamp(Number(profile.enemyDamageTakenMul) || 1, 0.4, 2.2),
-        playerDamageMul: this.clamp(Number(profile.playerDamageMul) || 1, 0.4, 2.2),
-        economyCreditsMul: this.clamp(Number(profile.economyCreditsMul) || 1, 0.35, 2),
-        economySalvageMul: this.clamp(Number(profile.economySalvageMul) || 1, 0.35, 2),
-        lootDropMul: this.clamp(Number(profile.lootDropMul) || 1, 0.35, 2),
-        hazardIntensityMul: this.clamp(Number(profile.hazardIntensityMul) || 1, 0.35, 2)
+        difficultyId: profile.id || "normal",
+        mutatorId: mutator.id || "standard",
+        pressureMul: this.clamp((Number(profile.pressureMul) || 1) * (Number(mutator.pressureMul) || 1), 0.6, 2),
+        enemyDamageTakenMul: this.clamp(
+          (Number(profile.enemyDamageTakenMul) || 1) * (Number(mutator.enemyDamageTakenMul) || 1),
+          0.4,
+          2.2
+        ),
+        playerDamageMul: this.clamp((Number(profile.playerDamageMul) || 1) * (Number(mutator.playerDamageMul) || 1), 0.4, 2.2),
+        economyCreditsMul: this.clamp((Number(profile.economyCreditsMul) || 1) * (Number(mutator.economyCreditsMul) || 1), 0.35, 2),
+        economySalvageMul: this.clamp((Number(profile.economySalvageMul) || 1) * (Number(mutator.economySalvageMul) || 1), 0.35, 2),
+        lootDropMul: this.clamp((Number(profile.lootDropMul) || 1) * (Number(mutator.lootDropMul) || 1), 0.35, 2),
+        hazardIntensityMul: this.clamp((Number(profile.hazardIntensityMul) || 1) * (Number(mutator.hazardIntensityMul) || 1), 0.35, 2)
       };
+    }
+
+    getRunMutatorDefs() {
+      const defs = this.config.mission?.mutators;
+      if (!Array.isArray(defs) || !defs.length) {
+        return [
+          {
+            id: "standard",
+            pressureMul: 1,
+            enemyDamageTakenMul: 1,
+            playerDamageMul: 1,
+            economyCreditsMul: 1,
+            economySalvageMul: 1,
+            lootDropMul: 1,
+            hazardIntensityMul: 1
+          }
+        ];
+      }
+      return defs;
+    }
+
+    getRunMutatorProfile() {
+      const defs = this.getRunMutatorDefs();
+      const fallback = defs.find((entry) => entry.id === "standard") || defs[0];
+      return defs.find((entry) => entry.id === this.model.runMutatorId) || fallback;
     }
 
     cycleRunDifficulty(direction = 1) {
@@ -1729,6 +1781,26 @@
       this.model.runDifficultyId = id;
       this.model.hangar.message = tr("game.run_difficulty.changed", { difficulty: tr(`game.difficulty.${id}`) });
       if (saveProfile) this.saveProfile("run_difficulty_change");
+      this.hud.sync(this.model);
+      return true;
+    }
+
+    cycleRunMutator(direction = 1) {
+      const defs = this.getRunMutatorDefs();
+      if (!defs.length) return false;
+      const currentIndex = defs.findIndex((entry) => entry.id === this.model.runMutatorId);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (safeIndex + direction + defs.length) % defs.length;
+      return this.trySetRunMutator(defs[nextIndex].id);
+    }
+
+    trySetRunMutator(id, { saveProfile = true } = {}) {
+      const defs = this.getRunMutatorDefs();
+      if (!defs.some((entry) => entry.id === id)) return false;
+      if (this.model.runMutatorId === id) return false;
+      this.model.runMutatorId = id;
+      this.model.hangar.message = tr("game.run_mutator.changed", { mutator: tr(`game.mutator.${id}`) });
+      if (saveProfile) this.saveProfile("run_mutator_change");
       this.hud.sync(this.model);
       return true;
     }

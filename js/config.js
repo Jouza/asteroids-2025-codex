@@ -853,6 +853,48 @@
     },
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
+      mutators: [
+        {
+          id: "standard",
+          pressureMul: 1.0,
+          enemyDamageTakenMul: 1.0,
+          playerDamageMul: 1.0,
+          economyCreditsMul: 1.0,
+          economySalvageMul: 1.0,
+          lootDropMul: 1.0,
+          hazardIntensityMul: 1.0
+        },
+        {
+          id: "volatile_space",
+          pressureMul: 1.08,
+          enemyDamageTakenMul: 1.06,
+          playerDamageMul: 0.98,
+          economyCreditsMul: 1.08,
+          economySalvageMul: 0.95,
+          lootDropMul: 1.12,
+          hazardIntensityMul: 1.2
+        },
+        {
+          id: "scavenger_code",
+          pressureMul: 0.95,
+          enemyDamageTakenMul: 0.94,
+          playerDamageMul: 1.04,
+          economyCreditsMul: 0.9,
+          economySalvageMul: 1.2,
+          lootDropMul: 0.96,
+          hazardIntensityMul: 0.9
+        },
+        {
+          id: "blackout_protocol",
+          pressureMul: 1.15,
+          enemyDamageTakenMul: 1.16,
+          playerDamageMul: 0.9,
+          economyCreditsMul: 0.86,
+          economySalvageMul: 0.84,
+          lootDropMul: 1.06,
+          hazardIntensityMul: 1.26
+        }
+      ],
       bountyBoard: {
         slots: 3,
         maxRerollsPerSector: 1,
@@ -1257,6 +1299,7 @@
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
       { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" },
+      { ok: Array.isArray(config.mission?.mutators) && config.mission.mutators.length >= 1, msg: "mission.mutators missing" },
       { ok: Array.isArray(config.faction?.definitions) && config.faction.definitions.length >= 2, msg: "faction.definitions missing" },
       { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" },
       { ok: Array.isArray(config.faction?.intelOptions) && config.faction.intelOptions.length >= 1, msg: "faction.intelOptions missing" },

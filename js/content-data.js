@@ -213,6 +213,48 @@
     },
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
+      mutators: [
+        {
+          id: "standard",
+          pressureMul: 1.0,
+          enemyDamageTakenMul: 1.0,
+          playerDamageMul: 1.0,
+          economyCreditsMul: 1.0,
+          economySalvageMul: 1.0,
+          lootDropMul: 1.0,
+          hazardIntensityMul: 1.0
+        },
+        {
+          id: "volatile_space",
+          pressureMul: 1.08,
+          enemyDamageTakenMul: 1.06,
+          playerDamageMul: 0.98,
+          economyCreditsMul: 1.08,
+          economySalvageMul: 0.95,
+          lootDropMul: 1.12,
+          hazardIntensityMul: 1.2
+        },
+        {
+          id: "scavenger_code",
+          pressureMul: 0.95,
+          enemyDamageTakenMul: 0.94,
+          playerDamageMul: 1.04,
+          economyCreditsMul: 0.9,
+          economySalvageMul: 1.2,
+          lootDropMul: 0.96,
+          hazardIntensityMul: 0.9
+        },
+        {
+          id: "blackout_protocol",
+          pressureMul: 1.15,
+          enemyDamageTakenMul: 1.16,
+          playerDamageMul: 0.9,
+          economyCreditsMul: 0.86,
+          economySalvageMul: 0.84,
+          lootDropMul: 1.06,
+          hazardIntensityMul: 1.26
+        }
+      ],
       bountyBoard: {
         slots: 3,
         maxRerollsPerSector: 1,

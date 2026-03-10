@@ -1446,6 +1446,7 @@
 
     getRunSettingsRows(model) {
       const difficultyId = model.runDifficultyId || "normal";
+      const mutatorId = model.runMutatorId || "standard";
       return [
         {
           id: "mode",
@@ -1456,6 +1457,11 @@
           id: "difficulty",
           label: tr("overlay.settings_difficulty"),
           value: tr(`game.difficulty.${difficultyId}`)
+        },
+        {
+          id: "mutator",
+          label: tr("overlay.settings_mutator"),
+          value: tr(`game.mutator.${mutatorId}`)
         },
         {
           id: "pilot",
@@ -2301,6 +2307,15 @@
           statusLeftX,
           statusLeftY,
           tr("hud.status.difficulty", { difficulty: tr(`game.difficulty.${model.runDifficultyId || "normal"}`) }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          statusColW
+        );
+        statusLeftY += statusGap;
+        drawRow(
+          statusLeftX,
+          statusLeftY,
+          tr("hud.status.mutator", { mutator: tr(`game.mutator.${model.runMutatorId || "standard"}`) }),
           "#9fe3ff",
           "500 12px Trebuchet MS",
           statusColW

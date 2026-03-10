@@ -248,6 +248,25 @@ function validateContentData(contentData, issues) {
       assert(allowedMissions.has(missionId), `mission.order contains unknown id: ${missionId}`, issues);
     }
   }
+  const missionMutators = contentData.mission?.mutators;
+  assert(Array.isArray(missionMutators) && missionMutators.length >= 1, "mission.mutators must be non-empty", issues);
+  if (Array.isArray(missionMutators)) {
+    for (const [index, mutator] of missionMutators.entries()) {
+      assert(typeof mutator.id === "string" && mutator.id.length > 0, `mission.mutators[${index}] id is required`, issues);
+      for (const key of [
+        "pressureMul",
+        "enemyDamageTakenMul",
+        "playerDamageMul",
+        "economyCreditsMul",
+        "economySalvageMul",
+        "lootDropMul",
+        "hazardIntensityMul"
+      ]) {
+        const value = Number(mutator[key]);
+        assert(Number.isFinite(value) && value > 0, `mission mutator ${mutator.id || index} ${key} must be > 0`, issues);
+      }
+    }
+  }
   const bountyBoard = contentData.mission?.bountyBoard;
   if (bountyBoard != null) {
     assert(

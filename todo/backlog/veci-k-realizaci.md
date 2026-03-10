@@ -25,9 +25,8 @@
   - [x] Anti-snowball guard pro reputaci (sector cap + diminishing returns)
 
 - [ ] Endgame / replayability
-  - [ ] Bounty board
   - [x] Bounty board (MVP) - data/model + hangar board UI + mission auto-payout hook
-  - [ ] Mutatory
+  - [x] Mutatory (MVP) - selectable run mutator presets + persistence + gameplay scaling multipliers
   - [x] Endless sektor (run loop bez finalniho win-state)
   - [ ] Boss rush
   - [ ] Win-state follow-up po MVP

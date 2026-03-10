@@ -1217,7 +1217,7 @@ function runTests() {
 
   tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
-    gameA.model.overlaySettingsRow = 4;
+    gameA.model.overlaySettingsRow = 5;
     gameA.model.flightModel = "arcade";
     gameA.adjustSelectedOverlaySetting(1);
     assert(gameA.model.flightModel === "sim_lite", "Run setup flight row should switch to SIM LITE");
@@ -1227,6 +1227,22 @@ function runTests() {
     );
     gameA.adjustSelectedOverlaySetting(-1);
     assert(gameA.model.flightModel === "arcade", "Run setup flight row should switch back to ARCADE");
+  });
+
+  tests.push(() => {
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.overlaySettingsRow = 2;
+    gameA.model.runMutatorId = "standard";
+    gameA.adjustSelectedOverlaySetting(1);
+    assert(gameA.model.runMutatorId === "volatile_space", "Run setup mutator row should cycle to VOLATILE SPACE");
+    assert(
+      gameA.model.profile.progression.runMutatorId === "volatile_space",
+      "Selected mutator should persist into profile progression"
+    );
+    gameA.adjustSelectedOverlaySetting(1);
+    assert(gameA.model.runMutatorId === "scavenger_code", "Run setup mutator row should cycle to SCAVENGER CODE");
+    gameA.adjustSelectedOverlaySetting(-1);
+    assert(gameA.model.runMutatorId === "volatile_space", "Run setup mutator row should cycle back");
   });
 
   tests.push(() => {
@@ -1256,6 +1272,21 @@ function runTests() {
     assert(ace.enemyDamageTakenMul > normal.enemyDamageTakenMul, "Ace should increase incoming enemy damage");
     assert(rookie.economyCreditsMul > normal.economyCreditsMul, "Rookie should boost credits economy");
     assert(ace.economyCreditsMul < normal.economyCreditsMul, "Ace should reduce credits economy");
+  });
+
+  tests.push(() => {
+    gameA.model.runDifficultyId = "normal";
+    gameA.model.runMutatorId = "standard";
+    const baseline = gameA.getRunDifficultyMultipliers();
+    gameA.model.runMutatorId = "volatile_space";
+    const volatileSpace = gameA.getRunDifficultyMultipliers();
+    gameA.model.runMutatorId = "scavenger_code";
+    const scavenger = gameA.getRunDifficultyMultipliers();
+    assert(volatileSpace.hazardIntensityMul > baseline.hazardIntensityMul, "Volatile Space should increase hazard intensity");
+    assert(volatileSpace.lootDropMul > baseline.lootDropMul, "Volatile Space should increase loot drop multiplier");
+    assert(scavenger.economySalvageMul > baseline.economySalvageMul, "Scavenger Code should increase salvage economy");
+    assert(scavenger.economyCreditsMul < baseline.economyCreditsMul, "Scavenger Code should reduce credits economy");
+    gameA.model.runMutatorId = "standard";
   });
 
   tests.push(() => {
