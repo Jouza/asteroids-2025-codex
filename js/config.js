@@ -1060,6 +1060,79 @@
         { maxSector: 7, difficulty: 1.18 },
         { maxSector: 999, difficulty: 1.34 }
       ],
+      biomeVisuals: {
+        default: {
+          ambientCadence: 1.0,
+          debrisDensity: 1.0,
+          fogPulse: 0.1,
+          beatColor: "176,222,255",
+          parallaxLayers: [
+            { speed: 0.13, alpha: 0.07, size: 1.4, driftX: 1.0, driftY: 0.32 },
+            { speed: 0.23, alpha: 0.1, size: 2.0, driftX: 1.12, driftY: 0.44 }
+          ]
+        },
+        belt: {
+          ambientCadence: 1.08,
+          debrisDensity: 1.0,
+          fogPulse: 0.08,
+          beatColor: "154,218,245",
+          parallaxLayers: [
+            { speed: 0.2, alpha: 0.08, size: 1.3, driftX: 1.16, driftY: 0.35 },
+            { speed: 0.35, alpha: 0.12, size: 1.9, driftX: 1.24, driftY: 0.42 },
+            { speed: 0.5, alpha: 0.15, size: 2.3, driftX: 1.36, driftY: 0.5 }
+          ]
+        },
+        graveyard: {
+          ambientCadence: 0.86,
+          debrisDensity: 1.26,
+          fogPulse: 0.14,
+          beatColor: "184,206,232",
+          parallaxLayers: [
+            { speed: 0.1, alpha: 0.08, size: 1.7, driftX: 0.86, driftY: 0.26 },
+            { speed: 0.18, alpha: 0.12, size: 2.4, driftX: 0.94, driftY: 0.34 }
+          ]
+        },
+        refinery: {
+          ambientCadence: 1.2,
+          debrisDensity: 0.78,
+          fogPulse: 0.06,
+          beatColor: "255,174,118",
+          parallaxLayers: [
+            { speed: 0.1, alpha: 0.07, size: 1.2, driftX: 0.76, driftY: 0.2 },
+            { speed: 0.17, alpha: 0.09, size: 1.8, driftX: 0.88, driftY: 0.26 }
+          ]
+        },
+        ion_field: {
+          ambientCadence: 1.24,
+          debrisDensity: 0.9,
+          fogPulse: 0.16,
+          beatColor: "136,182,255",
+          parallaxLayers: [
+            { speed: 0.14, alpha: 0.08, size: 1.4, driftX: 1.0, driftY: 0.4 },
+            { speed: 0.24, alpha: 0.11, size: 1.9, driftX: 1.12, driftY: 0.52 }
+          ]
+        },
+        shattered_relay: {
+          ambientCadence: 1.12,
+          debrisDensity: 1.05,
+          fogPulse: 0.13,
+          beatColor: "186,198,255",
+          parallaxLayers: [
+            { speed: 0.13, alpha: 0.08, size: 1.6, driftX: 0.96, driftY: 0.36 },
+            { speed: 0.21, alpha: 0.11, size: 2.1, driftX: 1.05, driftY: 0.46 }
+          ]
+        },
+        cryo_ring: {
+          ambientCadence: 0.92,
+          debrisDensity: 0.84,
+          fogPulse: 0.2,
+          beatColor: "162,232,255",
+          parallaxLayers: [
+            { speed: 0.08, alpha: 0.07, size: 1.4, driftX: 0.76, driftY: 0.18 },
+            { speed: 0.14, alpha: 0.1, size: 1.9, driftX: 0.84, driftY: 0.24 }
+          ]
+        }
+      },
       biomes: [
         {
           id: "belt",
@@ -1309,6 +1382,14 @@
           config.mission.ufoHunt.preludeMaxUfos >= config.mission.ufoHunt.preludeMinUfos &&
           config.mission.ufoHunt.finaleConcurrentUfos >= 1,
         msg: "mission.ufoHunt staged targets are invalid"
+      },
+      {
+        ok:
+          config.missionDirector?.biomeVisuals &&
+          typeof config.missionDirector.biomeVisuals === "object" &&
+          !Array.isArray(config.missionDirector.biomeVisuals) &&
+          typeof config.missionDirector.biomeVisuals.default === "object",
+        msg: "missionDirector.biomeVisuals missing or invalid"
       },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },

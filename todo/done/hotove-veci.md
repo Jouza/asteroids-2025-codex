@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Biome atmosphere pass 2.0 (MVP)
+  - [x] Data-driven `missionDirector.biomeVisuals` profil (parallax/debris/cadence/fogPulse/beatColor) pro vsechny biomy
+  - [x] `currentMission.visualFx` runtime state + central `triggerMissionBeat(...)` dispatcher
+  - [x] Event beats napojeny na mission start, biome mini event, survive cleanup, ufo_hunt finale a boss phase transition
+  - [x] Render pass rozsireny o cadence-driven parallax vrstvu a `drawMissionBeats` overlay
+  - [x] Help/i18n texty aktualizovany na novou biome atmosphere + phase beat logiku
+  - [x] Harness coverage doplnena pro `visualFx` init + survive/hunt/boss beat trigger scenare
+
 - [x] Mission flow: UFO Hunt staged finale pass
   - [x] `ufo_hunt` prepnuto na staged flow: 1-3 prelude UFO (sekvencne po smrti) + finale 2 UFO soubezne
   - [x] Objective/status text doplnen o fazovy progress (`Hunt ... | Final wave ...`)

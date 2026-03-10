@@ -162,6 +162,10 @@ function runTests() {
 
   tests.push(() => {
     gameA.startGame(12345);
+    assert(
+      gameA.model.currentMission?.visualFx && typeof gameA.model.currentMission.visualFx === "object",
+      "Mission start should initialize visualFx runtime state"
+    );
     gameA.model.missionTimer = 0;
     gameA.model.asteroids = [
       {
@@ -185,6 +189,10 @@ function runTests() {
     assert(
       gameA.model.currentMission.objectiveText.startsWith("Clear remaining threats"),
       "Survive objective should switch to clear-threat text after timer expires"
+    );
+    assert(
+      gameA.model.currentMission.visualFx?.beatKind === "survive_cleanup",
+      "Survive cleanup transition should trigger survive_cleanup mission beat"
     );
   });
 
@@ -398,6 +406,10 @@ function runTests() {
     gameA.enemySystem.updateMiniBoss(1 / 60);
     assert(boss.phaseIndex >= 2, "Mini boss should transition to phase 3 at low HP threshold");
     assert(gameA.model.enemyBullets.length >= 6, "Mini boss phase transition should trigger arena mine ring");
+    assert(
+      gameA.model.currentMission?.visualFx?.beatKind === "boss_phase",
+      "Mini boss phase transition should trigger boss_phase mission beat"
+    );
   });
 
   tests.push(() => {
@@ -498,6 +510,7 @@ function runTests() {
     assert(mission.ufoHuntPhase === "finale", "UFO hunt should transition to finale phase after prelude clear");
     assert(gameA.model.ufos.length === finaleTarget, "UFO hunt finale should spawn all finale UFOs simultaneously");
     assert(gameA.model.ufos.every((ufo) => ufo.huntFinale === true), "Finale UFOs should be tagged as finale");
+    assert(mission.visualFx?.beatKind === "hunt_finale", "UFO hunt finale transition should trigger hunt_finale beat");
   });
 
   tests.push(() => {

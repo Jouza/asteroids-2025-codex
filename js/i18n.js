@@ -375,7 +375,7 @@
         "Data is loaded directly from game configuration. Values match the current build balance.<br>Note: \"DMG\" is base hit value (before crit/resist modifiers), \"Range\" is approximate projectile travel.",
       "help.section.mission_types": "Mission Types",
       "help.section.mission_types_hint":
-        "Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> (distinct moveset and phases), and clearing it ends the run with VICTORY.",
+        "Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. Runtime now adds short visual event beats on key phase transitions (cleanup/finale/boss phase). In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> and clearing it ends the run with VICTORY.",
       "help.section.mission_endless_hint":
         "Endless mode unlocks after your first campaign clear. Run setup mode now supports <strong>Campaign / Boss Rush / Endless</strong> with <strong>Left/Right</strong> (or quick cycle by <strong>E</strong>). Boss Rush runs mini-boss encounters every sector and has its own final clear at sector 4 (VICTORY). Endless sectors ramp pressure faster after sector 5 and apply softer credit gain damping to limit snowballing.",
       "help.card.boss_rush_mode.name": "BOSS RUSH",
@@ -386,7 +386,7 @@
         "<strong>Impact:</strong> fast high-pressure boss practice loop with clear run-complete endpoint.",
       "help.section.biomes": "Biomes",
       "help.section.biomes_hint":
-        "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, and may add specific hazard zones.",
+        "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, hazard zones, and now also cadence-driven parallax/debris visuals.",
       "help.section.pilot_rpg": "Pilot RPG (MVP)",
       "help.section.pilot_attributes_ref": "Pilot Attributes Reference",
       "help.section.pilot_attributes_ref_hint": "Each attribute has persistent identity text shared with Pilot Console.",

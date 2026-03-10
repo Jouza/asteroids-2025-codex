@@ -24,6 +24,7 @@
       this.drawShip(model, input);
       this.drawVignette();
       this.drawMissionEnvironment(model);
+      this.drawMissionBeats(model);
       this.drawFlash(model.flashMs);
       this.drawMissionStatus(model);
       this.drawTelemetry(model);
@@ -651,10 +652,94 @@
       ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
     }
 
+    drawBiomeParallaxBackdrop(mission, missionTime) {
+      const { ctx, config } = this;
+      const visual = mission.biomeVisualProfile || {};
+      const layers = Array.isArray(visual.parallaxLayers) ? visual.parallaxLayers : [];
+      const density = Math.max(0.2, Math.min(2.2, Number(visual.debrisDensity) || 1));
+      const seed = mission.visualFx?.seed ?? 0;
+      if (!layers.length) return;
+      const fract = (value) => value - Math.floor(value);
+      ctx.save();
+      for (let li = 0; li < layers.length; li += 1) {
+        const layer = layers[li];
+        const speed = Math.max(0.05, Number(layer.speed) || 0.18);
+        const alpha = Math.max(0.03, Math.min(0.22, Number(layer.alpha) || 0.08));
+        const size = Math.max(0.8, Number(layer.size) || 1.6);
+        const driftX = Number(layer.driftX) || 1;
+        const driftY = Number(layer.driftY) || 0.35;
+        const count = Math.max(8, Math.round((14 + li * 6) * density));
+        ctx.fillStyle = `rgba(170,214,244,${alpha})`;
+        for (let i = 0; i < count; i += 1) {
+          const basis = seed * 0.000001 + i * 0.137 + li * 0.619;
+          const x = fract(basis * 31.71 + missionTime * speed * driftX * 0.08) * (config.canvas.width + 18) - 9;
+          const y = fract(basis * 53.17 + missionTime * speed * driftY * 0.06) * (config.canvas.height + 18) - 9;
+          ctx.fillRect(x, y, size, size);
+        }
+      }
+      ctx.restore();
+    }
+
+    drawMissionBeats(model) {
+      const mission = model.currentMission;
+      if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
+      const beatTtl = Number(mission.visualFx?.beatTtl) || 0;
+      if (beatTtl <= 0) return;
+      const beatMaxTtl = Math.max(0.01, Number(mission.visualFx?.beatMaxTtl) || beatTtl);
+      const beatIntensity = Math.max(0.1, Number(mission.visualFx?.beatIntensity) || 0.7);
+      const beatKind = mission.visualFx?.beatKind || "mission";
+      const progress = Math.max(0, Math.min(1, beatTtl / beatMaxTtl));
+      const { ctx, config } = this;
+      const visual = mission.biomeVisualProfile || {};
+      const baseColor = typeof visual.beatColor === "string" ? visual.beatColor : "176,222,255";
+      const colorByKind = {
+        mission_start: baseColor,
+        biome_event: "196,255,188",
+        hunt_finale: "255,188,132",
+        survive_cleanup: "188,232,255",
+        storm_cleanup: "255,214,154",
+        boss_phase: "255,148,216"
+      };
+      const pulseColor = colorByKind[beatKind] || baseColor;
+      const alpha = Math.max(0.05, Math.min(0.45, progress * 0.32 * beatIntensity));
+      ctx.save();
+      const fog = ctx.createRadialGradient(
+        config.canvas.width * 0.5,
+        config.canvas.height * 0.5,
+        config.canvas.height * 0.08,
+        config.canvas.width * 0.5,
+        config.canvas.height * 0.5,
+        config.canvas.height * 0.78
+      );
+      fog.addColorStop(0, `rgba(${pulseColor},${alpha * 0.3})`);
+      fog.addColorStop(0.55, `rgba(${pulseColor},${alpha * 0.16})`);
+      fog.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = fog;
+      ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      const ringRadius = (config.canvas.height * 0.24 + (1 - progress) * config.canvas.height * 0.1) * (0.92 + beatIntensity * 0.08);
+      ctx.strokeStyle = `rgba(${pulseColor},${alpha * 0.9})`;
+      ctx.lineWidth = 1.6 + (1 - progress) * 1.4;
+      ctx.beginPath();
+      ctx.arc(config.canvas.width * 0.5, config.canvas.height * 0.5, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     drawMissionEnvironment(model) {
       const mission = model.currentMission;
       if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
       const { ctx, config } = this;
+      const visual = mission.biomeVisualProfile || {};
+      const visualFx = mission.visualFx || {};
+      const cadenceMul = Math.max(0.35, Number(visual.ambientCadence) || Number(visualFx.cadence) || 1);
+      const missionTime = Math.max(0, Number(visualFx.time) || 0);
+      const debrisDensity = Math.max(0.2, Math.min(2.2, Number(visual.debrisDensity) || 1));
+      const beatTtl = Math.max(0, Number(visualFx.beatTtl) || 0);
+      const beatMaxTtl = Math.max(0.01, Number(visualFx.beatMaxTtl) || 1);
+      const beatRatio = beatTtl > 0 ? Math.max(0, Math.min(1, beatTtl / beatMaxTtl)) : 0;
+      const beatIntensity = Math.max(0, Number(visualFx.beatIntensity) || 0);
+      const beatPulse = beatRatio * beatIntensity;
+      this.drawBiomeParallaxBackdrop(mission, missionTime);
       const effects = mission.modifierEffects || {};
       if (mission.biomeId === "graveyard") {
         ctx.fillStyle = "rgba(118,142,170,0.09)";
@@ -662,8 +747,8 @@
         ctx.save();
         ctx.strokeStyle = "rgba(132,168,212,0.22)";
         ctx.lineWidth = 1.1;
-        for (let i = 0; i < 6; i += 1) {
-          const drift = Math.sin(performance.now() * 0.0006 + i * 0.9) * 12;
+        for (let i = 0; i < Math.max(4, Math.round(6 * debrisDensity)); i += 1) {
+          const drift = Math.sin(missionTime * 0.6 * cadenceMul + i * 0.9) * 12;
           const x = 120 + i * 150 + drift;
           const y = 90 + (i % 2) * 120;
           ctx.strokeRect(x, y, 58, 20);
@@ -677,8 +762,8 @@
         ctx.fillStyle = "rgba(158,112,74,0.09)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
         ctx.save();
-        for (let i = 0; i < 4; i += 1) {
-          const y = 120 + i * 140 + Math.sin(performance.now() * 0.0012 + i) * 6;
+        for (let i = 0; i < Math.max(3, Math.round(4 * debrisDensity)); i += 1) {
+          const y = 120 + i * 140 + Math.sin(missionTime * 1.2 * cadenceMul + i) * 6;
           const heatLine = ctx.createLinearGradient(0, y, config.canvas.width, y + 22);
           heatLine.addColorStop(0, "rgba(255,172,108,0)");
           heatLine.addColorStop(0.5, "rgba(255,172,108,0.18)");
@@ -687,7 +772,7 @@
           ctx.fillRect(0, y, config.canvas.width, 22);
         }
         ctx.fillStyle = "rgba(255,201,142,0.12)";
-        for (let i = 0; i < 5; i += 1) {
+        for (let i = 0; i < Math.max(4, Math.round(5 * debrisDensity)); i += 1) {
           const x = 96 + i * 180;
           ctx.fillRect(x, 36, 4, config.canvas.height - 72);
         }
@@ -696,8 +781,8 @@
         ctx.fillStyle = "rgba(132,164,188,0.07)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
         ctx.save();
-        for (let i = 0; i < 6; i += 1) {
-          const y = 84 + i * 104 + Math.sin(performance.now() * 0.0009 + i * 0.8) * 8;
+        for (let i = 0; i < Math.max(4, Math.round(6 * debrisDensity)); i += 1) {
+          const y = 84 + i * 104 + Math.sin(missionTime * 0.9 * cadenceMul + i * 0.8) * 8;
           const beltLine = ctx.createLinearGradient(0, y, config.canvas.width, y + 18);
           beltLine.addColorStop(0, "rgba(172,214,238,0)");
           beltLine.addColorStop(0.5, "rgba(172,214,238,0.15)");
@@ -706,8 +791,8 @@
           ctx.fillRect(0, y, config.canvas.width, 18);
         }
         ctx.fillStyle = "rgba(188,228,245,0.26)";
-        for (let i = 0; i < 18; i += 1) {
-          const t = performance.now() * 0.00015 + i * 0.31;
+        for (let i = 0; i < Math.max(10, Math.round(18 * debrisDensity)); i += 1) {
+          const t = missionTime * 0.15 * cadenceMul + i * 0.31;
           const x = (t * config.canvas.width * 0.35 + i * 72) % (config.canvas.width + 24) - 12;
           const y = 70 + (i % 6) * 110 + Math.sin(t * 7 + i) * 11;
           ctx.fillRect(x, y, 2, 2);
@@ -717,21 +802,21 @@
         ctx.fillStyle = "rgba(98,132,204,0.08)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
         ctx.save();
-        for (let i = 0; i < 4; i += 1) {
+        for (let i = 0; i < Math.max(3, Math.round(4 * debrisDensity)); i += 1) {
           const y = 92 + i * 150;
-          const alpha = 0.16 + Math.sin(performance.now() * 0.0018 + i * 1.4) * 0.06;
+          const alpha = 0.16 + Math.sin(missionTime * 1.8 * cadenceMul + i * 1.4) * 0.06;
           ctx.strokeStyle = `rgba(166,196,255,${Math.max(0.06, alpha)})`;
           ctx.lineWidth = 1.1;
           ctx.beginPath();
           ctx.moveTo(0, y);
           for (let x = 0; x <= config.canvas.width; x += 48) {
-            const waveY = y + Math.sin(x * 0.018 + performance.now() * 0.003 + i) * 8;
+              const waveY = y + Math.sin(x * 0.018 + missionTime * 3 * cadenceMul + i) * 8;
             ctx.lineTo(x, waveY);
           }
           ctx.stroke();
         }
-        for (let i = 0; i < 10; i += 1) {
-          const pulse = 0.2 + Math.sin(performance.now() * 0.0022 + i * 0.7) * 0.1;
+        for (let i = 0; i < Math.max(6, Math.round(10 * debrisDensity)); i += 1) {
+          const pulse = 0.2 + Math.sin(missionTime * 2.2 * cadenceMul + i * 0.7) * 0.1;
           const x = 72 + i * 92;
           const y = 64 + (i % 5) * 118;
           ctx.strokeStyle = `rgba(184,206,255,${Math.max(0.08, pulse)})`;
@@ -745,8 +830,8 @@
         ctx.fillStyle = "rgba(126,138,170,0.09)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
         ctx.save();
-        for (let i = 0; i < 6; i += 1) {
-          const pulse = 0.2 + Math.sin(performance.now() * 0.0022 + i * 0.7) * 0.14;
+        for (let i = 0; i < Math.max(4, Math.round(6 * debrisDensity)); i += 1) {
+          const pulse = 0.2 + Math.sin(missionTime * 2.2 * cadenceMul + i * 0.7) * 0.14;
           const x = 88 + i * 146;
           const y = 74 + (i % 3) * 186;
           ctx.strokeStyle = `rgba(192,206,255,${Math.max(0.08, pulse)})`;
@@ -762,8 +847,8 @@
         ctx.fillStyle = "rgba(126,188,218,0.08)";
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
         ctx.save();
-        for (let i = 0; i < 5; i += 1) {
-          const y = 86 + i * 126 + Math.sin(performance.now() * 0.0013 + i) * 7;
+        for (let i = 0; i < Math.max(3, Math.round(5 * debrisDensity)); i += 1) {
+          const y = 86 + i * 126 + Math.sin(missionTime * 1.3 * cadenceMul + i) * 7;
           const line = ctx.createLinearGradient(0, y, config.canvas.width, y + 18);
           line.addColorStop(0, "rgba(196,236,255,0)");
           line.addColorStop(0.5, "rgba(196,236,255,0.16)");
@@ -775,7 +860,8 @@
       }
 
       if ((effects.fogAlpha ?? 0) > 0) {
-        const alpha = Math.min(0.5, effects.fogAlpha);
+        const fogPulse = 1 + Math.sin(missionTime * 1.6 * cadenceMul) * Math.max(0, Math.min(0.35, Number(visual.fogPulse) || 0));
+        const alpha = Math.min(0.58, effects.fogAlpha * fogPulse * (1 + beatPulse * 0.2));
         const fog = ctx.createRadialGradient(
           config.canvas.width * 0.5,
           config.canvas.height * 0.5,
@@ -807,16 +893,17 @@
 
       const biomeHazards = mission.biomeHazards || [];
       for (const hazard of biomeHazards) {
+        const hazardBeatBoost = 1 + beatPulse * 0.16;
         const pulseRadius =
           hazard.type === "plasma_vent"
-            ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16)
-            : hazard.radius;
+            ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16) * hazardBeatBoost
+            : hazard.radius * hazardBeatBoost;
         ctx.save();
         if (hazard.type === "debris_field") {
           const ringPulse = 0.9 + Math.sin((hazard.phase ?? 0) * 3.6) * 0.1;
           ctx.strokeStyle = "rgba(140,205,255,0.55)";
           ctx.fillStyle = "rgba(96,146,198,0.09)";
-          ctx.lineWidth = 1.4 + ringPulse * 0.4;
+          ctx.lineWidth = (1.4 + ringPulse * 0.4) * hazardBeatBoost;
           ctx.setLineDash([8, 6]);
           ctx.beginPath();
           ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
@@ -831,7 +918,7 @@
             ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
           }
         } else if (hazard.type === "plasma_vent") {
-          const alpha = 0.38 + Math.sin((hazard.phase ?? 0) * 3.3) * 0.14;
+          const alpha = (0.38 + Math.sin((hazard.phase ?? 0) * 3.3) * 0.14) * (1 + beatPulse * 0.15);
           ctx.strokeStyle = `rgba(255,166,108,${alpha})`;
           ctx.fillStyle = `rgba(255,126,74,${Math.max(0.08, alpha * 0.3)})`;
           ctx.lineWidth = 1.8;
@@ -908,7 +995,7 @@
       if (!warnings.length) return;
 
       const warningText = warnings.join(" | ");
-      const alpha = 0.58 + Math.sin(performance.now() / 120) * 0.22;
+      const alpha = 0.58 + Math.sin(missionTime * 8.3) * 0.22;
       ctx.save();
       ctx.textAlign = "right";
       ctx.font = "700 14px Trebuchet MS";

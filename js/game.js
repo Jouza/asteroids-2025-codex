@@ -3363,6 +3363,9 @@
       const bonusSummary = this.formatBiomeEventBonuses(event);
       mission.biomeEventText = tr("mission.event.triggered", { event: eventName, bonus: bonusSummary || "-" });
       this.model.hangar.message = mission.biomeEventText;
+      if (typeof this.missionSystem?.triggerMissionBeat === "function") {
+        this.missionSystem.triggerMissionBeat("biome_event", 0.72, 0.86);
+      }
       this.hud.sync(this.model);
     }
 

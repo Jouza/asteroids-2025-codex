@@ -366,6 +366,9 @@
       boss.weakpointTimer = Math.min(boss.weakpointTimer, cfg.weakpointCycleSeconds[nextPhase] * 0.55);
       if (boss.isFinalBoss) this.triggerFinalBossPhaseEvent(boss);
       else this.triggerMiniBossPhaseEvent(boss);
+      if (typeof g.missionSystem?.triggerMissionBeat === "function") {
+        g.missionSystem.triggerMissionBeat("boss_phase", boss.isFinalBoss ? 1.0 : 0.84, boss.isFinalBoss ? 1.05 : 0.88);
+      }
     }
 
     updateMiniBoss(dt) {

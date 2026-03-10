@@ -37,6 +37,90 @@
       this.game = game;
     }
 
+    getBiomeVisualProfile(biomeId) {
+      const g = this.game;
+      const profiles = g.config.missionDirector?.biomeVisuals || {};
+      const profile = profiles[biomeId] || profiles.default || {};
+      const cadence = Math.max(0.35, Number(profile.ambientCadence) || 1);
+      const debrisDensity = Math.max(0.2, Number(profile.debrisDensity) || 1);
+      const fogPulse = Math.max(0, Number(profile.fogPulse) || 0);
+      const beatColor = typeof profile.beatColor === "string" && profile.beatColor.length > 0 ? profile.beatColor : "176,222,255";
+      const layersRaw = Array.isArray(profile.parallaxLayers) ? profile.parallaxLayers : [];
+      const parallaxLayers = layersRaw
+        .map((layer) => ({
+          speed: Math.max(0.05, Number(layer.speed) || 0.18),
+          alpha: Math.max(0.04, Number(layer.alpha) || 0.1),
+          size: Math.max(0.6, Number(layer.size) || 1.6),
+          driftX: Number(layer.driftX) || 1,
+          driftY: Number(layer.driftY) || 0.35
+        }))
+        .slice(0, 3);
+      return {
+        ambientCadence: cadence,
+        debrisDensity,
+        fogPulse,
+        beatColor,
+        parallaxLayers: parallaxLayers.length
+          ? parallaxLayers
+          : [
+              { speed: 0.15, alpha: 0.08, size: 1.6, driftX: 1, driftY: 0.3 },
+              { speed: 0.28, alpha: 0.11, size: 2.2, driftX: 1.1, driftY: 0.45 }
+            ]
+      };
+    }
+
+    createMissionVisualFxState(biomeId) {
+      const profile = this.getBiomeVisualProfile(biomeId);
+      return {
+        time: 0,
+        cadence: profile.ambientCadence,
+        beatTtl: 0,
+        beatMaxTtl: 0,
+        beatKind: "",
+        beatIntensity: 0,
+        seed: Math.floor(this.game.rng() * 1e9) >>> 0
+      };
+    }
+
+    updateMissionVisualFx(dt) {
+      const g = this.game;
+      const mission = g.model.currentMission;
+      if (!mission) return;
+      if (!mission.visualFx || typeof mission.visualFx !== "object") {
+        mission.visualFx = this.createMissionVisualFxState(mission.biomeId);
+      }
+      const visualFx = mission.visualFx;
+      const cadence = Math.max(0.35, Number(visualFx.cadence) || 1);
+      visualFx.time = Math.max(0, Number(visualFx.time) || 0) + dt * cadence;
+      if ((visualFx.beatTtl ?? 0) > 0) {
+        visualFx.beatTtl = Math.max(0, visualFx.beatTtl - dt);
+        if (visualFx.beatTtl <= 0) {
+          visualFx.beatKind = "";
+          visualFx.beatIntensity = 0;
+          visualFx.beatMaxTtl = 0;
+        }
+      }
+    }
+
+    triggerMissionBeat(kind, intensity = 0.7, durationSeconds = 0.7) {
+      const g = this.game;
+      const mission = g.model.currentMission;
+      if (!mission) return;
+      if (!mission.visualFx || typeof mission.visualFx !== "object") {
+        mission.visualFx = this.createMissionVisualFxState(mission.biomeId);
+      }
+      const visualFx = mission.visualFx;
+      const nextIntensity = g.clamp(Number(intensity) || 0.7, 0.1, 1.4);
+      const nextDuration = g.clamp(Number(durationSeconds) || 0.7, 0.2, 1.8);
+      const hasActiveBeat = (visualFx.beatTtl ?? 0) > 0;
+      if (!hasActiveBeat || nextIntensity >= (visualFx.beatIntensity ?? 0)) {
+        visualFx.beatKind = kind || "mission";
+      }
+      visualFx.beatIntensity = Math.max(nextIntensity, Number(visualFx.beatIntensity) || 0);
+      visualFx.beatTtl = Math.max(nextDuration, Number(visualFx.beatTtl) || 0);
+      visualFx.beatMaxTtl = Math.max(nextDuration, Number(visualFx.beatMaxTtl) || 0);
+    }
+
     getMissionDifficulty(level) {
       const g = this.game;
       const ramps = g.config.missionDirector.pacingBySector || [];
@@ -198,6 +282,7 @@
     buildMissionContext(level) {
       const biome = this.rollMissionBiome(level);
       const modifier = this.rollMissionModifier(level);
+      const biomeVisualProfile = this.getBiomeVisualProfile(biome.id);
       return {
         biomeId: biome.id,
         biomeLabel: biome.label,
@@ -217,6 +302,8 @@
           pullStrength: modifier.pullStrength ?? 0,
           radius: modifier.radius ?? 0
         },
+        biomeVisualProfile,
+        visualFx: this.createMissionVisualFxState(biome.id),
         gravityAnomaly:
           modifier.id === "gravity_anomaly" ? this.createGravityAnomaly(modifier) : null
       };
@@ -352,6 +439,7 @@
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.label = tr("mission.label.survive");
         g.model.currentMission.objectiveText = tr("mission.hold_for", { seconds: g.model.missionTimer.toFixed(0) });
+        g.model.currentMission.surviveCleanupBeatTriggered = false;
       }
 
       if (type === "ufo_hunt") {
@@ -440,6 +528,7 @@
           kills: 0,
           target: g.model.missionSpawnBudget
         });
+        g.model.currentMission.asteroidCleanupBeatTriggered = false;
         this.spawnAsteroidPack(level, initialLarge, initialMedium);
         g.model.missionSpawnTimer = g.model.currentMission.spawnIntervalSeconds;
       }
@@ -468,6 +557,7 @@
       }
 
       g.onMissionStarted();
+      this.triggerMissionBeat("mission_start", 0.55, 0.62);
     }
 
     applyMissionEnvironmentalEffects(dt) {
@@ -626,6 +716,7 @@
       if (g.model.gameState !== window.Asteroids.GAME_STATE.PLAYING || !g.model.currentMission) return;
 
       const mission = g.model.currentMission;
+      this.updateMissionVisualFx(dt);
       const type = mission.type;
       mission.biomeIntroTimer = Math.max(0, (mission.biomeIntroTimer ?? 0) - dt);
       const threatsRemaining =
@@ -659,6 +750,10 @@
         if (g.model.missionTimer > 0) {
           mission.objectiveText = tr("mission.hold_for", { seconds: g.model.missionTimer.toFixed(1) });
         } else {
+          if (!mission.surviveCleanupBeatTriggered) {
+            this.triggerMissionBeat("survive_cleanup", 0.7, 0.74);
+            mission.surviveCleanupBeatTriggered = true;
+          }
           mission.objectiveText = tr("mission.clear_remaining", { count: threatsRemaining });
         }
         if (g.model.missionTimer <= 0 && threatsRemaining === 0) mission.completed = true;
@@ -681,6 +776,7 @@
           if (preludeKillsNow >= preludeTarget && g.model.ufos.length === 0) {
             mission.ufoHuntPhase = "finale";
             g.model.missionSpawnTimer = 0;
+            this.triggerMissionBeat("hunt_finale", 0.84, 0.86);
           }
         }
 
@@ -716,6 +812,10 @@
         if (g.model.missionAsteroidKills < target) {
           mission.objectiveText = tr("mission.break_asteroids", { kills: shownKills, target });
         } else {
+          if (!mission.asteroidCleanupBeatTriggered) {
+            this.triggerMissionBeat("storm_cleanup", 0.74, 0.74);
+            mission.asteroidCleanupBeatTriggered = true;
+          }
           mission.objectiveText = tr("mission.target_reached_clear", { count: threatsRemaining });
         }
         if (g.model.missionAsteroidKills >= target && threatsRemaining === 0) mission.completed = true;
