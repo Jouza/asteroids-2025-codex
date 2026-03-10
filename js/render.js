@@ -1806,6 +1806,15 @@
           if (num > 0) return `+${num}`;
           return String(num);
         };
+        const formatBountyRow = (offer) => {
+          if (!offer) return "-";
+          const label = offer.label || tr(`game.bounty.kind.${offer.kind}`);
+          const progress = Math.max(0, Math.floor(Number(offer.progress) || 0));
+          const target = Math.max(1, Math.floor(Number(offer.target) || 1));
+          const credits = Math.max(0, Math.floor(Number(offer.rewardCredits) || 0));
+          const salvage = Math.max(0, Math.floor(Number(offer.rewardSalvage) || 0));
+          return tr("render.hangar.bounty_row", { label, progress, target, credits, salvage });
+        };
         const resolveThresholdId = (repValue) => {
           const thresholds = Array.isArray(config.faction?.repThresholds) ? config.faction.repThresholds : [];
           const sorted = thresholds
@@ -2337,6 +2346,28 @@
         drawRow(statusRightX, statusRightY, `Tuning x${tuningMultiplier.toFixed(2)} | Shots ${maxShots}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
         statusRightY += statusGap;
         drawRow(statusRightX, statusRightY, tr("hud.status.contraband_heat", { heat: Math.floor(Number(model.contrabandHeat) || 0) }), "#ffb58f", "500 12px Trebuchet MS", statusColW);
+        statusRightY += statusGap;
+        const bountyBoard = model.bountyBoard || {};
+        const bountySector = Math.max(1, Math.floor(Number(bountyBoard.sector) || model.sector));
+        drawRow(
+          statusRightX,
+          statusRightY,
+          tr("render.hangar.bounty_title", { sector: bountySector }),
+          "#ffd785",
+          "700 12px Trebuchet MS",
+          statusColW
+        );
+        statusRightY += 14;
+        const bountyOffers = Array.isArray(bountyBoard.offers) ? bountyBoard.offers : [];
+        if (!bountyOffers.length) {
+          drawRow(statusRightX, statusRightY, tr("render.hangar.bounty_none"), "rgba(216,245,255,0.7)", "500 12px Trebuchet MS", statusColW);
+        } else {
+          for (const offer of bountyOffers.slice(0, 3)) {
+            const rowColor = offer.claimed || offer.completed ? "#9bf5bb" : "#d8f5ff";
+            drawRow(statusRightX, statusRightY, formatBountyRow(offer), rowColor, "500 11px Trebuchet MS", statusColW);
+            statusRightY += 14;
+          }
+        }
 
         const actionBarY = bottomRowY + bottomRowH + 10;
         ctx.fillStyle = "rgba(4,12,24,0.88)";

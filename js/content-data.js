@@ -188,7 +188,60 @@
       ]
     },
     mission: {
-      order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]
+      order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
+      bountyBoard: {
+        slots: 3,
+        templates: [
+          {
+            id: "ufo_hunter",
+            kind: "ufo_kills",
+            labelKey: "game.bounty.kind.ufo_kills",
+            baseTarget: 2,
+            targetStep: 1,
+            targetStepEverySectors: 2,
+            rewardCreditsBase: 42,
+            rewardCreditsStep: 8,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 1
+          },
+          {
+            id: "asteroid_breaker",
+            kind: "asteroid_kills",
+            labelKey: "game.bounty.kind.asteroid_kills",
+            baseTarget: 8,
+            targetStep: 2,
+            targetStepEverySectors: 2,
+            rewardCreditsBase: 38,
+            rewardCreditsStep: 7,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 1
+          },
+          {
+            id: "contract_runner",
+            kind: "mission_clears",
+            labelKey: "game.bounty.kind.mission_clears",
+            baseTarget: 1,
+            targetStep: 0,
+            targetStepEverySectors: 1,
+            rewardCreditsBase: 34,
+            rewardCreditsStep: 6,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 0
+          },
+          {
+            id: "credit_sweep",
+            kind: "credits_earned",
+            labelKey: "game.bounty.kind.credits_earned",
+            baseTarget: 48,
+            targetStep: 12,
+            targetStepEverySectors: 2,
+            rewardCreditsBase: 46,
+            rewardCreditsStep: 10,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 1
+          }
+        ]
+      }
     },
     missionDirector: {
       pacingBySector: [

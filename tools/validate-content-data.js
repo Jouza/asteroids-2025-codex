@@ -199,6 +199,45 @@ function validateContentData(contentData, issues) {
       assert(allowedMissions.has(missionId), `mission.order contains unknown id: ${missionId}`, issues);
     }
   }
+  const bountyBoard = contentData.mission?.bountyBoard;
+  if (bountyBoard != null) {
+    assert(
+      bountyBoard && typeof bountyBoard === "object" && !Array.isArray(bountyBoard),
+      "mission.bountyBoard must be an object when provided",
+      issues
+    );
+    if (bountyBoard && typeof bountyBoard === "object" && !Array.isArray(bountyBoard)) {
+      assert(
+        Number.isFinite(Number(bountyBoard.slots)) && Number(bountyBoard.slots) >= 1,
+        "mission.bountyBoard.slots must be >= 1",
+        issues
+      );
+      const templates = bountyBoard.templates;
+      assert(Array.isArray(templates) && templates.length >= 1, "mission.bountyBoard.templates must be non-empty", issues);
+      if (Array.isArray(templates)) {
+        for (const [index, template] of templates.entries()) {
+          assert(typeof template.id === "string" && template.id.length > 0, `bounty template[${index}] id is required`, issues);
+          assert(typeof template.kind === "string" && template.kind.length > 0, `bounty template[${index}] kind is required`, issues);
+          assert(Number.isFinite(Number(template.baseTarget)) && Number(template.baseTarget) >= 1, `bounty template ${template.id} baseTarget must be >= 1`, issues);
+          assert(
+            Number.isFinite(Number(template.targetStepEverySectors)) && Number(template.targetStepEverySectors) >= 1,
+            `bounty template ${template.id} targetStepEverySectors must be >= 1`,
+            issues
+          );
+          assert(
+            Number.isFinite(Number(template.rewardCreditsBase)) && Number(template.rewardCreditsBase) >= 0,
+            `bounty template ${template.id} rewardCreditsBase must be >= 0`,
+            issues
+          );
+          assert(
+            Number.isFinite(Number(template.rewardSalvageBase)) && Number(template.rewardSalvageBase) >= 0,
+            `bounty template ${template.id} rewardSalvageBase must be >= 0`,
+            issues
+          );
+        }
+      }
+    }
+  }
 
   const modeWeights = contentData.ufo?.modeWeights || {};
   const weightKeys = Object.keys(modeWeights);

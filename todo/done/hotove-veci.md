@@ -47,6 +47,13 @@
   - [x] `Victory` i `Game Over` overlay ukazuji faction debrief (start/end/delta + unlocky + posledni eventy)
   - [x] Harness coverage pro timeline snapshot a game-over summary payload
 
+- [x] Endgame / replayability - Bounty board (MVP) slice 1
+  - [x] Data-driven `mission.bountyBoard` templates (target/reward scaling) v config/content vrstve
+  - [x] Runtime bounty board model na sektor + auto generovani offeru
+  - [x] Mission-complete hook pro progress + auto payout (credits/salvage) pri splneni kontraktu
+  - [x] Hangar `TACTICAL STATUS` zobrazuje bounty board kontrakty a progress
+  - [x] Harness coverage pro board generation + mission payout flow
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

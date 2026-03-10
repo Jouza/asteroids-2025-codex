@@ -292,6 +292,10 @@
           shopIndex: 0,
           pilotCursor: 0
         },
+        bountyBoard: {
+          sector: 1,
+          offers: []
+        },
         loadout: {
           primaryId: "auto_cannon",
           secondaryId: "missile_burst",
@@ -1506,6 +1510,7 @@
       this.model.victorySummary = null;
       this.model.gameOverSummary = null;
       this.model.missionCompleteSummary = null;
+      this.model.bountyBoard = { sector: 1, offers: [] };
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
@@ -1538,6 +1543,7 @@
       this.rng = createSeededRng(this.model.runSeed);
       this.initializeShipResources(this.model.ship);
       this.initFactionRunSummary();
+      this.ensureBountyBoardForSector(this.model.sector, { force: true });
       this.enemySystem.scheduleNextUfoSpawn();
       this.missionSystem.startMission(this.model.sector);
       this.hud.sync(this.model);
@@ -2828,6 +2834,110 @@
       return this.clamp(1 - damping, minMul, 1);
     }
 
+    getBountyBoardConfig() {
+      return this.config.mission?.bountyBoard || { slots: 3, templates: [] };
+    }
+
+    getBountyTemplates() {
+      const cfg = this.getBountyBoardConfig();
+      const templates = Array.isArray(cfg.templates) ? cfg.templates : [];
+      return templates.filter((entry) => entry && typeof entry.id === "string" && typeof entry.kind === "string");
+    }
+
+    createBountyOffer(template, sector, slotIndex) {
+      const safeSector = Math.max(1, Math.floor(Number(sector) || 1));
+      const stepEvery = Math.max(1, Math.floor(Number(template.targetStepEverySectors) || 1));
+      const scalingSteps = Math.floor((safeSector - 1) / stepEvery);
+      const target = Math.max(1, Math.floor(Number(template.baseTarget) || 1) + scalingSteps * Math.max(0, Math.floor(Number(template.targetStep) || 0)));
+      const rewardCredits = Math.max(
+        0,
+        Math.floor(Number(template.rewardCreditsBase) || 0) + Math.max(0, safeSector - 1) * Math.max(0, Math.floor(Number(template.rewardCreditsStep) || 0))
+      );
+      const rewardSalvage = Math.max(
+        0,
+        Math.floor(Number(template.rewardSalvageBase) || 0) + Math.max(0, safeSector - 1) * Math.max(0, Math.floor(Number(template.rewardSalvageStep) || 0))
+      );
+      const id = `${template.id}_${safeSector}_${slotIndex}_${Math.floor(this.rng() * 1e6)}`;
+      const labelKey = template.labelKey || `game.bounty.kind.${template.kind}`;
+      return {
+        id,
+        templateId: template.id,
+        kind: template.kind,
+        labelKey,
+        label: tr(labelKey),
+        target,
+        progress: 0,
+        rewardCredits,
+        rewardSalvage,
+        completed: false,
+        claimed: false
+      };
+    }
+
+    ensureBountyBoardForSector(sector = this.model.sector, { force = false } = {}) {
+      const safeSector = Math.max(1, Math.floor(Number(sector) || 1));
+      this.model.bountyBoard =
+        this.model.bountyBoard && typeof this.model.bountyBoard === "object"
+          ? this.model.bountyBoard
+          : { sector: safeSector, offers: [] };
+      const board = this.model.bountyBoard;
+      const templates = this.getBountyTemplates();
+      const slots = Math.max(1, Math.floor(Number(this.getBountyBoardConfig().slots) || 3));
+      if (!templates.length) {
+        board.sector = safeSector;
+        board.offers = [];
+        return board;
+      }
+      const shouldReroll = force || board.sector !== safeSector || !Array.isArray(board.offers) || board.offers.length === 0;
+      if (!shouldReroll) return board;
+      const pool = templates.slice();
+      const offers = [];
+      while (offers.length < slots && pool.length > 0) {
+        const idx = Math.floor(this.rng() * pool.length);
+        const template = pool.splice(idx, 1)[0];
+        offers.push(this.createBountyOffer(template, safeSector, offers.length));
+      }
+      board.sector = safeSector;
+      board.offers = offers;
+      return board;
+    }
+
+    getBountyProgressDelta(offer, missionSummary) {
+      if (!offer || !missionSummary) return 0;
+      if (offer.kind === "ufo_kills") return Math.max(0, Math.floor(Number(missionSummary.ufoKills) || 0));
+      if (offer.kind === "asteroid_kills") return Math.max(0, Math.floor(Number(missionSummary.asteroidKills) || 0));
+      if (offer.kind === "mission_clears") return 1;
+      if (offer.kind === "credits_earned") return Math.max(0, Math.floor(Number(missionSummary.creditsGained) || 0));
+      if (offer.kind === "mini_boss_kills") return Math.max(0, Math.floor(Number(missionSummary.miniBossKills) || 0));
+      return 0;
+    }
+
+    processBountyBoardMissionResult(missionSummary) {
+      const board = this.model.bountyBoard;
+      if (!board || board.sector !== this.model.sector) return;
+      const offers = Array.isArray(board.offers) ? board.offers : [];
+      let totalCredits = 0;
+      let totalSalvage = 0;
+      for (const offer of offers) {
+        if (!offer || offer.claimed) continue;
+        const delta = this.getBountyProgressDelta(offer, missionSummary);
+        offer.progress = Math.min(offer.target, Math.max(0, offer.progress + delta));
+        offer.completed = offer.progress >= offer.target;
+        if (!offer.completed) continue;
+        offer.claimed = true;
+        totalCredits += Math.max(0, Math.floor(Number(offer.rewardCredits) || 0));
+        totalSalvage += Math.max(0, Math.floor(Number(offer.rewardSalvage) || 0));
+      }
+      if (totalCredits > 0) {
+        this.model.credits += totalCredits;
+        this.model.telemetry.creditsEarned += totalCredits;
+      }
+      if (totalSalvage > 0) this.model.salvageParts += totalSalvage;
+      if (totalCredits > 0 || totalSalvage > 0) {
+        this.model.hangar.message = tr("game.bounty.completed", { credits: totalCredits, salvage: totalSalvage });
+      }
+    }
+
     recordPrimaryShot() {
       this.model.telemetry.shots.primary += 1;
     }
@@ -2851,6 +2961,7 @@
     onMissionStarted() {
       const mission = this.model.currentMission;
       if (!mission) return;
+      this.ensureBountyBoardForSector(this.model.sector);
       this.audio.play("mission_start");
       this.audio.play("biome_stinger", {
         biomeId: mission.biomeId,
@@ -2985,6 +3096,7 @@
         utilityUses: this.model.telemetry.shots.utility - active.utilityUsesStart,
         playerHitsTaken: this.model.telemetry.playerHitsTaken - active.playerHitsStart
       };
+      this.processBountyBoardMissionResult(this.model.telemetry.lastMission);
       this.model.telemetry.activeMission = null;
       const missionType = this.model.currentMission?.type ?? active.type;
       const xpBonus = this.config.pilot.xp.missionBonusByType[missionType] ?? 0;

@@ -1045,6 +1045,47 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(61616);
+    gameA.ensureBountyBoardForSector(gameA.model.sector, { force: true });
+    const board = gameA.model.bountyBoard;
+    const expected = Math.min(
+      Math.max(1, Math.floor(Number(gameA.config.mission.bountyBoard.slots) || 3)),
+      gameA.config.mission.bountyBoard.templates.length
+    );
+    assert(Array.isArray(board.offers), "Bounty board should create offers array");
+    assert(board.offers.length === expected, "Bounty board should fill configured slot count");
+  });
+
+  tests.push(() => {
+    gameA.startGame(62626);
+    gameA.model.credits = 0;
+    gameA.model.salvageParts = 0;
+    gameA.model.bountyBoard = {
+      sector: gameA.model.sector,
+      offers: [
+        {
+          id: "test_contract",
+          templateId: "test_contract",
+          kind: "mission_clears",
+          labelKey: "game.bounty.kind.mission_clears",
+          label: "Contract Runner",
+          target: 1,
+          progress: 0,
+          rewardCredits: 50,
+          rewardSalvage: 2,
+          completed: false,
+          claimed: false
+        }
+      ]
+    };
+    gameA.onMissionCompleted();
+    const offer = gameA.model.bountyBoard.offers[0];
+    assert(offer.claimed, "Completed bounty should be auto-claimed on mission completion");
+    assert(gameA.model.credits >= 50, "Bounty payout should grant credits");
+    assert(gameA.model.salvageParts >= 2, "Bounty payout should grant salvage");
+  });
+
+  tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
     gameA.model.overlaySettingsRow = 4;
     gameA.model.flightModel = "arcade";

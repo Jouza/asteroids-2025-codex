@@ -829,6 +829,59 @@
     },
     mission: {
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
+      bountyBoard: {
+        slots: 3,
+        templates: [
+          {
+            id: "ufo_hunter",
+            kind: "ufo_kills",
+            labelKey: "game.bounty.kind.ufo_kills",
+            baseTarget: 2,
+            targetStep: 1,
+            targetStepEverySectors: 2,
+            rewardCreditsBase: 42,
+            rewardCreditsStep: 8,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 1
+          },
+          {
+            id: "asteroid_breaker",
+            kind: "asteroid_kills",
+            labelKey: "game.bounty.kind.asteroid_kills",
+            baseTarget: 8,
+            targetStep: 2,
+            targetStepEverySectors: 2,
+            rewardCreditsBase: 38,
+            rewardCreditsStep: 7,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 1
+          },
+          {
+            id: "contract_runner",
+            kind: "mission_clears",
+            labelKey: "game.bounty.kind.mission_clears",
+            baseTarget: 1,
+            targetStep: 0,
+            targetStepEverySectors: 1,
+            rewardCreditsBase: 34,
+            rewardCreditsStep: 6,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 0
+          },
+          {
+            id: "credit_sweep",
+            kind: "credits_earned",
+            labelKey: "game.bounty.kind.credits_earned",
+            baseTarget: 48,
+            targetStep: 12,
+            targetStepEverySectors: 2,
+            rewardCreditsBase: 46,
+            rewardCreditsStep: 10,
+            rewardSalvageBase: 1,
+            rewardSalvageStep: 1
+          }
+        ]
+      },
       survive: {
         baseDurationSeconds: 19,
         durationStepSeconds: 2.3,
@@ -1150,6 +1203,14 @@
       { ok: config.economy.minCreditsPerKill >= 0, msg: "economy.minCreditsPerKill must be >= 0" },
       { ok: config.bullet.maxActive >= 1 && config.bullet.maxActive <= 30, msg: "bullet.maxActive out of expected range" },
       { ok: config.mission.survive.baseDurationSeconds >= 5, msg: "mission.survive.baseDurationSeconds too low" },
+      {
+        ok:
+          Number.isFinite(config.mission?.bountyBoard?.slots) &&
+          config.mission.bountyBoard.slots >= 1 &&
+          Array.isArray(config.mission.bountyBoard.templates) &&
+          config.mission.bountyBoard.templates.length >= 1,
+        msg: "mission.bountyBoard missing or invalid"
+      },
       { ok: config.mission.ufoHunt.maxConcurrentCap >= 1, msg: "mission.ufoHunt.maxConcurrentCap must be >= 1" },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
