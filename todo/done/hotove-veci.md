@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Mission flow: UFO Hunt staged finale pass
+  - [x] `ufo_hunt` prepnuto na staged flow: 1-3 prelude UFO (sekvencne po smrti) + finale 2 UFO soubezne
+  - [x] Objective/status text doplnen o fazovy progress (`Hunt ... | Final wave ...`)
+  - [x] Harness coverage upravena pro staged hunt a finale spawn behavior
+  - [x] Help text pro kartu `UFO HUNT` aktualizovan na novy flow
+
 - [x] Combat feedback: floating damage numbers na UFO zasah
   - [x] Pri zasahu UFO se vykresli plovouci damage text s fade-out (`-X SH` pro shield, `-Y HU` pro hull)
   - [x] Stejny floating damage feedback rozsireny i na mini-bosse (`-Y HU`), vcetne Boss Rush flow

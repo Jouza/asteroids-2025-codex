@@ -447,6 +447,8 @@ function runTests() {
     gameA.model.sector = 1;
     gameA.missionSystem.startMission(2);
     const earlyBudget = gameA.model.missionSpawnBudget;
+    const earlyPrelude = gameA.model.currentMission.preludeTargetUfos;
+    const earlyFinale = gameA.model.currentMission.finaleTargetUfos;
     const earlyInterval = gameA.model.currentMission.spawnIntervalSeconds;
 
     gameA.model.sector = 7;
@@ -454,7 +456,10 @@ function runTests() {
     const lateBudget = gameA.model.missionSpawnBudget;
     const lateInterval = gameA.model.currentMission.spawnIntervalSeconds;
 
-    assert(lateBudget > earlyBudget, "Mission pacing should scale UFO hunt budget by sector");
+    assert(earlyPrelude >= 1 && earlyPrelude <= 3, "UFO hunt prelude target should stay in 1-3 range");
+    assert(earlyFinale === 2, "UFO hunt should always use two simultaneous finale UFOs");
+    assert(earlyBudget === earlyPrelude + earlyFinale, "UFO hunt total target should be prelude + finale");
+    assert(lateBudget >= earlyBudget, "Mission pacing should not reduce UFO hunt total target by sector");
     assert(lateInterval < earlyInterval, "Mission pacing should reduce spawn interval at higher sectors");
   });
 
@@ -465,20 +470,34 @@ function runTests() {
     gameA.missionSystem.startMission(2);
     const campaignBudget = gameA.model.missionSpawnBudget;
     const campaignInterval = gameA.model.currentMission.spawnIntervalSeconds;
-    const campaignConcurrent = gameA.model.currentMission.maxConcurrentUfos;
     assert(gameA.getEndlessCreditsMultiplier() === 1, "Campaign credits multiplier should stay at 1.0");
 
     gameA.model.runMode = "endless";
     gameA.missionSystem.startMission(2);
     const endlessBudget = gameA.model.missionSpawnBudget;
     const endlessInterval = gameA.model.currentMission.spawnIntervalSeconds;
-    const endlessConcurrent = gameA.model.currentMission.maxConcurrentUfos;
     const endlessCreditsMul = gameA.getEndlessCreditsMultiplier();
 
     assert(endlessBudget >= campaignBudget, "Endless pacing should not reduce objective budget at high sectors");
     assert(endlessInterval < campaignInterval, "Endless pacing should increase spawn pressure via shorter interval");
-    assert(endlessConcurrent >= campaignConcurrent, "Endless pacing should not reduce concurrent UFO pressure");
     assert(endlessCreditsMul < 1, "Endless economy should damp credits at high sectors");
+  });
+
+  tests.push(() => {
+    gameA.startGame(7373);
+    gameA.model.sector = 5;
+    gameA.missionSystem.startMission(2);
+    const mission = gameA.model.currentMission;
+    const preludeTarget = mission.preludeTargetUfos;
+    const finaleTarget = mission.finaleTargetUfos;
+    mission.preludeSpawnedUfos = preludeTarget;
+    gameA.model.missionUfoKills = preludeTarget;
+    gameA.model.ufos = [];
+    gameA.model.missionSpawnTimer = 0;
+    gameA.missionSystem.updateMission(0);
+    assert(mission.ufoHuntPhase === "finale", "UFO hunt should transition to finale phase after prelude clear");
+    assert(gameA.model.ufos.length === finaleTarget, "UFO hunt finale should spawn all finale UFOs simultaneously");
+    assert(gameA.model.ufos.every((ufo) => ufo.huntFinale === true), "Finale UFOs should be tagged as finale");
   });
 
   tests.push(() => {

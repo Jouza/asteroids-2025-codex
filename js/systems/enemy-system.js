@@ -55,12 +55,13 @@
       ufo.maxHp = ufo.hp;
     }
 
-    spawnMissionUfo() {
+    spawnMissionUfo(options = {}) {
       const g = this.game;
       const mode = this.rollUfoModeForSector();
       const x = g.rng() < 0.5 ? -28 : g.config.canvas.width + 28;
       const y = randomRange(g.rng, 90, g.config.canvas.height - 90);
       const ufo = createUfo(mode, x, y, g.config);
+      if (options.huntPhase === "finale") ufo.huntFinale = true;
       this.maybeAssignElitePrefix(ufo);
       g.model.ufos.push(ufo);
     }

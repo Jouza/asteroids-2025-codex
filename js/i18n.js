@@ -202,6 +202,7 @@
       "mission.clear_remaining": "Clear remaining threats: {count}",
       "mission.hold_for": "Hold for {seconds}s",
       "mission.destroy_ufos": "Destroy UFOs: {kills}/{target}",
+      "mission.ufo_hunt_staged": "Hunt {preludeKills}/{preludeTarget} | Final wave {finaleKills}/{finaleTarget}",
       "mission.break_asteroids": "Break asteroids: {kills}/{target}",
       "mission.target_reached_clear": "Target reached. Clear remaining threats: {count}",
       "mission.destroy_boss": "Destroy boss ({hp} HP)",
@@ -440,9 +441,9 @@
       "help.card.mission_survive.impact": "<strong>Impact:</strong> tempo management, space control, and stable resource economy.",
       "help.card.mission_ufo_hunt.name": "UFO HUNT",
       "help.card.mission_ufo_hunt.tag": "Kill quota",
-      "help.card.mission_ufo_hunt.line": "Complete UFO kill quota. Spawn tempo and parallel pressure increase by sector.",
+      "help.card.mission_ufo_hunt.line": "Clear staged hunt flow: 1-3 chained UFOs, then 2 finale UFOs at once.",
       "help.card.mission_ufo_hunt.impact":
-        "<strong>Impact:</strong> target-priority execution and reading enemy roles (support/sniper/kamikaze).",
+        "<strong>Impact:</strong> controlled single-target pacing in prelude, then burst survival in finale overlap.",
       "help.card.mission_asteroid_storm.name": "ASTEROID STORM",
       "help.card.mission_asteroid_storm.tag": "Break quota",
       "help.card.mission_asteroid_storm.line":

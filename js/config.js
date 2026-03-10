@@ -969,6 +969,10 @@
       ufoHunt: {
         baseKills: 1,
         killStep: 1,
+        preludeMinUfos: 1,
+        preludeMaxUfos: 3,
+        preludeTargetScale: 0.75,
+        finaleConcurrentUfos: 2,
         maxConcurrentUfos: 1,
         maxConcurrentRampEverySectors: 4,
         maxConcurrentCap: 3,
@@ -1299,7 +1303,13 @@
           config.mission.bountyBoard.templates.length >= 1,
         msg: "mission.bountyBoard missing or invalid"
       },
-      { ok: config.mission.ufoHunt.maxConcurrentCap >= 1, msg: "mission.ufoHunt.maxConcurrentCap must be >= 1" },
+      {
+        ok:
+          config.mission.ufoHunt.preludeMinUfos >= 1 &&
+          config.mission.ufoHunt.preludeMaxUfos >= config.mission.ufoHunt.preludeMinUfos &&
+          config.mission.ufoHunt.finaleConcurrentUfos >= 1,
+        msg: "mission.ufoHunt staged targets are invalid"
+      },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
       { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" },

@@ -10,6 +10,7 @@
     "mission.label.final_boss": "FINAL BOSS",
     "mission.hold_for": "Hold for {seconds}s",
     "mission.destroy_ufos": "Destroy UFOs: {kills}/{target}",
+    "mission.ufo_hunt_staged": "Hunt {preludeKills}/{preludeTarget} | Final wave {finaleKills}/{finaleTarget}",
     "mission.break_asteroids": "Break asteroids: {kills}/{target}",
     "mission.target_reached_clear": "Target reached. Clear remaining threats: {count}",
     "mission.clear_remaining": "Clear remaining threats: {count}",
@@ -356,26 +357,33 @@
       if (type === "ufo_hunt") {
         const baseKills =
           missionCfg.ufoHunt.baseKills + Math.floor((level - 1) / 2) * missionCfg.ufoHunt.killStep;
-        g.model.missionSpawnBudget = Math.max(
-          1,
+        const preludeMin = Math.max(1, Math.floor(missionCfg.ufoHunt.preludeMinUfos ?? 1));
+        const preludeMax = Math.max(preludeMin, Math.floor(missionCfg.ufoHunt.preludeMaxUfos ?? 3));
+        const preludeScale = Math.max(0.1, Number(missionCfg.ufoHunt.preludeTargetScale ?? 0.55));
+        const preludeTarget = this.game.clamp(
           Math.round(
             this.applyMissionVariance(
               baseKills *
                 difficulty *
                 endless.objectiveMul *
-                (g.model.currentMission.factionDirective?.objectiveMul ?? 1),
+                (g.model.currentMission.factionDirective?.objectiveMul ?? 1) *
+                preludeScale,
               0.1
             )
-          )
+          ),
+          preludeMin,
+          preludeMax
         );
+        const finaleTarget = Math.max(1, Math.floor(missionCfg.ufoHunt.finaleConcurrentUfos ?? 2));
+        g.model.currentMission.ufoHuntPhase = "prelude";
+        g.model.currentMission.preludeTargetUfos = preludeTarget;
+        g.model.currentMission.preludeSpawnedUfos = 0;
+        g.model.currentMission.finaleTargetUfos = finaleTarget;
+        g.model.currentMission.finaleSpawnedUfos = 0;
+        g.model.currentMission.maxConcurrentUfos = 1;
+        g.model.currentMission.totalTargetUfos = preludeTarget + finaleTarget;
+        g.model.missionSpawnBudget = g.model.currentMission.totalTargetUfos;
         g.model.missionSpawnTimer = 0.2;
-        g.model.currentMission.maxConcurrentUfos = Math.min(
-          missionCfg.ufoHunt.maxConcurrentCap + endless.extraConcurrent,
-          missionCfg.ufoHunt.maxConcurrentUfos +
-            Math.floor((level - 1) / missionCfg.ufoHunt.maxConcurrentRampEverySectors) +
-            (difficulty >= 1.25 ? 1 : 0) +
-            endless.extraConcurrent
-        );
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
           missionCfg.ufoHunt.spawnIntervalSeconds,
           missionCfg.ufoHunt.spawnRateRampPerSector,
@@ -386,7 +394,12 @@
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.spawnIntervalSeconds *= g.model.currentMission.factionDirective?.spawnIntervalMul ?? 1;
         g.model.currentMission.label = tr("mission.label.ufo_hunt");
-        g.model.currentMission.objectiveText = tr("mission.destroy_ufos", { kills: 0, target: g.model.missionSpawnBudget });
+        g.model.currentMission.objectiveText = tr("mission.ufo_hunt_staged", {
+          preludeKills: 0,
+          preludeTarget,
+          finaleKills: 0,
+          finaleTarget
+        });
       }
 
       if (type === "asteroid_storm") {
@@ -653,15 +666,43 @@
 
       if (type === "ufo_hunt") {
         g.model.missionSpawnTimer -= dt;
-        const target = g.model.missionSpawnBudget;
-        const remainingKills = target - g.model.missionUfoKills;
-        const desiredConcurrent = Math.min(mission.maxConcurrentUfos ?? g.config.mission.ufoHunt.maxConcurrentUfos, remainingKills);
-        if (remainingKills > 0 && g.model.ufos.length < desiredConcurrent && g.model.missionSpawnTimer <= 0) {
-          g.enemySystem.spawnMissionUfo();
-          g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.ufoHunt.spawnIntervalSeconds;
+        const preludeTarget = Math.max(1, Math.floor(mission.preludeTargetUfos ?? 1));
+        const finaleTarget = Math.max(1, Math.floor(mission.finaleTargetUfos ?? 2));
+        const phase = mission.ufoHuntPhase || "prelude";
+
+        if (phase === "prelude") {
+          const spawnedPrelude = Math.max(0, Math.floor(mission.preludeSpawnedUfos || 0));
+          if (spawnedPrelude < preludeTarget && g.model.ufos.length === 0 && g.model.missionSpawnTimer <= 0) {
+            g.enemySystem.spawnMissionUfo({ huntPhase: "prelude" });
+            mission.preludeSpawnedUfos = spawnedPrelude + 1;
+            g.model.missionSpawnTimer = mission.spawnIntervalSeconds ?? g.config.mission.ufoHunt.spawnIntervalSeconds;
+          }
+          const preludeKillsNow = Math.min(preludeTarget, g.model.missionUfoKills);
+          if (preludeKillsNow >= preludeTarget && g.model.ufos.length === 0) {
+            mission.ufoHuntPhase = "finale";
+            g.model.missionSpawnTimer = 0;
+          }
         }
-        mission.objectiveText = tr("mission.destroy_ufos", { kills: g.model.missionUfoKills, target });
-        if (g.model.missionUfoKills >= target && threatsRemaining === 0) mission.completed = true;
+
+        if (mission.ufoHuntPhase === "finale") {
+          const spawnedFinale = Math.max(0, Math.floor(mission.finaleSpawnedUfos || 0));
+          if (spawnedFinale < finaleTarget && g.model.ufos.length === 0) {
+            for (let i = spawnedFinale; i < finaleTarget; i += 1) {
+              g.enemySystem.spawnMissionUfo({ huntPhase: "finale" });
+            }
+            mission.finaleSpawnedUfos = finaleTarget;
+          }
+        }
+
+        const preludeKills = Math.min(preludeTarget, g.model.missionUfoKills);
+        const finaleKills = g.clamp(g.model.missionUfoKills - preludeTarget, 0, finaleTarget);
+        mission.objectiveText = tr("mission.ufo_hunt_staged", {
+          preludeKills,
+          preludeTarget,
+          finaleKills,
+          finaleTarget
+        });
+        if (finaleKills >= finaleTarget && threatsRemaining === 0) mission.completed = true;
       }
 
       if (type === "asteroid_storm") {
