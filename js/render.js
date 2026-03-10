@@ -13,6 +13,7 @@
     render(model, input) {
       this.clear();
       this.drawStarfield();
+      this.drawDeepSpaceBackdrop(model);
       this.drawAsteroids(model.asteroids);
       this.drawUfos(model.ufos);
       this.drawMiniBoss(model.miniBoss);
@@ -21,10 +22,12 @@
       this.drawUtilityEffects(model.utilityEffects);
       this.drawParticles(model.particles);
       this.drawDamageNumbers(model.damageNumbers);
+      this.drawForegroundDust(model);
       this.drawShip(model, input);
       this.drawVignette();
       this.drawMissionEnvironment(model);
       this.drawMissionBeats(model);
+      this.drawCinematicFlash(model);
       this.drawFlash(model.flashMs);
       this.drawMissionStatus(model);
       this.drawTelemetry(model);
@@ -652,6 +655,133 @@
       ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
     }
 
+    getAtmospherePerfScale(model) {
+      const avgFrameMs = Number(model?.performance?.avgFrameMs) || 0;
+      if (avgFrameMs > 18) return 0.7;
+      return 1;
+    }
+
+    drawDeepSpaceBackdrop(model) {
+      const mission = model.currentMission;
+      if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
+      const { ctx, config } = this;
+      const visual = mission.biomeVisualProfile || {};
+      const deepSpace = visual.deepSpace || {};
+      const visualFx = mission.visualFx || {};
+      const missionTime = Math.max(0, Number(visualFx.time) || 0);
+      const seed = Number(visualFx.layerSeedA ?? visualFx.seed) || 0;
+      const perfScale = this.getAtmospherePerfScale(model);
+      const beatPulse = Math.max(0, Number(visualFx.beatIntensity) || 0) * (Math.max(0, Number(visualFx.beatTtl) || 0) > 0 ? 1 : 0);
+      const fract = (value) => value - Math.floor(value);
+      const nebulaBands = Math.max(1, Math.min(6, Math.floor(Number(deepSpace.nebulaBands) || 2)));
+      const nebulaAlpha = Math.max(0.02, Math.min(0.3, Number(deepSpace.nebulaAlpha) || 0.09));
+      const dustBands = Math.max(1, Math.min(4, Math.floor(Number(deepSpace.dustBands) || 2)));
+      const dustCount = Math.min(80, Math.max(18, Math.round(18 * dustBands * perfScale)));
+
+      ctx.save();
+      for (let i = 0; i < nebulaBands; i += 1) {
+        const basis = seed * 0.000001 + i * 0.761;
+        const centerX = fract(basis * 7.31 + missionTime * 0.01 * (0.4 + i * 0.16)) * config.canvas.width;
+        const centerY = fract(basis * 9.53 + missionTime * 0.007 * (0.36 + i * 0.12)) * config.canvas.height;
+        const radius = config.canvas.height * (0.24 + i * 0.08);
+        const tintShift = 8 + i * 10;
+        const alpha = Math.min(0.22, nebulaAlpha * (0.72 + i * 0.14) * (1 + beatPulse * 0.08));
+        const glow = ctx.createRadialGradient(centerX, centerY, radius * 0.12, centerX, centerY, radius);
+        glow.addColorStop(0, `rgba(${96 + tintShift},${128 + tintShift},${188 + tintShift},${alpha})`);
+        glow.addColorStop(1, "rgba(8,12,24,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      }
+
+      ctx.fillStyle = "rgba(174,210,242,0.08)";
+      for (let i = 0; i < dustCount; i += 1) {
+        const basis = seed * 0.000001 + i * 0.193;
+        const x = fract(basis * 17.39 + missionTime * 0.01 * (0.24 + (i % 4) * 0.08)) * config.canvas.width;
+        const y = fract(basis * 23.41 + missionTime * 0.008 * (0.2 + (i % 3) * 0.06)) * config.canvas.height;
+        const r = 0.7 + (i % 3) * 0.5;
+        ctx.fillRect(x, y, r, r);
+      }
+      ctx.restore();
+
+      this.drawWarScars(mission, missionTime, model);
+    }
+
+    drawWarScars(mission, missionTime, model) {
+      const { ctx, config } = this;
+      const visual = mission.biomeVisualProfile || {};
+      const scars = visual.warScars || {};
+      const visualFx = mission.visualFx || {};
+      const perfScale = this.getAtmospherePerfScale(model);
+      const beatBoost = 1 + Math.max(0, Number(visualFx.beatIntensity) || 0) * (Number(visualFx.beatTtl) > 0 ? 0.14 : 0);
+      const density = Math.max(0.2, Math.min(2.2, Number(scars.density) || 1));
+      const lenMin = Math.max(8, Number(scars.streakLenMin) || 18);
+      const lenMax = Math.max(lenMin, Number(scars.streakLenMax) || 44);
+      const flickerCadence = Math.max(0.2, Number(scars.flickerCadence) || 1);
+      const silhouetteChance = Math.max(0, Math.min(0.95, Number(scars.silhouetteChance) || 0.16));
+      const seed = Number(visualFx.layerSeedA ?? visualFx.seed) || 0;
+      const count = Math.min(36, Math.max(6, Math.round(14 * density * perfScale)));
+      const fract = (value) => value - Math.floor(value);
+
+      ctx.save();
+      for (let i = 0; i < count; i += 1) {
+        const basis = seed * 0.000001 + i * 0.419;
+        const x = fract(basis * 13.17 + missionTime * 0.02) * config.canvas.width;
+        const y = fract(basis * 7.91 + missionTime * 0.015) * config.canvas.height;
+        const phase = missionTime * flickerCadence + i * 0.67;
+        const alpha = Math.max(0.04, 0.15 + Math.sin(phase) * 0.06) * beatBoost;
+        const len = lenMin + fract(basis * 29.11) * (lenMax - lenMin);
+        const angle = (-0.45 + fract(basis * 19.37) * 0.9) * Math.PI;
+        const dx = Math.cos(angle) * len;
+        const dy = Math.sin(angle) * len;
+        ctx.strokeStyle = `rgba(164,198,228,${Math.min(0.32, alpha)})`;
+        ctx.lineWidth = 1.05 + fract(basis * 37.3) * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + dx, y + dy);
+        ctx.stroke();
+
+        if (fract(basis * 43.9) < silhouetteChance) {
+          const sw = 8 + fract(basis * 11.9) * 20;
+          const sh = 3 + fract(basis * 17.7) * 10;
+          ctx.fillStyle = `rgba(18,24,38,${Math.min(0.3, alpha * 0.9)})`;
+          ctx.fillRect(x - sw * 0.5, y - sh * 0.5, sw, sh);
+        }
+      }
+      ctx.restore();
+    }
+
+    drawForegroundDust(model) {
+      const mission = model.currentMission;
+      if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
+      const { ctx, config } = this;
+      const visual = mission.biomeVisualProfile || {};
+      const dust = visual.foregroundDust || {};
+      const visualFx = mission.visualFx || {};
+      const missionTime = Math.max(0, Number(visualFx.time) || 0);
+      const seed = Number(visualFx.layerSeedB ?? visualFx.seed) || 0;
+      const perfScale = this.getAtmospherePerfScale(model);
+      const density = Math.max(0.2, Math.min(2.5, Number(dust.density) || 1));
+      const speedMul = Math.max(0.2, Math.min(2.8, Number(dust.speedMul) || 1));
+      const alphaBase = Math.max(0.04, Math.min(0.5, Number(dust.alpha) || 0.22));
+      const sizeMin = Math.max(0.2, Number(dust.sizeMin) || 0.8);
+      const sizeMax = Math.max(sizeMin, Number(dust.sizeMax) || 2.2);
+      const count = Math.min(90, Math.max(16, Math.round(32 * density * perfScale)));
+      const fract = (value) => value - Math.floor(value);
+
+      ctx.save();
+      for (let i = 0; i < count; i += 1) {
+        const basis = seed * 0.000001 + i * 0.251;
+        const speed = (0.34 + fract(basis * 11.1) * 0.96) * speedMul;
+        const x = fract(basis * 31.37 + missionTime * speed * 0.03) * (config.canvas.width + 24) - 12;
+        const y = fract(basis * 17.91 + missionTime * speed * 0.024) * (config.canvas.height + 24) - 12;
+        const size = sizeMin + fract(basis * 23.41) * (sizeMax - sizeMin);
+        const alpha = Math.min(0.46, alphaBase * (0.72 + fract(basis * 29.7) * 0.42));
+        ctx.fillStyle = `rgba(182,212,236,${alpha})`;
+        ctx.fillRect(x, y, size, size);
+      }
+      ctx.restore();
+    }
+
     drawBiomeParallaxBackdrop(mission, missionTime) {
       const { ctx, config } = this;
       const visual = mission.biomeVisualProfile || {};
@@ -722,6 +852,40 @@
       ctx.beginPath();
       ctx.arc(config.canvas.width * 0.5, config.canvas.height * 0.5, ringRadius, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.restore();
+    }
+
+    drawCinematicFlash(model) {
+      const mission = model.currentMission;
+      if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
+      const visualFx = mission.visualFx || {};
+      const flashTtl = Number(visualFx.flashTtl) || 0;
+      if (flashTtl <= 0) return;
+      const flashMaxTtl = Math.max(0.01, Number(visualFx.flashMaxTtl) || flashTtl);
+      const flashIntensity = Math.max(0.08, Number(visualFx.flashIntensity) || 0.2);
+      const flashColor = typeof visualFx.flashColor === "string" && visualFx.flashColor.length > 0
+        ? visualFx.flashColor
+        : "176,222,255";
+      const perfScale = this.getAtmospherePerfScale(model);
+      const perfAlphaMul = perfScale < 1 ? 0.75 : 1;
+      const ratio = Math.max(0, Math.min(1, flashTtl / flashMaxTtl));
+      const alpha = Math.max(0.03, Math.min(0.34, ratio * flashIntensity * 0.42)) * perfAlphaMul;
+      const { ctx, config } = this;
+      ctx.save();
+      ctx.fillStyle = `rgba(${flashColor},${alpha})`;
+      ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      const bandA = ctx.createLinearGradient(0, config.canvas.height * 0.24, 0, config.canvas.height * 0.4);
+      bandA.addColorStop(0, "rgba(0,0,0,0)");
+      bandA.addColorStop(0.5, `rgba(${flashColor},${alpha * 0.8})`);
+      bandA.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bandA;
+      ctx.fillRect(0, config.canvas.height * 0.2, config.canvas.width, config.canvas.height * 0.24);
+      const bandB = ctx.createLinearGradient(0, config.canvas.height * 0.62, 0, config.canvas.height * 0.82);
+      bandB.addColorStop(0, "rgba(0,0,0,0)");
+      bandB.addColorStop(0.5, `rgba(${flashColor},${alpha * 0.58})`);
+      bandB.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bandB;
+      ctx.fillRect(0, config.canvas.height * 0.6, config.canvas.width, config.canvas.height * 0.24);
       ctx.restore();
     }
 

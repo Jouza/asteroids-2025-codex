@@ -369,6 +369,9 @@
       if (typeof g.missionSystem?.triggerMissionBeat === "function") {
         g.missionSystem.triggerMissionBeat("boss_phase", boss.isFinalBoss ? 1.0 : 0.84, boss.isFinalBoss ? 1.05 : 0.88);
       }
+      if (typeof g.missionSystem?.triggerMissionFlash === "function") {
+        g.missionSystem.triggerMissionFlash(boss.isFinalBoss ? 0.72 : 0.52, boss.isFinalBoss ? 0.84 : 0.62, "255,148,216");
+      }
     }
 
     updateMiniBoss(dt) {

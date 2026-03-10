@@ -12,9 +12,9 @@
   - [ ] Off-screen warning indikator pro velke boss/hazard hrozby mimo viewport
   - [ ] Hit clarity pass: odlisit incoming damage typy (kinetic/explosive/dot) pres VFX cue
 
-- [ ] Biome atmosphere pass 2.0
-  - [ ] Vetsi vizualni rozdily biome behem boje (parallax/debris density/ambient cadence)
-  - [ ] Kontextove "event beats" (svetlo/fog pulse) pri mission phase transitions a boss phase
+- [ ] Atmosphere follow-up (post Raw Space v1)
+  - [ ] Lokalni slider/preset pro intenzitu ambient VFX (Low/Default/High) pro slabsi GPU
+  - [ ] Dalsi "event beat" varianty podle hazard typu (unikatni signature pulse)
 
 - [ ] Hangar visual/gameplay UX follow-up
   - [ ] Tactical status viewport/scroll pro nizsi vysky (stejny princip jako SHOP & OPS)

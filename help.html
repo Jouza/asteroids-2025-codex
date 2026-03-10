@@ -295,6 +295,7 @@
         mission_asteroid_storm: "mission",
         mission_mini_boss: "mission",
         boss_rush_mode: "mission",
+        raw_space_atmosphere: "biome",
         biome_belt_fringe: "biome",
         biome_wreck_graveyard: "biome",
         biome_refinery: "biome",
@@ -673,7 +674,7 @@
       });
 
       const biomes = cfg.missionDirector?.biomes || [];
-      const biomeCards = [];
+      const biomeCards = ["raw_space_atmosphere"];
       for (const biome of biomes) {
         const key = biomeCardById[biome.id];
         if (key && !biomeCards.includes(key)) biomeCards.push(key);

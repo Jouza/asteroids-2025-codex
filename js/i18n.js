@@ -386,7 +386,13 @@
         "<strong>Impact:</strong> fast high-pressure boss practice loop with clear run-complete endpoint.",
       "help.section.biomes": "Biomes",
       "help.section.biomes_hint":
-        "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, hazard zones, and now also cadence-driven parallax/debris visuals.",
+        "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, hazard zones, and cadence-driven visual profiles (deep-space layers, war scars, foreground dust, event beats).",
+      "help.card.raw_space_atmosphere.name": "Raw Space Atmosphere",
+      "help.card.raw_space_atmosphere.tag": "Visual readability",
+      "help.card.raw_space_atmosphere.line":
+        "Biome visuals now stack deep-space backdrops, war-scar streaks, and foreground dust. Mission beats and cinematic flashes mark phase transitions without changing combat rules.",
+      "help.card.raw_space_atmosphere.impact":
+        "<strong>Impact:</strong> stronger battlefield mood and clearer phase awareness while keeping HUD/hazard readability.",
       "help.section.pilot_rpg": "Pilot RPG (MVP)",
       "help.section.pilot_attributes_ref": "Pilot Attributes Reference",
       "help.section.pilot_attributes_ref_hint": "Each attribute has persistent identity text shared with Pilot Console.",

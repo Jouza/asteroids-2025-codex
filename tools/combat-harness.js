@@ -166,6 +166,16 @@ function runTests() {
       gameA.model.currentMission?.visualFx && typeof gameA.model.currentMission.visualFx === "object",
       "Mission start should initialize visualFx runtime state"
     );
+    assert(
+      Number(gameA.model.currentMission.visualFx?.flashTtl) > 0 &&
+        Number(gameA.model.currentMission.visualFx?.flashIntensity) > 0,
+      "Mission start should initialize cinematic flash state"
+    );
+    assert(
+      Number.isFinite(gameA.model.currentMission.visualFx?.layerSeedA) &&
+        Number.isFinite(gameA.model.currentMission.visualFx?.layerSeedB),
+      "Mission visualFx should include stable layer seeds"
+    );
     gameA.model.missionTimer = 0;
     gameA.model.asteroids = [
       {
@@ -194,6 +204,23 @@ function runTests() {
       gameA.model.currentMission.visualFx?.beatKind === "survive_cleanup",
       "Survive cleanup transition should trigger survive_cleanup mission beat"
     );
+  });
+
+  tests.push(() => {
+    gameA.startGame(12446);
+    const mission = gameA.model.currentMission;
+    assert(mission?.visualFx, "Mission visualFx missing before flash lifecycle test");
+    if (mission.biomeVisualProfile?.cinematicFlashes) mission.biomeVisualProfile.cinematicFlashes.enabled = false;
+    mission.visualFx.flashTtl = 0.36;
+    mission.visualFx.flashMaxTtl = 0.36;
+    mission.visualFx.flashIntensity = 0.48;
+    mission.visualFx.flashColor = "188,222,255";
+    for (let i = 0; i < 120; i += 1) {
+      gameA.missionSystem.updateMissionVisualFx(1 / 60);
+    }
+    assert(mission.visualFx.flashTtl === 0, "Flash TTL should decay to zero");
+    assert(mission.visualFx.flashIntensity === 0, "Flash intensity should reset after TTL expiry");
+    assert(mission.visualFx.flashMaxTtl === 0, "Flash max TTL should reset after TTL expiry");
   });
 
   tests.push(() => {
@@ -409,6 +436,11 @@ function runTests() {
     assert(
       gameA.model.currentMission?.visualFx?.beatKind === "boss_phase",
       "Mini boss phase transition should trigger boss_phase mission beat"
+    );
+    assert(
+      Number(gameA.model.currentMission?.visualFx?.flashTtl) > 0 &&
+        Number(gameA.model.currentMission?.visualFx?.flashIntensity) > 0,
+      "Mini boss phase transition should trigger mission cinematic flash"
     );
   });
 

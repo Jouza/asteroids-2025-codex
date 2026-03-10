@@ -41,6 +41,11 @@
       const g = this.game;
       const profiles = g.config.missionDirector?.biomeVisuals || {};
       const profile = profiles[biomeId] || profiles.default || {};
+      const clamp = (value, min, max, fallback) => {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return fallback;
+        return Math.min(max, Math.max(min, num));
+      };
       const cadence = Math.max(0.35, Number(profile.ambientCadence) || 1);
       const debrisDensity = Math.max(0.2, Number(profile.debrisDensity) || 1);
       const fogPulse = Math.max(0, Number(profile.fogPulse) || 0);
@@ -55,6 +60,10 @@
           driftY: Number(layer.driftY) || 0.35
         }))
         .slice(0, 3);
+      const deepSpaceRaw = profile.deepSpace || {};
+      const warScarsRaw = profile.warScars || {};
+      const foregroundDustRaw = profile.foregroundDust || {};
+      const cinematicFlashesRaw = profile.cinematicFlashes || {};
       return {
         ambientCadence: cadence,
         debrisDensity,
@@ -65,7 +74,38 @@
           : [
               { speed: 0.15, alpha: 0.08, size: 1.6, driftX: 1, driftY: 0.3 },
               { speed: 0.28, alpha: 0.11, size: 2.2, driftX: 1.1, driftY: 0.45 }
-            ]
+            ],
+        deepSpace: {
+          nebulaBands: Math.floor(clamp(deepSpaceRaw.nebulaBands, 1, 6, 2)),
+          nebulaAlpha: clamp(deepSpaceRaw.nebulaAlpha, 0.02, 0.3, 0.09),
+          dustBands: Math.floor(clamp(deepSpaceRaw.dustBands, 1, 4, 2)),
+          vignetteTint:
+            typeof deepSpaceRaw.vignetteTint === "string" && deepSpaceRaw.vignetteTint.length > 0
+              ? deepSpaceRaw.vignetteTint
+              : "10,18,34"
+        },
+        warScars: {
+          density: clamp(warScarsRaw.density, 0.2, 2.2, 1),
+          streakLenMin: clamp(warScarsRaw.streakLenMin, 8, 80, 18),
+          streakLenMax: clamp(warScarsRaw.streakLenMax, 12, 120, 44),
+          silhouetteChance: clamp(warScarsRaw.silhouetteChance, 0, 0.95, 0.16),
+          flickerCadence: clamp(warScarsRaw.flickerCadence, 0.2, 3.5, 1)
+        },
+        foregroundDust: {
+          density: clamp(foregroundDustRaw.density, 0.2, 2.5, 1),
+          speedMul: clamp(foregroundDustRaw.speedMul, 0.2, 2.8, 1),
+          alpha: clamp(foregroundDustRaw.alpha, 0.04, 0.5, 0.22),
+          sizeMin: clamp(foregroundDustRaw.sizeMin, 0.2, 4, 0.8),
+          sizeMax: clamp(foregroundDustRaw.sizeMax, 0.4, 6, 2.2)
+        },
+        cinematicFlashes: {
+          enabled: cinematicFlashesRaw.enabled !== false,
+          chancePerMinute: clamp(cinematicFlashesRaw.chancePerMinute, 0, 24, 2.4),
+          minIntensity: clamp(cinematicFlashesRaw.minIntensity, 0.05, 1, 0.2),
+          maxIntensity: clamp(cinematicFlashesRaw.maxIntensity, 0.08, 1.2, 0.46),
+          ttlMin: clamp(cinematicFlashesRaw.ttlMin, 0.12, 3, 0.34),
+          ttlMax: clamp(cinematicFlashesRaw.ttlMax, 0.16, 4, 0.72)
+        }
       };
     }
 
@@ -78,7 +118,13 @@
         beatMaxTtl: 0,
         beatKind: "",
         beatIntensity: 0,
-        seed: Math.floor(this.game.rng() * 1e9) >>> 0
+        flashTtl: 0,
+        flashMaxTtl: 0,
+        flashIntensity: 0,
+        flashColor: profile.beatColor || "176,222,255",
+        seed: Math.floor(this.game.rng() * 1e9) >>> 0,
+        layerSeedA: Math.floor(this.game.rng() * 1e9) >>> 0,
+        layerSeedB: Math.floor(this.game.rng() * 1e9) >>> 0
       };
     }
 
@@ -100,6 +146,28 @@
           visualFx.beatMaxTtl = 0;
         }
       }
+      if ((visualFx.flashTtl ?? 0) > 0) {
+        visualFx.flashTtl = Math.max(0, visualFx.flashTtl - dt);
+        if (visualFx.flashTtl <= 0) {
+          visualFx.flashIntensity = 0;
+          visualFx.flashMaxTtl = 0;
+        }
+      }
+      const profile = mission.biomeVisualProfile || this.getBiomeVisualProfile(mission.biomeId);
+      const flashCfg = profile.cinematicFlashes || {};
+      const chancePerMinute = Math.max(0, Number(flashCfg.chancePerMinute) || 0);
+      if (flashCfg.enabled !== false && chancePerMinute > 0) {
+        const chanceRoll = Math.min(1, (chancePerMinute / 60) * dt);
+        if (g.rng() < chanceRoll) {
+          const minIntensity = Math.max(0.05, Number(flashCfg.minIntensity) || 0.2);
+          const maxIntensity = Math.max(minIntensity, Number(flashCfg.maxIntensity) || 0.46);
+          const minTtl = Math.max(0.12, Number(flashCfg.ttlMin) || 0.34);
+          const maxTtl = Math.max(minTtl, Number(flashCfg.ttlMax) || 0.72);
+          const intensity = minIntensity + g.rng() * (maxIntensity - minIntensity);
+          const ttl = minTtl + g.rng() * (maxTtl - minTtl);
+          this.triggerMissionFlash(intensity, ttl, profile.beatColor);
+        }
+      }
     }
 
     triggerMissionBeat(kind, intensity = 0.7, durationSeconds = 0.7) {
@@ -119,6 +187,32 @@
       visualFx.beatIntensity = Math.max(nextIntensity, Number(visualFx.beatIntensity) || 0);
       visualFx.beatTtl = Math.max(nextDuration, Number(visualFx.beatTtl) || 0);
       visualFx.beatMaxTtl = Math.max(nextDuration, Number(visualFx.beatMaxTtl) || 0);
+      if (kind === "mission_start") {
+        this.triggerMissionFlash(0.24, 0.42, mission.biomeVisualProfile?.beatColor || "176,222,255");
+      } else if (kind === "boss_phase") {
+        this.triggerMissionFlash(nextIntensity * 0.62, Math.max(0.44, nextDuration * 0.62), "255,148,216");
+      }
+    }
+
+    triggerMissionFlash(intensity = 0.3, durationSeconds = 0.5, colorRgb = null) {
+      const g = this.game;
+      const mission = g.model.currentMission;
+      if (!mission) return;
+      if (!mission.visualFx || typeof mission.visualFx !== "object") {
+        mission.visualFx = this.createMissionVisualFxState(mission.biomeId);
+      }
+      const visualFx = mission.visualFx;
+      const nextIntensity = g.clamp(Number(intensity) || 0.3, 0.08, 1.2);
+      const nextDuration = g.clamp(Number(durationSeconds) || 0.5, 0.12, 2.4);
+      const hasActiveFlash = (visualFx.flashTtl ?? 0) > 0;
+      const fallbackColor = mission.biomeVisualProfile?.beatColor || "176,222,255";
+      const nextColor = typeof colorRgb === "string" && colorRgb.length > 0 ? colorRgb : fallbackColor;
+      if (!hasActiveFlash || nextIntensity >= (visualFx.flashIntensity ?? 0)) {
+        visualFx.flashColor = nextColor;
+      }
+      visualFx.flashIntensity = Math.max(nextIntensity, Number(visualFx.flashIntensity) || 0);
+      visualFx.flashTtl = Math.max(nextDuration, Number(visualFx.flashTtl) || 0);
+      visualFx.flashMaxTtl = Math.max(nextDuration, Number(visualFx.flashMaxTtl) || 0);
     }
 
     getMissionDifficulty(level) {

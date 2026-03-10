@@ -1,5 +1,14 @@
 # Hotove veci
 
+- [x] Raw Space Combat Pack v1 (vizualni atmosfera)
+  - [x] Rozsirene `missionDirector.biomeVisuals` o `deepSpace`, `warScars`, `foregroundDust`, `cinematicFlashes` pro vsechny biomy
+  - [x] `currentMission.visualFx` rozsireno o flash lifecycle (`flashTtl/intensity/color`) + oddelene layer seedy
+  - [x] Mission runtime doplnen o `triggerMissionFlash(...)` a data-driven cinematic flash roll podle biome profilu
+  - [x] Render pipeline doplnena o `drawDeepSpaceBackdrop`, `drawWarScars`, `drawForegroundDust`, `drawCinematicFlash`
+  - [x] Perf guardrails: pri `avgFrameMs > 18` snizeni density/alpha (foreground/scars/flashes) bez zasahu do gameplay logiky
+  - [x] Help aktualizace: nova karta `Raw Space Atmosphere` + rozsireny biome hint
+  - [x] Harness coverage: mission flash init, boss phase flash trigger, flash TTL lifecycle reset
+
 - [x] Biome atmosphere pass 2.0 (MVP)
   - [x] Data-driven `missionDirector.biomeVisuals` profil (parallax/debris/cadence/fogPulse/beatColor) pro vsechny biomy
   - [x] `currentMission.visualFx` runtime state + central `triggerMissionBeat(...)` dispatcher

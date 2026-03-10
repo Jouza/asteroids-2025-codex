@@ -1069,7 +1069,35 @@
           parallaxLayers: [
             { speed: 0.13, alpha: 0.07, size: 1.4, driftX: 1.0, driftY: 0.32 },
             { speed: 0.23, alpha: 0.1, size: 2.0, driftX: 1.12, driftY: 0.44 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.09,
+            dustBands: 2,
+            vignetteTint: "10,18,34"
+          },
+          warScars: {
+            density: 1.0,
+            streakLenMin: 18,
+            streakLenMax: 44,
+            silhouetteChance: 0.16,
+            flickerCadence: 1.0
+          },
+          foregroundDust: {
+            density: 1.0,
+            speedMul: 1.0,
+            alpha: 0.22,
+            sizeMin: 0.8,
+            sizeMax: 2.2
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 2.4,
+            minIntensity: 0.2,
+            maxIntensity: 0.46,
+            ttlMin: 0.34,
+            ttlMax: 0.72
+          }
         },
         belt: {
           ambientCadence: 1.08,
@@ -1080,7 +1108,35 @@
             { speed: 0.2, alpha: 0.08, size: 1.3, driftX: 1.16, driftY: 0.35 },
             { speed: 0.35, alpha: 0.12, size: 1.9, driftX: 1.24, driftY: 0.42 },
             { speed: 0.5, alpha: 0.15, size: 2.3, driftX: 1.36, driftY: 0.5 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.08,
+            dustBands: 2,
+            vignetteTint: "10,20,38"
+          },
+          warScars: {
+            density: 1.18,
+            streakLenMin: 24,
+            streakLenMax: 58,
+            silhouetteChance: 0.12,
+            flickerCadence: 1.1
+          },
+          foregroundDust: {
+            density: 1.06,
+            speedMul: 1.08,
+            alpha: 0.2,
+            sizeMin: 0.9,
+            sizeMax: 2.1
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 2.0,
+            minIntensity: 0.18,
+            maxIntensity: 0.42,
+            ttlMin: 0.3,
+            ttlMax: 0.62
+          }
         },
         graveyard: {
           ambientCadence: 0.86,
@@ -1090,7 +1146,35 @@
           parallaxLayers: [
             { speed: 0.1, alpha: 0.08, size: 1.7, driftX: 0.86, driftY: 0.26 },
             { speed: 0.18, alpha: 0.12, size: 2.4, driftX: 0.94, driftY: 0.34 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.11,
+            dustBands: 3,
+            vignetteTint: "18,24,38"
+          },
+          warScars: {
+            density: 1.24,
+            streakLenMin: 18,
+            streakLenMax: 46,
+            silhouetteChance: 0.32,
+            flickerCadence: 0.74
+          },
+          foregroundDust: {
+            density: 1.16,
+            speedMul: 0.84,
+            alpha: 0.25,
+            sizeMin: 0.9,
+            sizeMax: 2.7
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 2.7,
+            minIntensity: 0.22,
+            maxIntensity: 0.5,
+            ttlMin: 0.36,
+            ttlMax: 0.82
+          }
         },
         refinery: {
           ambientCadence: 1.2,
@@ -1100,7 +1184,35 @@
           parallaxLayers: [
             { speed: 0.1, alpha: 0.07, size: 1.2, driftX: 0.76, driftY: 0.2 },
             { speed: 0.17, alpha: 0.09, size: 1.8, driftX: 0.88, driftY: 0.26 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.08,
+            dustBands: 1,
+            vignetteTint: "30,18,12"
+          },
+          warScars: {
+            density: 0.86,
+            streakLenMin: 16,
+            streakLenMax: 42,
+            silhouetteChance: 0.1,
+            flickerCadence: 1.4
+          },
+          foregroundDust: {
+            density: 0.86,
+            speedMul: 1.12,
+            alpha: 0.19,
+            sizeMin: 0.8,
+            sizeMax: 1.9
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 1.8,
+            minIntensity: 0.16,
+            maxIntensity: 0.34,
+            ttlMin: 0.28,
+            ttlMax: 0.56
+          }
         },
         ion_field: {
           ambientCadence: 1.24,
@@ -1110,7 +1222,35 @@
           parallaxLayers: [
             { speed: 0.14, alpha: 0.08, size: 1.4, driftX: 1.0, driftY: 0.4 },
             { speed: 0.24, alpha: 0.11, size: 1.9, driftX: 1.12, driftY: 0.52 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 3,
+            nebulaAlpha: 0.1,
+            dustBands: 2,
+            vignetteTint: "12,18,48"
+          },
+          warScars: {
+            density: 1.04,
+            streakLenMin: 20,
+            streakLenMax: 48,
+            silhouetteChance: 0.14,
+            flickerCadence: 1.8
+          },
+          foregroundDust: {
+            density: 0.94,
+            speedMul: 1.16,
+            alpha: 0.22,
+            sizeMin: 0.8,
+            sizeMax: 2.2
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 3.1,
+            minIntensity: 0.24,
+            maxIntensity: 0.58,
+            ttlMin: 0.38,
+            ttlMax: 0.92
+          }
         },
         shattered_relay: {
           ambientCadence: 1.12,
@@ -1120,7 +1260,35 @@
           parallaxLayers: [
             { speed: 0.13, alpha: 0.08, size: 1.6, driftX: 0.96, driftY: 0.36 },
             { speed: 0.21, alpha: 0.11, size: 2.1, driftX: 1.05, driftY: 0.46 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.1,
+            dustBands: 2,
+            vignetteTint: "18,20,40"
+          },
+          warScars: {
+            density: 1.14,
+            streakLenMin: 22,
+            streakLenMax: 52,
+            silhouetteChance: 0.24,
+            flickerCadence: 1.3
+          },
+          foregroundDust: {
+            density: 1.0,
+            speedMul: 1.02,
+            alpha: 0.21,
+            sizeMin: 0.8,
+            sizeMax: 2.4
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 2.6,
+            minIntensity: 0.2,
+            maxIntensity: 0.48,
+            ttlMin: 0.32,
+            ttlMax: 0.76
+          }
         },
         cryo_ring: {
           ambientCadence: 0.92,
@@ -1130,7 +1298,35 @@
           parallaxLayers: [
             { speed: 0.08, alpha: 0.07, size: 1.4, driftX: 0.76, driftY: 0.18 },
             { speed: 0.14, alpha: 0.1, size: 1.9, driftX: 0.84, driftY: 0.24 }
-          ]
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.07,
+            dustBands: 1,
+            vignetteTint: "8,26,40"
+          },
+          warScars: {
+            density: 0.72,
+            streakLenMin: 16,
+            streakLenMax: 34,
+            silhouetteChance: 0.08,
+            flickerCadence: 0.62
+          },
+          foregroundDust: {
+            density: 0.72,
+            speedMul: 0.76,
+            alpha: 0.16,
+            sizeMin: 0.7,
+            sizeMax: 1.8
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 1.2,
+            minIntensity: 0.14,
+            maxIntensity: 0.28,
+            ttlMin: 0.26,
+            ttlMax: 0.52
+          }
         }
       },
       biomes: [
@@ -1390,6 +1586,14 @@
           !Array.isArray(config.missionDirector.biomeVisuals) &&
           typeof config.missionDirector.biomeVisuals.default === "object",
         msg: "missionDirector.biomeVisuals missing or invalid"
+      },
+      {
+        ok:
+          typeof config.missionDirector?.biomeVisuals?.default?.deepSpace === "object" &&
+          typeof config.missionDirector?.biomeVisuals?.default?.warScars === "object" &&
+          typeof config.missionDirector?.biomeVisuals?.default?.foregroundDust === "object" &&
+          typeof config.missionDirector?.biomeVisuals?.default?.cinematicFlashes === "object",
+        msg: "missionDirector.biomeVisuals default subprofiles missing"
       },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
