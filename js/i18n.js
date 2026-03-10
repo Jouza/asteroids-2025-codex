@@ -376,7 +376,13 @@
       "help.section.mission_types_hint":
         "Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> (distinct moveset and phases), and clearing it ends the run with VICTORY.",
       "help.section.mission_endless_hint":
-        "Endless mode unlocks after your first campaign clear. Run setup mode now supports <strong>Campaign / Boss Rush / Endless</strong> with <strong>Left/Right</strong> (or quick cycle by <strong>E</strong>). Boss Rush runs mini-boss encounters every sector; Endless sectors ramp pressure faster after sector 5 and apply softer credit gain damping to limit snowballing.",
+        "Endless mode unlocks after your first campaign clear. Run setup mode now supports <strong>Campaign / Boss Rush / Endless</strong> with <strong>Left/Right</strong> (or quick cycle by <strong>E</strong>). Boss Rush runs mini-boss encounters every sector and has its own final clear at sector 4 (VICTORY). Endless sectors ramp pressure faster after sector 5 and apply softer credit gain damping to limit snowballing.",
+      "help.card.boss_rush_mode.name": "BOSS RUSH",
+      "help.card.boss_rush_mode.tag": "Mode flow",
+      "help.card.boss_rush_mode.line":
+        "Boss Rush skips standard mission rotation and starts mini-boss encounters every sector. The mode has a dedicated final clear branch at sector 4.",
+      "help.card.boss_rush_mode.impact":
+        "<strong>Impact:</strong> fast high-pressure boss practice loop with clear run-complete endpoint.",
       "help.section.biomes": "Biomes",
       "help.section.biomes_hint":
         "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, and may add specific hazard zones.",

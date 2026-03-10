@@ -88,6 +88,7 @@
   - [x] Boss Rush final encounter uzavira run do `VICTORY` (mimo campaign flow)
   - [x] Boss Rush victory nepouziva campaign endless-unlock side effect
   - [x] Victory overlay dostal dedikovany status text pro Boss Rush clear
+  - [x] Help doplnen o explicitni Boss Rush final-clear popis (mission hint + samostatna karta)
   - [x] Harness coverage pro Boss Rush final victory branch
 
 - [x] Hangar UI overflow fix (responsive panel sizing)

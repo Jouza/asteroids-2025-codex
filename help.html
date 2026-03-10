@@ -294,6 +294,7 @@
         mission_ufo_hunt: "mission",
         mission_asteroid_storm: "mission",
         mission_mini_boss: "mission",
+        boss_rush_mode: "mission",
         biome_belt_fringe: "biome",
         biome_wreck_graveyard: "biome",
         biome_refinery: "biome",
@@ -662,6 +663,7 @@
 
       const missionCards = Array.from(new Set((cfg.mission?.order || []).map(toMissionCard)));
       if (!missionCards.includes("mission_mini_boss")) missionCards.push("mission_mini_boss");
+      if (!missionCards.includes("boss_rush_mode")) missionCards.push("boss_rush_mode");
       appendSection({
         titleKey: "help.section.mission_types",
         hintKey: "help.section.mission_types_hint",
