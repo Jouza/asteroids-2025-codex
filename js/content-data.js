@@ -25,6 +25,7 @@
       shopBiasThresholdRep: 15,
       shopPriceInfluencePerRep100: 0.14,
       shopPenaltyInfluencePerRep100: 0.06,
+      blackMarketPriceMul: 1.22,
       intelOptions: [
         {
           id: "balanced",

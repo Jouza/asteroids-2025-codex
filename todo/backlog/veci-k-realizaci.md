@@ -19,7 +19,7 @@
 
 - [ ] Frakce a reputace (Phase 2+ rozsireni)
   - [x] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)
-  - [ ] Neutral/black-market vendor jako treti obchodni vrstva
+  - [x] Neutral/black-market vendor jako treti obchodni vrstva
   - [ ] Reputation thresholdy (`-20/0/+20/+50`) s odemykatelnymi pasivy
   - [ ] Contraband mechanika (silny item za reputacni/bounty riziko)
   - [ ] Frakcni varianty mission cilu bez nove mission architektury

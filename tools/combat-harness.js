@@ -307,16 +307,20 @@ function runTests() {
     pressSpaceAt(3); // primary cycle
     assert(gameA.model.loadout.primaryId !== prevPrimary, "Shop index 3 should map to primary loadout cycle");
 
+    const vendorBefore = gameA.model.hangar.shopVendorId;
+    pressSpaceAt(6); // vendor cycle
+    assert(gameA.model.hangar.shopVendorId !== vendorBefore, "Shop index 6 should cycle hangar vendor");
+
     const intelBefore = gameA.model.hangar.factionIntelId;
-    pressSpaceAt(6); // intel cycle
-    assert(gameA.model.hangar.factionIntelId !== intelBefore, "Shop index 6 should cycle faction intel choice");
+    pressSpaceAt(7); // intel cycle
+    assert(gameA.model.hangar.factionIntelId !== intelBefore, "Shop index 7 should cycle faction intel choice");
 
     gameA.model.hangar.selectionSource = "inventory";
     gameA.model.hangar.selectionIndex = 0;
     gameA.model.inventory = [gameA.createModuleDrop()];
     const creditsBeforeSell = gameA.model.credits;
-    pressSpaceAt(7); // sell selected
-    assert(gameA.model.inventory.length === 0, "Shop index 7 should sell selected inventory module");
+    pressSpaceAt(8); // sell selected
+    assert(gameA.model.inventory.length === 0, "Shop index 8 should sell selected inventory module");
     assert(gameA.model.credits > creditsBeforeSell, "Selling selected module should grant credits");
 
     gameA.model.inventory = [gameA.createModuleDrop()];
@@ -324,7 +328,7 @@ function runTests() {
     gameA.model.hangar.selectionIndex = 0;
     const salvageBefore = gameA.model.salvageParts;
     pressSpaceAt(shopSize - 1); // salvage selected (last action row)
-    assert(gameA.model.inventory.length === 0, "Shop index 8 should salvage selected inventory module");
+    assert(gameA.model.inventory.length === 0, "Shop index 9 should salvage selected inventory module");
     assert(gameA.model.salvageParts > salvageBefore, "Salvaging selected module should grant salvage parts");
   });
 
@@ -732,6 +736,7 @@ function runTests() {
   tests.push(() => {
     gameA.model.factions.helix_union = 60;
     gameA.model.factions.drift_cartel = -10;
+    gameA.model.hangar.shopVendorId = "faction";
     const helixShop = gameA.getHangarShopItems();
     gameA.model.factions.helix_union = -10;
     gameA.model.factions.drift_cartel = 60;
@@ -743,6 +748,18 @@ function runTests() {
         cartelShop.find((item) => item.id === "fire_rate")?.resolvedCost,
       "Dominant faction should alter resolved shop item costs"
     );
+  });
+
+  tests.push(() => {
+    gameA.model.factions.helix_union = 75;
+    gameA.model.factions.drift_cartel = -20;
+    gameA.model.hangar.shopVendorId = "faction";
+    const factionShop = gameA.getHangarShopItems();
+    gameA.model.hangar.shopVendorId = "black_market";
+    const blackMarketShop = gameA.getHangarShopItems();
+    const factionRepair = factionShop.find((item) => item.id === "repair");
+    const blackMarketRepair = blackMarketShop.find((item) => item.id === "repair");
+    assert(blackMarketRepair.resolvedCost > factionRepair.resolvedCost, "Black market should be pricier than faction market");
   });
 
   tests.push(() => {

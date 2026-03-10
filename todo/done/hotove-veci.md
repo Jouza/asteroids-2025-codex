@@ -11,6 +11,12 @@
   - [x] Intel contract aplikuje reputacni dopad na startu mise
   - [x] Harness testy pro intel action flow, reward dopad a pressure scaling
 
+- [x] Frakce a reputace (Phase 2) - neutral/black-market vendor
+  - [x] Hangar `Vendor` volba (Faction Market / Black Market)
+  - [x] Black market pouziva samostatne naceneni offeru (`blackMarketPriceMul`) a odpojuje faction bias ordering
+  - [x] Render + action mapovani aktualizovany o novou vendor vrstvu v SHOP & OPS
+  - [x] Harness test overuje pricier black-market pricing oproti faction marketu
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

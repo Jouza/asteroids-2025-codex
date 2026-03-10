@@ -45,6 +45,12 @@ function validateContentData(contentData, issues) {
     "faction.rewardSalvagePerRep100 must be >= 0",
     issues
   );
+  const blackMarketPriceMul = Number(contentData.faction?.blackMarketPriceMul);
+  assert(
+    Number.isFinite(blackMarketPriceMul) && blackMarketPriceMul >= 1,
+    "faction.blackMarketPriceMul must be >= 1",
+    issues
+  );
   const intelOptions = contentData.faction?.intelOptions;
   assert(Array.isArray(intelOptions) && intelOptions.length >= 1, "faction.intelOptions must be non-empty", issues);
   if (Array.isArray(intelOptions)) {

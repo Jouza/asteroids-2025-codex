@@ -278,6 +278,7 @@
         hangar: {
           message: tr("game.hangar.controls"),
           shopItems: [],
+          shopVendorId: "faction",
           factionIntelId: "balanced",
           lootCrate: [],
           selectionSource: "crate",
@@ -424,6 +425,29 @@
       const fallback = defs.find((entry) => entry.id === "balanced")?.id || defs[0]?.id || "balanced";
       if (!id) return fallback;
       return defs.some((entry) => entry.id === id) ? id : fallback;
+    }
+
+    sanitizeHangarVendorId(id) {
+      return id === "black_market" ? "black_market" : "faction";
+    }
+
+    getHangarVendorId() {
+      return this.sanitizeHangarVendorId(this.model.hangar?.shopVendorId);
+    }
+
+    cycleHangarVendor(direction = 1) {
+      const order = ["faction", "black_market"];
+      const current = this.getHangarVendorId();
+      const idx = order.indexOf(current);
+      const next = order[(idx + direction + order.length) % order.length];
+      this.model.hangar.shopVendorId = next;
+      this.model.hangar.message = tr("game.hangar.vendor_changed", { vendor: tr(`game.hangar.vendor.${next}`) });
+      if (typeof this.hangarSystem?.refreshShopOffers === "function") {
+        this.hangarSystem.refreshShopOffers();
+      }
+      this.saveProfile("hangar_vendor_change");
+      this.hud.sync(this.model);
+      return next;
     }
 
     getSelectedFactionIntelProfile() {
@@ -621,6 +645,15 @@
 
     getHangarShopItems() {
       const baseItems = Array.isArray(this.config.hangar?.items) ? this.config.hangar.items : [];
+      const vendor = this.getHangarVendorId();
+      if (vendor === "black_market") {
+        const priceMul = this.clamp(Number(this.config.faction?.blackMarketPriceMul) || 1.2, 1, 2.2);
+        return baseItems.map((item, index) => ({
+          ...item,
+          baseIndex: index,
+          resolvedCost: Math.max(1, Math.round((Number(item.cost) || 0) * priceMul))
+        }));
+      }
       const items = baseItems.map((item, index) => ({
         ...item,
         baseIndex: index,
@@ -1169,6 +1202,7 @@
       this.model.dotEffects = [];
       this.model.hangar.message = tr("game.hangar.controls");
       this.model.hangar.shopItems = [];
+      this.model.hangar.shopVendorId = "faction";
       this.model.hangar.lootCrate = [];
       this.model.hangar.selectionSource = "crate";
       this.model.hangar.selectionIndex = 0;

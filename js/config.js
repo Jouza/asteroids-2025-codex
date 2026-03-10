@@ -671,6 +671,7 @@
       shopBiasThresholdRep: 15,
       shopPriceInfluencePerRep100: 0.14,
       shopPenaltyInfluencePerRep100: 0.06,
+      blackMarketPriceMul: 1.22,
       intelOptions: [
         {
           id: "balanced",
@@ -1096,7 +1097,8 @@
       { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" },
       { ok: Array.isArray(config.faction?.definitions) && config.faction.definitions.length >= 2, msg: "faction.definitions missing" },
       { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" },
-      { ok: Array.isArray(config.faction?.intelOptions) && config.faction.intelOptions.length >= 1, msg: "faction.intelOptions missing" }
+      { ok: Array.isArray(config.faction?.intelOptions) && config.faction.intelOptions.length >= 1, msg: "faction.intelOptions missing" },
+      { ok: Number.isFinite(config.faction?.blackMarketPriceMul) && config.faction.blackMarketPriceMul >= 1, msg: "faction.blackMarketPriceMul invalid" }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {
