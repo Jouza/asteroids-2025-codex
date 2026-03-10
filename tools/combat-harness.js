@@ -1794,6 +1794,165 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(91111);
+    gameA.model.asteroids = [
+      {
+        x: 240,
+        y: 180,
+        vx: 0,
+        vy: 0,
+        radius: gameA.asteroidDefs.small.radius,
+        size: "small",
+        asteroidType: "normal",
+        spin: 0,
+        rotation: 0,
+        shape: [1, 1, 1],
+        nearMissCooldown: 0
+      }
+    ];
+    gameA.model.enemyBullets = [
+      {
+        x: 240,
+        y: 180,
+        vx: 0,
+        vy: 0,
+        radius: 4,
+        ttl: 1,
+        damageProfile: "enemy_bullet_hunter",
+        asteroidCollisionMode: "break"
+      }
+    ];
+    gameA.combatSystem.handleEnemyBulletAsteroidCollisions();
+    assert(gameA.model.enemyBullets.length === 0, "Enemy break projectile should be removed on asteroid collision");
+    assert(gameA.model.asteroids.length === 0, "Enemy break projectile should destroy a small asteroid");
+  });
+
+  tests.push(() => {
+    gameA.startGame(92222);
+    gameA.model.asteroids = [
+      {
+        x: 260,
+        y: 220,
+        vx: 0,
+        vy: 0,
+        radius: gameA.asteroidDefs.small.radius,
+        size: "small",
+        asteroidType: "normal",
+        spin: 0,
+        rotation: 0,
+        shape: [1, 1, 1],
+        nearMissCooldown: 0
+      }
+    ];
+    gameA.model.enemyBullets = [
+      {
+        x: 260,
+        y: 220,
+        vx: 0,
+        vy: 0,
+        radius: 4,
+        ttl: 1,
+        damageProfile: "enemy_bullet_support",
+        asteroidCollisionMode: "block"
+      }
+    ];
+    gameA.combatSystem.handleEnemyBulletAsteroidCollisions();
+    assert(gameA.model.enemyBullets.length === 0, "Enemy block projectile should disappear on asteroid impact");
+    assert(gameA.model.asteroids.length === 1, "Enemy block projectile should not damage asteroid");
+  });
+
+  tests.push(() => {
+    gameA.startGame(93333);
+    gameA.model.score = 0;
+    gameA.model.telemetry.kills.asteroids = 0;
+    gameA.model.missionAsteroidKills = 0;
+    gameA.model.hangar.lootCrate = [];
+    gameA.model.asteroids = [
+      {
+        x: 300,
+        y: 300,
+        vx: 0,
+        vy: 0,
+        radius: gameA.asteroidDefs.small.radius,
+        size: "small",
+        asteroidType: "normal",
+        spin: 0,
+        rotation: 0,
+        shape: [1, 1, 1],
+        nearMissCooldown: 0
+      }
+    ];
+    gameA.model.enemyBullets = [
+      {
+        x: 300,
+        y: 300,
+        vx: 0,
+        vy: 0,
+        radius: 4,
+        ttl: 1,
+        damageProfile: "enemy_bullet_hunter",
+        asteroidCollisionMode: "break"
+      }
+    ];
+    gameA.combatSystem.handleEnemyBulletAsteroidCollisions();
+    assert(gameA.model.score === 0, "Enemy-caused asteroid destruction should not grant score");
+    assert(gameA.model.telemetry.kills.asteroids === 0, "Enemy-caused asteroid destruction should not add asteroid kill telemetry");
+    assert(gameA.model.missionAsteroidKills === 0, "Enemy-caused asteroid destruction should not advance mission asteroid kill counter");
+    assert(gameA.model.hangar.lootCrate.length === 0, "Enemy-caused asteroid destruction should not drop loot");
+  });
+
+  tests.push(() => {
+    gameA.startGame(94444);
+    const ship = gameA.model.ship;
+    ship.invulnMs = 0;
+    ship.hull = ship.hullMax;
+    ship.shield = ship.shieldMax;
+    gameA.model.asteroids = [
+      {
+        x: ship.x,
+        y: ship.y,
+        vx: 0,
+        vy: 0,
+        radius: gameA.asteroidDefs.small.radius,
+        size: "small",
+        asteroidType: "normal",
+        spin: 0,
+        rotation: 0,
+        shape: [1, 1, 1],
+        nearMissCooldown: 0
+      }
+    ];
+    gameA.model.enemyBullets = [
+      {
+        x: ship.x,
+        y: ship.y,
+        vx: 0,
+        vy: 0,
+        radius: 4,
+        ttl: 1,
+        damageProfile: "enemy_bullet_hunter",
+        asteroidCollisionMode: "break"
+      }
+    ];
+    gameA.combatSystem.handleEnemyBulletAsteroidCollisions();
+    gameA.combatSystem.handleShipThreatCollisions();
+    assert(
+      ship.hull === ship.hullMax && ship.shield === ship.shieldMax,
+      "Enemy bullet destroyed by asteroid should not damage ship in the same frame"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(95555);
+    const hunterMode = gameA.enemySystem.getEnemyBulletAsteroidCollisionMode("enemy_bullet_hunter");
+    const supportMode = gameA.enemySystem.getEnemyBulletAsteroidCollisionMode("enemy_bullet_support");
+    const mineMode = gameA.enemySystem.getEnemyBulletAsteroidCollisionMode("enemy_mine");
+    assert(hunterMode === "break", "Kinetic enemy projectile profile should map to break asteroid collision mode");
+    assert(supportMode === "block", "Plasma enemy projectile profile should map to block asteroid collision mode");
+    assert(mineMode === "break", "Explosive enemy projectile profile should map to break asteroid collision mode");
+  });
+
+  tests.push(() => {
     gameA.startGame(11111);
     const ship = gameA.model.ship;
     ship.invulnMs = 0;

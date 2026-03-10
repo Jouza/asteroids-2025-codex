@@ -470,6 +470,29 @@
       }
     }
 
+    handleEnemyBulletAsteroidCollisions() {
+      const g = this.game;
+      for (let b = g.model.enemyBullets.length - 1; b >= 0; b -= 1) {
+        const bullet = g.model.enemyBullets[b];
+        if (!bullet) continue;
+        let hitIndex = -1;
+        for (let a = g.model.asteroids.length - 1; a >= 0; a -= 1) {
+          if (circleCollision(bullet, g.model.asteroids[a])) {
+            hitIndex = a;
+            break;
+          }
+        }
+        if (hitIndex === -1) continue;
+        const asteroid = g.model.asteroids[hitIndex];
+        g.model.enemyBullets.splice(b, 1);
+        if ((bullet.asteroidCollisionMode || "break") === "break") {
+          g.destroyAsteroidByIndex(hitIndex, true, { awardRewards: false, source: "enemy_projectile" });
+        } else if (asteroid) {
+          g.emitImpactParticles(asteroid.x, asteroid.y, 4, "255,176,132");
+        }
+      }
+    }
+
     handleShipThreatCollisions() {
       const g = this.game;
       const ship = g.model.ship;

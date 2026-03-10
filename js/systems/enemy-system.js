@@ -6,6 +6,18 @@
       this.game = game;
     }
 
+    getEnemyBulletAsteroidCollisionMode(damageProfile) {
+      const g = this.game;
+      const type = g.config?.damage?.enemyHitProfiles?.[damageProfile]?.damageType;
+      return type === "plasma" ? "block" : "break";
+    }
+
+    setEnemyBulletTraits(bullet, damageProfile) {
+      bullet.damageProfile = damageProfile;
+      bullet.asteroidCollisionMode = this.getEnemyBulletAsteroidCollisionMode(damageProfile);
+      return bullet;
+    }
+
     getSectorScale(perSector, maxBonus) {
       const g = this.game;
       const sectorIndex = Math.max(0, g.model.sector - 1);
@@ -201,7 +213,7 @@
       mine.ttl = g.config.ufo.mineTtlSeconds;
       mine.radius = g.config.ufo.mineRadius;
       mine.isMine = true;
-      mine.damageProfile = "enemy_mine";
+      this.setEnemyBulletTraits(mine, "enemy_mine");
       g.pushEnemyBullet(mine);
       g.recordEnemyShot();
       g.emitImpactParticles(ufo.x, ufo.y, 3, "255,178,120");
@@ -216,7 +228,7 @@
         bullet.vx *= 0.8;
         bullet.vy *= 0.8;
         bullet.ttl = 1.4;
-        bullet.damageProfile = "enemy_mine";
+        this.setEnemyBulletTraits(bullet, "enemy_mine");
         g.pushEnemyBullet(bullet);
       }
       g.emitImpactParticles(ufo.x, ufo.y, 14, "255,124,120");
@@ -243,7 +255,7 @@
       const bullet = createEnemyBullet(muzzleX, muzzleY, shotAngle, g.config);
       bullet.vx *= speedScale;
       bullet.vy *= speedScale;
-      bullet.damageProfile =
+      const damageProfile =
         ufo.mode === "sniper"
           ? "enemy_bullet_sniper"
           : ufo.mode === "swarm"
@@ -251,6 +263,7 @@
             : ufo.mode === "support"
               ? "enemy_bullet_support"
               : "enemy_bullet_hunter";
+      this.setEnemyBulletTraits(bullet, damageProfile);
       g.pushEnemyBullet(bullet);
       g.recordEnemyShot();
       g.emitImpactParticles(muzzleX, muzzleY, 2, "255,123,196");
@@ -294,7 +307,7 @@
         bullet.ttl = cfg.mineTtlSeconds;
         bullet.radius = g.config.ufo.mineRadius;
         bullet.isMine = true;
-        bullet.damageProfile = "enemy_mine";
+        this.setEnemyBulletTraits(bullet, "enemy_mine");
         g.pushEnemyBullet(bullet);
       }
 
@@ -326,7 +339,7 @@
         bullet.ttl = mineTtlSeconds;
         bullet.radius = g.config.ufo.mineRadius;
         bullet.isMine = true;
-        bullet.damageProfile = "enemy_mine";
+        this.setEnemyBulletTraits(bullet, "enemy_mine");
         g.pushEnemyBullet(bullet);
       }
       const large = cfg.asteroidSpawnLargeByPhase?.[phase] ?? 1;
@@ -426,7 +439,7 @@
             );
             bullet.vx *= speedScale * 1.05;
             bullet.vy *= speedScale * 1.05;
-            bullet.damageProfile = "mini_boss_bullet";
+            this.setEnemyBulletTraits(bullet, "mini_boss_bullet");
             g.pushEnemyBullet(bullet);
             g.recordEnemyShot();
           }
@@ -441,7 +454,7 @@
               const bullet = createEnemyBullet(boss.x, boss.y, angle, g.config);
               bullet.vx *= speedScale * speedFactor;
               bullet.vy *= speedScale * speedFactor;
-              bullet.damageProfile = "mini_boss_bullet";
+              this.setEnemyBulletTraits(bullet, "mini_boss_bullet");
               g.pushEnemyBullet(bullet);
               g.recordEnemyShot();
             }
@@ -458,7 +471,7 @@
               bullet.ttl = mineTtlSeconds;
               bullet.radius = g.config.ufo.mineRadius;
               bullet.isMine = true;
-              bullet.damageProfile = "enemy_mine";
+              this.setEnemyBulletTraits(bullet, "enemy_mine");
               g.pushEnemyBullet(bullet);
             }
           }
@@ -470,7 +483,7 @@
             const bullet = createEnemyBullet(boss.x, boss.y, aim + t * spread + (g.rng() - 0.5) * 0.06, g.config);
             bullet.vx *= speedScale;
             bullet.vy *= speedScale;
-            bullet.damageProfile = "mini_boss_bullet";
+            this.setEnemyBulletTraits(bullet, "mini_boss_bullet");
             g.pushEnemyBullet(bullet);
             g.recordEnemyShot();
           }

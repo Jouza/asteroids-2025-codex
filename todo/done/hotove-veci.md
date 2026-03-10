@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Enemy projectile vs asteroid collision rework (UFO + Boss)
+  - [x] Enemy strely maji runtime `asteroidCollisionMode` (`break`/`block`) mapovany podle `damageProfile` (`plasma => block`, ostatni => break)
+  - [x] Pridany kolizni pass `handleEnemyBulletAsteroidCollisions()` pred `handleShipThreatCollisions()`
+  - [x] `break` rezim pro enemy strely pouziva stejnou split/blast mechaniku asteroidu jako hrac
+  - [x] Enemy-caused asteroid destruction nedava hraci rewardy (score/telemetry kill/mission asteroid kill/loot)
+  - [x] Harness testy doplneny pro `break`/`block`, no-reward pravidla a kolizni poradi v ramci frame
+
 - [x] Campaign flow rework na 8 kol (unikatni biome + boss jen v 8. kole)
   - [x] `run.finalSector` zvednut na 8 v configu i content override
   - [x] Campaign pouziva seeded `campaignBiomeOrder` bez opakovani biomu v ramci runu

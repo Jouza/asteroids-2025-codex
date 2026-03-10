@@ -2405,6 +2405,7 @@
       this.combatSystem.handleBulletAsteroidCollisions();
       this.combatSystem.handleBulletUfoCollisions();
       this.combatSystem.handleBulletMiniBossCollisions();
+      this.combatSystem.handleEnemyBulletAsteroidCollisions();
       this.combatSystem.handleShipThreatCollisions();
       if (perfEnabled) {
         const now = this.getNowMs();
@@ -3657,27 +3658,32 @@
       return sizeScore + typeScore;
     }
 
-    destroyAsteroidByIndex(index, allowBlast) {
+    destroyAsteroidByIndex(index, allowBlast, options = {}) {
       const asteroid = this.model.asteroids[index];
       if (!asteroid) return;
+      const awardRewards = options.awardRewards !== false;
 
-      this.registerScore(this.getAsteroidScore(asteroid), true);
-      this.model.telemetry.kills.asteroids += 1;
+      if (awardRewards) {
+        this.registerScore(this.getAsteroidScore(asteroid), true);
+        this.model.telemetry.kills.asteroids += 1;
+      }
       this.model.flashMs = Math.max(this.model.flashMs, 80);
       this.emitExplosionFx(asteroid.x, asteroid.y, asteroid.radius, "89,245,255", "196,240,255");
       this.model.hitstopSeconds = Math.max(this.model.hitstopSeconds, 0.01);
       this.audio.play("asteroid_pop");
       this.combatSystem.splitAsteroid(asteroid);
       this.model.asteroids.splice(index, 1);
-      this.model.missionAsteroidKills += 1;
-      this.tryDropModule("asteroid", asteroid.size);
+      if (awardRewards) {
+        this.model.missionAsteroidKills += 1;
+        this.tryDropModule("asteroid", asteroid.size);
+      }
 
       if (allowBlast && asteroid.asteroidType === "volatile") {
-        this.triggerVolatileBlast(asteroid.x, asteroid.y, asteroid.radius);
+        this.triggerVolatileBlast(asteroid.x, asteroid.y, asteroid.radius, options);
       }
     }
 
-    triggerVolatileBlast(x, y, radius) {
+    triggerVolatileBlast(x, y, radius, options = {}) {
       const blastRadius = radius * this.config.asteroid.volatileBlastRadiusFactor;
       this.model.flashMs = Math.max(this.model.flashMs, 120);
       this.emitExplosionFx(x, y, blastRadius * 0.7, "255,133,100", "255,208,140");
@@ -3687,7 +3693,7 @@
         const target = this.model.asteroids[i];
         const dist = Math.hypot(target.x - x, target.y - y);
         if (dist <= blastRadius + target.radius) {
-          this.destroyAsteroidByIndex(i, false);
+          this.destroyAsteroidByIndex(i, false, options);
         }
       }
     }
