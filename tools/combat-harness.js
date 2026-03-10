@@ -211,6 +211,58 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(123456);
+    gameA.model.runMode = "campaign";
+    const finalSector = Math.max(1, Math.floor(gameA.config.run.finalSector || 8));
+    const seenBiomes = [];
+    for (let sector = 1; sector <= finalSector; sector += 1) {
+      gameA.model.sector = sector;
+      gameA.missionSystem.startMission(sector);
+      seenBiomes.push(gameA.model.currentMission?.biomeId);
+    }
+    const uniqueBiomes = new Set(seenBiomes.filter(Boolean));
+    assert(seenBiomes.length === finalSector, "Campaign should produce one biome entry per sector");
+    assert(uniqueBiomes.size === finalSector, "Campaign biome order should avoid repeats for all 8 sectors");
+    assert(
+      Array.isArray(gameA.model.campaignBiomeOrder) && gameA.model.campaignBiomeOrder.length === finalSector,
+      "Campaign should persist generated biome order for the full run length"
+    );
+  });
+
+  tests.push(() => {
+    const runSeed = 654321;
+    const collectCampaignOrder = () => {
+      gameA.startGame(runSeed);
+      gameA.model.runMode = "campaign";
+      const finalSector = Math.max(1, Math.floor(gameA.config.run.finalSector || 8));
+      const result = [];
+      for (let sector = 1; sector <= finalSector; sector += 1) {
+        gameA.model.sector = sector;
+        gameA.missionSystem.startMission(sector);
+        result.push(gameA.model.currentMission?.biomeId || "");
+      }
+      return result;
+    };
+    const first = collectCampaignOrder();
+    const second = collectCampaignOrder();
+    assert(first.join("|") === second.join("|"), "Campaign biome order should be deterministic for the same seed");
+  });
+
+  tests.push(() => {
+    gameA.startGame(765432);
+    gameA.model.runMode = "campaign";
+    const finalSector = Math.max(1, Math.floor(gameA.config.run.finalSector || 8));
+    for (let sector = 1; sector < finalSector; sector += 1) {
+      const type = gameA.missionSystem.getMissionTypeByIndex(sector);
+      assert(type !== "mini_boss", "Campaign sectors before final should not schedule mini_boss");
+    }
+    assert(
+      gameA.missionSystem.getMissionTypeByIndex(finalSector) === "mini_boss",
+      "Campaign final sector should schedule mini_boss"
+    );
+  });
+
+  tests.push(() => {
     gameA.startGame(12446);
     const mission = gameA.model.currentMission;
     assert(mission?.visualFx, "Mission visualFx missing before flash lifecycle test");

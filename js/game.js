@@ -346,6 +346,7 @@
         factions: createDefaultFactionProgression(),
         factionRepGainTracker: {},
         factionRunSummary: null,
+        campaignBiomeOrder: [],
         contrabandHeat: 0,
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
@@ -1585,6 +1586,7 @@
       this.model.hangar.shopIndex = 0;
       this.model.hangar.pilotCursor = 0;
       this.model.factionRepGainTracker = {};
+      this.model.campaignBiomeOrder = [];
       this.model.overlaySettingsRow = 0;
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;

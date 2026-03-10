@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Campaign flow rework na 8 kol (unikatni biome + boss jen v 8. kole)
+  - [x] `run.finalSector` zvednut na 8 v configu i content override
+  - [x] Campaign pouziva seeded `campaignBiomeOrder` bez opakovani biomu v ramci runu
+  - [x] Mission flow pro campaign: kola 1-7 rotace bez bossu, kolo 8 `mini_boss`/`FINAL BOSS`
+  - [x] Boss Rush zustava samostatny 4-kolovy rezim
+  - [x] Help/i18n texty upraveny na novy campaign flow
+  - [x] Harness coverage doplnena o determinismus biome poradi a mission type schedule 1..8
+
 - [x] Biome expansion to 8 (Neon + Dust)
   - [x] Pridany biomy `neon_nebula` a `dust_expanse` do mission directoru, vcetne vyvazeni biome weightu na soucet 1.0
   - [x] Oba biomy maji plny pack: mini-event, audio warning/stinger profil a visual profil (`biomeVisuals`)

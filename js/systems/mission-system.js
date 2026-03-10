@@ -311,7 +311,49 @@
       const g = this.game;
       const biomes = g.config.missionDirector.biomes || [];
       if (!biomes.length) return { id: "void", label: tr("mission.outer_void") };
+      if (g.model.runMode === "campaign") {
+        const order = this.ensureCampaignBiomeOrder();
+        const index = Math.max(0, Math.floor(level) - 1);
+        const campaignBiomeId = order[index];
+        if (campaignBiomeId) {
+          const campaignBiome = biomes.find((entry) => entry.id === campaignBiomeId);
+          if (campaignBiome) return campaignBiome;
+        }
+      }
       return this.pickWeighted(biomes, biomes[0]);
+    }
+
+    getCampaignFinalSector() {
+      const runCfg = this.game.config.run || {};
+      return Math.max(1, Math.floor(runCfg.finalSector ?? 8));
+    }
+
+    ensureCampaignBiomeOrder() {
+      const g = this.game;
+      const finalSector = this.getCampaignFinalSector();
+      const biomes = Array.isArray(g.config.missionDirector?.biomes) ? g.config.missionDirector.biomes : [];
+      const biomeIds = biomes
+        .map((biome) => (typeof biome?.id === "string" && biome.id.length > 0 ? biome.id : ""))
+        .filter((id, idx, arr) => id && arr.indexOf(id) === idx);
+      if (!biomeIds.length) {
+        g.model.campaignBiomeOrder = [];
+        return g.model.campaignBiomeOrder;
+      }
+      const existing = Array.isArray(g.model.campaignBiomeOrder) ? g.model.campaignBiomeOrder : [];
+      if (existing.length >= finalSector) return existing;
+      const shuffled = biomeIds.slice();
+      for (let i = shuffled.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(g.rng() * (i + 1));
+        const tmp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = tmp;
+      }
+      const order = shuffled.slice(0, finalSector);
+      while (order.length < finalSector) {
+        order.push(shuffled[order.length % shuffled.length]);
+      }
+      g.model.campaignBiomeOrder = order;
+      return order;
     }
 
     createBiomeHazardsForMission(biome) {
@@ -495,6 +537,12 @@
     getMissionTypeByIndex(missionIndex) {
       const g = this.game;
       if (g.model.runMode === "boss_rush") return "mini_boss";
+      if (g.model.runMode === "campaign") {
+        const finalSector = this.getCampaignFinalSector();
+        if (missionIndex >= finalSector) return "mini_boss";
+        const campaignOrder = ["survive", "ufo_hunt", "asteroid_storm"];
+        return campaignOrder[(Math.max(1, missionIndex) - 1) % campaignOrder.length];
+      }
       const order = g.config.mission.order;
       return order[(missionIndex - 1) % order.length];
     }

@@ -780,7 +780,7 @@
       ]
     },
     run: {
-      finalSector: 4,
+      finalSector: 8,
       finalMissionType: "mini_boss",
       bossRush: {
         finalSector: 4,
@@ -1055,9 +1055,10 @@
     },
     missionDirector: {
       pacingBySector: [
-        { maxSector: 2, difficulty: 0.86 },
-        { maxSector: 4, difficulty: 1.0 },
-        { maxSector: 7, difficulty: 1.18 },
+        { maxSector: 2, difficulty: 0.84 },
+        { maxSector: 4, difficulty: 0.96 },
+        { maxSector: 6, difficulty: 1.1 },
+        { maxSector: 8, difficulty: 1.24 },
         { maxSector: 999, difficulty: 1.34 }
       ],
       biomeVisuals: {

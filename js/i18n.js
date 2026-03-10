@@ -377,7 +377,7 @@
         "Data is loaded directly from game configuration. Values match the current build balance.<br>Note: \"DMG\" is base hit value (before crit/resist modifiers), \"Range\" is approximate projectile travel.",
       "help.section.mission_types": "Mission Types",
       "help.section.mission_types_hint":
-        "Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. Runtime now adds short visual event beats on key phase transitions (cleanup/finale/boss phase). In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> and clearing it ends the run with VICTORY.",
+        "Campaign now runs a fixed <strong>8-sector arc</strong>. Sectors 1-7 rotate <strong>survive -> ufo_hunt -> asteroid_storm</strong>, while sector 8 is the only <strong>mini_boss</strong> encounter and escalates to <strong>FINAL BOSS</strong> for run completion. Runtime adds short visual event beats on key phase transitions (cleanup/finale/boss phase).",
       "help.section.mission_endless_hint":
         "Endless mode unlocks after your first campaign clear. Run setup mode now supports <strong>Campaign / Boss Rush / Endless</strong> with <strong>Left/Right</strong> (or quick cycle by <strong>E</strong>). Boss Rush runs mini-boss encounters every sector and has its own final clear at sector 4 (VICTORY). Endless sectors ramp pressure faster after sector 5 and apply softer credit gain damping to limit snowballing.",
       "help.card.boss_rush_mode.name": "BOSS RUSH",
@@ -388,7 +388,7 @@
         "<strong>Impact:</strong> fast high-pressure boss practice loop with clear run-complete endpoint.",
       "help.section.biomes": "Biomes",
       "help.section.biomes_hint":
-        "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, hazard zones, and cadence-driven visual profiles (deep-space layers, war scars, foreground dust, event beats).",
+        "Biomes define arena atmosphere, biome-specific ambient/warning SFX flavor, hazard zones, and cadence-driven visual profiles (deep-space layers, war scars, foreground dust, event beats). In Campaign, each of the 8 sectors uses a different biome with seeded order and no repeats inside the run.",
       "help.card.raw_space_atmosphere.name": "Raw Space Atmosphere",
       "help.card.raw_space_atmosphere.tag": "Visual readability",
       "help.card.raw_space_atmosphere.line":
