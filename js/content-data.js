@@ -89,6 +89,36 @@
           }
         }
       },
+      lootIdentity: {
+        helix_union: {
+          affixWeights: {
+            efficient: 1.55,
+            tactical: 1.45,
+            quickspin: 1.18,
+            overclocked: 1.22,
+            corsair_mark: 1.42
+          },
+          setTagWeights: {
+            corsair: 1.45,
+            warden: 1.12,
+            prospector: 0.88
+          }
+        },
+        drift_cartel: {
+          affixWeights: {
+            hardened: 1.24,
+            afterburn: 1.48,
+            reactive: 1.34,
+            charged: 1.18,
+            prospector_mark: 1.46
+          },
+          setTagWeights: {
+            prospector: 1.45,
+            warden: 1.12,
+            corsair: 0.88
+          }
+        }
+      },
       intelOptions: [
         {
           id: "balanced",

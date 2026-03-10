@@ -701,6 +701,36 @@
           effects: { shopPriceMul: 0.9, creditsMul: 1.12, salvageMul: 1.1 }
         }
       ],
+      lootIdentity: {
+        helix_union: {
+          affixWeights: {
+            efficient: 1.55,
+            tactical: 1.45,
+            quickspin: 1.18,
+            overclocked: 1.22,
+            corsair_mark: 1.42
+          },
+          setTagWeights: {
+            corsair: 1.45,
+            warden: 1.12,
+            prospector: 0.88
+          }
+        },
+        drift_cartel: {
+          affixWeights: {
+            hardened: 1.24,
+            afterburn: 1.48,
+            reactive: 1.34,
+            charged: 1.18,
+            prospector_mark: 1.46
+          },
+          setTagWeights: {
+            prospector: 1.45,
+            warden: 1.12,
+            corsair: 0.88
+          }
+        }
+      },
       intelOptions: [
         {
           id: "balanced",
@@ -1136,6 +1166,12 @@
           config.faction?.missionDirectives == null ||
           (typeof config.faction.missionDirectives === "object" && !Array.isArray(config.faction.missionDirectives)),
         msg: "faction.missionDirectives invalid"
+      },
+      {
+        ok:
+          config.faction?.lootIdentity == null ||
+          (typeof config.faction.lootIdentity === "object" && !Array.isArray(config.faction.lootIdentity)),
+        msg: "faction.lootIdentity invalid"
       }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);

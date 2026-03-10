@@ -22,7 +22,6 @@
   - [x] Neutral/black-market vendor jako treti obchodni vrstva
   - [x] Reputation thresholdy (`-20/0/+20/+50`) s odemykatelnymi pasivy
   - [x] Contraband mechanika (silny item za reputacni/bounty riziko)
-  - [ ] Frakcni module sety a affix identity pro buildcraft
   - [ ] End-of-run faction summary (timeline reputace + unlocky)
   - [x] Anti-snowball guard pro reputaci (sector cap + diminishing returns)
 

@@ -35,6 +35,12 @@
   - [x] Mission context rozsireny o directive text (`Biome | Modifier | Directive`)
   - [x] Harness coverage pro smerove rozdily target/pacing mezi frakcemi
 
+- [x] Frakce a reputace (Phase 2) - frakcni module sety a affix identity
+  - [x] Frakcni loot identity profil (`affixWeights` + `setTagWeights`) pro HELIX/DRIFT
+  - [x] Generator dropu pouziva faction-weighted vyber affixu pri zachovani rarity/slot logiky
+  - [x] Bias set tagu: HELIX preferuje `corsair`, DRIFT preferuje `prospector`
+  - [x] Harness coverage pro distribucni rozdily affix/set prevalence mezi frakcemi
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

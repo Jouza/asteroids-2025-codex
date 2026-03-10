@@ -135,6 +135,61 @@ function validateContentData(contentData, issues) {
       }
     }
   }
+  const lootIdentity = contentData.faction?.lootIdentity;
+  if (lootIdentity != null) {
+    assert(
+      lootIdentity && typeof lootIdentity === "object" && !Array.isArray(lootIdentity),
+      "faction.lootIdentity must be an object when provided",
+      issues
+    );
+    if (lootIdentity && typeof lootIdentity === "object" && !Array.isArray(lootIdentity)) {
+      for (const factionId of Object.keys(lootIdentity)) {
+        const profile = lootIdentity[factionId];
+        assert(
+          profile && typeof profile === "object" && !Array.isArray(profile),
+          `faction.lootIdentity.${factionId} must be an object`,
+          issues
+        );
+        if (!profile || typeof profile !== "object" || Array.isArray(profile)) continue;
+        const affixWeights = profile.affixWeights;
+        const setTagWeights = profile.setTagWeights;
+        if (affixWeights != null) {
+          assert(
+            affixWeights && typeof affixWeights === "object" && !Array.isArray(affixWeights),
+            `faction.lootIdentity.${factionId}.affixWeights must be an object`,
+            issues
+          );
+          if (affixWeights && typeof affixWeights === "object" && !Array.isArray(affixWeights)) {
+            for (const affixId of Object.keys(affixWeights)) {
+              const value = Number(affixWeights[affixId]);
+              assert(
+                Number.isFinite(value) && value > 0,
+                `faction.lootIdentity.${factionId}.affixWeights.${affixId} must be > 0`,
+                issues
+              );
+            }
+          }
+        }
+        if (setTagWeights != null) {
+          assert(
+            setTagWeights && typeof setTagWeights === "object" && !Array.isArray(setTagWeights),
+            `faction.lootIdentity.${factionId}.setTagWeights must be an object`,
+            issues
+          );
+          if (setTagWeights && typeof setTagWeights === "object" && !Array.isArray(setTagWeights)) {
+            for (const setTag of Object.keys(setTagWeights)) {
+              const value = Number(setTagWeights[setTag]);
+              assert(
+                Number.isFinite(value) && value > 0,
+                `faction.lootIdentity.${factionId}.setTagWeights.${setTag} must be > 0`,
+                issues
+              );
+            }
+          }
+        }
+      }
+    }
+  }
 
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);

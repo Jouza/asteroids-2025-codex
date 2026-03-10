@@ -1953,27 +1953,71 @@
       return merged;
     }
 
+    getLootFactionIdForDrop() {
+      const missionFaction = this.model.currentMission?.biomeFactionId;
+      if (missionFaction) return missionFaction;
+      const dominant = this.getDominantFactionState();
+      return dominant?.id || null;
+    }
+
+    getFactionLootIdentityProfile(factionId = this.getLootFactionIdForDrop()) {
+      if (!factionId) return null;
+      const raw = this.config.faction?.lootIdentity?.[factionId];
+      if (!raw || typeof raw !== "object") return null;
+      const affixWeightsRaw = raw.affixWeights && typeof raw.affixWeights === "object" ? raw.affixWeights : {};
+      const setTagWeightsRaw = raw.setTagWeights && typeof raw.setTagWeights === "object" ? raw.setTagWeights : {};
+      const affixWeights = {};
+      const setTagWeights = {};
+      for (const key of Object.keys(affixWeightsRaw)) {
+        affixWeights[key] = this.clamp(Number(affixWeightsRaw[key]) || 1, 0.1, 4);
+      }
+      for (const key of Object.keys(setTagWeightsRaw)) {
+        setTagWeights[key] = this.clamp(Number(setTagWeightsRaw[key]) || 1, 0.1, 4);
+      }
+      return {
+        factionId,
+        affixWeights,
+        setTagWeights
+      };
+    }
+
+    getFactionWeightedAffixScore(affix, lootIdentityProfile = null) {
+      if (!affix) return 0;
+      if (!lootIdentityProfile) return 1;
+      const idMul = lootIdentityProfile.affixWeights?.[affix.id] ?? 1;
+      const setMul = affix.setTag ? lootIdentityProfile.setTagWeights?.[affix.setTag] ?? 1 : 1;
+      return Math.max(0.1, idMul * setMul);
+    }
+
+    pickUniqueAffixes(affixPool, targetCount, lootIdentityProfile = null) {
+      const remaining = Array.isArray(affixPool) ? affixPool.slice() : [];
+      const picked = [];
+      while (picked.length < targetCount && remaining.length > 0) {
+        const candidate = this.rollWeighted(remaining, (affix) => this.getFactionWeightedAffixScore(affix, lootIdentityProfile));
+        if (!candidate) break;
+        picked.push(candidate);
+        const removeIndex = remaining.findIndex((affix) => affix.id === candidate.id);
+        if (removeIndex >= 0) remaining.splice(removeIndex, 1);
+      }
+      return picked;
+    }
+
     createModuleDrop() {
       const slot = this.config.loot.slots[Math.floor(this.rng() * this.config.loot.slots.length)];
       const bases = this.config.loot.basesBySlot[slot];
       const base = bases[Math.floor(this.rng() * bases.length)];
       const rarity = this.rollLootRarity();
       const affixPool = this.config.loot.affixes.filter((affix) => affix.slots.includes(slot));
-      const affixes = [];
+      const lootIdentity = this.getFactionLootIdentityProfile();
       let modifiers = { ...(base.modifiers || {}) };
       const targetAffixes = Math.min(rarity.affixCount, affixPool.length);
-
-      while (affixes.length < targetAffixes) {
-        const candidate = affixPool[Math.floor(this.rng() * affixPool.length)];
-        if (affixes.some((affix) => affix.id === candidate.id)) continue;
-        affixes.push(candidate);
-        modifiers = this.mergeModifiers(modifiers, candidate.modifiers);
-      }
+      let affixes = this.pickUniqueAffixes(affixPool, targetAffixes, lootIdentity);
+      for (const candidate of affixes) modifiers = this.mergeModifiers(modifiers, candidate.modifiers);
 
       if (targetAffixes > 0 && this.rng() < 0.45) {
         const setAffixes = affixPool.filter((affix) => affix.setTag);
         if (setAffixes.length > 0 && !affixes.some((affix) => affix.setTag)) {
-          const setAffix = setAffixes[Math.floor(this.rng() * setAffixes.length)];
+          const setAffix = this.rollWeighted(setAffixes, (affix) => this.getFactionWeightedAffixScore(affix, lootIdentity));
           const replaceIndex = affixes.length > 0 ? Math.floor(this.rng() * affixes.length) : -1;
           if (replaceIndex >= 0) affixes[replaceIndex] = setAffix;
           else affixes.push(setAffix);

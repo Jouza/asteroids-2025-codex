@@ -961,6 +961,56 @@ function runTests() {
   });
 
   tests.push(() => {
+    const sampleFactionLoot = (factionId, seed) => {
+      gameA.startGame(seed);
+      gameA.model.currentMission = { biomeFactionId: factionId };
+      const rareDef = gameA.config.loot.rarities.find((entry) => entry.id === "rare");
+      const originalRollLootRarity = gameA.rollLootRarity.bind(gameA);
+      gameA.rollLootRarity = () => rareDef;
+      const counts = {
+        affix: {},
+        setTag: {}
+      };
+      for (let i = 0; i < 600; i += 1) {
+        const drop = gameA.createModuleDrop();
+        for (const affix of drop.affixes) {
+          counts.affix[affix.id] = (counts.affix[affix.id] ?? 0) + 1;
+          if (affix.setTag) counts.setTag[affix.setTag] = (counts.setTag[affix.setTag] ?? 0) + 1;
+        }
+      }
+      gameA.rollLootRarity = originalRollLootRarity;
+      return counts;
+    };
+
+    const helix = sampleFactionLoot("helix_union", 58585);
+    const drift = sampleFactionLoot("drift_cartel", 58585);
+    const sum = (obj, keys) => keys.reduce((acc, key) => acc + (obj[key] ?? 0), 0);
+    const helixPreferredAffixes = ["efficient", "tactical", "quickspin", "overclocked", "corsair_mark"];
+    const driftPreferredAffixes = ["hardened", "afterburn", "reactive", "charged", "prospector_mark"];
+    const helixBiasHelix = sum(helix.affix, helixPreferredAffixes);
+    const helixBiasDrift = sum(helix.affix, driftPreferredAffixes);
+    const driftBiasDrift = sum(drift.affix, driftPreferredAffixes);
+    const driftBiasHelix = sum(drift.affix, helixPreferredAffixes);
+
+    assert(
+      helixBiasHelix > helixBiasDrift,
+      "HELIX loot identity should prefer HELIX-affiliated affix families"
+    );
+    assert(
+      driftBiasDrift > driftBiasHelix,
+      "DRIFT loot identity should prefer DRIFT-affiliated affix families"
+    );
+    assert(
+      (helix.setTag.corsair ?? 0) > (helix.setTag.prospector ?? 0),
+      "HELIX loot identity should bias Corsair set-tag prevalence"
+    );
+    assert(
+      (drift.setTag.prospector ?? 0) > (drift.setTag.corsair ?? 0),
+      "DRIFT loot identity should bias Prospector set-tag prevalence"
+    );
+  });
+
+  tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
     gameA.model.overlaySettingsRow = 4;
     gameA.model.flightModel = "arcade";
