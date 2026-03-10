@@ -17,13 +17,6 @@
   - [x] MVP: Skill perky + unlock flow v hangaru
   - [ ] Rozsireni tree na 10-12+ perku + branch synergie
 
-- [ ] Frakce a reputace (Phase 2+ rozsireni)
-  - [x] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)
-  - [x] Neutral/black-market vendor jako treti obchodni vrstva
-  - [x] Reputation thresholdy (`-20/0/+20/+50`) s odemykatelnymi pasivy
-  - [x] Contraband mechanika (silny item za reputacni/bounty riziko)
-  - [x] Anti-snowball guard pro reputaci (sector cap + diminishing returns)
-
 - [ ] Endgame / replayability
   - [x] Bounty board (MVP) - data/model + hangar board UI + mission auto-payout hook
   - [x] Mutatory (MVP) - selectable run mutator presets + persistence + gameplay scaling multipliers
