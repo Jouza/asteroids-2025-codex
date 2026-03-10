@@ -1011,6 +1011,40 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(59595);
+    gameA.model.factions.helix_union = 18;
+    gameA.model.factions.drift_cartel = 0;
+    gameA.initFactionRunSummary();
+    gameA.addFactionReputation("helix_union", 5, {
+      announce: false,
+      saveProfile: false,
+      reasonKey: "game.faction.reason.mission_complete",
+      applyGainTuning: false
+    });
+    const summary = gameA.buildFactionRunSummarySnapshot();
+    const helix = summary.byFaction.find((entry) => entry.factionId === "helix_union");
+    assert(helix.startRep === 18, "Faction run summary should store run-start reputation baseline");
+    assert(helix.endRep === 23, "Faction run summary should store current reputation");
+    assert(helix.deltaRep === 5, "Faction run summary should compute net reputation delta");
+    assert(helix.unlockedThresholdIds.includes("trusted"), "Crossing rep threshold should register unlocked faction tier");
+    assert(
+      summary.timeline.some((entry) => entry.type === "rep_delta" && entry.factionId === "helix_union"),
+      "Faction run summary should include reputation timeline entries"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(60606);
+    gameA.endGame();
+    assert(gameA.model.gameOverSummary != null, "Game over should build summary payload");
+    assert(
+      Array.isArray(gameA.model.gameOverSummary?.factionSummary?.byFaction) &&
+        gameA.model.gameOverSummary.factionSummary.byFaction.length >= 2,
+      "Game over summary should include faction run summary"
+    );
+  });
+
+  tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
     gameA.model.overlaySettingsRow = 4;
     gameA.model.flightModel = "arcade";

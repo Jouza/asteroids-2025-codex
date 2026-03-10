@@ -1374,6 +1374,76 @@
       return startY + (lines.length - 1) * lineHeight;
     }
 
+    formatSignedInteger(value) {
+      const number = Math.floor(Number(value) || 0);
+      return number > 0 ? `+${number}` : String(number);
+    }
+
+    drawFactionEndSummary(centerX, startY, factionSummary) {
+      const { ctx } = this;
+      if (!factionSummary || !Array.isArray(factionSummary.byFaction) || factionSummary.byFaction.length === 0) {
+        return startY;
+      }
+      let y = startY;
+      ctx.textAlign = "center";
+      ctx.font = "600 15px Trebuchet MS";
+      ctx.fillStyle = "rgba(196,238,255,0.9)";
+      ctx.fillText(tr("overlay.faction_summary.title"), centerX, y);
+      y += 20;
+      ctx.font = "500 13px Trebuchet MS";
+      ctx.fillStyle = "rgba(216,245,255,0.9)";
+      for (const faction of factionSummary.byFaction) {
+        ctx.fillText(
+          tr("overlay.faction_summary.row", {
+            faction: tr(`game.faction.${faction.factionId}`),
+            start: faction.startRep,
+            end: faction.endRep,
+            delta: this.formatSignedInteger(faction.deltaRep)
+          }),
+          centerX,
+          y
+        );
+        y += 18;
+      }
+      const unlockRows = [];
+      for (const faction of factionSummary.byFaction) {
+        const unlocked = Array.isArray(faction.unlockedThresholdIds) ? faction.unlockedThresholdIds : [];
+        if (!unlocked.length) continue;
+        unlockRows.push(
+          tr("overlay.faction_summary.unlock_row", {
+            faction: tr(`game.faction.${faction.factionId}`),
+            unlocks: unlocked.map((id) => tr(`game.faction.threshold.${id}`)).join(", ")
+          })
+        );
+      }
+      if (unlockRows.length > 0) {
+        ctx.fillStyle = "rgba(255,223,164,0.92)";
+        for (const row of unlockRows) y = this.drawWrappedText(row, centerX, y, 760, 16, 2) + 18;
+      }
+      const timeline = Array.isArray(factionSummary.timeline) ? factionSummary.timeline.slice(-2) : [];
+      if (timeline.length > 0) {
+        ctx.fillStyle = "rgba(186,226,248,0.86)";
+        for (const event of timeline) {
+          const factionName = tr(`game.faction.${event.factionId}`);
+          const text =
+            event.type === "threshold_unlock"
+              ? tr("overlay.faction_summary.timeline_unlock", {
+                  sector: event.sector,
+                  faction: factionName,
+                  threshold: tr(`game.faction.threshold.${event.thresholdId}`)
+                })
+              : tr("overlay.faction_summary.timeline_delta", {
+                  sector: event.sector,
+                  faction: factionName,
+                  delta: this.formatSignedInteger(event.delta),
+                  reason: tr(event.reasonKey || "game.faction.reason.mission_start")
+                });
+          y = this.drawWrappedText(text, centerX, y, 760, 16, 2) + 14;
+        }
+      }
+      return y;
+    }
+
     getRunSettingsRows(model) {
       const difficultyId = model.runDifficultyId || "normal";
       return [
@@ -1554,12 +1624,12 @@
       if (model.gameState === GAME_STATE.GAME_OVER) {
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
-        const summary = model.victorySummary || {};
+        const summary = model.gameOverSummary || model.victorySummary || {};
         const pilotLabelFromId = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
         const shipLabelFromId = tr(`identity.ship.${model.identity?.shipId}.name`);
         const pilotLabel = summary.identity?.pilot || (pilotLabelFromId.includes("identity.pilot.") ? "-" : pilotLabelFromId);
         const shipLabel = summary.identity?.ship || (shipLabelFromId.includes("identity.ship.") ? "-" : shipLabelFromId);
-        this.drawOverlayBlock(cx, cy + 20, 560, 224);
+        this.drawOverlayBlock(cx, cy + 42, 600, 320);
         ctx.fillStyle = "#d8f5ff";
         ctx.textAlign = "center";
         ctx.font = "700 38px Trebuchet MS";
@@ -1572,7 +1642,7 @@
         } else {
           ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), cx, sectorLabelY);
         }
-        const identityBottomY = this.drawWrappedText(
+        this.drawWrappedText(
           tr("overlay.identity_status", {
             pilot: pilotLabel,
             ship: shipLabel
@@ -1583,15 +1653,16 @@
           24,
           2
         );
+        const factionBottomY = this.drawFactionEndSummary(cx, cy + 94, summary.factionSummary);
         ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr("overlay.enter_new_run"), cx, identityBottomY + 28);
+        ctx.fillText(tr("overlay.enter_new_run"), cx, factionBottomY + 16);
       }
 
       if (model.gameState === GAME_STATE.VICTORY) {
         const summary = model.victorySummary || {};
         const cx = config.canvas.width / 2;
         const cy = config.canvas.height / 2;
-        this.drawOverlayBlock(cx, cy + 24, 560, 248);
+        this.drawOverlayBlock(cx, cy + 54, 600, 380);
         ctx.fillStyle = "#d8f5ff";
         ctx.textAlign = "center";
         ctx.font = "700 38px Trebuchet MS";
@@ -1636,8 +1707,9 @@
           cx,
           unlockY
         );
+        const factionBottomY = this.drawFactionEndSummary(cx, unlockY + 28, summary.factionSummary);
         ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr("overlay.enter_new_run"), cx, unlockY + 32);
+        ctx.fillText(tr("overlay.enter_new_run"), cx, factionBottomY + 12);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {

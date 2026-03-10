@@ -41,6 +41,12 @@
   - [x] Bias set tagu: HELIX preferuje `corsair`, DRIFT preferuje `prospector`
   - [x] Harness coverage pro distribucni rozdily affix/set prevalence mezi frakcemi
 
+- [x] Frakce a reputace (Phase 2) - end-of-run faction summary
+  - [x] Runtime sbirany timeline reputacnich zmen behem runu (mission/intel/biome/contraband)
+  - [x] Threshold unlock eventy (`strained/trusted/ally`) jsou logovane do run summary
+  - [x] `Victory` i `Game Over` overlay ukazuji faction debrief (start/end/delta + unlocky + posledni eventy)
+  - [x] Harness coverage pro timeline snapshot a game-over summary payload
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

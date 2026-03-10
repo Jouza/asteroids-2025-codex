@@ -268,6 +268,7 @@
         runMode: "campaign",
         endlessUnlocked: false,
         victorySummary: null,
+        gameOverSummary: null,
         missionCompleteSummary: null,
         flightModel: "arcade",
         runDifficultyId: "normal",
@@ -334,6 +335,7 @@
         setStatusText: tr("hud.no_active_set"),
         factions: createDefaultFactionProgression(),
         factionRepGainTracker: {},
+        factionRunSummary: null,
         contrabandHeat: 0,
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
@@ -627,6 +629,94 @@
       return active;
     }
 
+    getFactionThresholdIdForRep(repValue) {
+      const rep = Math.floor(Number(repValue) || 0);
+      const defs = this.getFactionThresholdDefs();
+      let activeId = null;
+      for (const tier of defs) {
+        if (rep < tier.minRep) continue;
+        if (Number.isFinite(tier.maxRep) && rep > tier.maxRep) continue;
+        activeId = tier.id;
+      }
+      return activeId;
+    }
+
+    initFactionRunSummary() {
+      const startRep = {};
+      const thresholdUnlocks = {};
+      for (const faction of this.getFactionDefs()) {
+        const rep = this.getFactionReputation(faction.id);
+        startRep[faction.id] = rep;
+        thresholdUnlocks[faction.id] = [];
+      }
+      this.model.factionRunSummary = {
+        active: true,
+        startedAtSeconds: this.model.runtimeSeconds,
+        startRep,
+        thresholdUnlocks,
+        timeline: [],
+        maxTimelineEntries: 24
+      };
+    }
+
+    recordFactionRunTimelineEntry(entry) {
+      const summary = this.model.factionRunSummary;
+      if (!summary || !summary.active) return;
+      const safeEntry = entry && typeof entry === "object" ? entry : null;
+      if (!safeEntry || !safeEntry.factionId) return;
+      const maxEntries = Math.max(8, Math.floor(Number(summary.maxTimelineEntries) || 24));
+      summary.timeline.push({
+        sector: Math.max(1, Math.floor(Number(this.model.sector) || 1)),
+        runtimeSeconds: Number(this.model.runtimeSeconds) || 0,
+        ...safeEntry
+      });
+      if (summary.timeline.length > maxEntries) {
+        summary.timeline.splice(0, summary.timeline.length - maxEntries);
+      }
+    }
+
+    registerFactionThresholdUnlock(factionId, thresholdId, sourceEntry = null) {
+      if (!factionId || !thresholdId) return;
+      const summary = this.model.factionRunSummary;
+      if (!summary || !summary.active) return;
+      const byFaction = summary.thresholdUnlocks && typeof summary.thresholdUnlocks === "object" ? summary.thresholdUnlocks : {};
+      const list = Array.isArray(byFaction[factionId]) ? byFaction[factionId] : [];
+      if (!list.includes(thresholdId)) list.push(thresholdId);
+      byFaction[factionId] = list;
+      summary.thresholdUnlocks = byFaction;
+      this.recordFactionRunTimelineEntry({
+        type: "threshold_unlock",
+        factionId,
+        thresholdId,
+        reasonKey: sourceEntry?.reasonKey || "game.faction.reason.mission_complete"
+      });
+    }
+
+    buildFactionRunSummarySnapshot() {
+      const summary = this.model.factionRunSummary;
+      if (!summary) return null;
+      const defs = this.getFactionDefs();
+      const byFaction = defs.map((faction) => {
+        const startRep = Math.floor(Number(summary.startRep?.[faction.id]) || 0);
+        const endRep = this.getFactionReputation(faction.id);
+        const unlocked = Array.isArray(summary.thresholdUnlocks?.[faction.id])
+          ? summary.thresholdUnlocks[faction.id].slice()
+          : [];
+        return {
+          factionId: faction.id,
+          startRep,
+          endRep,
+          deltaRep: endRep - startRep,
+          unlockedThresholdIds: unlocked
+        };
+      });
+      const timeline = Array.isArray(summary.timeline) ? summary.timeline.slice(-8) : [];
+      return {
+        byFaction,
+        timeline
+      };
+    }
+
     getFactionMissionDirective(factionId = this.model.currentMission?.biomeFactionId || null, missionType = this.model.currentMission?.type || null) {
       if (!factionId || !missionType) return null;
       const directives = this.config.faction?.missionDirectives;
@@ -670,8 +760,21 @@
 
       this.model.factions = this.model.factions && typeof this.model.factions === "object" ? this.model.factions : {};
       this.model.factions[factionId] = after;
-
+      const beforeThresholdId = this.getFactionThresholdIdForRep(before);
+      const afterThresholdId = this.getFactionThresholdIdForRep(after);
       const reasonKey = options.reasonKey || "game.faction.reason.mission_start";
+      this.recordFactionRunTimelineEntry({
+        type: "rep_delta",
+        factionId,
+        delta: applied,
+        beforeRep: before,
+        afterRep: after,
+        reasonKey
+      });
+      if (afterThresholdId && afterThresholdId !== beforeThresholdId) {
+        this.registerFactionThresholdUnlock(factionId, afterThresholdId, { reasonKey });
+      }
+
       if (options.announce !== false) {
         this.model.hangar.message = tr("game.faction.rep_changed", {
           faction: tr(`game.faction.${factionId}`),
@@ -1274,11 +1377,13 @@
       this.saveProfile(saveReason);
       this.input.reset();
       this.model.gameState = state;
+      if (this.model.factionRunSummary) this.model.factionRunSummary.active = false;
       this.audio.play(soundCue);
       this.hud.sync(this.model);
     }
 
     endGame() {
+      this.model.gameOverSummary = this.buildGameOverSummary();
       this.endRun(GAME_STATE.GAME_OVER, "game_over", "ui_game_over");
     }
 
@@ -1310,9 +1415,25 @@
           secondary: this.model.loadout.secondaryLabel,
           utility: this.model.loadout.utilityLabel
         },
+        factionSummary: this.buildFactionRunSummarySnapshot(),
         salvageParts: this.model.salvageParts,
         missionsCompleted: this.model.telemetry.completedMissions,
         miniBossKills: this.model.telemetry.kills.miniBosses
+      };
+    }
+
+    buildGameOverSummary() {
+      const selectedPilot = this.getSelectedIdentityPilot();
+      const selectedShip = this.getSelectedIdentityShip();
+      return {
+        score: this.model.score,
+        sector: this.model.sector,
+        runtimeSeconds: this.model.runtimeSeconds,
+        identity: {
+          pilot: selectedPilot ? tr(`identity.pilot.${selectedPilot.id}.callsign`) : "-",
+          ship: selectedShip ? tr(`identity.ship.${selectedShip.id}.name`) : "-"
+        },
+        factionSummary: this.buildFactionRunSummarySnapshot()
       };
     }
 
@@ -1383,6 +1504,7 @@
       this.model.missionAsteroidKills = 0;
       this.model.currentMission = null;
       this.model.victorySummary = null;
+      this.model.gameOverSummary = null;
       this.model.missionCompleteSummary = null;
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
@@ -1415,6 +1537,7 @@
       };
       this.rng = createSeededRng(this.model.runSeed);
       this.initializeShipResources(this.model.ship);
+      this.initFactionRunSummary();
       this.enemySystem.scheduleNextUfoSpawn();
       this.missionSystem.startMission(this.model.sector);
       this.hud.sync(this.model);
