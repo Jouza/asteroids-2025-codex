@@ -85,6 +85,12 @@
   - [x] Victory overlay dostal dedikovany status text pro Boss Rush clear
   - [x] Harness coverage pro Boss Rush final victory branch
 
+- [x] Hangar UI overflow fix (responsive panel sizing)
+  - [x] Hangar top/bottom panel heights jsou odvazene od canvas vysky misto pevnych hodnot
+  - [x] `SHOP & OPS` panel ma viewport window + scrollbar thumb pri dlouhem seznamu akci
+  - [x] TACTICAL STATUS spacing je adaptivni pro nizsi vysky
+  - [x] Spodni action/message bar je clampnuty, aby nepretikal mimo canvas
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu
