@@ -57,6 +57,7 @@
       "game.run_mutator.changed": "Mutator: {mutator}",
       "game.flight_mode.changed": "Flight model: {mode}",
       "game.run_mode.campaign": "CAMPAIGN",
+      "game.run_mode.boss_rush": "BOSS RUSH",
       "game.run_mode.endless": "ENDLESS",
       "game.difficulty.rookie": "ROOKIE",
       "game.difficulty.normal": "NORMAL",
@@ -374,7 +375,7 @@
       "help.section.mission_types_hint":
         "Mission order cycles as <strong>survive -> ufo_hunt -> asteroid_storm -> mini_boss</strong>. In campaign mode, mini_boss in the final sector becomes <strong>FINAL BOSS</strong> (distinct moveset and phases), and clearing it ends the run with VICTORY.",
       "help.section.mission_endless_hint":
-        "Endless mode unlocks after your first campaign clear. On start/game over/victory overlays, pick mode explicitly with <strong>Left/Right</strong> (or quick toggle by <strong>E</strong>). Endless sectors ramp pressure faster after sector 5 and apply softer credit gain damping to limit snowballing.",
+        "Endless mode unlocks after your first campaign clear. Run setup mode now supports <strong>Campaign / Boss Rush / Endless</strong> with <strong>Left/Right</strong> (or quick cycle by <strong>E</strong>). Boss Rush runs mini-boss encounters every sector; Endless sectors ramp pressure faster after sector 5 and apply softer credit gain damping to limit snowballing.",
       "help.section.biomes": "Biomes",
       "help.section.biomes_hint":
         "Each sector rolls a biome. Biome defines arena atmosphere, biome-specific ambient/warning SFX flavor, and may add specific hazard zones.",

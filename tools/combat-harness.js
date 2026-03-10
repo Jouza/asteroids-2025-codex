@@ -685,6 +685,23 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(17171);
+    gameA.model.runMode = "boss_rush";
+    gameA.model.sector = 2;
+    gameA.missionSystem.startMission(2);
+    assert(gameA.model.currentMission?.type === "mini_boss", "Boss Rush should always start mini-boss encounters");
+    gameA.model.miniBoss = null;
+    gameA.model.asteroids = [];
+    gameA.model.ufos = [];
+    gameA.model.enemyBullets = [];
+    gameA.missionSystem.updateMission(1 / 60);
+    assert(
+      gameA.model.gameState === AsteroidsA.GAME_STATE.MISSION_COMPLETE,
+      "Boss Rush completion should route to mission-complete flow instead of campaign victory"
+    );
+  });
+
+  tests.push(() => {
     gameA.model.factions.helix_union = 0;
     gameA.model.factions.drift_cartel = 0;
     gameA.startGame(40404);
@@ -1213,6 +1230,17 @@ function runTests() {
     gameA.claimCompletedBounties();
     assert(gameA.model.factions.helix_union > 0, "Claiming faction bounty should increase board faction reputation");
     assert(gameA.model.factions.drift_cartel < 0, "Claiming faction bounty should reduce rival faction reputation");
+  });
+
+  tests.push(() => {
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.overlaySettingsRow = 0;
+    gameA.model.endlessUnlocked = false;
+    gameA.model.runMode = "campaign";
+    gameA.adjustSelectedOverlaySetting(1);
+    assert(gameA.model.runMode === "boss_rush", "Run setup mode row should cycle to BOSS RUSH");
+    gameA.adjustSelectedOverlaySetting(-1);
+    assert(gameA.model.runMode === "campaign", "Run setup mode row should cycle back to CAMPAIGN");
   });
 
   tests.push(() => {

@@ -28,7 +28,7 @@
   - [x] Bounty board (MVP) - data/model + hangar board UI + mission auto-payout hook
   - [x] Mutatory (MVP) - selectable run mutator presets + persistence + gameplay scaling multipliers
   - [x] Endless sektor (run loop bez finalniho win-state)
-  - [ ] Boss rush
+  - [x] Boss rush (MVP) - samostatny run mode s mini-boss only mission flow
   - [ ] Win-state follow-up po MVP
   - [ ] Samostatna reward tabulka pro final clear (clear bonus/meta reward)
   - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)

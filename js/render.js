@@ -1451,7 +1451,7 @@
         {
           id: "mode",
           label: tr("overlay.settings_mode"),
-          value: model.runMode === "campaign" ? tr("game.run_mode.campaign") : tr("game.run_mode.endless")
+          value: tr(`game.run_mode.${model.runMode || "campaign"}`)
         },
         {
           id: "difficulty",

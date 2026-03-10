@@ -278,6 +278,7 @@
 
     getMissionTypeByIndex(missionIndex) {
       const g = this.game;
+      if (g.model.runMode === "boss_rush") return "mini_boss";
       const order = g.config.mission.order;
       return order[(missionIndex - 1) % order.length];
     }

@@ -72,6 +72,12 @@
   - [x] Mutator multiplikatory slouceny s obtiznosti pro pressure, incoming/outgoing damage, economy, loot a hazards
   - [x] Help/i18n/harness/validace pokryti pro mutator flow
 
+- [x] Endgame / replayability - Boss Rush (MVP) slice 1
+  - [x] Novy run mode `BOSS RUSH` dostupny v unified Run setup mode row (vcetne quick cycle `E`)
+  - [x] Mission routing pro Boss Rush: kazdy sektor startuje `mini_boss` encounter (bez standardnich mission typů)
+  - [x] Completion flow zustava mission-complete/hangar loop (bez campaign auto-victory)
+  - [x] Harness coverage pro mode cycling a mini-boss-only mission flow
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

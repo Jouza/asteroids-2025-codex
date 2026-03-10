@@ -1210,7 +1210,7 @@
       this.model.salvageParts = progression.salvageParts;
       this.model.pilot = deepClone(progression.pilot || createDefaultPilotProgression());
       this.model.endlessUnlocked = Boolean(progression.unlocks?.endlessMode);
-      if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
+      if (!this.model.endlessUnlocked && this.model.runMode === "endless") this.model.runMode = "campaign";
       this.syncIdentitySelectionState();
       this.syncLoadoutLabels();
       this.refreshSetState();
@@ -1299,8 +1299,7 @@
         if (this.input.wasPressed("ArrowLeft")) this.adjustSelectedOverlaySetting(-1);
         if (this.input.wasPressed("ArrowRight")) this.adjustSelectedOverlaySetting(1);
         if (this.input.wasPressed("KeyE")) {
-          const next = this.model.runMode === "campaign" ? "endless" : "campaign";
-          this.trySetRunMode(next);
+          this.cycleRunMode(1);
         }
       }
 
@@ -1380,8 +1379,24 @@
       profile.pilot = createDefaultPilotProgression();
     }
 
+    getRunModeDefs() {
+      return ["campaign", "boss_rush", "endless"];
+    }
+
+    cycleRunMode(direction = 1) {
+      const modes = this.getRunModeDefs();
+      if (!modes.length) return false;
+      const currentIndex = modes.indexOf(this.model.runMode);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      for (let step = 1; step <= modes.length; step += 1) {
+        const nextIndex = (safeIndex + direction * step + modes.length * 4) % modes.length;
+        if (this.trySetRunMode(modes[nextIndex])) return true;
+      }
+      return false;
+    }
+
     trySetRunMode(mode) {
-      if (mode !== "campaign" && mode !== "endless") return false;
+      if (!this.getRunModeDefs().includes(mode)) return false;
       if (mode === "endless" && !this.model.endlessUnlocked) {
         this.model.hangar.message = tr("game.run_mode.locked");
         this.hud.sync(this.model);
@@ -1389,7 +1404,7 @@
       }
       if (this.model.runMode === mode) return false;
       this.model.runMode = mode;
-      this.model.hangar.message = tr("game.run_mode.changed", { mode: this.model.runMode.toUpperCase() });
+      this.model.hangar.message = tr("game.run_mode.changed", { mode: tr(`game.run_mode.${mode}`) });
       this.hud.sync(this.model);
       return true;
     }
@@ -1529,7 +1544,7 @@
       this.model.gameOverSummary = null;
       this.model.missionCompleteSummary = null;
       this.model.bountyBoard = { sector: 1, factionId: null, offers: [], rerollsUsed: 0 };
-      if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
+      if (!this.model.endlessUnlocked && this.model.runMode === "endless") this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
       this.model.hangar.message = tr("game.hangar.controls");
@@ -1670,7 +1685,7 @@
       const current = this.clamp(this.model.overlaySettingsRow ?? 0, 0, rows.length - 1);
       const row = rows[current];
       if (row === "mode") {
-        this.trySetRunMode(direction < 0 ? "campaign" : "endless");
+        this.cycleRunMode(direction);
         return;
       }
       if (row === "pilot") {
