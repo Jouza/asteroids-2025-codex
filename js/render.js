@@ -15,6 +15,7 @@
       this.drawStarfield();
       this.drawAsteroids(model.asteroids);
       this.drawUfos(model.ufos);
+      this.drawDamageNumbers(model.damageNumbers);
       this.drawMiniBoss(model.miniBoss);
       this.drawBullets(model.bullets);
       this.drawEnemyBullets(model.enemyBullets);
@@ -509,6 +510,27 @@
 
         ctx.restore();
       }
+    }
+
+    drawDamageNumbers(damageNumbers) {
+      if (!Array.isArray(damageNumbers) || damageNumbers.length === 0) return;
+      const { ctx } = this;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "700 14px Trebuchet MS";
+      for (const item of damageNumbers) {
+        const maxTtl = Math.max(0.01, Number(item.maxTtl) || 0.65);
+        const alpha = Math.max(0, Math.min(1, (Number(item.ttl) || 0) / maxTtl));
+        if (alpha <= 0) continue;
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(0,18,28,0.9)";
+        ctx.fillStyle = `rgba(${item.color || "255,255,255"},1)`;
+        ctx.strokeText(item.text || "", item.x, item.y);
+        ctx.fillText(item.text || "", item.x, item.y);
+      }
+      ctx.restore();
     }
 
     drawMiniBoss(boss) {

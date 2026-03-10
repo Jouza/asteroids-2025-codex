@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Combat feedback: floating damage numbers na UFO zasah
+  - [x] Pri zasahu UFO se vykresli plovouci damage text s fade-out (`-X SH` pro shield, `-Y HU` pro hull)
+  - [x] Runtime model doplnen o `damageNumbers` list + update krok (drift + TTL cleanup)
+  - [x] Render pipeline doplnena o vrstvu damage textu nad bojujicimi objekty
+
 - [x] Backlog reprioritization (focus: visual + gameplay experience)
   - [x] `todo/backlog/veci-k-realizaci.md` preusporadan podle prioritni fronty pro herni zazitek
   - [x] Hotove podbody odstraneny z backlogu (zustavaji pouze aktivni polozky)

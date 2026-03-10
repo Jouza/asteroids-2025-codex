@@ -242,6 +242,7 @@
         enemyBullets: [],
         asteroids: [],
         ufos: [],
+        damageNumbers: [],
         miniBoss: null,
         particles: [],
         utilityEffects: [],
@@ -1540,6 +1541,7 @@
       this.model.enemyBullets = [];
       this.model.asteroids = [];
       this.model.ufos = [];
+      this.model.damageNumbers = [];
       this.model.miniBoss = null;
       this.model.particles = [];
       this.model.utilityEffects = [];
@@ -2332,6 +2334,7 @@
       this.model.secondaryCooldown = Math.max(0, this.model.secondaryCooldown - dt);
       this.model.utilityCooldown = Math.max(0, this.model.utilityCooldown - dt);
       this.model.dashCooldown = Math.max(0, this.model.dashCooldown - dt);
+      this.updateDamageNumbers(dt);
       if (perfEnabled) {
         const now = this.getNowMs();
         this.recordSectionTiming("cooldowns", now - sectionStart);
@@ -3707,13 +3710,61 @@
       const ufo = this.model.ufos[index];
       if (!ufo) return false;
       const resolved = this.resolvePlayerDamage(baseDamage, damageType, critChance);
-      ufo.hp -= resolved.damage;
+      let remainingDamage = Math.max(0, Number(resolved.damage) || 0);
+      let shieldDamage = 0;
+      let hullDamage = 0;
+      if ((ufo.shield ?? 0) > 0) {
+        shieldDamage = Math.min(ufo.shield, remainingDamage);
+        ufo.shield -= shieldDamage;
+        remainingDamage -= shieldDamage;
+      }
+      if (remainingDamage > 0) {
+        hullDamage = remainingDamage;
+        ufo.hp -= hullDamage;
+      }
+      if (shieldDamage > 0) {
+        this.spawnDamageNumber(ufo.x, ufo.y - ufo.radius * 0.7, shieldDamage, "SH", "118,242,255");
+      }
+      if (hullDamage > 0) {
+        this.spawnDamageNumber(ufo.x, ufo.y - ufo.radius * 0.15, hullDamage, "HU", "255,138,202");
+      }
       this.emitImpactParticles(ufo.x, ufo.y, resolved.isCrit ? 8 : 5, "255,122,198");
       if (ufo.hp <= 0) {
         this.destroyUfoByIndex(index);
         return true;
       }
       return false;
+    }
+
+    spawnDamageNumber(x, y, amount, label, colorRgb = "255,255,255") {
+      const raw = Number(amount) || 0;
+      if (raw <= 0) return;
+      const value = Math.max(1, Math.round(raw));
+      const sway = (this.rng() - 0.5) * 16;
+      this.model.damageNumbers.push({
+        x,
+        y,
+        vx: sway,
+        vy: -(48 + this.rng() * 14),
+        ttl: 0.65,
+        maxTtl: 0.65,
+        text: `-${value} ${label}`,
+        color: colorRgb
+      });
+    }
+
+    updateDamageNumbers(dt) {
+      if (!Array.isArray(this.model.damageNumbers) || this.model.damageNumbers.length === 0) return;
+      for (let i = this.model.damageNumbers.length - 1; i >= 0; i -= 1) {
+        const item = this.model.damageNumbers[i];
+        item.ttl -= dt;
+        if (item.ttl <= 0) {
+          this.model.damageNumbers.splice(i, 1);
+          continue;
+        }
+        item.x += item.vx * dt;
+        item.y += item.vy * dt;
+      }
     }
 
     destroyMiniBoss() {
