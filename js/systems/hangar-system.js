@@ -28,7 +28,8 @@
         id: item.id,
         title: item.title,
         cost: item.cost,
-        resolvedCost: item.resolvedCost ?? item.cost
+        resolvedCost: item.resolvedCost ?? item.cost,
+        isContraband: Boolean(item.isContraband)
       }));
     }
 
@@ -214,7 +215,14 @@
       if (item.id === "fire_rate") g.model.upgrades.fireRateLevel += 1;
       if (item.id === "magazine") g.model.upgrades.magazineLevel += 1;
 
+      const contrabandApplied =
+        item.isContraband && typeof g.applyContrabandPurchaseEffects === "function"
+          ? g.applyContrabandPurchaseEffects(item.id)
+          : false;
       g.model.hangar.message = tr("hangar.purchased", { title: item.title });
+      if (contrabandApplied) {
+        g.model.hangar.message = tr("game.contraband.purchase_notice", { title: item.title, heat: g.getContrabandHeat?.() ?? 0 });
+      }
       g.saveProfile("hangar_purchase");
     }
 

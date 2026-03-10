@@ -2110,11 +2110,12 @@
           const item = shopItems[i];
           const itemCost = item.resolvedCost ?? item.cost;
           const canAfford = model.credits >= itemCost;
-          let label = `${item.title} ${itemCost}cr`;
+          const contrabandPrefix = item.isContraband ? `${tr("render.hangar.contraband_tag")} ` : "";
+          let label = `${contrabandPrefix}${item.title} ${itemCost}cr`;
           if (item.id === "fire_rate") {
-            label = `${item.title} [Lv ${fireRateLevel}/${fireRateMax}] ${itemCost}cr`;
+            label = `${contrabandPrefix}${item.title} [Lv ${fireRateLevel}/${fireRateMax}] ${itemCost}cr`;
           } else if (item.id === "magazine") {
-            label = `${item.title} [Lv ${magazineLevel}/${magazineMax}] ${itemCost}cr`;
+            label = `${contrabandPrefix}${item.title} [Lv ${magazineLevel}/${magazineMax}] ${itemCost}cr`;
           }
           pushAction(label, canAfford ? "#d8f5ff" : "rgba(216,245,255,0.45)", i);
           if (item.id === "repair") pushHeader(tr("render.hangar.shop_group_progression"));
@@ -2262,6 +2263,8 @@
         drawRow(statusRightX, statusRightY, `Drain P/S/U ${pDrain.toFixed(1)}/${sDrain.toFixed(1)}/${uDrain.toFixed(1)}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
         statusRightY += statusGap;
         drawRow(statusRightX, statusRightY, `Tuning x${tuningMultiplier.toFixed(2)} | Shots ${maxShots}`, "#9fe3ff", "500 12px Trebuchet MS", statusColW);
+        statusRightY += statusGap;
+        drawRow(statusRightX, statusRightY, tr("hud.status.contraband_heat", { heat: Math.floor(Number(model.contrabandHeat) || 0) }), "#ffb58f", "500 12px Trebuchet MS", statusColW);
 
         const actionBarY = bottomRowY + bottomRowH + 10;
         ctx.fillStyle = "rgba(4,12,24,0.88)";

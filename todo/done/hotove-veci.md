@@ -23,6 +23,12 @@
   - [x] Reputation gain anti-snowball: sector cap + diminishing returns pro pozitivni gain
   - [x] Harness coverage pro threshold reward dopad a sektorovy rep gain cap
 
+- [x] Frakce a reputace (Phase 2) - contraband mechanika
+  - [x] Black market oznacuje vybrane offery jako `contraband` (discount + reputacni riziko)
+  - [x] Nakup contrabandu aplikuje reputacni penalizaci obou frakci a zveda `contrabandHeat`
+  - [x] `contrabandHeat` zvysuje mission pressure a po mission complete se postupne snizuje
+  - [x] Harness coverage pro contraband purchase penalizaci + heat-driven pressure
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

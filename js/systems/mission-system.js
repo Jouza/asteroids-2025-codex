@@ -291,7 +291,10 @@
           ? g.getSelectedFactionIntelProfile()
           : { id: "balanced", pressureMul: 1, creditsMul: 1, salvageMul: 1, reputationDelta: {} };
       const intelPressureMul = Number(intelProfile.pressureMul) || 1;
-      const difficulty = this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1) * intelPressureMul;
+      const contrabandPressureMul =
+        typeof g.getContrabandPressureMultiplier === "function" ? g.getContrabandPressureMultiplier() : 1;
+      const difficulty =
+        this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1) * intelPressureMul * contrabandPressureMul;
       const context = this.buildMissionContext(level);
       g.model.currentMission = {
         type,

@@ -802,6 +802,39 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(46464);
+    gameA.model.gameState = AsteroidsA.GAME_STATE.HANGAR;
+    gameA.model.hangar.shopVendorId = "black_market";
+    gameA.hangarSystem.refreshShopOffers();
+    const offers = gameA.model.hangar.shopItems;
+    const contrabandIndex = offers.findIndex((item) => item.isContraband);
+    assert(contrabandIndex >= 0, "Black market should include contraband-tagged offers");
+    gameA.model.credits = 9999;
+    gameA.model.factions.helix_union = 20;
+    gameA.model.factions.drift_cartel = 20;
+    gameA.model.contrabandHeat = 0;
+    const repBeforeHelix = gameA.model.factions.helix_union;
+    const repBeforeDrift = gameA.model.factions.drift_cartel;
+
+    gameA.hangarSystem.purchaseHangarItem(contrabandIndex);
+
+    assert(gameA.model.contrabandHeat > 0, "Purchasing contraband should increase contraband heat");
+    assert(gameA.model.factions.helix_union < repBeforeHelix, "Contraband purchase should penalize HELIX reputation");
+    assert(gameA.model.factions.drift_cartel < repBeforeDrift, "Contraband purchase should penalize DRIFT reputation");
+  });
+
+  tests.push(() => {
+    gameA.startGame(47474);
+    gameA.model.contrabandHeat = 0;
+    gameA.missionSystem.startMission(1);
+    const baselineDifficulty = gameA.model.currentMission?.difficulty ?? 1;
+    gameA.model.contrabandHeat = 5;
+    gameA.missionSystem.startMission(1);
+    const heatedDifficulty = gameA.model.currentMission?.difficulty ?? 1;
+    assert(heatedDifficulty > baselineDifficulty, "Contraband heat should increase mission pressure");
+  });
+
+  tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.VICTORY;
     gameA.model.overlaySettingsRow = 2;
     gameA.model.runSeed = 1234;

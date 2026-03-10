@@ -193,6 +193,7 @@
         },
         factionIntelId: "balanced",
         factions: createDefaultFactionProgression(),
+        contrabandHeat: 0,
         identity: createDefaultIdentitySelection(),
         salvageParts: 0,
         pilot: createDefaultPilotProgression()
@@ -333,6 +334,7 @@
         setStatusText: tr("hud.no_active_set"),
         factions: createDefaultFactionProgression(),
         factionRepGainTracker: {},
+        contrabandHeat: 0,
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
         identityStatusText: tr("hud.identity_unknown"),
@@ -464,6 +466,51 @@
       this.saveProfile("hangar_vendor_change");
       this.hud.sync(this.model);
       return next;
+    }
+
+    getContrabandItemIdSet() {
+      const ids = this.config.faction?.contrabandItemIds;
+      if (!Array.isArray(ids)) return new Set();
+      return new Set(ids.filter((id) => typeof id === "string" && id.length > 0));
+    }
+
+    getContrabandHeat() {
+      return Math.max(0, Math.floor(Number(this.model.contrabandHeat) || 0));
+    }
+
+    getContrabandPressureMultiplier() {
+      const heat = this.getContrabandHeat();
+      const perStack = Math.max(0, Number(this.config.faction?.contrabandHeatPressurePerStack) || 0);
+      return this.clamp(1 + heat * perStack, 1, 2.2);
+    }
+
+    applyContrabandPurchaseEffects(itemId) {
+      if (!this.getContrabandItemIdSet().has(itemId)) return false;
+      const heatGain = Math.max(0, Math.floor(Number(this.config.faction?.contrabandHeatPerPurchase) || 1));
+      const heatMax = Math.max(0, Math.floor(Number(this.config.faction?.contrabandHeatMax) || 12));
+      const penalty = Math.max(0, Math.floor(Number(this.config.faction?.contrabandRepPenalty) || 2));
+
+      this.model.contrabandHeat = this.clamp(this.getContrabandHeat() + heatGain, 0, heatMax);
+      for (const faction of this.getFactionDefs()) {
+        this.addFactionReputation(faction.id, -penalty, {
+          reasonKey: "game.faction.reason.contraband",
+          announce: false,
+          saveProfile: false,
+          applyGainTuning: false
+        });
+      }
+      this.model.hangar.message = tr("game.contraband.applied", { heat: this.model.contrabandHeat });
+      this.hud.sync(this.model);
+      return true;
+    }
+
+    decayContrabandHeatOnMissionComplete() {
+      const decay = Math.max(0, Math.floor(Number(this.config.faction?.contrabandHeatDecayOnMissionComplete) || 1));
+      if (decay <= 0) return 0;
+      const before = this.getContrabandHeat();
+      const after = this.clamp(before - decay, 0, Math.max(0, Math.floor(Number(this.config.faction?.contrabandHeatMax) || 12)));
+      this.model.contrabandHeat = after;
+      return before - after;
     }
 
     getSelectedFactionIntelProfile() {
@@ -738,10 +785,16 @@
       const vendor = this.getHangarVendorId();
       if (vendor === "black_market") {
         const priceMul = this.clamp(Number(this.config.faction?.blackMarketPriceMul) || 1.2, 1, 2.2);
+        const contrabandDiscount = this.clamp(Number(this.config.faction?.contrabandDiscountMul) || 0.72, 0.4, 1);
+        const contrabandSet = this.getContrabandItemIdSet();
         return baseItems.map((item, index) => ({
           ...item,
           baseIndex: index,
-          resolvedCost: Math.max(1, Math.round((Number(item.cost) || 0) * priceMul))
+          isContraband: contrabandSet.has(item.id),
+          resolvedCost: Math.max(
+            1,
+            Math.round((Number(item.cost) || 0) * priceMul * (contrabandSet.has(item.id) ? contrabandDiscount : 1))
+          )
         }));
       }
       const items = baseItems.map((item, index) => ({
@@ -879,6 +932,11 @@
       };
 
       safe.progression.salvageParts = Math.max(0, Math.floor(Number(progression.salvageParts) || 0));
+      safe.progression.contrabandHeat = this.clamp(
+        Math.floor(Number(progression.contrabandHeat) || 0),
+        0,
+        Math.max(0, Math.floor(Number(this.config.faction?.contrabandHeatMax) || 12))
+      );
 
       const defaultPilot = createDefaultPilotProgression();
       const pilotRaw = progression.pilot && typeof progression.pilot === "object" ? progression.pilot : {};
@@ -969,6 +1027,7 @@
         inventory: deepClone(this.model.inventory),
         equipment: deepClone(this.model.equipment),
         factions: deepClone(this.model.factions),
+        contrabandHeat: this.model.contrabandHeat,
         identity: deepClone(this.model.identity),
         salvageParts: this.model.salvageParts,
         pilot: deepClone(this.model.pilot)
@@ -993,6 +1052,11 @@
       this.model.inventory = deepClone(progression.inventory);
       this.model.equipment = deepClone(progression.equipment);
       this.model.factions = this.sanitizeFactionProgression(progression.factions);
+      this.model.contrabandHeat = this.clamp(
+        Math.floor(Number(progression.contrabandHeat) || 0),
+        0,
+        Math.max(0, Math.floor(Number(this.config.faction?.contrabandHeatMax) || 12))
+      );
       this.model.identity = deepClone(progression.identity || createDefaultIdentitySelection());
       this.model.salvageParts = progression.salvageParts;
       this.model.pilot = deepClone(progression.pilot || createDefaultPilotProgression());
@@ -1147,6 +1211,7 @@
       const selectedShopVendorId = this.sanitizeHangarVendorId(this.model.hangar?.shopVendorId || profile.shopVendorId);
       const selectedIntelId = this.sanitizeFactionIntelId(this.model.hangar?.factionIntelId || profile.factionIntelId);
       const selectedFactions = deepClone(this.model.factions || profile.factions || defaults.factions);
+      const selectedContrabandHeat = 0;
       const unlocks = deepClone(profile.unlocks || defaults.unlocks);
       profile.flightModel = selectedFlightModel;
       profile.runDifficultyId = selectedDifficultyId;
@@ -1158,6 +1223,7 @@
       profile.inventory = [];
       profile.equipment = deepClone(defaults.equipment);
       profile.factions = selectedFactions;
+      profile.contrabandHeat = selectedContrabandHeat;
       profile.identity = selectedIdentity;
       profile.salvageParts = 0;
       profile.pilot = createDefaultPilotProgression();
@@ -2730,6 +2796,7 @@
       const missionType = this.model.currentMission?.type ?? active.type;
       const xpBonus = this.config.pilot.xp.missionBonusByType[missionType] ?? 0;
       this.grantPilotXp(xpBonus, "mission");
+      this.decayContrabandHeatOnMissionComplete();
       this.applyMissionFactionReputation(
         this.config.faction?.missionCompleteRepGain ?? 0,
         "game.faction.reason.mission_complete",

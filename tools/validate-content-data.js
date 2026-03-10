@@ -51,6 +51,22 @@ function validateContentData(contentData, issues) {
     "faction.blackMarketPriceMul must be >= 1",
     issues
   );
+  const contrabandDiscountMul = Number(contentData.faction?.contrabandDiscountMul);
+  assert(
+    Number.isFinite(contrabandDiscountMul) && contrabandDiscountMul > 0 && contrabandDiscountMul <= 1,
+    "faction.contrabandDiscountMul must be in (0,1]",
+    issues
+  );
+  assert(
+    Array.isArray(contentData.faction?.contrabandItemIds) && contentData.faction.contrabandItemIds.length >= 1,
+    "faction.contrabandItemIds must be non-empty",
+    issues
+  );
+  assert(
+    Number.isFinite(Number(contentData.faction?.contrabandHeatMax)) && Number(contentData.faction.contrabandHeatMax) >= 0,
+    "faction.contrabandHeatMax must be >= 0",
+    issues
+  );
   const intelOptions = contentData.faction?.intelOptions;
   assert(Array.isArray(intelOptions) && intelOptions.length >= 1, "faction.intelOptions must be non-empty", issues);
   if (Array.isArray(intelOptions)) {

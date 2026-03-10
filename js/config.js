@@ -672,6 +672,13 @@
       shopPriceInfluencePerRep100: 0.14,
       shopPenaltyInfluencePerRep100: 0.06,
       blackMarketPriceMul: 1.22,
+      contrabandItemIds: ["fire_rate", "magazine"],
+      contrabandDiscountMul: 0.72,
+      contrabandRepPenalty: 2,
+      contrabandHeatPerPurchase: 1,
+      contrabandHeatMax: 12,
+      contrabandHeatPressurePerStack: 0.03,
+      contrabandHeatDecayOnMissionComplete: 1,
       repGainSectorCapBase: 5,
       repGainSectorCapStep: 1,
       repGainDiminishStart: 20,
@@ -1121,7 +1128,9 @@
       { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" },
       { ok: Array.isArray(config.faction?.intelOptions) && config.faction.intelOptions.length >= 1, msg: "faction.intelOptions missing" },
       { ok: Number.isFinite(config.faction?.blackMarketPriceMul) && config.faction.blackMarketPriceMul >= 1, msg: "faction.blackMarketPriceMul invalid" },
-      { ok: Array.isArray(config.faction?.repThresholds) && config.faction.repThresholds.length >= 1, msg: "faction.repThresholds missing" }
+      { ok: Array.isArray(config.faction?.repThresholds) && config.faction.repThresholds.length >= 1, msg: "faction.repThresholds missing" },
+      { ok: Array.isArray(config.faction?.contrabandItemIds) && config.faction.contrabandItemIds.length >= 1, msg: "faction.contrabandItemIds missing" },
+      { ok: Number.isFinite(config.faction?.contrabandDiscountMul) && config.faction.contrabandDiscountMul > 0, msg: "faction.contrabandDiscountMul invalid" }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {

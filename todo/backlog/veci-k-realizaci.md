@@ -21,7 +21,7 @@
   - [x] Faction intel volba pred misi (bonus + tradeoff + reputacni dopad)
   - [x] Neutral/black-market vendor jako treti obchodni vrstva
   - [x] Reputation thresholdy (`-20/0/+20/+50`) s odemykatelnymi pasivy
-  - [ ] Contraband mechanika (silny item za reputacni/bounty riziko)
+  - [x] Contraband mechanika (silny item za reputacni/bounty riziko)
   - [ ] Frakcni varianty mission cilu bez nove mission architektury
   - [ ] Frakcni module sety a affix identity pro buildcraft
   - [ ] End-of-run faction summary (timeline reputace + unlocky)
