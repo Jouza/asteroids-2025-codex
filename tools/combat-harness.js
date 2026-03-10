@@ -1953,6 +1953,159 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(96666);
+    const ship = gameA.model.ship;
+    ship.energy = ship.energyMax;
+    ship.heat = 0;
+    gameA.model.asteroids = [
+      {
+        x: ship.x + 10,
+        y: ship.y + 10,
+        vx: 0,
+        vy: 0,
+        radius: gameA.asteroidDefs.medium.radius,
+        size: "medium",
+        asteroidType: "drain_core",
+        spin: 0,
+        rotation: 0,
+        shape: [1, 1, 1],
+        nearMissCooldown: 0
+      }
+    ];
+    gameA.combatSystem.updateAsteroids(0.5);
+    assert(ship.energy < ship.energyMax, "Drain core asteroid should drain ship energy in aura range");
+    assert(ship.heat > 0, "Drain core asteroid should increase ship heat in aura range");
+  });
+
+  tests.push(() => {
+    gameA.startGame(97777);
+    const echo = {
+      x: 320,
+      y: 260,
+      vx: 0,
+      vy: 0,
+      radius: gameA.asteroidDefs.small.radius,
+      size: "small",
+      asteroidType: "echo_shell",
+      spin: 0,
+      rotation: 0,
+      shape: [1, 1, 1],
+      nearMissCooldown: 0
+    };
+    gameA.model.asteroids = [echo];
+    gameA.model.bullets = [{ x: 320, y: 260, vx: 0, vy: 0, radius: 2, ttl: 1, kind: "primary_auto", bossDamage: 20, pierce: 0 }];
+    gameA.model.enemyBullets = [
+      { x: 332, y: 260, vx: 120, vy: 0, radius: 3, ttl: 1.2, damageProfile: "enemy_bullet_hunter", asteroidCollisionMode: "break" }
+    ];
+    const beforeVy = gameA.model.enemyBullets[0].vy;
+    gameA.combatSystem.handleBulletAsteroidCollisions();
+    assert(gameA.model.asteroids.length === 0, "Echo shell asteroid should still break on projectile impact");
+    assert(gameA.model.enemyBullets.length === 1, "Echo shell pulse should deflect nearby projectiles rather than deleting them");
+    assert(gameA.model.enemyBullets[0].vy !== beforeVy, "Echo shell pulse should alter nearby projectile trajectory");
+  });
+
+  tests.push(() => {
+    gameA.startGame(98888);
+    const ship = gameA.model.ship;
+    ship.invulnMs = 0;
+    ship.shield = ship.shieldMax;
+    ship.hull = ship.hullMax;
+    gameA.model.currentMission = gameA.model.currentMission || {};
+    gameA.model.sentryRelays = [
+      {
+        id: "relay_harness",
+        x: ship.x - 80,
+        y: ship.y,
+        radius: 13,
+        hp: 40,
+        telegraphSeconds: 0.6,
+        telegraphTimer: 0,
+        telegraphActive: true,
+        aimAngle: 0,
+        cooldownSeconds: 2.8,
+        cooldownTimer: 0,
+        beamWidth: 8,
+        beamRange: 1000
+      }
+    ];
+    gameA.combatSystem.updateMissionEntities(0.1);
+    assert(ship.shield < ship.shieldMax || ship.hull < ship.hullMax, "Sentry relay shot should damage ship on beam line");
+  });
+
+  tests.push(() => {
+    gameA.startGame(99991);
+    gameA.model.currentMission = gameA.model.currentMission || {};
+    gameA.model.currentMission.drifterStatus = "active";
+    const ship = gameA.model.ship;
+    gameA.model.credits = 0;
+    gameA.model.salvageParts = 0;
+    gameA.model.salvageDrifters = [
+      {
+        id: "drifter_capture",
+        x: ship.x,
+        y: ship.y,
+        vx: 0,
+        vy: 0,
+        radius: 10,
+        hp: 10,
+        state: "active",
+        captureTimer: 0,
+        captureRatio: 0,
+        captureRadius: 48,
+        captureSeconds: 0.2,
+        rewardCredits: 14,
+        rewardSalvage: 2
+      }
+    ];
+    gameA.combatSystem.updateMissionEntities(0.25);
+    assert(gameA.model.credits >= 14, "Salvage drifter capture should grant credits");
+    assert(gameA.model.salvageParts >= 2, "Salvage drifter capture should grant salvage");
+    assert(gameA.model.currentMission.drifterStatus === "captured", "Salvage drifter capture should set captured status");
+  });
+
+  tests.push(() => {
+    gameA.startGame(99992);
+    gameA.model.currentMission = gameA.model.currentMission || {};
+    gameA.model.currentMission.drifterStatus = "active";
+    gameA.model.credits = 0;
+    gameA.model.salvageParts = 0;
+    gameA.model.salvageDrifters = [
+      {
+        id: "drifter_lost",
+        x: 280,
+        y: 240,
+        vx: 0,
+        vy: 0,
+        radius: 10,
+        hp: 4,
+        state: "active",
+        captureTimer: 0,
+        captureRatio: 0,
+        captureRadius: 48,
+        captureSeconds: 1.2,
+        rewardCredits: 18,
+        rewardSalvage: 1
+      }
+    ];
+    gameA.model.enemyBullets = [
+      {
+        x: 280,
+        y: 240,
+        vx: 0,
+        vy: 0,
+        radius: 3,
+        ttl: 1,
+        damageProfile: "enemy_bullet_hunter",
+        asteroidCollisionMode: "break"
+      }
+    ];
+    gameA.combatSystem.handleEnemyBulletAsteroidCollisions();
+    assert(gameA.model.salvageDrifters.length === 0, "Enemy hit should remove salvage drifter when HP reaches zero");
+    assert(gameA.model.currentMission.drifterStatus === "lost", "Enemy-destroyed drifter should set lost status");
+    assert(gameA.model.credits === 0 && gameA.model.salvageParts === 0, "Drifter fail should only lose bonus and not apply penalty");
+  });
+
+  tests.push(() => {
     gameA.startGame(11111);
     const ship = gameA.model.ship;
     ship.invulnMs = 0;

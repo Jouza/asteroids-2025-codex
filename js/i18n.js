@@ -120,6 +120,11 @@
       "game.unlock.endless": "Campaign cleared. Endless mode unlocked.",
       "game.boss.down": "Boss down: +{credits} credits, {drops} guaranteed module",
       "game.boss.final_down": "Final boss down: +{credits} credits, {drops} guaranteed module",
+      "warning.sentry_lock": "SENTRY LOCK",
+      "mission.drifter.status": "Drifter: {status}",
+      "mission.drifter.active": "active",
+      "mission.drifter.captured": "captured",
+      "mission.drifter.lost": "lost",
       "hangar.section": "Section: {section} | Up/Down select | Space action",
       "hangar.shop.choice": "Shop option {index}/{total} | Space action",
       "hangar.pilot.attr": "Pilot attr: {attr} | Space upgrade",
@@ -417,6 +422,7 @@
         "<strong>Impact:</strong> use mutators to change run economy/risk identity without switching base difficulty.",
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
+      "help.section.entities": "Combat Entities",
       "help.section.hazards": "Hazard Zones",
       "help.section.hazards_hint":
         "Hazards now use stronger pre-tick telegraphs, off-screen threat indicators for major dangers, and incoming hit-type VFX cues for faster reaction reads.",
@@ -592,6 +598,27 @@
       "help.card.asteroid_volatile.line": "On destruction, triggers a blast that can chain additional hits.",
       "help.card.asteroid_volatile.impact":
         "<strong>Impact:</strong> AOE hazard, but also <span class=\"ok\">a tactical weapon against packs</span>.",
+      "help.card.asteroid_drain_core.name": "Drain Core Asteroid",
+      "help.card.asteroid_drain_core.tag": "Object",
+      "help.card.asteroid_drain_core.line": "Emits an aura that drains energy and builds heat near its core.",
+      "help.card.asteroid_drain_core.impact":
+        "<strong>Impact:</strong> punishes greedy close passes and stresses cooldown/resource timing.",
+      "help.card.asteroid_echo_shell.name": "Echo Shell Asteroid",
+      "help.card.asteroid_echo_shell.tag": "Object",
+      "help.card.asteroid_echo_shell.line": "On hit, releases a pulse that deflects nearby projectiles.",
+      "help.card.asteroid_echo_shell.impact":
+        "<strong>Impact:</strong> disrupts firing lanes and creates short projectile-chaos windows.",
+      "help.card.entity_sentry_relay.name": "Sentry Relay",
+      "help.card.entity_sentry_relay.tag": "Threat Entity",
+      "help.card.entity_sentry_relay.line": "Static relay with telegraphed beam shots along locked aim lines.",
+      "help.card.entity_sentry_relay.impact":
+        "<strong>Impact:</strong> forces lane changes and target-priority decisions under pressure.",
+      "help.card.entity_salvage_drifter.name": "Salvage Drifter",
+      "help.card.entity_salvage_drifter.tag": "Neutral Objective",
+      "help.card.entity_salvage_drifter.line":
+        "Drifting neutral cache. Hold proximity to capture credits/salvage before enemies destroy it.",
+      "help.card.entity_salvage_drifter.impact":
+        "<strong>Impact:</strong> adds optional objective pressure; failure only means lost bonus.",
       "help.card.ufo_hunter.name": "Hunter",
       "help.card.ufo_hunter.tag": "Enemy",
       "help.card.ufo_hunter.line": "Close- to mid-range pressure.",

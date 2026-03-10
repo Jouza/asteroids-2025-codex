@@ -242,6 +242,8 @@
         enemyBullets: [],
         asteroids: [],
         ufos: [],
+        sentryRelays: [],
+        salvageDrifters: [],
         damageNumbers: [],
         incomingHitCues: [],
         miniBoss: null,
@@ -1543,6 +1545,8 @@
       this.model.enemyBullets = [];
       this.model.asteroids = [];
       this.model.ufos = [];
+      this.model.sentryRelays = [];
+      this.model.salvageDrifters = [];
       this.model.damageNumbers = [];
       this.model.incomingHitCues = [];
       this.model.miniBoss = null;
@@ -2389,6 +2393,7 @@
       }
 
       this.combatSystem.updateAsteroids(dt);
+      this.combatSystem.updateMissionEntities(dt);
       this.enemySystem.updateUfos(dt);
       this.enemySystem.updateMiniBoss(dt);
       this.updateDotEffects(dt);
@@ -2405,6 +2410,7 @@
       this.combatSystem.handleBulletAsteroidCollisions();
       this.combatSystem.handleBulletUfoCollisions();
       this.combatSystem.handleBulletMiniBossCollisions();
+      this.combatSystem.handleBulletMissionEntityCollisions();
       this.combatSystem.handleEnemyBulletAsteroidCollisions();
       this.combatSystem.handleShipThreatCollisions();
       if (perfEnabled) {
@@ -3650,6 +3656,38 @@
       if (this.model.uiAlerts.lowHull && !prevAlerts.lowHull) this.audio.play("warning", { biomeId, missionAudioProfile });
       if (this.model.uiAlerts.highHeat && !prevAlerts.highHeat) this.audio.play("warning", { biomeId, missionAudioProfile });
       if (this.model.uiAlerts.shieldBroken && !prevAlerts.shieldBroken) this.audio.play("warning", { biomeId, missionAudioProfile });
+    }
+
+    getAsteroidSpecialProfile(type) {
+      const specials = this.config.missionDirector?.asteroidSpecials || {};
+      const profile = specials[type];
+      return profile && typeof profile === "object" ? profile : {};
+    }
+
+    triggerEchoShellPulse(x, y, profile = null) {
+      const pulseCfg = profile || this.getAsteroidSpecialProfile("echo_shell");
+      const radius = Math.max(24, Number(pulseCfg.echoPulseRadius) || 126);
+      const ttl = Math.max(0.2, Number(pulseCfg.echoPulseTtl) || 0.5);
+      this.addRingParticle(x, y, ttl, 8, "162,238,255", Math.max(40, radius / Math.max(0.15, ttl)));
+      this.emitImpactParticles(x, y, 10, "160,236,255");
+      this.model.flashMs = Math.max(this.model.flashMs, 64);
+
+      const deflectProjectile = (projectile) => {
+        const dx = projectile.x - x;
+        const dy = projectile.y - y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > radius + (projectile.radius ?? 0)) return false;
+        const angle = Math.atan2(projectile.vy || 0.0001, projectile.vx || 0.0001);
+        const turn = (this.rng() < 0.5 ? -1 : 1) * (0.42 + this.rng() * 0.24);
+        const speed = Math.max(40, Math.hypot(projectile.vx, projectile.vy) * 0.9);
+        projectile.vx = Math.cos(angle + turn) * speed;
+        projectile.vy = Math.sin(angle + turn) * speed;
+        projectile.ttl = Math.max(0.1, Number(projectile.ttl) - 0.25);
+        return true;
+      };
+
+      for (const bullet of this.model.bullets) deflectProjectile(bullet);
+      for (const bullet of this.model.enemyBullets) deflectProjectile(bullet);
     }
 
     getAsteroidScore(asteroid) {

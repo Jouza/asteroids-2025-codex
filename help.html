@@ -313,6 +313,10 @@
         asteroid_normal: "asteroid",
         asteroid_magnetic: "asteroid",
         asteroid_volatile: "asteroid",
+        asteroid_drain_core: "asteroid",
+        asteroid_echo_shell: "asteroid",
+        entity_sentry_relay: "hazard",
+        entity_salvage_drifter: "salvage",
         ufo_hunter: "ufo",
         ufo_sniper: "ufo",
         ufo_swarm: "ufo",
@@ -729,6 +733,11 @@
       appendSection({
         titleKey: "help.section.ufo_types",
         cards: ufoCards
+      });
+
+      appendSection({
+        titleKey: "help.section.entities",
+        cards: ["entity_sentry_relay", "entity_salvage_drifter"]
       });
 
       const hazards = ["hazard_readability_telegraph"];

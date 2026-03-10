@@ -15,6 +15,8 @@
       this.drawStarfield();
       this.drawDeepSpaceBackdrop(model);
       this.drawAsteroids(model.asteroids);
+      this.drawSentryRelays(model.sentryRelays, model.ship);
+      this.drawSalvageDrifters(model.salvageDrifters);
       this.drawUfos(model.ufos);
       this.drawMiniBoss(model.miniBoss);
       this.drawBullets(model.bullets);
@@ -417,6 +419,14 @@
           ctx.shadowColor = "rgba(255,141,103,0.65)";
           ctx.fillStyle = "rgba(126,65,49,0.33)";
           ctx.strokeStyle = "rgba(255,181,142,0.98)";
+        } else if (asteroid.asteroidType === "drain_core") {
+          ctx.shadowColor = "rgba(126,255,166,0.68)";
+          ctx.fillStyle = "rgba(62,130,92,0.3)";
+          ctx.strokeStyle = "rgba(162,255,196,0.98)";
+        } else if (asteroid.asteroidType === "echo_shell") {
+          ctx.shadowColor = "rgba(146,215,255,0.7)";
+          ctx.fillStyle = "rgba(56,104,148,0.31)";
+          ctx.strokeStyle = "rgba(178,237,255,0.98)";
         } else {
           ctx.shadowColor = "rgba(90,193,255,0.5)";
           ctx.fillStyle = "rgba(56,88,123,0.30)";
@@ -453,7 +463,89 @@
           ctx.arc(0, 0, asteroid.radius * 0.25, 0, Math.PI * 2);
           ctx.fill();
         }
+        if (asteroid.asteroidType === "drain_core") {
+          const pulse = 0.72 + Math.sin((asteroid.rotation ?? 0) * 4.2) * 0.2;
+          ctx.strokeStyle = `rgba(170,255,206,${0.28 + pulse * 0.18})`;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(0, 0, asteroid.radius * 1.55, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (asteroid.asteroidType === "echo_shell") {
+          const pulse = 0.74 + Math.sin((asteroid.rotation ?? 0) * 5.3) * 0.18;
+          ctx.strokeStyle = `rgba(190,242,255,${0.24 + pulse * 0.22})`;
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.arc(0, 0, asteroid.radius * 1.45, 0, Math.PI * 2);
+          ctx.stroke();
+        }
 
+        ctx.restore();
+      }
+    }
+
+    drawSentryRelays(relays, ship) {
+      if (!Array.isArray(relays) || relays.length === 0) return;
+      const { ctx } = this;
+      for (const relay of relays) {
+        ctx.save();
+        ctx.translate(relay.x, relay.y);
+        ctx.shadowColor = "rgba(172,230,255,0.82)";
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = "rgba(64,118,168,0.36)";
+        ctx.strokeStyle = "rgba(188,237,255,0.97)";
+        ctx.lineWidth = 1.7;
+        ctx.beginPath();
+        ctx.arc(0, 0, relay.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-relay.radius * 0.72, 0);
+        ctx.lineTo(relay.radius * 0.72, 0);
+        ctx.stroke();
+        ctx.restore();
+
+        if (relay.telegraphActive && ship) {
+          const len = relay.beamRange ?? 1320;
+          const ex = relay.x + Math.cos(relay.aimAngle) * len;
+          const ey = relay.y + Math.sin(relay.aimAngle) * len;
+          const ratio = Math.max(0, Math.min(1, (relay.telegraphTimer ?? 0) / Math.max(0.1, relay.telegraphSeconds ?? 0.8)));
+          ctx.save();
+          ctx.strokeStyle = `rgba(198,238,255,${0.25 + (1 - ratio) * 0.45})`;
+          ctx.lineWidth = 1.8 + (1 - ratio) * 1.5;
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath();
+          ctx.moveTo(relay.x, relay.y);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+      }
+    }
+
+    drawSalvageDrifters(drifters) {
+      if (!Array.isArray(drifters) || drifters.length === 0) return;
+      const { ctx } = this;
+      for (const drifter of drifters) {
+        if (drifter.state !== "active") continue;
+        ctx.save();
+        ctx.translate(drifter.x, drifter.y);
+        ctx.shadowColor = "rgba(166,255,204,0.88)";
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = "rgba(78,156,114,0.34)";
+        ctx.strokeStyle = "rgba(186,255,218,0.95)";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.arc(0, 0, drifter.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        const ringR = (drifter.captureRadius ?? 56) * (0.3 + (drifter.captureRatio ?? 0) * 0.7);
+        ctx.strokeStyle = `rgba(176,255,208,${0.16 + (drifter.captureRatio ?? 0) * 0.32})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
     }
@@ -937,6 +1029,9 @@
         threats.push({ id, x, y, color, priority });
       };
       if (model.miniBoss) addThreat("boss", model.miniBoss.x, model.miniBoss.y, "255,148,216", 100);
+      for (const relay of model.sentryRelays || []) {
+        addThreat(`sentry:${relay.id || "relay"}`, relay.x, relay.y, "166,226,255", relay.telegraphActive ? 92 : 76);
+      }
       if (mission.gravityAnomaly) {
         addThreat("gravity", mission.gravityAnomaly.x, mission.gravityAnomaly.y, "146,186,255", 90);
       }
@@ -1398,6 +1493,7 @@
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "cryo_shear_zone")) warnings.push("CRYO SHEAR");
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "neon_arc_field")) warnings.push("NEON ARC");
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "dust_squall")) warnings.push("DUST SQUALL");
+      if ((model.sentryRelays || []).some((relay) => relay.telegraphActive)) warnings.push(tr("warning.sentry_lock"));
       if (model.miniBoss?.phaseAnnounceTimer > 0) warnings.push(`BOSS PHASE ${model.miniBoss.phaseIndex + 1}`);
       if (model.uiAlerts?.lowHull) warnings.push("HULL CRITICAL");
       if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");
@@ -1461,6 +1557,17 @@
         ctx.font = "600 12px Trebuchet MS";
         ctx.fillStyle = "rgba(255,224,162,0.94)";
         ctx.fillText(model.currentMission.biomeEventText, config.canvas.width / 2, 100);
+      }
+      if (model.currentMission.drifterStatus && model.currentMission.drifterStatus !== "none") {
+        ctx.font = "600 12px Trebuchet MS";
+        ctx.fillStyle =
+          model.currentMission.drifterStatus === "captured"
+            ? "rgba(168,255,198,0.94)"
+            : model.currentMission.drifterStatus === "lost"
+              ? "rgba(255,198,158,0.9)"
+              : "rgba(186,236,255,0.92)";
+        const status = tr(`mission.drifter.${model.currentMission.drifterStatus}`);
+        ctx.fillText(tr("mission.drifter.status", { status }), config.canvas.width / 2, 116);
       }
       if ((model.currentMission.biomeIntroTimer ?? 0) > 0) {
         const ratio = Math.min(1, model.currentMission.biomeIntroTimer / 1.9);

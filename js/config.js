@@ -279,6 +279,7 @@
         enemy_bullet_swarm: { damageType: "kinetic", baseDamage: 14, critChance: 0.03, critMultiplier: 1.4 },
         enemy_bullet_support: { damageType: "plasma", baseDamage: 16, critChance: 0.05, critMultiplier: 1.5 },
         enemy_mine: { damageType: "explosive", baseDamage: 24, critChance: 0.05, critMultiplier: 1.6 },
+        sentry_relay_bolt: { damageType: "plasma", baseDamage: 21, critChance: 0.04, critMultiplier: 1.45 },
         asteroid_collision: { damageType: "collision", baseDamage: 34, critChance: 0.0 },
         ufo_collision: { damageType: "collision", baseDamage: 30, critChance: 0.0 },
         kamikaze_collision: { damageType: "collision", baseDamage: 48, critChance: 0.0 },
@@ -1642,6 +1643,69 @@
           }
         }
       ],
+      asteroidSpecials: {
+        drain_core: {
+          unlockSector: 4,
+          chance: 0.08,
+          drainRadius: 148,
+          energyDrainPerSec: 12,
+          heatPerSec: 8
+        },
+        echo_shell: {
+          unlockSector: 3,
+          chance: 0.1,
+          echoPulseRadius: 126,
+          echoPulseTtl: 0.5
+        }
+      },
+      entityProfiles: {
+        sentry_relay: {
+          unlockSector: 3,
+          maxPerMission: 1,
+          chanceByMission: {
+            survive: 0.28,
+            ufo_hunt: 0.23,
+            asteroid_storm: 0.2,
+            mini_boss: 0
+          },
+          biomeChanceMul: {
+            shattered_relay: 1.35,
+            refinery: 1.2,
+            graveyard: 0.92
+          },
+          hp: 74,
+          radius: 13,
+          telegraphSeconds: 0.82,
+          cooldownSeconds: 2.8,
+          beamWidth: 7,
+          beamRange: 1320
+        },
+        salvage_drifter: {
+          unlockSector: 2,
+          maxPerMission: 1,
+          chanceByMission: {
+            survive: 0.2,
+            ufo_hunt: 0.18,
+            asteroid_storm: 0.24,
+            mini_boss: 0
+          },
+          biomeChanceMul: {
+            graveyard: 1.24,
+            dust_expanse: 1.28,
+            belt: 1.15
+          },
+          radius: 11,
+          hp: 42,
+          driftSpeedMin: 16,
+          driftSpeedMax: 32,
+          captureRadius: 56,
+          captureSeconds: 2.2,
+          rewardCreditsBase: 15,
+          rewardCreditsStep: 4,
+          rewardSalvageBase: 1,
+          rewardSalvageStep: 1
+        }
+      },
       modifiers: {
         ion_storm: {
           label: "Ion Storm",
@@ -1852,7 +1916,9 @@
   const ASTEROID_TYPES = {
     normal: { scoreBonus: 0 },
     magnetic: { scoreBonus: 35 },
-    volatile: { scoreBonus: 45 }
+    volatile: { scoreBonus: 45 },
+    drain_core: { scoreBonus: 55 },
+    echo_shell: { scoreBonus: 52 }
   };
 
   window.Asteroids = window.Asteroids || {};

@@ -328,6 +328,17 @@
           }
         }
 
+        if (ship && asteroid.asteroidType === "drain_core") {
+          const profile = g.getAsteroidSpecialProfile("drain_core");
+          const drainRadius = Math.max(24, Number(profile.drainRadius) || 148);
+          const dist = Math.hypot(asteroid.x - ship.x, asteroid.y - ship.y);
+          if (dist < drainRadius + ship.radius) {
+            const falloff = g.clamp(1 - dist / Math.max(1, drainRadius), 0.15, 1);
+            ship.energy = Math.max(0, ship.energy - Math.max(0, Number(profile.energyDrainPerSec) || 12) * falloff * dt);
+            ship.heat = Math.min(ship.heatMax, ship.heat + Math.max(0, Number(profile.heatPerSec) || 8) * falloff * dt);
+          }
+        }
+
         if (ship && asteroid.nearMissCooldown <= 0) {
           const dist = Math.hypot(asteroid.x - ship.x, asteroid.y - ship.y);
           const collisionDist = asteroid.radius + ship.radius;
@@ -355,6 +366,76 @@
         p.ttl -= dt;
         p.life -= dt;
         if (p.life <= 0) g.model.particles.splice(i, 1);
+      }
+    }
+
+    updateMissionEntities(dt) {
+      const g = this.game;
+      const ship = g.model.ship;
+      if (!ship || g.model.gameState !== window.Asteroids.GAME_STATE.PLAYING) return;
+      const relays = Array.isArray(g.model.sentryRelays) ? g.model.sentryRelays : [];
+      const drifters = Array.isArray(g.model.salvageDrifters) ? g.model.salvageDrifters : [];
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      for (let i = relays.length - 1; i >= 0; i -= 1) {
+        const relay = relays[i];
+        if (!relay || relay.hp <= 0) {
+          relays.splice(i, 1);
+          continue;
+        }
+        relay.cooldownTimer = Math.max(0, (relay.cooldownTimer ?? 0) - dt);
+        relay.telegraphTimer = Math.max(0, (relay.telegraphTimer ?? 0) - dt);
+        if (!relay.telegraphActive && relay.cooldownTimer <= 0) {
+          relay.telegraphActive = true;
+          relay.telegraphTimer = relay.telegraphSeconds;
+          relay.aimAngle = Math.atan2(ship.y - relay.y, ship.x - relay.x);
+        }
+        if (!relay.telegraphActive || relay.telegraphTimer > 0) continue;
+        relay.telegraphActive = false;
+        relay.cooldownTimer = relay.cooldownSeconds;
+        const rayRange = relay.beamRange ?? 1320;
+        const dirX = Math.cos(relay.aimAngle);
+        const dirY = Math.sin(relay.aimAngle);
+        const rayEndX = relay.x + dirX * rayRange;
+        const rayEndY = relay.y + dirY * rayRange;
+        const toShipX = ship.x - relay.x;
+        const toShipY = ship.y - relay.y;
+        const proj = clamp((toShipX * dirX + toShipY * dirY) / Math.max(1, rayRange), 0, 1);
+        const closestX = relay.x + dirX * proj * rayRange;
+        const closestY = relay.y + dirY * proj * rayRange;
+        const distToRay = Math.hypot(ship.x - closestX, ship.y - closestY);
+        if (distToRay <= ship.radius + (relay.beamWidth ?? 7) * 0.9) {
+          g.applyDamageToShip("sentry_relay_bolt");
+        }
+        g.emitImpactParticles(relay.x, relay.y, 7, "176,232,255");
+      }
+
+      for (let i = drifters.length - 1; i >= 0; i -= 1) {
+        const drifter = drifters[i];
+        if (!drifter || drifter.state !== "active") {
+          drifters.splice(i, 1);
+          continue;
+        }
+        drifter.x += drifter.vx * dt;
+        drifter.y += drifter.vy * dt;
+        wrapPosition(drifter, g.config.canvas.width, g.config.canvas.height);
+        const dist = Math.hypot(ship.x - drifter.x, ship.y - drifter.y);
+        if (dist <= drifter.captureRadius + ship.radius) {
+          drifter.captureTimer += dt;
+          drifter.captureRatio = g.clamp(drifter.captureTimer / Math.max(0.1, drifter.captureSeconds), 0, 1);
+          if (drifter.captureTimer >= drifter.captureSeconds) {
+            drifter.state = "captured";
+            drifter.statusTtl = 1.8;
+            g.model.credits += Math.max(0, Math.floor(drifter.rewardCredits || 0));
+            g.model.salvageParts += Math.max(0, Math.floor(drifter.rewardSalvage || 0));
+            g.model.telemetry.creditsEarned += Math.max(0, Math.floor(drifter.rewardCredits || 0));
+            g.emitImpactParticles(drifter.x, drifter.y, 14, "168,255,194");
+            if (g.model.currentMission) g.model.currentMission.drifterStatus = "captured";
+          }
+        } else {
+          drifter.captureTimer = Math.max(0, drifter.captureTimer - dt * 0.35);
+          drifter.captureRatio = g.clamp(drifter.captureTimer / Math.max(0.1, drifter.captureSeconds), 0, 1);
+        }
       }
     }
 
@@ -386,9 +467,13 @@
         }
         if (hitIndex === -1) continue;
         const bullet = g.model.bullets[b];
-        const impactX = g.model.asteroids[hitIndex].x;
-        const impactY = g.model.asteroids[hitIndex].y;
+        const hitAsteroid = g.model.asteroids[hitIndex];
+        const impactX = hitAsteroid.x;
+        const impactY = hitAsteroid.y;
+        const isEchoShell = hitAsteroid.asteroidType === "echo_shell";
+        const echoProfile = isEchoShell ? g.getAsteroidSpecialProfile("echo_shell") : null;
         g.destroyAsteroidByIndex(hitIndex, true);
+        if (isEchoShell) g.triggerEchoShellPulse(impactX, impactY, echoProfile);
         if (bullet?.chainTargets > 0) {
           g.triggerPrimaryChain(impactX, impactY, bullet.chainTargets, bullet.chainRadius, bullet.chainBossDamage);
         }
@@ -470,11 +555,60 @@
       }
     }
 
+    handleBulletMissionEntityCollisions() {
+      const g = this.game;
+      const relays = Array.isArray(g.model.sentryRelays) ? g.model.sentryRelays : [];
+      if (!relays.length) return;
+      for (let b = g.model.bullets.length - 1; b >= 0; b -= 1) {
+        const bullet = g.model.bullets[b];
+        if (!bullet) continue;
+        let hitIndex = -1;
+        for (let r = relays.length - 1; r >= 0; r -= 1) {
+          if (circleCollision(bullet, relays[r])) {
+            hitIndex = r;
+            break;
+          }
+        }
+        if (hitIndex === -1) continue;
+        const relay = relays[hitIndex];
+        const hitDamage = Math.max(10, Number(bullet.bossDamage) || 20);
+        relay.hp = Math.max(0, relay.hp - hitDamage);
+        g.consumePlayerProjectileHit(b);
+        g.emitImpactParticles(relay.x, relay.y, 7, "162,236,255");
+        if (relay.hp <= 0) {
+          relays.splice(hitIndex, 1);
+          g.emitExplosionFx(relay.x, relay.y, 36, "146,231,255", "214,244,255");
+          if (g.model.currentMission) g.model.currentMission.relayStatus = "down";
+        }
+      }
+    }
+
     handleEnemyBulletAsteroidCollisions() {
       const g = this.game;
       for (let b = g.model.enemyBullets.length - 1; b >= 0; b -= 1) {
         const bullet = g.model.enemyBullets[b];
         if (!bullet) continue;
+        const drifters = Array.isArray(g.model.salvageDrifters) ? g.model.salvageDrifters : [];
+        let drifterHitIndex = -1;
+        for (let d = drifters.length - 1; d >= 0; d -= 1) {
+          if (circleCollision(bullet, drifters[d])) {
+            drifterHitIndex = d;
+            break;
+          }
+        }
+        if (drifterHitIndex >= 0) {
+          const drifter = drifters[drifterHitIndex];
+          g.model.enemyBullets.splice(b, 1);
+          const profileId = bullet.damageProfile || "enemy_bullet_hunter";
+          const hitProfile = g.config.damage?.enemyHitProfiles?.[profileId] || {};
+          drifter.hp = Math.max(0, (drifter.hp ?? 0) - Math.max(1, Math.floor(Number(hitProfile.baseDamage) || 10)));
+          g.emitImpactParticles(drifter.x, drifter.y, 4, "255,188,132");
+          if (drifter.hp <= 0) {
+            drifters.splice(drifterHitIndex, 1);
+            if (g.model.currentMission) g.model.currentMission.drifterStatus = "lost";
+          }
+          continue;
+        }
         let hitIndex = -1;
         for (let a = g.model.asteroids.length - 1; a >= 0; a -= 1) {
           if (circleCollision(bullet, g.model.asteroids[a])) {
@@ -485,8 +619,11 @@
         if (hitIndex === -1) continue;
         const asteroid = g.model.asteroids[hitIndex];
         g.model.enemyBullets.splice(b, 1);
+        const isEchoShell = asteroid?.asteroidType === "echo_shell";
+        const echoProfile = isEchoShell ? g.getAsteroidSpecialProfile("echo_shell") : null;
         if ((bullet.asteroidCollisionMode || "break") === "break") {
           g.destroyAsteroidByIndex(hitIndex, true, { awardRewards: false, source: "enemy_projectile" });
+          if (isEchoShell && asteroid) g.triggerEchoShellPulse(asteroid.x, asteroid.y, echoProfile);
         } else if (asteroid) {
           g.emitImpactParticles(asteroid.x, asteroid.y, 4, "255,176,132");
         }
@@ -518,6 +655,12 @@
         if (circleCollision(ship, ufo)) {
           const profileId = ufo.mode === "kamikaze" ? "kamikaze_collision" : "ufo_collision";
           g.applyDamageToShip(profileId);
+          return;
+        }
+      }
+      for (const relay of g.model.sentryRelays || []) {
+        if (circleCollision(ship, relay)) {
+          g.applyDamageToShip("ufo_collision", { baseDamage: 26, damageType: "collision", critChance: 0 });
           return;
         }
       }

@@ -1,5 +1,16 @@
 # Hotove veci
 
+- [x] Mechanics pack: drain_core + echo_shell + sentry_relay + salvage_drifter
+  - [x] Pridany asteroid typy `drain_core` a `echo_shell` (score bonus + runtime chovani)
+  - [x] `drain_core` aura drainuje energii a pridava heat podle vzdalenosti
+  - [x] `echo_shell` pri zasahu spousti pulse, ktery odklani blizke projektily
+  - [x] Pridana mission entita `sentry_relay` se zamerenym telegraph beam shotem
+  - [x] Pridana neutral objective entita `salvage_drifter` s capture rewardem (fail = pouze ztrata bonusu)
+  - [x] Mission integrace pres data-driven `missionDirector.entityProfiles` + `chanceByMission`/`biomeChanceMul`
+  - [x] Render/HUD doplnen o entity vykresleni, warning lock cue a drifter status row
+  - [x] Help/i18n coverage doplnena o nove asteroid/entity karty a status texty
+  - [x] Harness coverage doplnena pro drain/echo/sentry/drifter scenare
+
 - [x] Enemy projectile vs asteroid collision rework (UFO + Boss)
   - [x] Enemy strely maji runtime `asteroidCollisionMode` (`break`/`block`) mapovany podle `damageProfile` (`plasma => block`, ostatni => break)
   - [x] Pridany kolizni pass `handleEnemyBulletAsteroidCollisions()` pred `handleShipThreatCollisions()`

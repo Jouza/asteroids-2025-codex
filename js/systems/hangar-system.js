@@ -157,6 +157,8 @@
       g.model.comboMultiplier = 1;
       g.model.comboTimer = 0;
       g.model.ufos = [];
+      g.model.sentryRelays = [];
+      g.model.salvageDrifters = [];
       g.model.miniBoss = null;
       g.model.enemyBullets = [];
       g.model.bullets = [];

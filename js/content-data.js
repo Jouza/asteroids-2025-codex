@@ -515,6 +515,69 @@
           }
         }
       ],
+      asteroidSpecials: {
+        drain_core: {
+          unlockSector: 4,
+          chance: 0.08,
+          drainRadius: 148,
+          energyDrainPerSec: 12,
+          heatPerSec: 8
+        },
+        echo_shell: {
+          unlockSector: 3,
+          chance: 0.1,
+          echoPulseRadius: 126,
+          echoPulseTtl: 0.5
+        }
+      },
+      entityProfiles: {
+        sentry_relay: {
+          unlockSector: 3,
+          maxPerMission: 1,
+          chanceByMission: {
+            survive: 0.28,
+            ufo_hunt: 0.23,
+            asteroid_storm: 0.2,
+            mini_boss: 0
+          },
+          biomeChanceMul: {
+            shattered_relay: 1.35,
+            refinery: 1.2,
+            graveyard: 0.92
+          },
+          hp: 74,
+          radius: 13,
+          telegraphSeconds: 0.82,
+          cooldownSeconds: 2.8,
+          beamWidth: 7,
+          beamRange: 1320
+        },
+        salvage_drifter: {
+          unlockSector: 2,
+          maxPerMission: 1,
+          chanceByMission: {
+            survive: 0.2,
+            ufo_hunt: 0.18,
+            asteroid_storm: 0.24,
+            mini_boss: 0
+          },
+          biomeChanceMul: {
+            graveyard: 1.24,
+            dust_expanse: 1.28,
+            belt: 1.15
+          },
+          radius: 11,
+          hp: 42,
+          driftSpeedMin: 16,
+          driftSpeedMax: 32,
+          captureRadius: 56,
+          captureSeconds: 2.2,
+          rewardCreditsBase: 15,
+          rewardCreditsStep: 4,
+          rewardSalvageBase: 1,
+          rewardSalvageStep: 1
+        }
+      },
       modifiers: {
         ion_storm: {
           label: "Ion Storm",

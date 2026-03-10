@@ -494,9 +494,103 @@
     chooseAsteroidTypeForSector(level) {
       const g = this.game;
       const roll = g.rng();
+      const specials = g.config.missionDirector?.asteroidSpecials || {};
+      const drainCfg = specials.drain_core || {};
+      const echoCfg = specials.echo_shell || {};
+      if (
+        level >= Math.max(1, Math.floor(Number(drainCfg.unlockSector) || 4)) &&
+        roll < Math.max(0, Number(drainCfg.chance) || 0.08)
+      ) {
+        return "drain_core";
+      }
+      if (
+        level >= Math.max(1, Math.floor(Number(echoCfg.unlockSector) || 3)) &&
+        roll < Math.max(0, Number(echoCfg.chance) || 0.1)
+      ) {
+        return "echo_shell";
+      }
       if (level >= 3 && roll < 0.18) return "volatile";
       if (level >= 2 && roll < 0.38) return "magnetic";
       return "normal";
+    }
+
+    getMissionEntityProfile(entityId) {
+      const profiles = this.game.config.missionDirector?.entityProfiles || {};
+      const profile = profiles[entityId];
+      return profile && typeof profile === "object" ? profile : {};
+    }
+
+    rollMissionEntityChance(entityId, level, missionType, biomeId) {
+      const g = this.game;
+      const profile = this.getMissionEntityProfile(entityId);
+      const unlockSector = Math.max(1, Math.floor(Number(profile.unlockSector) || 1));
+      if (level < unlockSector) return false;
+      const missionChance = Math.max(0, Number(profile.chanceByMission?.[missionType]) || 0);
+      const biomeMul = Math.max(0.4, Number(profile.biomeChanceMul?.[biomeId]) || 1);
+      return g.rng() < missionChance * biomeMul;
+    }
+
+    spawnMissionEntities(level, missionType, biomeId) {
+      const g = this.game;
+      g.model.sentryRelays = [];
+      g.model.salvageDrifters = [];
+      const sentryProfile = this.getMissionEntityProfile("sentry_relay");
+      const drifterProfile = this.getMissionEntityProfile("salvage_drifter");
+
+      if (this.rollMissionEntityChance("sentry_relay", level, missionType, biomeId)) {
+        const maxCount = Math.max(0, Math.floor(Number(sentryProfile.maxPerMission) || 1));
+        for (let i = 0; i < maxCount; i += 1) {
+          g.model.sentryRelays.push({
+            id: `sentry_${Math.floor(g.rng() * 1e6)}`,
+            x: g.config.canvas.width * (0.16 + g.rng() * 0.68),
+            y: g.config.canvas.height * (0.16 + g.rng() * 0.68),
+            radius: Math.max(8, Number(sentryProfile.radius) || 13),
+            hp: Math.max(24, Number(sentryProfile.hp) || 74),
+            telegraphSeconds: Math.max(0.2, Number(sentryProfile.telegraphSeconds) || 0.82),
+            telegraphTimer: 0,
+            telegraphActive: false,
+            aimAngle: 0,
+            cooldownSeconds: Math.max(0.8, Number(sentryProfile.cooldownSeconds) || 2.8),
+            cooldownTimer: 0.8 + g.rng() * 1.2,
+            beamWidth: Math.max(3, Number(sentryProfile.beamWidth) || 7),
+            beamRange: Math.max(g.config.canvas.width, Number(sentryProfile.beamRange) || 1320)
+          });
+        }
+      }
+
+      if (this.rollMissionEntityChance("salvage_drifter", level, missionType, biomeId)) {
+        const maxCount = Math.max(0, Math.floor(Number(drifterProfile.maxPerMission) || 1));
+        for (let i = 0; i < maxCount; i += 1) {
+          const angle = g.rng() * Math.PI * 2;
+          const speedMin = Math.max(6, Number(drifterProfile.driftSpeedMin) || 16);
+          const speedMax = Math.max(speedMin, Number(drifterProfile.driftSpeedMax) || 32);
+          const speed = speedMin + g.rng() * (speedMax - speedMin);
+          g.model.salvageDrifters.push({
+            id: `drifter_${Math.floor(g.rng() * 1e6)}`,
+            x: g.config.canvas.width * (0.18 + g.rng() * 0.64),
+            y: g.config.canvas.height * (0.18 + g.rng() * 0.64),
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            radius: Math.max(6, Number(drifterProfile.radius) || 11),
+            hp: Math.max(10, Number(drifterProfile.hp) || 42),
+            state: "active",
+            captureTimer: 0,
+            captureRatio: 0,
+            captureRadius: Math.max(24, Number(drifterProfile.captureRadius) || 56),
+            captureSeconds: Math.max(0.5, Number(drifterProfile.captureSeconds) || 2.2),
+            rewardCredits: Math.max(
+              0,
+              Math.floor(Number(drifterProfile.rewardCreditsBase) || 15) +
+                Math.max(0, level - 1) * Math.max(0, Math.floor(Number(drifterProfile.rewardCreditsStep) || 4))
+            ),
+            rewardSalvage: Math.max(
+              0,
+              Math.floor(Number(drifterProfile.rewardSalvageBase) || 1) +
+                Math.max(0, level - 1) * Math.max(0, Math.floor(Number(drifterProfile.rewardSalvageStep) || 1))
+            )
+          });
+        }
+      }
     }
 
     spawnAsteroidPack(level, largeCount, mediumCount = 0) {
@@ -590,8 +684,13 @@
       g.model.enemyBullets = [];
       g.model.ufos = [];
       g.model.asteroids = [];
+      g.model.sentryRelays = [];
+      g.model.salvageDrifters = [];
       g.model.miniBoss = null;
       g.model.utilityEffects = [];
+      this.spawnMissionEntities(level, type, context.biomeId);
+      g.model.currentMission.relayStatus = g.model.sentryRelays.length > 0 ? "active" : "none";
+      g.model.currentMission.drifterStatus = g.model.salvageDrifters.length > 0 ? "active" : "none";
 
       const missionCfg = g.config.mission;
 
@@ -957,6 +1056,7 @@
       const threatsRemaining =
         g.model.asteroids.length +
         g.model.ufos.length +
+        g.model.sentryRelays.length +
         g.model.enemyBullets.length +
         (g.model.miniBoss ? 1 : 0);
 
@@ -1082,6 +1182,16 @@
       mission.contextText = mission.factionDirective
         ? tr("mission.context_with_directive", contextParams)
         : tr("mission.context", contextParams);
+      if (g.model.salvageDrifters.length > 0 && mission.drifterStatus !== "captured" && mission.drifterStatus !== "lost") {
+        mission.drifterStatus = "active";
+      } else if (g.model.salvageDrifters.length === 0 && mission.drifterStatus === "active") {
+        mission.drifterStatus = "lost";
+      }
+      if (g.model.sentryRelays.length > 0 && mission.relayStatus !== "down") {
+        mission.relayStatus = "active";
+      } else if (g.model.sentryRelays.length === 0 && mission.relayStatus === "active") {
+        mission.relayStatus = "down";
+      }
 
       if (mission.completed && !g.model.sectorCompletionHandled) {
         g.onMissionCompleted();
