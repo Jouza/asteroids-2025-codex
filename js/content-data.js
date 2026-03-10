@@ -168,6 +168,10 @@
       ]
     },
     run: {
+      bossRush: {
+        finalSector: 4,
+        finalMissionType: "mini_boss"
+      },
       difficultyPresets: [
         {
           id: "rookie",

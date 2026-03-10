@@ -45,6 +45,7 @@
       "overlay.runtime": "Runtime: {seconds}s",
       "overlay.endless_unlocked": "Endless mode unlocked. Press E to switch mode.",
       "overlay.campaign_complete": "Campaign complete.",
+      "overlay.boss_rush_complete": "Boss Rush complete.",
       "overlay.enter_new_run": "Press Enter for a new run",
       "overlay.faction_summary.title": "Faction Debrief",
       "overlay.faction_summary.row": "{faction}: {start} -> {end} ({delta})",

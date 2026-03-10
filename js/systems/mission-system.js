@@ -432,7 +432,9 @@
       }
 
       if (type === "mini_boss") {
-        const isFinalEncounter = typeof g.isFinalEncounter === "function" ? g.isFinalEncounter(type, level) : false;
+        const isCampaignFinal = typeof g.isFinalEncounter === "function" ? g.isFinalEncounter(type, level) : false;
+        const isBossRushFinal = typeof g.isBossRushFinalEncounter === "function" ? g.isBossRushFinalEncounter(type, level) : false;
+        const isFinalEncounter = isCampaignFinal || isBossRushFinal;
         const hpBase = Math.round(
           (missionCfg.miniBoss.hpBase + (level - 1) * missionCfg.miniBoss.hpStep) * (0.95 + difficulty * 0.2)
         );

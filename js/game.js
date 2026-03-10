@@ -1428,6 +1428,10 @@
       return this.model.runMode === "campaign";
     }
 
+    isBossRushMode() {
+      return this.model.runMode === "boss_rush";
+    }
+
     isFinalEncounter(missionType = this.model.currentMission?.type, sector = this.model.sector) {
       if (!this.isCampaignMode()) return false;
       const runCfg = this.config.run || {};
@@ -1436,10 +1440,20 @@
       return sector >= finalSector && missionType === finalMissionType;
     }
 
-    buildVictorySummary() {
+    isBossRushFinalEncounter(missionType = this.model.currentMission?.type, sector = this.model.sector) {
+      if (!this.isBossRushMode()) return false;
+      const bossRushCfg = this.config.run?.bossRush || {};
+      const finalSector = Math.max(1, Math.floor(bossRushCfg.finalSector ?? this.config.run?.finalSector ?? 4));
+      const finalMissionType = bossRushCfg.finalMissionType || "mini_boss";
+      return sector >= finalSector && missionType === finalMissionType;
+    }
+
+    buildVictorySummary({ statusKey = null } = {}) {
       const selectedPilot = this.getSelectedIdentityPilot();
       const selectedShip = this.getSelectedIdentityShip();
       return {
+        runMode: this.model.runMode || "campaign",
+        statusKey,
         score: this.model.score,
         sector: this.model.sector,
         runtimeSeconds: this.model.runtimeSeconds,
@@ -1474,19 +1488,27 @@
       };
     }
 
-    completeRunVictory() {
-      this.model.victorySummary = this.buildVictorySummary();
-      if (!this.model.endlessUnlocked) {
+    completeRunVictory({ unlockEndless = false, statusKey = null } = {}) {
+      let resolvedStatusKey = statusKey;
+      if (unlockEndless && !this.model.endlessUnlocked) {
         this.model.endlessUnlocked = true;
         this.model.unlocks.endlessMode = true;
         this.model.hangar.message = tr("game.unlock.endless");
+        if (!resolvedStatusKey) resolvedStatusKey = "overlay.endless_unlocked";
+      } else if (!resolvedStatusKey) {
+        resolvedStatusKey = this.isBossRushMode() ? "overlay.boss_rush_complete" : "overlay.campaign_complete";
       }
+      this.model.victorySummary = this.buildVictorySummary({ statusKey: resolvedStatusKey });
       this.endRun(GAME_STATE.VICTORY, "victory", "mission_complete");
     }
 
     onMissionCompletionResolved() {
       if (this.isFinalEncounter()) {
-        this.completeRunVictory();
+        this.completeRunVictory({ unlockEndless: true });
+        return true;
+      }
+      if (this.isBossRushFinalEncounter()) {
+        this.completeRunVictory({ unlockEndless: false, statusKey: "overlay.boss_rush_complete" });
         return true;
       }
       this.model.missionCompleteSummary = this.buildMissionCompleteSummary();

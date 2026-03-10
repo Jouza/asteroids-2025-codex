@@ -78,6 +78,13 @@
   - [x] Completion flow zustava mission-complete/hangar loop (bez campaign auto-victory)
   - [x] Harness coverage pro mode cycling a mini-boss-only mission flow
 
+- [x] Endgame / replayability - Win-state follow-up po MVP (Boss Rush) slice 1
+  - [x] Data-driven Boss Rush final clear hranice (`run.bossRush.finalSector` + `finalMissionType`)
+  - [x] Boss Rush final encounter uzavira run do `VICTORY` (mimo campaign flow)
+  - [x] Boss Rush victory nepouziva campaign endless-unlock side effect
+  - [x] Victory overlay dostal dedikovany status text pro Boss Rush clear
+  - [x] Harness coverage pro Boss Rush final victory branch
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

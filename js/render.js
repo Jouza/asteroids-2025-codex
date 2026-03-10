@@ -1706,10 +1706,10 @@
           buildBottomY + 30
         );
         const unlockY = buildBottomY + 58;
+        const summaryStatusKey =
+          summary.statusKey || (model.endlessUnlocked ? "overlay.endless_unlocked" : "overlay.campaign_complete");
         ctx.fillText(
-          model.endlessUnlocked
-            ? tr("overlay.endless_unlocked")
-            : tr("overlay.campaign_complete"),
+          tr(summaryStatusKey),
           cx,
           unlockY
         );

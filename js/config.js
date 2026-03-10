@@ -782,6 +782,10 @@
     run: {
       finalSector: 4,
       finalMissionType: "mini_boss",
+      bossRush: {
+        finalSector: 4,
+        finalMissionType: "mini_boss"
+      },
       difficultyPresets: [
         {
           id: "rookie",
@@ -1299,6 +1303,14 @@
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },
       { ok: Array.isArray(config.run.difficultyPresets) && config.run.difficultyPresets.length >= 1, msg: "run.difficultyPresets missing" },
+      {
+        ok:
+          Number.isFinite(config.run?.bossRush?.finalSector) &&
+          config.run.bossRush.finalSector >= 1 &&
+          typeof config.run.bossRush.finalMissionType === "string" &&
+          config.run.bossRush.finalMissionType.length > 0,
+        msg: "run.bossRush config missing or invalid"
+      },
       { ok: Array.isArray(config.mission?.mutators) && config.mission.mutators.length >= 1, msg: "mission.mutators missing" },
       { ok: Array.isArray(config.faction?.definitions) && config.faction.definitions.length >= 2, msg: "faction.definitions missing" },
       { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" },

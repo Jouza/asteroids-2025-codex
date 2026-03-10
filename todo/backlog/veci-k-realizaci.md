@@ -29,7 +29,7 @@
   - [x] Mutatory (MVP) - selectable run mutator presets + persistence + gameplay scaling multipliers
   - [x] Endless sektor (run loop bez finalniho win-state)
   - [x] Boss rush (MVP) - samostatny run mode s mini-boss only mission flow
-  - [ ] Win-state follow-up po MVP
+  - [x] Win-state follow-up po MVP (Boss Rush ma vlastni final clear + odlisny victory status)
   - [ ] Samostatna reward tabulka pro final clear (clear bonus/meta reward)
   - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
   - [x] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)

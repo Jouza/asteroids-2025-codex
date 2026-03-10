@@ -702,6 +702,28 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(18181);
+    gameA.model.endlessUnlocked = false;
+    gameA.model.unlocks.endlessMode = false;
+    gameA.model.runMode = "boss_rush";
+    const finalSector = Math.max(1, Math.floor(gameA.config.run?.bossRush?.finalSector ?? gameA.config.run.finalSector));
+    gameA.model.sector = finalSector;
+    gameA.missionSystem.startMission(finalSector);
+    gameA.model.miniBoss = null;
+    gameA.model.asteroids = [];
+    gameA.model.ufos = [];
+    gameA.model.enemyBullets = [];
+    gameA.missionSystem.updateMission(1 / 60);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.VICTORY, "Boss Rush final encounter should end in VICTORY");
+    assert(!gameA.model.endlessUnlocked, "Boss Rush clear should not unlock endless mode");
+    assert(!gameA.model.unlocks.endlessMode, "Boss Rush clear should not persist endless unlock");
+    assert(
+      gameA.model.victorySummary?.statusKey === "overlay.boss_rush_complete",
+      "Boss Rush victory should use dedicated overlay status text"
+    );
+  });
+
+  tests.push(() => {
     gameA.model.factions.helix_union = 0;
     gameA.model.factions.drift_cartel = 0;
     gameA.startGame(40404);
