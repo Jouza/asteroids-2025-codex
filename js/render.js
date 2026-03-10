@@ -1760,9 +1760,11 @@
         const layoutX = 68;
         const layoutW = config.canvas.width - layoutX * 2;
         const topRowY = 150;
-        const topRowH = 250;
+        const availableRowsH = Math.max(360, config.canvas.height - topRowY - 64);
+        const idealBottomRowH = Math.floor(availableRowsH * 0.45);
+        const bottomRowH = Math.max(170, Math.min(220, idealBottomRowH));
+        const topRowH = Math.max(200, availableRowsH - panelGap - bottomRowH);
         const bottomRowY = topRowY + topRowH + panelGap;
-        const bottomRowH = 220;
         const bottomRowSplit = 0.44;
         const totalGap = panelGap * 2;
         const colW0 = Math.floor((layoutW - totalGap) * 0.34);
@@ -2035,7 +2037,7 @@
           colW0 - 24
         );
         selY += 20;
-        const listRows = 10;
+        const listRows = Math.max(7, Math.min(10, Math.floor((topRowH - 92) / 17)));
         const listStart = getWindowStart(merged.length, mergedIndex, listRows, 4);
         const listTopY = selY - 13;
         const rowHeight = 17;
@@ -2186,7 +2188,6 @@
         drawRow(buildX, buildY, `Set: ${setText}`, "#b8f6ff", "600 12px Trebuchet MS", colW2 - 24);
 
         const actX = bottomColX0 + 12;
-        let actY = bottomRowY + 52;
         const actionRows = [];
         const pushHeader = (label) => actionRows.push({ type: "header", label });
         const pushAction = (label, color, actionIndex) => actionRows.push({ type: "action", label, color, actionIndex });
@@ -2264,12 +2265,29 @@
           bountyRerollUsed < bountyRerollMax && model.credits >= bountyRerollCostFinal ? "#ffd785" : "rgba(216,245,255,0.45)",
           loadoutBaseIndex + 8
         );
-        const rowStep = 14;
-        for (let i = 0; i < actionRows.length; i += 1) {
+        const actionContentTop = bottomRowY + 52;
+        const actionContentHeight = Math.max(70, bottomRowH - 64);
+        const rowHeights = actionRows.map((row) => (row.type === "header" ? 16 : 14));
+        const selectedActionRowIndex = actionRows.findIndex((row) => row.type === "action" && row.actionIndex === shopIndex);
+        let actionStart = 0;
+        if (selectedActionRowIndex >= 0) {
+          let span = 0;
+          for (let i = actionStart; i <= selectedActionRowIndex; i += 1) span += rowHeights[i];
+          while (span > actionContentHeight && actionStart < selectedActionRowIndex) {
+            span -= rowHeights[actionStart];
+            actionStart += 1;
+          }
+        }
+        let actY = actionContentTop;
+        let actionUsed = 0;
+        for (let i = actionStart; i < actionRows.length; i += 1) {
           const row = actionRows[i];
+          const rowHeight = rowHeights[i];
+          if (actionUsed + rowHeight > actionContentHeight) break;
           if (row.type === "header") {
             drawSectionHeader(actX, actY, row.label, bottomColW0 - 24);
-            actY += 16;
+            actY += rowHeight;
+            actionUsed += rowHeight;
             continue;
           }
           drawSelectableRow(
@@ -2280,13 +2298,27 @@
             navSection === "shop" && shopIndex === row.actionIndex,
             row.color
           );
-          actY += rowStep;
+          actY += rowHeight;
+          actionUsed += rowHeight;
+        }
+        const totalActionHeight = rowHeights.reduce((sum, h) => sum + h, 0);
+        if (totalActionHeight > actionContentHeight) {
+          const barX = bottomColX0 + bottomColW0 - 11;
+          ctx.fillStyle = "rgba(63,207,255,0.2)";
+          ctx.fillRect(barX, actionContentTop - 12, 4, actionContentHeight);
+          const hiddenBefore = rowHeights.slice(0, actionStart).reduce((sum, h) => sum + h, 0);
+          const thumbHeight = Math.max(10, (actionContentHeight / totalActionHeight) * actionContentHeight);
+          const thumbTravel = Math.max(0, actionContentHeight - thumbHeight);
+          const scrollRatio = Math.max(0, Math.min(1, hiddenBefore / Math.max(1, totalActionHeight - actionContentHeight)));
+          const thumbY = actionContentTop - 12 + thumbTravel * scrollRatio;
+          ctx.fillStyle = "rgba(255,231,168,0.82)";
+          ctx.fillRect(barX, thumbY, 4, thumbHeight);
         }
 
         const statusX = bottomColX1 + 12;
         const statusTopY = bottomRowY + 52;
         const statusInnerW = bottomColW1 - 24;
-        const statusGap = 16;
+        const statusGap = Math.max(12, Math.min(16, Math.floor((bottomRowH - 66) / 11)));
         const statusColGap = 18;
         const statusColW = Math.floor((statusInnerW - statusColGap) / 2);
         const statusLeftX = statusX;
@@ -2423,7 +2455,7 @@
           }
         }
 
-        const actionBarY = bottomRowY + bottomRowH + 10;
+        const actionBarY = bottomRowY + bottomRowH + 8;
         ctx.fillStyle = "rgba(4,12,24,0.88)";
         ctx.fillRect(layoutX, actionBarY, layoutW, 24);
         ctx.strokeStyle = "rgba(63,207,255,0.45)";
@@ -2439,7 +2471,7 @@
 
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";
-        ctx.fillText(hangar.message, centerX, actionBarY + 42);
+        ctx.fillText(hangar.message, centerX, Math.min(config.canvas.height - 8, actionBarY + 42));
       }
 
       ctx.restore();
