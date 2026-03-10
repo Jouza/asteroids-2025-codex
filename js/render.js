@@ -2227,6 +2227,30 @@
           selectedModule ? "#d8f5ff" : "rgba(216,245,255,0.45)",
           loadoutBaseIndex + 6
         );
+        pushHeader(tr("render.hangar.shop_group_bounty"));
+        const bountyBoardForActions = model.bountyBoard || {};
+        const bountyOffersForActions = Array.isArray(bountyBoardForActions.offers) ? bountyBoardForActions.offers : [];
+        const claimableCount = bountyOffersForActions.filter((offer) => offer && offer.completed && !offer.claimed).length;
+        const bountyRerollMax = Math.max(0, Math.floor(Number(config.mission?.bountyBoard?.maxRerollsPerSector) || 0));
+        const bountyRerollUsed = Math.max(0, Math.floor(Number(bountyBoardForActions.rerollsUsed) || 0));
+        const bountyRerollCost =
+          typeof model.sector === "number"
+            ? Math.max(
+                0,
+                Math.floor(Number(config.mission?.bountyBoard?.rerollCreditsBase) || 0) +
+                  Math.max(0, model.sector - 1) * Math.max(0, Math.floor(Number(config.mission?.bountyBoard?.rerollCreditsStep) || 0))
+              )
+            : 0;
+        pushAction(
+          tr("render.hangar.bounty_claim_action", { count: claimableCount }),
+          claimableCount > 0 ? "#9bf5bb" : "rgba(216,245,255,0.45)",
+          loadoutBaseIndex + 7
+        );
+        pushAction(
+          tr("render.hangar.bounty_reroll_action", { cost: bountyRerollCost, used: bountyRerollUsed, max: bountyRerollMax }),
+          bountyRerollUsed < bountyRerollMax && model.credits >= bountyRerollCost ? "#ffd785" : "rgba(216,245,255,0.45)",
+          loadoutBaseIndex + 8
+        );
         const rowStep = 14;
         for (let i = 0; i < actionRows.length; i += 1) {
           const row = actionRows[i];
@@ -2349,10 +2373,12 @@
         statusRightY += statusGap;
         const bountyBoard = model.bountyBoard || {};
         const bountySector = Math.max(1, Math.floor(Number(bountyBoard.sector) || model.sector));
+        const bountyRerollUsedStatus = Math.max(0, Math.floor(Number(bountyBoard.rerollsUsed) || 0));
+        const bountyRerollMaxStatus = Math.max(0, Math.floor(Number(config.mission?.bountyBoard?.maxRerollsPerSector) || 0));
         drawRow(
           statusRightX,
           statusRightY,
-          tr("render.hangar.bounty_title", { sector: bountySector }),
+          tr("render.hangar.bounty_title", { sector: bountySector, used: bountyRerollUsedStatus, max: bountyRerollMaxStatus }),
           "#ffd785",
           "700 12px Trebuchet MS",
           statusColW

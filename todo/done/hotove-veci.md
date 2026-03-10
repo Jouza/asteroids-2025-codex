@@ -54,6 +54,12 @@
   - [x] Hangar `TACTICAL STATUS` zobrazuje bounty board kontrakty a progress
   - [x] Harness coverage pro board generation + mission payout flow
 
+- [x] Endgame / replayability - Bounty board (MVP) slice 2 (manual claim + reroll UX)
+  - [x] Bounty completion uz nevyplaci reward automaticky; kontrakty cekaji na manual `Claim`
+  - [x] Hangar action list rozsireny o `Claim completed` a `Reroll board`
+  - [x] Reroll ma data-driven cenu + sektorovy limit (`maxRerollsPerSector`)
+  - [x] Harness coverage pro manual claim flow, reroll cost gate a reroll limit
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

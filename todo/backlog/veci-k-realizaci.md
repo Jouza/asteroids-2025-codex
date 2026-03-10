@@ -27,7 +27,6 @@
 - [ ] Endgame / replayability
   - [ ] Bounty board
   - [x] Bounty board (MVP) - data/model + hangar board UI + mission auto-payout hook
-  - [ ] Bounty board (MVP) - manual claim/reroll UX vrstva
   - [ ] Bounty board (MVP) - faction-specific board modifiers / heat interactions
   - [ ] Mutatory
   - [x] Endless sektor (run loop bez finalniho win-state)

@@ -329,9 +329,40 @@ function runTests() {
     gameA.model.hangar.selectionSource = "inventory";
     gameA.model.hangar.selectionIndex = 0;
     const salvageBefore = gameA.model.salvageParts;
-    pressSpaceAt(shopSize - 1); // salvage selected (last action row)
+    pressSpaceAt(shopSize - 3); // salvage selected
     assert(gameA.model.inventory.length === 0, "Shop index 9 should salvage selected inventory module");
     assert(gameA.model.salvageParts > salvageBefore, "Salvaging selected module should grant salvage parts");
+
+    gameA.model.bountyBoard = {
+      sector: gameA.model.sector,
+      rerollsUsed: 0,
+      offers: [
+        {
+          id: "claim_test",
+          templateId: "claim_test",
+          kind: "mission_clears",
+          labelKey: "game.bounty.kind.mission_clears",
+          label: "Contract Runner",
+          target: 1,
+          progress: 1,
+          rewardCredits: 20,
+          rewardSalvage: 1,
+          completed: true,
+          claimed: false
+        }
+      ]
+    };
+    const creditsBeforeClaim = gameA.model.credits;
+    pressSpaceAt(shopSize - 2); // claim completed
+    assert(gameA.model.credits > creditsBeforeClaim, "Claim action should pay completed bounty rewards");
+
+    gameA.model.credits = 9999;
+    const rerollCountBefore = gameA.model.bountyBoard.rerollsUsed;
+    pressSpaceAt(shopSize - 1); // reroll board
+    assert(
+      gameA.model.bountyBoard.rerollsUsed > rerollCountBefore,
+      "Reroll action should consume one reroll use"
+    );
   });
 
   tests.push(() => {
@@ -1080,9 +1111,29 @@ function runTests() {
     };
     gameA.onMissionCompleted();
     const offer = gameA.model.bountyBoard.offers[0];
-    assert(offer.claimed, "Completed bounty should be auto-claimed on mission completion");
+    assert(offer.completed, "Completed bounty should be marked complete on mission completion");
+    assert(!offer.claimed, "Completed bounty should wait for manual claim");
+    assert(gameA.model.credits === 0, "No bounty credits should be paid before manual claim");
+    assert(gameA.model.salvageParts === 0, "No bounty salvage should be paid before manual claim");
+    gameA.claimCompletedBounties();
+    assert(offer.claimed, "Manual claim should mark bounty as claimed");
     assert(gameA.model.credits >= 50, "Bounty payout should grant credits");
     assert(gameA.model.salvageParts >= 2, "Bounty payout should grant salvage");
+  });
+
+  tests.push(() => {
+    gameA.startGame(63636);
+    gameA.ensureBountyBoardForSector(gameA.model.sector, { force: true });
+    const board = gameA.model.bountyBoard;
+    gameA.model.credits = 0;
+    const noCreditOk = gameA.rerollBountyBoard();
+    assert(!noCreditOk, "Reroll should fail without enough credits");
+    gameA.model.credits = 9999;
+    const firstOk = gameA.rerollBountyBoard();
+    const secondOk = gameA.rerollBountyBoard();
+    assert(firstOk, "First reroll should succeed when credits are sufficient");
+    assert(!secondOk, "Reroll should fail after per-sector limit is reached");
+    assert(board.rerollsUsed === 1, "Reroll usage should track per-sector limit");
   });
 
   tests.push(() => {

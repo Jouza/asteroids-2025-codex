@@ -36,7 +36,7 @@
     getShopActionCount() {
       const offers = this.game.model.hangar.shopItems;
       const offerCount = Array.isArray(offers) && offers.length > 0 ? offers.length : this.getShopItems().length;
-      return offerCount + 7;
+      return offerCount + 9;
     }
 
     handleHangarInput() {
@@ -121,6 +121,8 @@
         else if (actionIndex === 4) this.cycleFactionIntelSelection(1);
         else if (actionIndex === 5) this.sellSelected();
         else if (actionIndex === 6) this.salvageSelected();
+        else if (actionIndex === 7) this.claimCompletedBounties();
+        else if (actionIndex === 8) this.rerollBountyBoard();
         return;
       }
       if (h.navSection === "loot") {
@@ -441,6 +443,18 @@
       g.cycleHangarVendor(step);
       this.refreshShopOffers();
       this.ensureNavState();
+    }
+
+    claimCompletedBounties() {
+      const g = this.game;
+      if (typeof g.claimCompletedBounties !== "function") return;
+      g.claimCompletedBounties();
+    }
+
+    rerollBountyBoard() {
+      const g = this.game;
+      if (typeof g.rerollBountyBoard !== "function") return;
+      g.rerollBountyBoard();
     }
 
     changePilotAttributeSelection(step) {

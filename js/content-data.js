@@ -191,6 +191,9 @@
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
       bountyBoard: {
         slots: 3,
+        maxRerollsPerSector: 1,
+        rerollCreditsBase: 22,
+        rerollCreditsStep: 4,
         templates: [
           {
             id: "ufo_hunter",

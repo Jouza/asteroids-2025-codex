@@ -212,6 +212,21 @@ function validateContentData(contentData, issues) {
         "mission.bountyBoard.slots must be >= 1",
         issues
       );
+      assert(
+        Number.isFinite(Number(bountyBoard.maxRerollsPerSector)) && Number(bountyBoard.maxRerollsPerSector) >= 0,
+        "mission.bountyBoard.maxRerollsPerSector must be >= 0",
+        issues
+      );
+      assert(
+        Number.isFinite(Number(bountyBoard.rerollCreditsBase)) && Number(bountyBoard.rerollCreditsBase) >= 0,
+        "mission.bountyBoard.rerollCreditsBase must be >= 0",
+        issues
+      );
+      assert(
+        Number.isFinite(Number(bountyBoard.rerollCreditsStep)) && Number(bountyBoard.rerollCreditsStep) >= 0,
+        "mission.bountyBoard.rerollCreditsStep must be >= 0",
+        issues
+      );
       const templates = bountyBoard.templates;
       assert(Array.isArray(templates) && templates.length >= 1, "mission.bountyBoard.templates must be non-empty", issues);
       if (Array.isArray(templates)) {

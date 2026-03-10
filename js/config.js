@@ -831,6 +831,9 @@
       order: ["survive", "ufo_hunt", "asteroid_storm", "mini_boss"],
       bountyBoard: {
         slots: 3,
+        maxRerollsPerSector: 1,
+        rerollCreditsBase: 22,
+        rerollCreditsStep: 4,
         templates: [
           {
             id: "ufo_hunter",
@@ -1207,6 +1210,12 @@
         ok:
           Number.isFinite(config.mission?.bountyBoard?.slots) &&
           config.mission.bountyBoard.slots >= 1 &&
+          Number.isFinite(config.mission.bountyBoard.maxRerollsPerSector) &&
+          config.mission.bountyBoard.maxRerollsPerSector >= 0 &&
+          Number.isFinite(config.mission.bountyBoard.rerollCreditsBase) &&
+          config.mission.bountyBoard.rerollCreditsBase >= 0 &&
+          Number.isFinite(config.mission.bountyBoard.rerollCreditsStep) &&
+          config.mission.bountyBoard.rerollCreditsStep >= 0 &&
           Array.isArray(config.mission.bountyBoard.templates) &&
           config.mission.bountyBoard.templates.length >= 1,
         msg: "mission.bountyBoard missing or invalid"

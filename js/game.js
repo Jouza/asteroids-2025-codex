@@ -294,7 +294,8 @@
         },
         bountyBoard: {
           sector: 1,
-          offers: []
+          offers: [],
+          rerollsUsed: 0
         },
         loadout: {
           primaryId: "auto_cannon",
@@ -1510,7 +1511,7 @@
       this.model.victorySummary = null;
       this.model.gameOverSummary = null;
       this.model.missionCompleteSummary = null;
-      this.model.bountyBoard = { sector: 1, offers: [] };
+      this.model.bountyBoard = { sector: 1, offers: [], rerollsUsed: 0 };
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
@@ -2876,16 +2877,19 @@
 
     ensureBountyBoardForSector(sector = this.model.sector, { force = false } = {}) {
       const safeSector = Math.max(1, Math.floor(Number(sector) || 1));
+      const previousSector = Math.max(1, Math.floor(Number(this.model.bountyBoard?.sector) || safeSector));
+      const sectorChanged = previousSector !== safeSector;
       this.model.bountyBoard =
         this.model.bountyBoard && typeof this.model.bountyBoard === "object"
           ? this.model.bountyBoard
-          : { sector: safeSector, offers: [] };
+          : { sector: safeSector, offers: [], rerollsUsed: 0 };
       const board = this.model.bountyBoard;
       const templates = this.getBountyTemplates();
       const slots = Math.max(1, Math.floor(Number(this.getBountyBoardConfig().slots) || 3));
       if (!templates.length) {
         board.sector = safeSector;
         board.offers = [];
+        board.rerollsUsed = 0;
         return board;
       }
       const shouldReroll = force || board.sector !== safeSector || !Array.isArray(board.offers) || board.offers.length === 0;
@@ -2899,7 +2903,73 @@
       }
       board.sector = safeSector;
       board.offers = offers;
+      if (force || sectorChanged) board.rerollsUsed = 0;
+      board.rerollsUsed = Math.max(0, Math.floor(Number(board.rerollsUsed) || 0));
       return board;
+    }
+
+    getBountyRerollCost(sector = this.model.sector) {
+      const cfg = this.getBountyBoardConfig();
+      const safeSector = Math.max(1, Math.floor(Number(sector) || 1));
+      const base = Math.max(0, Math.floor(Number(cfg.rerollCreditsBase) || 0));
+      const step = Math.max(0, Math.floor(Number(cfg.rerollCreditsStep) || 0));
+      return base + Math.max(0, safeSector - 1) * step;
+    }
+
+    claimCompletedBounties() {
+      const board = this.ensureBountyBoardForSector(this.model.sector);
+      const offers = Array.isArray(board.offers) ? board.offers : [];
+      let claimedCount = 0;
+      let totalCredits = 0;
+      let totalSalvage = 0;
+      for (const offer of offers) {
+        if (!offer || !offer.completed || offer.claimed) continue;
+        offer.claimed = true;
+        claimedCount += 1;
+        totalCredits += Math.max(0, Math.floor(Number(offer.rewardCredits) || 0));
+        totalSalvage += Math.max(0, Math.floor(Number(offer.rewardSalvage) || 0));
+      }
+      if (claimedCount <= 0) {
+        this.model.hangar.message = tr("game.bounty.claim_none");
+        return false;
+      }
+      if (totalCredits > 0) {
+        this.model.credits += totalCredits;
+        this.model.telemetry.creditsEarned += totalCredits;
+      }
+      if (totalSalvage > 0) this.model.salvageParts += totalSalvage;
+      this.model.hangar.message = tr("game.bounty.claimed", {
+        count: claimedCount,
+        credits: totalCredits,
+        salvage: totalSalvage
+      });
+      return true;
+    }
+
+    rerollBountyBoard() {
+      const board = this.ensureBountyBoardForSector(this.model.sector);
+      const cfg = this.getBountyBoardConfig();
+      const maxRerolls = Math.max(0, Math.floor(Number(cfg.maxRerollsPerSector) || 0));
+      const used = Math.max(0, Math.floor(Number(board.rerollsUsed) || 0));
+      if (used >= maxRerolls) {
+        this.model.hangar.message = tr("game.bounty.reroll_limit");
+        return false;
+      }
+      const cost = this.getBountyRerollCost(this.model.sector);
+      if (this.model.credits < cost) {
+        this.model.hangar.message = tr("game.bounty.reroll_no_credits", { cost });
+        return false;
+      }
+      this.model.credits -= cost;
+      board.rerollsUsed = used + 1;
+      this.ensureBountyBoardForSector(this.model.sector, { force: true });
+      board.rerollsUsed = used + 1;
+      this.model.hangar.message = tr("game.bounty.rerolled", {
+        cost,
+        used: board.rerollsUsed,
+        max: maxRerolls
+      });
+      return true;
     }
 
     getBountyProgressDelta(offer, missionSummary) {
@@ -2916,25 +2986,16 @@
       const board = this.model.bountyBoard;
       if (!board || board.sector !== this.model.sector) return;
       const offers = Array.isArray(board.offers) ? board.offers : [];
-      let totalCredits = 0;
-      let totalSalvage = 0;
+      let completedNow = 0;
       for (const offer of offers) {
-        if (!offer || offer.claimed) continue;
+        if (!offer || offer.claimed || offer.completed) continue;
         const delta = this.getBountyProgressDelta(offer, missionSummary);
         offer.progress = Math.min(offer.target, Math.max(0, offer.progress + delta));
         offer.completed = offer.progress >= offer.target;
-        if (!offer.completed) continue;
-        offer.claimed = true;
-        totalCredits += Math.max(0, Math.floor(Number(offer.rewardCredits) || 0));
-        totalSalvage += Math.max(0, Math.floor(Number(offer.rewardSalvage) || 0));
+        if (offer.completed) completedNow += 1;
       }
-      if (totalCredits > 0) {
-        this.model.credits += totalCredits;
-        this.model.telemetry.creditsEarned += totalCredits;
-      }
-      if (totalSalvage > 0) this.model.salvageParts += totalSalvage;
-      if (totalCredits > 0 || totalSalvage > 0) {
-        this.model.hangar.message = tr("game.bounty.completed", { credits: totalCredits, salvage: totalSalvage });
+      if (completedNow > 0) {
+        this.model.hangar.message = tr("game.bounty.ready_to_claim", { count: completedNow });
       }
     }
 
