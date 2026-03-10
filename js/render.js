@@ -15,12 +15,12 @@
       this.drawStarfield();
       this.drawAsteroids(model.asteroids);
       this.drawUfos(model.ufos);
-      this.drawDamageNumbers(model.damageNumbers);
       this.drawMiniBoss(model.miniBoss);
       this.drawBullets(model.bullets);
       this.drawEnemyBullets(model.enemyBullets);
       this.drawUtilityEffects(model.utilityEffects);
       this.drawParticles(model.particles);
+      this.drawDamageNumbers(model.damageNumbers);
       this.drawShip(model, input);
       this.drawVignette();
       this.drawMissionEnvironment(model);

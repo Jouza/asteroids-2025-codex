@@ -2868,7 +2868,13 @@
         ? bossCfg.weakpointDamageMultiplier
         : bossCfg.weakpointClosedMultiplier;
       const resolved = this.resolvePlayerDamage(baseDamage * weakpointMultiplier, damageType, critChance);
+      const beforeHp = Math.max(0, Number(boss.hp) || 0);
       boss.hp -= resolved.damage;
+      const dealtHullDamage = Math.max(0, beforeHp - Math.max(0, Number(boss.hp) || 0));
+      if (dealtHullDamage > 0) {
+        const textColor = boss.weakpointOpen ? "135,246,255" : "255,176,214";
+        this.spawnDamageNumber(boss.x, boss.y - boss.radius * 0.68, dealtHullDamage, "HU", textColor);
+      }
       this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 95 : 70);
       const hitColor = boss.weakpointOpen ? "126,237,255" : "255,118,188";
       this.emitImpactParticles(boss.x, boss.y, resolved.isCrit ? 14 : 10, hitColor);

@@ -2,6 +2,7 @@
 
 - [x] Combat feedback: floating damage numbers na UFO zasah
   - [x] Pri zasahu UFO se vykresli plovouci damage text s fade-out (`-X SH` pro shield, `-Y HU` pro hull)
+  - [x] Stejny floating damage feedback rozsireny i na mini-bosse (`-Y HU`), vcetne Boss Rush flow
   - [x] Runtime model doplnen o `damageNumbers` list + update krok (drift + TTL cleanup)
   - [x] Render pipeline doplnena o vrstvu damage textu nad bojujicimi objekty
 
