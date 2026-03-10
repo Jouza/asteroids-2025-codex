@@ -317,6 +317,7 @@
         ufo_kamikaze: "ufo",
         ufo_support: "ufo",
         ufo_mine_layer: "ufo",
+        hazard_readability_telegraph: "hazard",
         hazard_debris_field: "hazard",
         hazard_plasma_vent: "hazard",
         hazard_gravity_anomaly: "hazard",
@@ -722,7 +723,7 @@
         cards: ufoCards
       });
 
-      const hazards = [];
+      const hazards = ["hazard_readability_telegraph"];
       for (const biome of biomes) {
         const key = hazardCardBySource[biome.hazards?.type];
         if (key && !hazards.includes(key)) hazards.push(key);
@@ -733,6 +734,8 @@
       }
       appendSection({
         titleKey: "help.section.hazards",
+        hintKey: "help.section.hazards_hint",
+        hintHtml: true,
         cards: hazards
       });
 

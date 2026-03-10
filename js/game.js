@@ -243,6 +243,7 @@
         asteroids: [],
         ufos: [],
         damageNumbers: [],
+        incomingHitCues: [],
         miniBoss: null,
         particles: [],
         utilityEffects: [],
@@ -1542,6 +1543,7 @@
       this.model.asteroids = [];
       this.model.ufos = [];
       this.model.damageNumbers = [];
+      this.model.incomingHitCues = [];
       this.model.miniBoss = null;
       this.model.particles = [];
       this.model.utilityEffects = [];
@@ -2335,6 +2337,7 @@
       this.model.utilityCooldown = Math.max(0, this.model.utilityCooldown - dt);
       this.model.dashCooldown = Math.max(0, this.model.dashCooldown - dt);
       this.updateDamageNumbers(dt);
+      this.updateIncomingHitCues(dt);
       if (perfEnabled) {
         const now = this.getNowMs();
         this.recordSectionTiming("cooldowns", now - sectionStart);
@@ -2788,9 +2791,16 @@
         const shieldAbsorb = Math.min(ship.shield, remaining);
         ship.shield -= shieldAbsorb;
         remaining -= shieldAbsorb;
+        const hullDamage = Math.max(0, remaining);
         if (remaining > 0) {
           ship.hull = Math.max(0, ship.hull - remaining);
         }
+        this.pushIncomingHitCue({
+          damageType: resolved.damageType || event?.damageType || "kinetic",
+          isCrit: Boolean(resolved.isCrit),
+          shieldAbsorb,
+          hullDamage
+        });
 
         if (overrides.countAsHit !== false) this.recordPlayerHit();
         this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 210 : 160);
@@ -3773,6 +3783,36 @@
         }
         item.x += item.vx * dt;
         item.y += item.vy * dt;
+      }
+    }
+
+    pushIncomingHitCue(cue) {
+      if (!cue || typeof cue !== "object") return;
+      const ttl = cue.isCrit ? 0.58 : 0.44;
+      const item = {
+        damageType: typeof cue.damageType === "string" ? cue.damageType : "kinetic",
+        isCrit: Boolean(cue.isCrit),
+        shieldAbsorb: Math.max(0, Number(cue.shieldAbsorb) || 0),
+        hullDamage: Math.max(0, Number(cue.hullDamage) || 0),
+        ttl,
+        maxTtl: ttl
+      };
+      const list = this.model.incomingHitCues;
+      if (!Array.isArray(list)) {
+        this.model.incomingHitCues = [item];
+        return;
+      }
+      list.push(item);
+      const overflow = list.length - 10;
+      if (overflow > 0) list.splice(0, overflow);
+    }
+
+    updateIncomingHitCues(dt) {
+      const cues = this.model.incomingHitCues;
+      if (!Array.isArray(cues) || cues.length === 0) return;
+      for (let i = cues.length - 1; i >= 0; i -= 1) {
+        cues[i].ttl -= dt;
+        if (cues[i].ttl <= 0) cues.splice(i, 1);
       }
     }
 

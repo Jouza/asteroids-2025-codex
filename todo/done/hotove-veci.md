@@ -1,5 +1,14 @@
 # Hotove veci
 
+- [x] Combat Readability / Telegraph 2.0 (plny balik)
+  - [x] Data-driven `missionDirector.hazardTelegraphs` profil (pre-tick window, pulse color/alpha, ring/line boost, priority)
+  - [x] Hazard runtime telegraph metadata (`telegraphActive`, `telegraphRatio`, `telegraphKind`, `lastTickAt`) v mission update loopu
+  - [x] Render hazard pass doplnen o pre-tick pulse/halo/streak telegraph vrstvu + prioritni warning text
+  - [x] Off-screen edge indikatory pro mini-bosse, aktivni telegraph hazardy a gravity anomaly centrum
+  - [x] Incoming damage hit-type cues (`incomingHitCues`) s TTL, ring/arc + slabym screen tint feedbackem
+  - [x] Help/i18n aktualizace pro hazard readability vrstvu
+  - [x] Harness coverage: telegraph pre-tick/pulse-window, incoming cue creation, cue TTL expiry
+
 - [x] Raw Space Combat Pack v1 (vizualni atmosfera)
   - [x] Rozsirene `missionDirector.biomeVisuals` o `deepSpace`, `warScars`, `foregroundDust`, `cinematicFlashes` pro vsechny biomy
   - [x] `currentMission.visualFx` rozsireno o flash lifecycle (`flashTtl/intensity/color`) + oddelene layer seedy

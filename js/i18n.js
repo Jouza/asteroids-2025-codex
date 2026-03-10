@@ -416,6 +416,8 @@
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.hazards": "Hazard Zones",
+      "help.section.hazards_hint":
+        "Hazards now use stronger pre-tick telegraphs, off-screen threat indicators for major dangers, and incoming hit-type VFX cues for faster reaction reads.",
       "help.section.dev_profiling": "Dev Profiling Controls",
       "help.section.dev_profiling_hint":
         "For runtime performance diagnostics during manual QA, use <strong>B</strong> to toggle the perf overlay and <strong>N</strong> to dump a profiling snapshot to the browser console.",
@@ -630,6 +632,12 @@
         "Cold shear field that slows motion response and makes dash recovery slightly longer, while cooling heat.",
       "help.card.hazard_cryo_shear_zone.impact":
         "<strong>Impact:</strong> lower mobility but improved thermal management for sustained firing.",
+      "help.card.hazard_readability_telegraph.name": "Hazard Readability 2.0",
+      "help.card.hazard_readability_telegraph.tag": "Combat telegraph",
+      "help.card.hazard_readability_telegraph.line":
+        "Tick hazards now telegraph with incoming pulses before damage windows. Off-screen indicators mark boss/hazard/anomaly threats outside view, and incoming damage cues show hit type.",
+      "help.card.hazard_readability_telegraph.impact":
+        "<strong>Impact:</strong> faster threat parsing under pressure with no gameplay rule changes.",
       "help.weapon.slot.primary": "Primary",
       "help.weapon.slot.secondary": "Secondary",
       "help.weapon.slot.utility": "Utility",

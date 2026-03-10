@@ -1329,6 +1329,48 @@
           }
         }
       },
+      hazardTelegraphs: {
+        default: {
+          preTickWindowSec: 0.22,
+          pulseColor: "255,204,148",
+          pulseAlpha: 0.22,
+          ringBoost: 0.22,
+          lineBoost: 0.18,
+          warningPriority: 2
+        },
+        debris_field: {
+          preTickWindowSec: 0.26,
+          pulseColor: "166,220,255",
+          pulseAlpha: 0.2,
+          ringBoost: 0.26,
+          lineBoost: 0.2,
+          warningPriority: 2
+        },
+        plasma_vent: {
+          preTickWindowSec: 0.2,
+          pulseColor: "255,172,108",
+          pulseAlpha: 0.24,
+          ringBoost: 0.3,
+          lineBoost: 0.22,
+          warningPriority: 3
+        },
+        relay_jammer_burst: {
+          preTickWindowSec: 0.44,
+          pulseColor: "198,206,255",
+          pulseAlpha: 0.24,
+          ringBoost: 0.28,
+          lineBoost: 0.24,
+          warningPriority: 4
+        },
+        cryo_shear_zone: {
+          preTickWindowSec: 0.24,
+          pulseColor: "186,244,255",
+          pulseAlpha: 0.2,
+          ringBoost: 0.24,
+          lineBoost: 0.2,
+          warningPriority: 2
+        }
+      },
       biomes: [
         {
           id: "belt",
@@ -1594,6 +1636,12 @@
           typeof config.missionDirector?.biomeVisuals?.default?.foregroundDust === "object" &&
           typeof config.missionDirector?.biomeVisuals?.default?.cinematicFlashes === "object",
         msg: "missionDirector.biomeVisuals default subprofiles missing"
+      },
+      {
+        ok:
+          typeof config.missionDirector?.hazardTelegraphs === "object" &&
+          typeof config.missionDirector?.hazardTelegraphs?.default === "object",
+        msg: "missionDirector.hazardTelegraphs missing or invalid"
       },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },

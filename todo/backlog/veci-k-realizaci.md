@@ -7,10 +7,9 @@
   - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
   - [ ] Boss Rush depth pass (variace encounter flow mezi sektory, ne jen linearni mini-boss loop)
 
-- [ ] Combat readability / telegraph 2.0
-  - [ ] Silnejsi telegraphy pro nejrizikovejsi hazard ticky (pred-tick warning + pulse intenzita)
-  - [ ] Off-screen warning indikator pro velke boss/hazard hrozby mimo viewport
-  - [ ] Hit clarity pass: odlisit incoming damage typy (kinetic/explosive/dot) pres VFX cue
+- [ ] Combat readability follow-up (post Telegraph 2.0)
+  - [ ] Jemne doladeni prahu intenzity telegraphu podle obtiznosti/mutatoru (vizual only)
+  - [ ] Rozsireni hit-type cue palety o odliseni EMP/jam tlak vs cisty damage
 
 - [ ] Atmosphere follow-up (post Raw Space v1)
   - [ ] Lokalni slider/preset pro intenzitu ambient VFX (Low/Default/High) pro slabsi GPU

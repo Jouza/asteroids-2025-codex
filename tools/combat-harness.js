@@ -688,11 +688,121 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(8585);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-1",
+          type: "debris_field",
+          x: 480,
+          y: 360,
+          radius: 96,
+          tickSeconds: 0.85,
+          tickDamage: 8,
+          slowMul: 0.985,
+          tickTimer: 0.12,
+          phase: 0,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("debris_field"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const hazard = gameA.model.currentMission.biomeHazards[0];
+    assert(hazard.telegraphActive, "Tick hazard should enable telegraph before tick window");
+    assert(hazard.telegraphKind === "pre_tick", "Tick hazard telegraph kind should be pre_tick");
+  });
+
+  tests.push(() => {
+    gameA.startGame(8686);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-relay",
+          type: "relay_jammer_burst",
+          x: 480,
+          y: 360,
+          radius: 110,
+          tickSeconds: 0.3,
+          tickDamage: 4,
+          pulseCycleSeconds: 2.6,
+          pulseWindowSeconds: 0.72,
+          jamCooldownPerSecond: 0.5,
+          jamDragMul: 0.995,
+          angularDragMul: 0.965,
+          tickTimer: 0.22,
+          phase: 0.2,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("relay_jammer_burst"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const hazard = gameA.model.currentMission.biomeHazards[0];
+    assert(hazard.telegraphActive, "Relay jammer should enable telegraph around pulse window");
+    assert(hazard.telegraphKind === "pulse_window", "Relay jammer telegraph kind should be pulse_window");
+  });
+
+  tests.push(() => {
     gameA.startGame(9191);
     gameA.model.ship.invulnMs = 0;
     const before = gameA.model.hitstopSeconds;
     gameA.applyDamageToShip("enemy_bullet_hunter");
     assert(gameA.model.hitstopSeconds > before, "Player hit should trigger hitstop feedback");
+  });
+
+  tests.push(() => {
+    gameA.startGame(9292);
+    gameA.model.ship.invulnMs = 0;
+    const beforeCount = gameA.model.incomingHitCues.length;
+    gameA.applyDamageToShip("enemy_mine", {
+      baseDamage: 10,
+      damageType: "plasma",
+      critChance: 0,
+      critMultiplier: 1
+    });
+    assert(gameA.model.incomingHitCues.length > beforeCount, "Damage to ship should create incoming hit cue");
+    const cue = gameA.model.incomingHitCues[gameA.model.incomingHitCues.length - 1];
+    assert(cue.damageType === "plasma", "Incoming hit cue should keep resolved damage type");
+  });
+
+  tests.push(() => {
+    gameA.startGame(9393);
+    gameA.model.incomingHitCues = [
+      { damageType: "kinetic", isCrit: false, shieldAbsorb: 2, hullDamage: 1, ttl: 0.1, maxTtl: 0.1 }
+    ];
+    gameA.updateIncomingHitCues(0.2);
+    assert(gameA.model.incomingHitCues.length === 0, "Incoming hit cues should expire after TTL");
   });
 
   tests.push(() => {

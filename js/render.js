@@ -24,11 +24,13 @@
       this.drawDamageNumbers(model.damageNumbers);
       this.drawForegroundDust(model);
       this.drawShip(model, input);
+      this.drawIncomingHitCues(model);
       this.drawVignette();
       this.drawMissionEnvironment(model);
       this.drawMissionBeats(model);
       this.drawCinematicFlash(model);
       this.drawFlash(model.flashMs);
+      this.drawOffscreenThreatIndicators(model);
       this.drawMissionStatus(model);
       this.drawTelemetry(model);
       this.drawPerformanceOverlay(model);
@@ -889,6 +891,121 @@
       ctx.restore();
     }
 
+    drawIncomingHitCues(model) {
+      if (model.gameState !== GAME_STATE.PLAYING) return;
+      const ship = model.ship;
+      const cues = model.incomingHitCues;
+      if (!ship || !Array.isArray(cues) || cues.length === 0) return;
+      const { ctx, config } = this;
+      const palette = {
+        kinetic: "255,220,170",
+        collision: "255,182,126",
+        explosive: "255,154,126",
+        plasma: "192,255,182",
+        dot_thermal: "255,138,114"
+      };
+      ctx.save();
+      for (const cue of cues) {
+        const ttl = Math.max(0, Number(cue.ttl) || 0);
+        const maxTtl = Math.max(0.01, Number(cue.maxTtl) || ttl || 0.45);
+        const ratio = Math.max(0, Math.min(1, ttl / maxTtl));
+        const severity = Math.max(0.18, Math.min(1, (Number(cue.shieldAbsorb) || 0) * 0.02 + (Number(cue.hullDamage) || 0) * 0.04));
+        const color = palette[cue.damageType] || "212,228,255";
+        const alpha = Math.max(0.05, Math.min(0.4, ratio * severity * (cue.isCrit ? 0.56 : 0.38)));
+        const radius = ship.radius + 16 + (1 - ratio) * 26;
+        ctx.strokeStyle = `rgba(${color},${alpha})`;
+        ctx.lineWidth = cue.isCrit ? 3 : 2;
+        ctx.beginPath();
+        ctx.arc(ship.x, ship.y, radius, -Math.PI * 0.2, Math.PI * 1.2);
+        ctx.stroke();
+        ctx.fillStyle = `rgba(${color},${alpha * 0.32})`;
+        ctx.beginPath();
+        ctx.arc(ship.x, ship.y, ship.radius + 7 + (1 - ratio) * 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(${color},${alpha * 0.22})`;
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      }
+      ctx.restore();
+    }
+
+    collectOffscreenThreats(model) {
+      const mission = model.currentMission;
+      if (!mission) return [];
+      const threats = [];
+      const addThreat = (id, x, y, color, priority) => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        threats.push({ id, x, y, color, priority });
+      };
+      if (model.miniBoss) addThreat("boss", model.miniBoss.x, model.miniBoss.y, "255,148,216", 100);
+      if (mission.gravityAnomaly) {
+        addThreat("gravity", mission.gravityAnomaly.x, mission.gravityAnomaly.y, "146,186,255", 90);
+      }
+      for (const hazard of mission.biomeHazards || []) {
+        if (!hazard.telegraphActive) continue;
+        const priority = Math.max(1, Math.floor(hazard.telegraphProfile?.warningPriority || 2));
+        addThreat(`hazard:${hazard.type}`, hazard.x, hazard.y, hazard.telegraphProfile?.pulseColor || "255,204,148", 40 + priority * 10);
+      }
+      threats.sort((a, b) => b.priority - a.priority);
+      const seen = new Set();
+      const unique = [];
+      for (const threat of threats) {
+        if (seen.has(threat.id)) continue;
+        seen.add(threat.id);
+        unique.push(threat);
+      }
+      return unique.slice(0, 4);
+    }
+
+    drawOffscreenThreatIndicators(model) {
+      if (model.gameState !== GAME_STATE.PLAYING) return;
+      const ship = model.ship;
+      if (!ship) return;
+      const { ctx, config } = this;
+      const margin = 24;
+      const threats = this.collectOffscreenThreats(model);
+      if (!threats.length) return;
+      ctx.save();
+      for (const threat of threats) {
+        const onScreen =
+          threat.x >= margin &&
+          threat.x <= config.canvas.width - margin &&
+          threat.y >= margin &&
+          threat.y <= config.canvas.height - margin;
+        if (onScreen) continue;
+        const dx = threat.x - ship.x;
+        const dy = threat.y - ship.y;
+        const angle = Math.atan2(dy, dx);
+        const rayX = Math.cos(angle);
+        const rayY = Math.sin(angle);
+        const halfW = config.canvas.width * 0.5 - margin;
+        const halfH = config.canvas.height * 0.5 - margin;
+        const tx = Math.abs(rayX) < 0.0001 ? Number.POSITIVE_INFINITY : halfW / Math.abs(rayX);
+        const ty = Math.abs(rayY) < 0.0001 ? Number.POSITIVE_INFINITY : halfH / Math.abs(rayY);
+        const t = Math.min(tx, ty);
+        const centerX = config.canvas.width * 0.5;
+        const centerY = config.canvas.height * 0.5;
+        const px = centerX + rayX * t;
+        const py = centerY + rayY * t;
+        const dist = Math.hypot(dx, dy);
+        const alpha = Math.max(0.3, Math.min(0.88, 1 - dist / 1800));
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.fillStyle = `rgba(${threat.color},${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.lineTo(-8, -7);
+        ctx.lineTo(-8, 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${threat.color},${Math.min(1, alpha + 0.15)})`;
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(-20, -5, 8, 10);
+        ctx.rotate(-angle);
+        ctx.translate(-px, -py);
+      }
+      ctx.restore();
+    }
+
     drawMissionEnvironment(model) {
       const mission = model.currentMission;
       if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
@@ -1058,9 +1175,18 @@
       const biomeHazards = mission.biomeHazards || [];
       for (const hazard of biomeHazards) {
         const hazardBeatBoost = 1 + beatPulse * 0.16;
+        const telegraphRatio = Math.max(0, Math.min(1, Number(hazard.telegraphRatio) || 0));
+        const telegraphPulse = hazard.telegraphActive ? 0.45 + telegraphRatio * 0.55 : 0;
+        const telegraphCfg = hazard.telegraphProfile || {};
+        const telegraphColor =
+          typeof telegraphCfg.pulseColor === "string" && telegraphCfg.pulseColor.length > 0
+            ? telegraphCfg.pulseColor
+            : "255,204,148";
+        const ringBoost = Math.max(0, Number(telegraphCfg.ringBoost) || 0);
+        const lineBoost = Math.max(0, Number(telegraphCfg.lineBoost) || 0);
         const pulseRadius =
           hazard.type === "plasma_vent"
-            ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16) * hazardBeatBoost
+            ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16) * hazardBeatBoost * (1 + telegraphPulse * ringBoost)
             : hazard.radius * hazardBeatBoost;
         ctx.save();
         if (hazard.type === "debris_field") {
@@ -1141,10 +1267,53 @@
           ctx.lineTo(hazard.x, hazard.y + pulseRadius * 0.6);
           ctx.stroke();
         }
+        if (hazard.telegraphActive) {
+          const teleAlpha = Math.max(0.14, Math.min(0.62, (Number(telegraphCfg.pulseAlpha) || 0.22) * (0.6 + telegraphPulse * 0.9)));
+          ctx.strokeStyle = `rgba(${telegraphColor},${teleAlpha})`;
+          ctx.lineWidth = 1.4 + telegraphPulse * (2.2 + lineBoost * 2.5);
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius * (1 + 0.06 * telegraphPulse), 0, Math.PI * 2);
+          ctx.stroke();
+          const halo = ctx.createRadialGradient(hazard.x, hazard.y, pulseRadius * 0.22, hazard.x, hazard.y, pulseRadius * 1.2);
+          halo.addColorStop(0, `rgba(${telegraphColor},${teleAlpha * 0.28})`);
+          halo.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = halo;
+          ctx.fillRect(hazard.x - pulseRadius * 1.3, hazard.y - pulseRadius * 1.3, pulseRadius * 2.6, pulseRadius * 2.6);
+          const streakLen = pulseRadius * (0.2 + telegraphPulse * (0.45 + lineBoost));
+          for (let i = 0; i < 4; i += 1) {
+            const angle = (i / 4) * Math.PI * 2 + (hazard.phase ?? 0) * 0.8;
+            const sx = hazard.x + Math.cos(angle) * pulseRadius * 0.82;
+            const sy = hazard.y + Math.sin(angle) * pulseRadius * 0.82;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + Math.cos(angle) * streakLen, sy + Math.sin(angle) * streakLen);
+            ctx.stroke();
+          }
+        }
         ctx.restore();
       }
 
       const warnings = [];
+      const telegraphWarnings = [];
+      const hazardWarningLabel = (type) =>
+        type === "debris_field"
+          ? "DEBRIS FIELD"
+          : type === "plasma_vent"
+            ? "PLASMA VENT"
+            : type === "relay_jammer_burst"
+              ? "RELAY JAMMER"
+              : type === "cryo_shear_zone"
+                ? "CRYO SHEAR"
+                : "HAZARD";
+      for (const hazard of biomeHazards) {
+        if (!hazard.telegraphActive) continue;
+        telegraphWarnings.push({
+          priority: Math.max(1, Math.floor(hazard.telegraphProfile?.warningPriority || 2)),
+          label: `${hazardWarningLabel(hazard.type)} INCOMING`
+        });
+      }
+      telegraphWarnings.sort((a, b) => b.priority - a.priority);
+      for (const warning of telegraphWarnings.slice(0, 2)) warnings.push(warning.label);
       if ((effects.shieldDrainPerSecond ?? 0) > 0) warnings.push("ION STORM");
       if (mission.gravityAnomaly) warnings.push("GRAVITY ANOMALY");
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "debris_field")) warnings.push("DEBRIS FIELD");
@@ -1158,7 +1327,7 @@
       if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");
       if (!warnings.length) return;
 
-      const warningText = warnings.join(" | ");
+      const warningText = [...new Set(warnings)].join(" | ");
       const alpha = 0.58 + Math.sin(missionTime * 8.3) * 0.22;
       ctx.save();
       ctx.textAlign = "right";

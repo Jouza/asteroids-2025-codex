@@ -109,6 +109,32 @@
       };
     }
 
+    getHazardTelegraphProfile(hazardType) {
+      const g = this.game;
+      const profiles = g.config.missionDirector?.hazardTelegraphs || {};
+      const base = profiles.default || {};
+      const specific = profiles[hazardType] || {};
+      const preTickWindowSec = Math.max(0.05, Number(specific.preTickWindowSec ?? base.preTickWindowSec) || 0.22);
+      const pulseAlpha = g.clamp(Number(specific.pulseAlpha ?? base.pulseAlpha) || 0.22, 0.05, 0.7);
+      const ringBoost = g.clamp(Number(specific.ringBoost ?? base.ringBoost) || 0.22, 0, 0.8);
+      const lineBoost = g.clamp(Number(specific.lineBoost ?? base.lineBoost) || 0.18, 0, 0.8);
+      const warningPriority = Math.max(1, Math.floor(Number(specific.warningPriority ?? base.warningPriority) || 2));
+      const pulseColor =
+        typeof specific.pulseColor === "string" && specific.pulseColor.length > 0
+          ? specific.pulseColor
+          : typeof base.pulseColor === "string" && base.pulseColor.length > 0
+            ? base.pulseColor
+            : "255,204,148";
+      return {
+        preTickWindowSec,
+        pulseColor,
+        pulseAlpha,
+        ringBoost,
+        lineBoost,
+        warningPriority
+      };
+    }
+
     createMissionVisualFxState(biomeId) {
       const profile = this.getBiomeVisualProfile(biomeId);
       return {
@@ -335,7 +361,12 @@
           tickTimer: 0,
           phase: g.rng() * Math.PI * 2,
           pulseActive: false,
-          active: false
+          active: false,
+          telegraphProfile: this.getHazardTelegraphProfile(hazardDef.type),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
         });
       }
       return hazards;
@@ -733,6 +764,13 @@
       for (const hazard of hazards) {
         hazard.phase += dt;
         if (hazard.type === "relay_jammer_burst") hazard.pulseActive = false;
+        hazard.telegraphActive = false;
+        hazard.telegraphRatio = 0;
+        hazard.telegraphKind = "";
+        if (!hazard.telegraphProfile || typeof hazard.telegraphProfile !== "object") {
+          hazard.telegraphProfile = this.getHazardTelegraphProfile(hazard.type);
+        }
+        const telegraphProfile = hazard.telegraphProfile;
         const pulseRadius =
           hazard.type === "plasma_vent"
             ? hazard.radius * (0.84 + Math.sin(hazard.phase * 2.8) * 0.16)
@@ -742,6 +780,12 @@
         if (inside && !hazard.active) g.emitImpactParticles(ship.x, ship.y, 6, "255,198,140");
         hazard.active = inside;
         hazard.tickTimer = Math.max(0, (hazard.tickTimer ?? 0) - dt);
+        const tickWindow = Math.max(0.05, Number(telegraphProfile.preTickWindowSec) || 0.22);
+        if (hazard.active && (hazard.tickSeconds ?? 0) > 0 && hazard.tickTimer <= tickWindow) {
+          hazard.telegraphActive = true;
+          hazard.telegraphRatio = g.clamp(1 - hazard.tickTimer / tickWindow, 0, 1);
+          hazard.telegraphKind = "pre_tick";
+        }
         if (!inside) continue;
 
         if (hazard.type === "debris_field") {
@@ -755,6 +799,7 @@
               critMultiplier: 1.0
             });
             hazard.tickTimer = hazard.tickSeconds;
+            hazard.lastTickAt = g.model.runtimeSeconds;
           }
         } else if (hazard.type === "plasma_vent") {
           ship.heat = Math.min(ship.heatMax, ship.heat + hazard.heatPerSecond * dt);
@@ -768,6 +813,7 @@
               countAsHit: false
             });
             hazard.tickTimer = hazard.tickSeconds;
+            hazard.lastTickAt = g.model.runtimeSeconds;
           }
         } else if (hazard.type === "relay_jammer_burst") {
           const cycle = Math.max(0.2, hazard.pulseCycleSeconds || 2.6);
@@ -775,6 +821,17 @@
           const pulsePhase = hazard.phase % cycle;
           const pulseActive = pulsePhase <= windowSeconds;
           hazard.pulseActive = pulseActive;
+          const preWindow = Math.min(cycle, windowSeconds + Math.max(0.1, tickWindow));
+          const telegraphPhase = pulsePhase <= preWindow || cycle - pulsePhase <= tickWindow;
+          if (telegraphPhase) {
+            hazard.telegraphActive = true;
+            hazard.telegraphKind = "pulse_window";
+            if (pulsePhase <= preWindow) {
+              hazard.telegraphRatio = g.clamp((preWindow - pulsePhase) / preWindow, 0, 1);
+            } else {
+              hazard.telegraphRatio = g.clamp((tickWindow - (cycle - pulsePhase)) / tickWindow, 0, 1);
+            }
+          }
           const drag = Math.pow(hazard.jamDragMul ?? 1, dt * 60);
           ship.vx *= drag;
           ship.vy *= drag;
@@ -793,6 +850,7 @@
               critMultiplier: 1
             });
             hazard.tickTimer = hazard.tickSeconds;
+            hazard.lastTickAt = g.model.runtimeSeconds;
           }
         } else if (hazard.type === "cryo_shear_zone") {
           const slowFactor = Math.pow(hazard.slowMul ?? 1, dt * 60);
