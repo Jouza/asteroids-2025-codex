@@ -109,6 +109,7 @@ function runTests() {
     gameA.model.upgrades.fireRateLevel = 3;
     gameA.model.loadout.primaryId = "rail_lance";
     gameA.model.salvageParts = 17;
+    gameA.model.hangar.shopVendorId = "black_market";
     gameA.model.hangar.factionIntelId = "drift_contract";
     gameA.model.factions.helix_union = 9;
     gameA.model.factions.drift_cartel = -4;
@@ -120,6 +121,7 @@ function runTests() {
     assert(gameB.model.upgrades.fireRateLevel === 3, "Profile did not persist fireRateLevel");
     assert(gameB.model.loadout.primaryId === "rail_lance", "Profile did not persist primary loadout");
     assert(gameB.model.salvageParts === 17, "Profile did not persist salvage parts");
+    assert(gameB.model.hangar.shopVendorId === "black_market", "Profile did not persist selected hangar vendor");
     assert(gameB.model.hangar.factionIntelId === "drift_contract", "Profile did not persist selected faction intel");
     assert(gameB.model.factions.helix_union === 9, "Profile did not persist HELIX UNION reputation");
     assert(gameB.model.factions.drift_cartel === -4, "Profile did not persist DRIFT CARTEL reputation");
@@ -692,6 +694,43 @@ function runTests() {
     const lowRepCredits = gameA.model.credits;
 
     assert(highRepCredits > lowRepCredits, "Higher faction reputation should increase mission credit rewards");
+  });
+
+  tests.push(() => {
+    gameA.startGame(43636);
+    gameA.model.comboScoringEnabled = false;
+    gameA.model.currentMission = {
+      type: "survive",
+      biomeFactionId: "helix_union",
+      intelProfile: { id: "balanced", pressureMul: 1, creditsMul: 1, salvageMul: 1, reputationDelta: {} }
+    };
+    gameA.model.factions.helix_union = 10;
+    gameA.model.credits = 0;
+    gameA.registerScore(1200, false);
+    const baselineCredits = gameA.model.credits;
+
+    gameA.model.factions.helix_union = 55;
+    gameA.model.credits = 0;
+    gameA.registerScore(1200, false);
+    const allyTierCredits = gameA.model.credits;
+
+    assert(allyTierCredits > baselineCredits, "Higher reputation threshold tier should increase reward output");
+  });
+
+  tests.push(() => {
+    gameA.startGame(43737);
+    gameA.model.sector = 1;
+    gameA.model.factions.helix_union = 0;
+    gameA.model.factions.drift_cartel = 0;
+    gameA.model.currentMission = { biomeFactionId: "helix_union" };
+    for (let i = 0; i < 8; i += 1) {
+      gameA.applyMissionFactionReputation(3, "game.faction.reason.mission_start", { announce: false, saveProfile: false });
+    }
+    const sectorCap = Math.max(0, gameA.config.faction.repGainSectorCapBase || 0);
+    assert(
+      gameA.model.factions.helix_union <= sectorCap,
+      "Reputation gain should respect per-sector anti-snowball cap"
+    );
   });
 
   tests.push(() => {

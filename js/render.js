@@ -1734,6 +1734,24 @@
           if (num > 0) return `+${num}`;
           return String(num);
         };
+        const resolveThresholdId = (repValue) => {
+          const thresholds = Array.isArray(config.faction?.repThresholds) ? config.faction.repThresholds : [];
+          const sorted = thresholds
+            .filter((entry) => entry && Number.isFinite(Number(entry.minRep)) && typeof entry.id === "string")
+            .map((entry) => ({
+              id: entry.id,
+              minRep: Math.floor(Number(entry.minRep)),
+              maxRep: Number.isFinite(Number(entry.maxRep)) ? Math.floor(Number(entry.maxRep)) : null
+            }))
+            .sort((a, b) => a.minRep - b.minRep);
+          let active = null;
+          for (const tier of sorted) {
+            if (repValue < tier.minRep) continue;
+            if (Number.isFinite(tier.maxRep) && repValue > tier.maxRep) continue;
+            active = tier.id;
+          }
+          return active;
+        };
         const factionRep = model.factions || {};
         const fireRateLevel = Math.max(0, Math.floor(model.upgrades?.fireRateLevel || 0));
         const magazineLevel = Math.max(0, Math.floor(model.upgrades?.magazineLevel || 0));
@@ -2193,6 +2211,32 @@
           tr("hud.status.faction_rep", {
             faction: tr("game.faction.drift_cartel"),
             rep: formatSigned(factionRep.drift_cartel)
+          }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          statusColW
+        );
+        statusLeftY += statusGap;
+        const helixThresholdId = resolveThresholdId(Math.floor(Number(factionRep.helix_union) || 0));
+        const driftThresholdId = resolveThresholdId(Math.floor(Number(factionRep.drift_cartel) || 0));
+        drawRow(
+          statusLeftX,
+          statusLeftY,
+          tr("hud.status.faction_perk", {
+            faction: tr("game.faction.helix_union"),
+            perk: helixThresholdId ? tr(`game.faction.threshold.${helixThresholdId}`) : tr("hud.status.faction_perk.none")
+          }),
+          "#9fe3ff",
+          "500 12px Trebuchet MS",
+          statusColW
+        );
+        statusLeftY += statusGap;
+        drawRow(
+          statusLeftX,
+          statusLeftY,
+          tr("hud.status.faction_perk", {
+            faction: tr("game.faction.drift_cartel"),
+            perk: driftThresholdId ? tr(`game.faction.threshold.${driftThresholdId}`) : tr("hud.status.faction_perk.none")
           }),
           "#9fe3ff",
           "500 12px Trebuchet MS",

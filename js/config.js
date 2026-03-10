@@ -672,6 +672,28 @@
       shopPriceInfluencePerRep100: 0.14,
       shopPenaltyInfluencePerRep100: 0.06,
       blackMarketPriceMul: 1.22,
+      repGainSectorCapBase: 5,
+      repGainSectorCapStep: 1,
+      repGainDiminishStart: 20,
+      repGainDiminishMaxReduction: 0.7,
+      repThresholds: [
+        {
+          id: "strained",
+          minRep: -100,
+          maxRep: -20,
+          effects: { shopPriceMul: 1.08, creditsMul: 0.95, salvageMul: 0.94 }
+        },
+        {
+          id: "trusted",
+          minRep: 20,
+          effects: { shopPriceMul: 0.95, creditsMul: 1.06, salvageMul: 1.04 }
+        },
+        {
+          id: "ally",
+          minRep: 50,
+          effects: { shopPriceMul: 0.9, creditsMul: 1.12, salvageMul: 1.1 }
+        }
+      ],
       intelOptions: [
         {
           id: "balanced",
@@ -1098,7 +1120,8 @@
       { ok: Array.isArray(config.faction?.definitions) && config.faction.definitions.length >= 2, msg: "faction.definitions missing" },
       { ok: Number.isFinite(config.faction?.repMin) && Number.isFinite(config.faction?.repMax), msg: "faction reputation bounds missing" },
       { ok: Array.isArray(config.faction?.intelOptions) && config.faction.intelOptions.length >= 1, msg: "faction.intelOptions missing" },
-      { ok: Number.isFinite(config.faction?.blackMarketPriceMul) && config.faction.blackMarketPriceMul >= 1, msg: "faction.blackMarketPriceMul invalid" }
+      { ok: Number.isFinite(config.faction?.blackMarketPriceMul) && config.faction.blackMarketPriceMul >= 1, msg: "faction.blackMarketPriceMul invalid" },
+      { ok: Array.isArray(config.faction?.repThresholds) && config.faction.repThresholds.length >= 1, msg: "faction.repThresholds missing" }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {

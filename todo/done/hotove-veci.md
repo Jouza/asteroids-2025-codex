@@ -17,6 +17,12 @@
   - [x] Render + action mapovani aktualizovany o novou vendor vrstvu v SHOP & OPS
   - [x] Harness test overuje pricier black-market pricing oproti faction marketu
 
+- [x] Frakce a reputace (Phase 2) - thresholdy + anti-snowball
+  - [x] Reputation threshold tier efekty (`strained` / `trusted` / `ally`) napojene na reward/shop economy
+  - [x] Hangar status zobrazuje aktivni threshold perk pro obe frakce
+  - [x] Reputation gain anti-snowball: sector cap + diminishing returns pro pozitivni gain
+  - [x] Harness coverage pro threshold reward dopad a sektorovy rep gain cap
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

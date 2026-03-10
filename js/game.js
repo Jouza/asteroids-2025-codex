@@ -154,6 +154,7 @@
       progression: {
         flightModel: "arcade",
         runDifficultyId: "normal",
+        shopVendorId: "faction",
         loadout: {
           primaryId: "auto_cannon",
           secondaryId: "missile_burst",
@@ -331,6 +332,7 @@
         activeSets: [],
         setStatusText: tr("hud.no_active_set"),
         factions: createDefaultFactionProgression(),
+        factionRepGainTracker: {},
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
         identityStatusText: tr("hud.identity_unknown"),
@@ -420,6 +422,20 @@
       return defs.filter((entry) => entry && typeof entry.id === "string" && entry.id.length > 0);
     }
 
+    getFactionThresholdDefs() {
+      const defs = this.config.faction?.repThresholds;
+      if (!Array.isArray(defs) || !defs.length) return [];
+      return defs
+        .filter((entry) => entry && typeof entry.id === "string" && Number.isFinite(Number(entry.minRep)))
+        .map((entry) => ({
+          id: entry.id,
+          minRep: Math.floor(Number(entry.minRep)),
+          maxRep: Number.isFinite(Number(entry.maxRep)) ? Math.floor(Number(entry.maxRep)) : null,
+          effects: entry.effects && typeof entry.effects === "object" ? { ...entry.effects } : {}
+        }))
+        .sort((a, b) => a.minRep - b.minRep);
+    }
+
     sanitizeFactionIntelId(id) {
       const defs = this.getFactionIntelDefs();
       const fallback = defs.find((entry) => entry.id === "balanced")?.id || defs[0]?.id || "balanced";
@@ -503,16 +519,81 @@
       return String(number);
     }
 
+    getFactionSectorRepGainCap() {
+      const base = Math.max(0, Math.floor(Number(this.config.faction?.repGainSectorCapBase) || 5));
+      const step = Math.max(0, Math.floor(Number(this.config.faction?.repGainSectorCapStep) || 1));
+      return base + Math.max(0, this.model.sector - 1) * step;
+    }
+
+    getFactionRepGainTrackerEntry(factionId) {
+      this.model.factionRepGainTracker =
+        this.model.factionRepGainTracker && typeof this.model.factionRepGainTracker === "object"
+          ? this.model.factionRepGainTracker
+          : {};
+      const currentSector = Math.max(1, Math.floor(Number(this.model.sector) || 1));
+      const existing = this.model.factionRepGainTracker[factionId];
+      if (!existing || existing.sector !== currentSector) {
+        this.model.factionRepGainTracker[factionId] = { sector: currentSector, gain: 0 };
+      }
+      return this.model.factionRepGainTracker[factionId];
+    }
+
+    getTunedPositiveFactionGain(factionId, delta) {
+      const raw = Math.max(0, Math.floor(Number(delta) || 0));
+      if (raw <= 0) return 0;
+      const rep = this.getFactionReputation(factionId);
+      const diminishStart = Math.floor(Number(this.config.faction?.repGainDiminishStart) || 20);
+      const diminishMaxReduction = this.clamp(Number(this.config.faction?.repGainDiminishMaxReduction) || 0.7, 0, 0.95);
+      let tuned = raw;
+      if (rep >= diminishStart) {
+        const bounds = this.getFactionRepBounds();
+        const span = Math.max(1, bounds.max - diminishStart);
+        const progress = this.clamp((rep - diminishStart) / span, 0, 1);
+        const reduction = progress * diminishMaxReduction;
+        tuned = Math.max(1, Math.round(raw * (1 - reduction)));
+      }
+      const cap = this.getFactionSectorRepGainCap();
+      if (cap <= 0) return 0;
+      const tracker = this.getFactionRepGainTrackerEntry(factionId);
+      const remaining = Math.max(0, cap - Math.max(0, Math.floor(Number(tracker.gain) || 0)));
+      if (remaining <= 0) return 0;
+      return Math.min(tuned, remaining);
+    }
+
+    recordPositiveFactionGain(factionId, gain) {
+      const applied = Math.max(0, Math.floor(Number(gain) || 0));
+      if (applied <= 0) return;
+      const tracker = this.getFactionRepGainTrackerEntry(factionId);
+      tracker.gain = Math.max(0, Math.floor(Number(tracker.gain) || 0)) + applied;
+    }
+
+    getFactionThresholdProfile(factionId = this.model.currentMission?.biomeFactionId || null) {
+      if (!factionId) return null;
+      const rep = this.getFactionReputation(factionId);
+      const defs = this.getFactionThresholdDefs();
+      let active = null;
+      for (const tier of defs) {
+        if (rep < tier.minRep) continue;
+        if (Number.isFinite(tier.maxRep) && rep > tier.maxRep) continue;
+        active = tier;
+      }
+      return active;
+    }
+
     addFactionReputation(factionId, delta, options = {}) {
       const defs = this.getFactionDefs();
       if (!defs.some((entry) => entry.id === factionId)) return 0;
-      const deltaInt = Math.floor(Number(delta) || 0);
+      let deltaInt = Math.floor(Number(delta) || 0);
+      if (deltaInt > 0 && options.applyGainTuning !== false) {
+        deltaInt = this.getTunedPositiveFactionGain(factionId, deltaInt);
+      }
       if (deltaInt === 0) return 0;
       const bounds = this.getFactionRepBounds();
       const before = this.getFactionReputation(factionId);
       const after = this.clamp(before + deltaInt, bounds.min, bounds.max);
       const applied = after - before;
       if (applied === 0) return 0;
+      if (applied > 0 && options.applyGainTuning !== false) this.recordPositiveFactionGain(factionId, applied);
 
       this.model.factions = this.model.factions && typeof this.model.factions === "object" ? this.model.factions : {};
       this.model.factions[factionId] = after;
@@ -584,9 +665,12 @@
       const influence = this.clamp(rep / 100, -1, 1);
       const creditsScale = Number(this.config.faction?.rewardCreditsPerRep100) || 0;
       const salvageScale = Number(this.config.faction?.rewardSalvagePerRep100) || 0;
+      const threshold = this.getFactionThresholdProfile(factionId);
+      const thresholdCreditsMul = this.clamp(Number(threshold?.effects?.creditsMul) || 1, 0.7, 1.4);
+      const thresholdSalvageMul = this.clamp(Number(threshold?.effects?.salvageMul) || 1, 0.7, 1.4);
       return {
-        creditsMul: this.clamp(1 + influence * creditsScale, 0.75, 1.35),
-        salvageMul: this.clamp(1 + influence * salvageScale, 0.75, 1.35)
+        creditsMul: this.clamp((1 + influence * creditsScale) * thresholdCreditsMul, 0.65, 1.45),
+        salvageMul: this.clamp((1 + influence * salvageScale) * thresholdSalvageMul, 0.65, 1.45)
       };
     }
 
@@ -638,6 +722,12 @@
           if (itemId === "repair") multiplier *= 1 - influence * priceScale;
           else if (itemId === "fire_rate" || itemId === "magazine") multiplier *= 1 + influence * penaltyScale;
         }
+      }
+      const dominant = this.getDominantFactionState();
+      if (dominant?.id) {
+        const threshold = this.getFactionThresholdProfile(dominant.id);
+        const thresholdShopMul = this.clamp(Number(threshold?.effects?.shopPriceMul) || 1, 0.75, 1.3);
+        multiplier *= thresholdShopMul;
       }
       const clampedMultiplier = this.clamp(multiplier, 0.7, 1.4);
       return Math.max(1, Math.round((Number(baseCost) || 0) * clampedMultiplier));
@@ -724,6 +814,7 @@
       safe.progression.runDifficultyId = difficultyDefs.some((entry) => entry.id === requestedDifficultyId)
         ? requestedDifficultyId
         : fallbackDifficultyId;
+      safe.progression.shopVendorId = this.sanitizeHangarVendorId(progression.shopVendorId);
       safe.progression.factionIntelId = this.sanitizeFactionIntelId(progression.factionIntelId);
 
       const validPrimary = this.config.loadout.primary[progression.loadout?.primaryId];
@@ -866,6 +957,7 @@
       return {
         flightModel: this.model.flightModel,
         runDifficultyId: this.model.runDifficultyId,
+        shopVendorId: this.model.hangar.shopVendorId,
         factionIntelId: this.model.hangar.factionIntelId,
         loadout: {
           primaryId: this.model.loadout.primaryId,
@@ -891,6 +983,7 @@
       this.model.runDifficultyId = difficultyDefs.some((entry) => entry.id === progression.runDifficultyId)
         ? progression.runDifficultyId
         : fallbackDifficultyId;
+      this.model.hangar.shopVendorId = this.sanitizeHangarVendorId(progression.shopVendorId);
       this.model.hangar.factionIntelId = this.sanitizeFactionIntelId(progression.factionIntelId);
       this.model.loadout.primaryId = progression.loadout.primaryId;
       this.model.loadout.secondaryId = progression.loadout.secondaryId;
@@ -1051,11 +1144,13 @@
       const selectedIdentity = deepClone(this.model.identity || profile.identity || defaults.identity);
       const selectedFlightModel = this.model.flightModel === "sim_lite" ? "sim_lite" : "arcade";
       const selectedDifficultyId = this.model.runDifficultyId || profile.runDifficultyId || defaults.runDifficultyId;
+      const selectedShopVendorId = this.sanitizeHangarVendorId(this.model.hangar?.shopVendorId || profile.shopVendorId);
       const selectedIntelId = this.sanitizeFactionIntelId(this.model.hangar?.factionIntelId || profile.factionIntelId);
       const selectedFactions = deepClone(this.model.factions || profile.factions || defaults.factions);
       const unlocks = deepClone(profile.unlocks || defaults.unlocks);
       profile.flightModel = selectedFlightModel;
       profile.runDifficultyId = selectedDifficultyId;
+      profile.shopVendorId = selectedShopVendorId;
       profile.factionIntelId = selectedIntelId;
       profile.loadout = deepClone(defaults.loadout);
       profile.unlocks = unlocks;
@@ -1211,6 +1306,7 @@
       this.model.hangar.navSection = "shop";
       this.model.hangar.shopIndex = 0;
       this.model.hangar.pilotCursor = 0;
+      this.model.factionRepGainTracker = {};
       this.model.overlaySettingsRow = 0;
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;

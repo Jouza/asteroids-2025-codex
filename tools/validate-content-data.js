@@ -61,6 +61,22 @@ function validateContentData(contentData, issues) {
       assert(Number.isFinite(Number(intel.salvageMul)) && Number(intel.salvageMul) > 0, `intel ${intel.id} salvageMul must be > 0`, issues);
     }
   }
+  const repThresholds = contentData.faction?.repThresholds;
+  assert(Array.isArray(repThresholds) && repThresholds.length >= 1, "faction.repThresholds must be non-empty", issues);
+  if (Array.isArray(repThresholds)) {
+    for (const [index, tier] of repThresholds.entries()) {
+      assert(typeof tier.id === "string" && tier.id.length > 0, `faction.repThresholds[${index}] id is required`, issues);
+      assert(Number.isFinite(Number(tier.minRep)), `threshold ${tier.id} minRep must be numeric`, issues);
+      if (tier.maxRep != null) {
+        assert(Number.isFinite(Number(tier.maxRep)), `threshold ${tier.id} maxRep must be numeric when provided`, issues);
+      }
+      const effects = tier.effects || {};
+      for (const key of ["shopPriceMul", "creditsMul", "salvageMul"]) {
+        if (effects[key] == null) continue;
+        assert(Number.isFinite(Number(effects[key])) && Number(effects[key]) > 0, `threshold ${tier.id} ${key} must be > 0`, issues);
+      }
+    }
+  }
 
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);

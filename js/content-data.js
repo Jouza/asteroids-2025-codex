@@ -26,6 +26,28 @@
       shopPriceInfluencePerRep100: 0.14,
       shopPenaltyInfluencePerRep100: 0.06,
       blackMarketPriceMul: 1.22,
+      repGainSectorCapBase: 5,
+      repGainSectorCapStep: 1,
+      repGainDiminishStart: 20,
+      repGainDiminishMaxReduction: 0.7,
+      repThresholds: [
+        {
+          id: "strained",
+          minRep: -100,
+          maxRep: -20,
+          effects: { shopPriceMul: 1.08, creditsMul: 0.95, salvageMul: 0.94 }
+        },
+        {
+          id: "trusted",
+          minRep: 20,
+          effects: { shopPriceMul: 0.95, creditsMul: 1.06, salvageMul: 1.04 }
+        },
+        {
+          id: "ally",
+          minRep: 50,
+          effects: { shopPriceMul: 0.9, creditsMul: 1.12, salvageMul: 1.1 }
+        }
+      ],
       intelOptions: [
         {
           id: "balanced",
