@@ -176,6 +176,10 @@ function runTests() {
         Number.isFinite(gameA.model.currentMission.visualFx?.layerSeedB),
       "Mission visualFx should include stable layer seeds"
     );
+    gameA.model.currentMission.visualFx.beatTtl = 0;
+    gameA.model.currentMission.visualFx.beatMaxTtl = 0;
+    gameA.model.currentMission.visualFx.beatIntensity = 0;
+    gameA.model.currentMission.visualFx.beatKind = "";
     gameA.model.missionTimer = 0;
     gameA.model.asteroids = [
       {
@@ -774,6 +778,116 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(8787);
+    const biomeIds = (gameA.config.missionDirector?.biomes || []).map((biome) => biome.id);
+    assert(biomeIds.includes("neon_nebula"), "Mission director should include neon_nebula biome");
+    assert(biomeIds.includes("dust_expanse"), "Mission director should include dust_expanse biome");
+    const neonProfile = gameA.missionSystem.getBiomeVisualProfile("neon_nebula");
+    const dustProfile = gameA.missionSystem.getBiomeVisualProfile("dust_expanse");
+    assert(neonProfile.ambientCadence > 1, "Neon biome profile should have high cadence identity");
+    assert(dustProfile.debrisDensity > 1, "Dust biome profile should have high debris density identity");
+  });
+
+  tests.push(() => {
+    gameA.startGame(8888);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    ship.energy = ship.energyMax;
+    gameA.model.shootTimer = 0;
+    gameA.model.secondaryCooldown = 0;
+    gameA.model.utilityCooldown = 0;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-neon",
+          type: "neon_arc_field",
+          x: 480,
+          y: 360,
+          radius: 110,
+          tickSeconds: 0.45,
+          tickDamage: 8,
+          energyDrainPerSecond: 10,
+          cooldownPressurePerSecond: 0.5,
+          tickTimer: 0.1,
+          phase: 0.4,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("neon_arc_field"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    const energyBefore = ship.energy;
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 30);
+    const hazard = gameA.model.currentMission.biomeHazards[0];
+    assert(ship.energy < energyBefore, "Neon arc field should drain player energy");
+    assert(gameA.model.secondaryCooldown > 0, "Neon arc field should add cooldown pressure");
+    assert(hazard.telegraphActive && hazard.telegraphKind === "pre_tick", "Neon arc field should use pre_tick telegraph");
+  });
+
+  tests.push(() => {
+    gameA.startGame(8989);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    ship.vx = 120;
+    ship.vy = 0;
+    ship.shield = ship.shieldMax;
+    ship.hull = ship.hullMax;
+    ship.invulnMs = 0;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-dust",
+          type: "dust_squall",
+          x: 480,
+          y: 360,
+          radius: 118,
+          tickSeconds: 0.7,
+          tickDamage: 10,
+          slowMul: 0.97,
+          accuracyDragMul: 0.985,
+          tickTimer: 0.01,
+          phase: 0.6,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("dust_squall"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    const speedBefore = Math.hypot(ship.vx, ship.vy);
+    const shieldBefore = ship.shield;
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 30);
+    const speedAfter = Math.hypot(ship.vx, ship.vy);
+    const hazard = gameA.model.currentMission.biomeHazards[0];
+    assert(speedAfter < speedBefore, "Dust squall should reduce ship velocity");
+    assert(ship.shield < shieldBefore || ship.hull < ship.hullMax, "Dust squall should apply collision chip damage tick");
+    assert(hazard.telegraphActive && hazard.telegraphKind === "pre_tick", "Dust squall should use pre_tick telegraph");
+  });
+
+  tests.push(() => {
     gameA.startGame(9191);
     gameA.model.ship.invulnMs = 0;
     const before = gameA.model.hitstopSeconds;
@@ -1354,6 +1468,7 @@ function runTests() {
     gameA.startGame(64646);
     const originalSlots = gameA.config.mission.bountyBoard.slots;
     gameA.config.mission.bountyBoard.slots = 1;
+    gameA.model.currentMission = null;
     gameA.model.factions.helix_union = 70;
     gameA.model.factions.drift_cartel = -20;
     gameA.model.contrabandHeat = 0;

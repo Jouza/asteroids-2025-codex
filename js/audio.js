@@ -15,7 +15,9 @@
         refinery: { warningSoundId: "warning_refinery", stinger: { a: 240, b: 310, c: 460 } },
         ion_field: { warningSoundId: "warning_ion_field", stinger: { a: 320, b: 420, c: 620 } },
         shattered_relay: { warningSoundId: "warning_shattered_relay", stinger: { a: 220, b: 340, c: 510 } },
-        cryo_ring: { warningSoundId: "warning_cryo_ring", stinger: { a: 170, b: 240, c: 300 } }
+        cryo_ring: { warningSoundId: "warning_cryo_ring", stinger: { a: 170, b: 240, c: 300 } },
+        neon_nebula: { warningSoundId: "warning_neon_nebula", stinger: { a: 280, b: 460, c: 700 } },
+        dust_expanse: { warningSoundId: "warning_dust_expanse", stinger: { a: 160, b: 220, c: 300 } }
       };
       this.soundDefs = {
         ui_start: { priority: 4, cooldownMs: 120 },
@@ -36,6 +38,8 @@
         warning_ion_field: { priority: 5, cooldownMs: 280, cooldownAlias: "warning" },
         warning_shattered_relay: { priority: 5, cooldownMs: 280, cooldownAlias: "warning" },
         warning_cryo_ring: { priority: 5, cooldownMs: 280, cooldownAlias: "warning" },
+        warning_neon_nebula: { priority: 5, cooldownMs: 280, cooldownAlias: "warning" },
+        warning_dust_expanse: { priority: 5, cooldownMs: 280, cooldownAlias: "warning" },
         asteroid_pop: { priority: 1, cooldownMs: 35 },
         ufo_pop: { priority: 2, cooldownMs: 55 },
         boss_pop: { priority: 5, cooldownMs: 250 }
@@ -162,6 +166,8 @@
       else if (resolvedSoundId === "warning_ion_field") this.playTone(startAt, 0.18, 700, 540, "triangle", 0.053, def.priority);
       else if (resolvedSoundId === "warning_shattered_relay") this.playTone(startAt, 0.17, 540, 350, "square", 0.055, def.priority);
       else if (resolvedSoundId === "warning_cryo_ring") this.playTone(startAt, 0.19, 300, 220, "triangle", 0.051, def.priority);
+      else if (resolvedSoundId === "warning_neon_nebula") this.playTone(startAt, 0.18, 760, 520, "sawtooth", 0.054, def.priority);
+      else if (resolvedSoundId === "warning_dust_expanse") this.playTone(startAt, 0.2, 260, 180, "triangle", 0.052, def.priority);
       else if (resolvedSoundId === "asteroid_pop") this.playNoise(startAt, 0.08, 720, 0.055, def.priority);
       else if (resolvedSoundId === "ufo_pop") this.playTone(startAt, 0.13, 260, 80, "sawtooth", 0.07, def.priority);
       else if (resolvedSoundId === "boss_pop") {

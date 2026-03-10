@@ -358,6 +358,9 @@
           angularDampingMul: hazardDef.angularDampingMul ?? 1,
           coolingPerSecond: hazardDef.coolingPerSecond ?? 0,
           dashCooldownPerSecond: hazardDef.dashCooldownPerSecond ?? 0,
+          energyDrainPerSecond: hazardDef.energyDrainPerSecond ?? 0,
+          cooldownPressurePerSecond: hazardDef.cooldownPressurePerSecond ?? 0,
+          accuracyDragMul: hazardDef.accuracyDragMul ?? 1,
           tickTimer: 0,
           phase: g.rng() * Math.PI * 2,
           pulseActive: false,
@@ -859,6 +862,38 @@
           ship.angularVelocity *= Math.pow(hazard.angularDampingMul ?? 1, dt * 60);
           ship.heat = Math.max(0, ship.heat - Math.max(0, hazard.coolingPerSecond || 0) * dt);
           g.model.dashCooldown += Math.max(0, hazard.dashCooldownPerSecond || 0) * dt;
+        } else if (hazard.type === "neon_arc_field") {
+          ship.energy = Math.max(0, ship.energy - Math.max(0, hazard.energyDrainPerSecond || 0) * hazardMul * dt);
+          const cooldownPressure = Math.max(0, hazard.cooldownPressurePerSecond || 0) * hazardMul * dt;
+          g.model.shootTimer += cooldownPressure;
+          g.model.secondaryCooldown += cooldownPressure * 0.7;
+          g.model.utilityCooldown += cooldownPressure * 0.55;
+          g.model.dashCooldown += cooldownPressure * 0.4;
+          if (hazard.tickTimer <= 0) {
+            g.applyDamageToShip("enemy_bullet_support", {
+              baseDamage: hazard.tickDamage * hazardMul,
+              damageType: "plasma",
+              critChance: 0,
+              critMultiplier: 1
+            });
+            hazard.tickTimer = hazard.tickSeconds;
+            hazard.lastTickAt = g.model.runtimeSeconds;
+          }
+        } else if (hazard.type === "dust_squall") {
+          const slowFactor = Math.pow(hazard.slowMul ?? 1, dt * 60);
+          ship.vx *= slowFactor;
+          ship.vy *= slowFactor;
+          ship.angularVelocity *= Math.pow(hazard.accuracyDragMul ?? 1, dt * 60);
+          if (hazard.tickTimer <= 0) {
+            g.applyDamageToShip("asteroid_collision", {
+              baseDamage: hazard.tickDamage * hazardMul,
+              damageType: "collision",
+              critChance: 0,
+              critMultiplier: 1
+            });
+            hazard.tickTimer = hazard.tickSeconds;
+            hazard.lastTickAt = g.model.runtimeSeconds;
+          }
         }
       }
     }

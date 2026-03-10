@@ -225,6 +225,8 @@
       "mission.event.capacitor_surge": "Capacitor Surge",
       "mission.event.relay_hack": "Relay Hack",
       "mission.event.cryo_focus": "Cryo Focus",
+      "mission.event.neon_flux": "Neon Flux",
+      "mission.event.salvage_drift": "Salvage Drift",
       "mission.event.bonus.credits": "+{value} cr",
       "mission.event.bonus.salvage": "+{value} salvage",
       "mission.event.bonus.energy": "{value} energy",
@@ -495,6 +497,18 @@
         "Frozen ring with shear currents. Usually includes <strong>Cryo Shear</strong>. Mini event: <strong>Cryo Focus</strong> drops heat and eases cooldowns.",
       "help.card.biome_cryo_ring.impact":
         "<strong>Impact:</strong> mobility and turning are softer in-zone, but heat pressure is lower.",
+      "help.card.biome_neon_nebula.name": "Neon Nebula",
+      "help.card.biome_neon_nebula.tag": "Biome",
+      "help.card.biome_neon_nebula.line":
+        "Charged luminous cloud with unstable arc pockets. Usually includes <strong>Neon Arc Field</strong>. Mini event: <strong>Neon Flux</strong> boosts energy and eases cooldowns.",
+      "help.card.biome_neon_nebula.impact":
+        "<strong>Impact:</strong> cooldown rhythm disruption and higher mid-range pressure windows.",
+      "help.card.biome_dust_expanse.name": "Dust Expanse",
+      "help.card.biome_dust_expanse.tag": "Biome",
+      "help.card.biome_dust_expanse.line":
+        "Thick particulate lane with drifting squalls. Usually includes <strong>Dust Squall</strong>. Mini event: <strong>Salvage Drift</strong> grants salvage and credits.",
+      "help.card.biome_dust_expanse.impact":
+        "<strong>Impact:</strong> lower mobility precision with steady chip-risk and economy upside.",
       "help.card.pilot_xp.name": "XP and Level",
       "help.card.pilot_xp.tag": "Pilot progression",
       "help.card.pilot_xp.line":
@@ -632,6 +646,18 @@
         "Cold shear field that slows motion response and makes dash recovery slightly longer, while cooling heat.",
       "help.card.hazard_cryo_shear_zone.impact":
         "<strong>Impact:</strong> lower mobility but improved thermal management for sustained firing.",
+      "help.card.hazard_neon_arc_field.name": "Neon Arc Field",
+      "help.card.hazard_neon_arc_field.tag": "Biome Hazard (Neon Nebula)",
+      "help.card.hazard_neon_arc_field.line":
+        "Arc-charged zone that drains energy and adds cooldown pressure, with periodic plasma tick damage.",
+      "help.card.hazard_neon_arc_field.impact":
+        "<strong>Impact:</strong> burst cadence collapse if you overstay inside active arc lanes.",
+      "help.card.hazard_dust_squall.name": "Dust Squall",
+      "help.card.hazard_dust_squall.tag": "Biome Hazard (Dust Expanse)",
+      "help.card.hazard_dust_squall.line":
+        "Dense particulate vortex that drags movement response and applies periodic collision chip damage.",
+      "help.card.hazard_dust_squall.impact":
+        "<strong>Impact:</strong> reduced control precision and sustained attrition in packed fights.",
       "help.card.hazard_readability_telegraph.name": "Hazard Readability 2.0",
       "help.card.hazard_readability_telegraph.tag": "Combat telegraph",
       "help.card.hazard_readability_telegraph.line":

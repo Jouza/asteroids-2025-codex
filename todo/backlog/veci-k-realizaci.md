@@ -14,6 +14,7 @@
 - [ ] Atmosphere follow-up (post Raw Space v1)
   - [ ] Lokalni slider/preset pro intenzitu ambient VFX (Low/Default/High) pro slabsi GPU
   - [ ] Dalsi "event beat" varianty podle hazard typu (unikatni signature pulse)
+  - [ ] Biome expansion follow-up (8 -> 10) s dalsimi odlisnymi hazard archetypy
 
 - [ ] Hangar visual/gameplay UX follow-up
   - [ ] Tactical status viewport/scroll pro nizsi vysky (stejny princip jako SHOP & OPS)

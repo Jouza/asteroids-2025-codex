@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Biome expansion to 8 (Neon + Dust)
+  - [x] Pridany biomy `neon_nebula` a `dust_expanse` do mission directoru, vcetne vyvazeni biome weightu na soucet 1.0
+  - [x] Oba biomy maji plny pack: mini-event, audio warning/stinger profil a visual profil (`biomeVisuals`)
+  - [x] Nove biome hazardy `neon_arc_field` a `dust_squall` s vlastnim mission runtime chovanim
+  - [x] Render pass doplnen o hazard vizualy/warning labely/status labely pro nove hazard typy
+  - [x] Help/i18n coverage doplnena o nove biome/hazard karty a mini-event nazvy
+  - [x] Harness testy doplneny pro nove biome IDs a hazard behavior/telegraph scenare
+
 - [x] Combat Readability / Telegraph 2.0 (plny balik)
   - [x] Data-driven `missionDirector.hazardTelegraphs` profil (pre-tick window, pulse color/alpha, ring/line boost, priority)
   - [x] Hazard runtime telegraph metadata (`telegraphActive`, `telegraphRatio`, `telegraphKind`, `lastTickAt`) v mission update loopu

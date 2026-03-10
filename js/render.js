@@ -1138,6 +1138,38 @@
           ctx.fillRect(0, y, config.canvas.width, 18);
         }
         ctx.restore();
+      } else if (mission.biomeId === "neon_nebula") {
+        ctx.fillStyle = "rgba(114,76,172,0.09)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < Math.max(3, Math.round(5 * debrisDensity)); i += 1) {
+          const y = 86 + i * 124;
+          const alpha = 0.18 + Math.sin(missionTime * 2.4 * cadenceMul + i * 1.2) * 0.08;
+          ctx.strokeStyle = `rgba(208,168,255,${Math.max(0.08, alpha)})`;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          for (let x = 0; x <= config.canvas.width; x += 42) {
+            const ny = y + Math.sin(x * 0.018 + missionTime * 3.6 * cadenceMul + i) * 9;
+            if (x === 0) ctx.moveTo(x, ny);
+            else ctx.lineTo(x, ny);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (mission.biomeId === "dust_expanse") {
+        ctx.fillStyle = "rgba(136,108,74,0.09)";
+        ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+        ctx.save();
+        for (let i = 0; i < Math.max(4, Math.round(6 * debrisDensity)); i += 1) {
+          const y = 94 + i * 106 + Math.sin(missionTime * 1.1 * cadenceMul + i) * 6;
+          const band = ctx.createLinearGradient(0, y, config.canvas.width, y + 20);
+          band.addColorStop(0, "rgba(236,198,142,0)");
+          band.addColorStop(0.5, "rgba(236,198,142,0.15)");
+          band.addColorStop(1, "rgba(236,198,142,0)");
+          ctx.fillStyle = band;
+          ctx.fillRect(0, y, config.canvas.width, 20);
+        }
+        ctx.restore();
       }
 
       if ((effects.fogAlpha ?? 0) > 0) {
@@ -1187,6 +1219,8 @@
         const pulseRadius =
           hazard.type === "plasma_vent"
             ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16) * hazardBeatBoost * (1 + telegraphPulse * ringBoost)
+            : hazard.type === "dust_squall"
+              ? hazard.radius * (0.9 + Math.sin((hazard.phase ?? 0) * 2.1) * 0.1) * hazardBeatBoost
             : hazard.radius * hazardBeatBoost;
         ctx.save();
         if (hazard.type === "debris_field") {
@@ -1266,6 +1300,42 @@
           ctx.moveTo(hazard.x, hazard.y - pulseRadius * 0.6);
           ctx.lineTo(hazard.x, hazard.y + pulseRadius * 0.6);
           ctx.stroke();
+        } else if (hazard.type === "neon_arc_field") {
+          const arcPulse = 0.2 + Math.sin((hazard.phase ?? 0) * 3.4) * 0.12;
+          ctx.strokeStyle = `rgba(206,166,255,${Math.max(0.1, 0.26 + arcPulse)})`;
+          ctx.fillStyle = `rgba(138,92,232,${Math.max(0.08, 0.12 + arcPulse * 0.3)})`;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(230,198,255,0.52)";
+          for (let i = 0; i < 4; i += 1) {
+            const angleA = (i / 4) * Math.PI * 2 + (hazard.phase ?? 0) * 1.6;
+            const angleB = angleA + 0.46 + Math.sin((hazard.phase ?? 0) * 2.2 + i) * 0.14;
+            const r = pulseRadius * (0.36 + i * 0.12);
+            ctx.beginPath();
+            ctx.arc(hazard.x, hazard.y, r, angleA, angleB);
+            ctx.stroke();
+          }
+        } else if (hazard.type === "dust_squall") {
+          const dustPulse = 0.18 + Math.sin((hazard.phase ?? 0) * 2.6) * 0.08;
+          ctx.strokeStyle = `rgba(226,194,142,${Math.max(0.1, 0.24 + dustPulse)})`;
+          ctx.fillStyle = `rgba(140,112,78,${Math.max(0.06, 0.12 + dustPulse * 0.2)})`;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(hazard.x, hazard.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(244,214,166,0.32)";
+          for (let i = 0; i < 5; i += 1) {
+            const swirl = (hazard.phase ?? 0) * 1.3 + i * 1.1;
+            const sx = hazard.x + Math.cos(swirl) * pulseRadius * (0.28 + i * 0.1);
+            const sy = hazard.y + Math.sin(swirl) * pulseRadius * (0.28 + i * 0.1);
+            ctx.beginPath();
+            ctx.arc(sx, sy, 4 + i * 1.2, swirl, swirl + Math.PI * 0.66);
+            ctx.stroke();
+          }
         }
         if (hazard.telegraphActive) {
           const teleAlpha = Math.max(0.14, Math.min(0.62, (Number(telegraphCfg.pulseAlpha) || 0.22) * (0.6 + telegraphPulse * 0.9)));
@@ -1304,6 +1374,10 @@
               ? "RELAY JAMMER"
               : type === "cryo_shear_zone"
                 ? "CRYO SHEAR"
+                : type === "neon_arc_field"
+                  ? "NEON ARC"
+                  : type === "dust_squall"
+                    ? "DUST SQUALL"
                 : "HAZARD";
       for (const hazard of biomeHazards) {
         if (!hazard.telegraphActive) continue;
@@ -1322,6 +1396,8 @@
         warnings.push("RELAY JAMMER");
       }
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "cryo_shear_zone")) warnings.push("CRYO SHEAR");
+      if (biomeHazards.some((hazard) => hazard.active && hazard.type === "neon_arc_field")) warnings.push("NEON ARC");
+      if (biomeHazards.some((hazard) => hazard.active && hazard.type === "dust_squall")) warnings.push("DUST SQUALL");
       if (model.miniBoss?.phaseAnnounceTimer > 0) warnings.push(`BOSS PHASE ${model.miniBoss.phaseIndex + 1}`);
       if (model.uiAlerts?.lowHull) warnings.push("HULL CRITICAL");
       if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");
@@ -1364,6 +1440,10 @@
               ? "Relay Jammer"
               : type === "cryo_shear_zone"
                 ? "Cryo Shear"
+                : type === "neon_arc_field"
+                  ? "Neon Arc"
+                  : type === "dust_squall"
+                    ? "Dust Squall"
                 : type;
       const activeHazardText = activeHazards.length
         ? activeHazards.map((hazard) => hazardLabel(hazard.type)).join(", ")

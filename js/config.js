@@ -1327,6 +1327,82 @@
             ttlMin: 0.26,
             ttlMax: 0.52
           }
+        },
+        neon_nebula: {
+          ambientCadence: 1.28,
+          debrisDensity: 0.96,
+          fogPulse: 0.18,
+          beatColor: "196,154,255",
+          parallaxLayers: [
+            { speed: 0.16, alpha: 0.09, size: 1.5, driftX: 1.06, driftY: 0.44 },
+            { speed: 0.28, alpha: 0.13, size: 2.1, driftX: 1.18, driftY: 0.56 }
+          ],
+          deepSpace: {
+            nebulaBands: 3,
+            nebulaAlpha: 0.12,
+            dustBands: 2,
+            vignetteTint: "28,12,46"
+          },
+          warScars: {
+            density: 1.08,
+            streakLenMin: 20,
+            streakLenMax: 50,
+            silhouetteChance: 0.16,
+            flickerCadence: 1.9
+          },
+          foregroundDust: {
+            density: 0.9,
+            speedMul: 1.18,
+            alpha: 0.22,
+            sizeMin: 0.8,
+            sizeMax: 2.2
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 3.2,
+            minIntensity: 0.24,
+            maxIntensity: 0.58,
+            ttlMin: 0.34,
+            ttlMax: 0.86
+          }
+        },
+        dust_expanse: {
+          ambientCadence: 0.94,
+          debrisDensity: 1.32,
+          fogPulse: 0.1,
+          beatColor: "226,198,148",
+          parallaxLayers: [
+            { speed: 0.1, alpha: 0.1, size: 1.7, driftX: 0.88, driftY: 0.28 },
+            { speed: 0.18, alpha: 0.13, size: 2.5, driftX: 0.96, driftY: 0.34 }
+          ],
+          deepSpace: {
+            nebulaBands: 2,
+            nebulaAlpha: 0.09,
+            dustBands: 3,
+            vignetteTint: "32,22,12"
+          },
+          warScars: {
+            density: 1.02,
+            streakLenMin: 22,
+            streakLenMax: 56,
+            silhouetteChance: 0.26,
+            flickerCadence: 0.9
+          },
+          foregroundDust: {
+            density: 1.36,
+            speedMul: 0.86,
+            alpha: 0.24,
+            sizeMin: 1,
+            sizeMax: 2.9
+          },
+          cinematicFlashes: {
+            enabled: true,
+            chancePerMinute: 1.6,
+            minIntensity: 0.16,
+            maxIntensity: 0.34,
+            ttlMin: 0.28,
+            ttlMax: 0.62
+          }
         }
       },
       hazardTelegraphs: {
@@ -1369,13 +1445,29 @@
           ringBoost: 0.24,
           lineBoost: 0.2,
           warningPriority: 2
+        },
+        neon_arc_field: {
+          preTickWindowSec: 0.22,
+          pulseColor: "206,166,255",
+          pulseAlpha: 0.24,
+          ringBoost: 0.3,
+          lineBoost: 0.24,
+          warningPriority: 3
+        },
+        dust_squall: {
+          preTickWindowSec: 0.28,
+          pulseColor: "244,206,152",
+          pulseAlpha: 0.22,
+          ringBoost: 0.22,
+          lineBoost: 0.2,
+          warningPriority: 2
         }
       },
       biomes: [
         {
           id: "belt",
           label: "Belt Fringe",
-          weight: 0.22,
+          weight: 0.176,
           audio: {
             warningSoundId: "warning_belt",
             stinger: { a: 260, b: 390, c: 520 }
@@ -1388,7 +1480,7 @@
         {
           id: "graveyard",
           label: "Wreck Graveyard",
-          weight: 0.2,
+          weight: 0.16,
           audio: {
             warningSoundId: "warning_graveyard",
             stinger: { a: 190, b: 250, c: 330 }
@@ -1411,7 +1503,7 @@
         {
           id: "refinery",
           label: "Refinery Complex",
-          weight: 0.2,
+          weight: 0.16,
           audio: {
             warningSoundId: "warning_refinery",
             stinger: { a: 240, b: 310, c: 460 }
@@ -1435,7 +1527,7 @@
         {
           id: "ion_field",
           label: "Ion Field",
-          weight: 0.14,
+          weight: 0.112,
           audio: {
             warningSoundId: "warning_ion_field",
             stinger: { a: 320, b: 420, c: 620 }
@@ -1449,7 +1541,7 @@
         {
           id: "shattered_relay",
           label: "Shattered Relay",
-          weight: 0.12,
+          weight: 0.096,
           audio: {
             warningSoundId: "warning_shattered_relay",
             stinger: { a: 220, b: 340, c: 510 }
@@ -1476,7 +1568,7 @@
         {
           id: "cryo_ring",
           label: "Cryo Ring",
-          weight: 0.12,
+          weight: 0.096,
           audio: {
             warningSoundId: "warning_cryo_ring",
             stinger: { a: 170, b: 240, c: 300 }
@@ -1496,6 +1588,56 @@
             angularDampingMul: 0.95,
             coolingPerSecond: 18,
             dashCooldownPerSecond: 0.2
+          }
+        },
+        {
+          id: "neon_nebula",
+          label: "Neon Nebula",
+          weight: 0.1,
+          audio: {
+            warningSoundId: "warning_neon_nebula",
+            stinger: { a: 280, b: 460, c: 700 }
+          },
+          miniEvent: {
+            id: "neon_flux",
+            energy: 14,
+            cooldownDelta: -0.7
+          },
+          hazards: {
+            type: "neon_arc_field",
+            minCount: 1,
+            maxCount: 2,
+            radiusMin: 88,
+            radiusMax: 126,
+            tickSeconds: 0.45,
+            tickDamage: 8,
+            energyDrainPerSecond: 9,
+            cooldownPressurePerSecond: 0.52
+          }
+        },
+        {
+          id: "dust_expanse",
+          label: "Dust Expanse",
+          weight: 0.1,
+          audio: {
+            warningSoundId: "warning_dust_expanse",
+            stinger: { a: 160, b: 220, c: 300 }
+          },
+          miniEvent: {
+            id: "salvage_drift",
+            salvageParts: 2,
+            credits: 10
+          },
+          hazards: {
+            type: "dust_squall",
+            minCount: 2,
+            maxCount: 3,
+            radiusMin: 92,
+            radiusMax: 132,
+            tickSeconds: 0.7,
+            tickDamage: 9,
+            slowMul: 0.98,
+            accuracyDragMul: 0.985
           }
         }
       ],
@@ -1628,6 +1770,12 @@
           !Array.isArray(config.missionDirector.biomeVisuals) &&
           typeof config.missionDirector.biomeVisuals.default === "object",
         msg: "missionDirector.biomeVisuals missing or invalid"
+      },
+      {
+        ok:
+          Array.isArray(config.missionDirector?.biomes) &&
+          config.missionDirector.biomes.length >= 8,
+        msg: "missionDirector.biomes must define at least 8 entries"
       },
       {
         ok:

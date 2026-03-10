@@ -330,14 +330,30 @@
         {
           id: "belt",
           label: "Belt Fringe",
-          weight: 0.3,
-          factionId: "helix_union"
+          weight: 0.176,
+          factionId: "helix_union",
+          audio: {
+            warningSoundId: "warning_belt",
+            stinger: { a: 260, b: 390, c: 520 }
+          },
+          miniEvent: {
+            id: "prospector_ping",
+            credits: 12
+          }
         },
         {
           id: "graveyard",
           label: "Wreck Graveyard",
-          weight: 0.28,
+          weight: 0.16,
           factionId: "drift_cartel",
+          audio: {
+            warningSoundId: "warning_graveyard",
+            stinger: { a: 190, b: 250, c: 330 }
+          },
+          miniEvent: {
+            id: "scrap_cache",
+            salvageParts: 3
+          },
           hazards: {
             type: "debris_field",
             minCount: 2,
@@ -352,8 +368,17 @@
         {
           id: "refinery",
           label: "Refinery Complex",
-          weight: 0.24,
+          weight: 0.16,
           factionId: "helix_union",
+          audio: {
+            warningSoundId: "warning_refinery",
+            stinger: { a: 240, b: 310, c: 460 }
+          },
+          miniEvent: {
+            id: "coolant_cache",
+            heat: -20,
+            shield: 10
+          },
           hazards: {
             type: "plasma_vent",
             minCount: 1,
@@ -368,8 +393,123 @@
         {
           id: "ion_field",
           label: "Ion Field",
-          weight: 0.18,
-          factionId: "drift_cartel"
+          weight: 0.112,
+          factionId: "drift_cartel",
+          audio: {
+            warningSoundId: "warning_ion_field",
+            stinger: { a: 320, b: 420, c: 620 }
+          },
+          miniEvent: {
+            id: "capacitor_surge",
+            energy: 16,
+            shield: 6
+          }
+        },
+        {
+          id: "shattered_relay",
+          label: "Shattered Relay",
+          weight: 0.096,
+          factionId: "drift_cartel",
+          audio: {
+            warningSoundId: "warning_shattered_relay",
+            stinger: { a: 220, b: 340, c: 510 }
+          },
+          miniEvent: {
+            id: "relay_hack",
+            cooldownDelta: -0.9
+          },
+          hazards: {
+            type: "relay_jammer_burst",
+            minCount: 1,
+            maxCount: 2,
+            radiusMin: 92,
+            radiusMax: 128,
+            tickSeconds: 0.3,
+            tickDamage: 6,
+            pulseCycleSeconds: 2.6,
+            pulseWindowSeconds: 0.72,
+            jamCooldownPerSecond: 0.55,
+            jamDragMul: 0.995,
+            angularDragMul: 0.965
+          }
+        },
+        {
+          id: "cryo_ring",
+          label: "Cryo Ring",
+          weight: 0.096,
+          factionId: "helix_union",
+          audio: {
+            warningSoundId: "warning_cryo_ring",
+            stinger: { a: 170, b: 240, c: 300 }
+          },
+          miniEvent: {
+            id: "cryo_focus",
+            heat: -24,
+            cooldownDelta: -0.4
+          },
+          hazards: {
+            type: "cryo_shear_zone",
+            minCount: 2,
+            maxCount: 3,
+            radiusMin: 80,
+            radiusMax: 118,
+            slowMul: 0.988,
+            angularDampingMul: 0.95,
+            coolingPerSecond: 18,
+            dashCooldownPerSecond: 0.2
+          }
+        },
+        {
+          id: "neon_nebula",
+          label: "Neon Nebula",
+          weight: 0.1,
+          factionId: "drift_cartel",
+          audio: {
+            warningSoundId: "warning_neon_nebula",
+            stinger: { a: 280, b: 460, c: 700 }
+          },
+          miniEvent: {
+            id: "neon_flux",
+            energy: 14,
+            cooldownDelta: -0.7
+          },
+          hazards: {
+            type: "neon_arc_field",
+            minCount: 1,
+            maxCount: 2,
+            radiusMin: 88,
+            radiusMax: 126,
+            tickSeconds: 0.45,
+            tickDamage: 8,
+            energyDrainPerSecond: 9,
+            cooldownPressurePerSecond: 0.52
+          }
+        },
+        {
+          id: "dust_expanse",
+          label: "Dust Expanse",
+          weight: 0.1,
+          factionId: "helix_union",
+          audio: {
+            warningSoundId: "warning_dust_expanse",
+            stinger: { a: 160, b: 220, c: 300 }
+          },
+          miniEvent: {
+            id: "salvage_drift",
+            salvageParts: 2,
+            credits: 10
+          },
+          hazards: {
+            type: "dust_squall",
+            minCount: 2,
+            maxCount: 3,
+            radiusMin: 92,
+            radiusMax: 132,
+            tickSeconds: 0.7,
+            tickDamage: 9,
+            slowMul: 0.98,
+            accuracyDragMul: 0.985
+          }
         }
       ],
       modifiers: {
