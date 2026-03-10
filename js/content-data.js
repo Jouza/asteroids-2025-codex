@@ -89,6 +89,30 @@
           }
         }
       },
+      bountyBoardProfiles: {
+        helix_union: {
+          templateWeightByKind: {
+            ufo_kills: 1.35,
+            mission_clears: 1.2,
+            asteroid_kills: 0.86,
+            credits_earned: 0.94
+          },
+          rewardCreditsMul: 1.08,
+          rewardSalvageMul: 0.94,
+          repOnClaim: 1
+        },
+        drift_cartel: {
+          templateWeightByKind: {
+            ufo_kills: 0.86,
+            mission_clears: 0.94,
+            asteroid_kills: 1.35,
+            credits_earned: 1.18
+          },
+          rewardCreditsMul: 0.94,
+          rewardSalvageMul: 1.08,
+          repOnClaim: 1
+        }
+      },
       lootIdentity: {
         helix_union: {
           affixWeights: {
@@ -194,6 +218,9 @@
         maxRerollsPerSector: 1,
         rerollCreditsBase: 22,
         rerollCreditsStep: 4,
+        heatRerollCostPerStack: 0.06,
+        heatRewardCreditsPerStack: 0.04,
+        heatRewardSalvagePerStack: 0.03,
         templates: [
           {
             id: "ufo_hunter",

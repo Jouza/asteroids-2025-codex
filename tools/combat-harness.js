@@ -1123,6 +1123,7 @@ function runTests() {
 
   tests.push(() => {
     gameA.startGame(63636);
+    gameA.model.contrabandHeat = 0;
     gameA.ensureBountyBoardForSector(gameA.model.sector, { force: true });
     const board = gameA.model.bountyBoard;
     gameA.model.credits = 0;
@@ -1134,6 +1135,84 @@ function runTests() {
     assert(firstOk, "First reroll should succeed when credits are sufficient");
     assert(!secondOk, "Reroll should fail after per-sector limit is reached");
     assert(board.rerollsUsed === 1, "Reroll usage should track per-sector limit");
+  });
+
+  tests.push(() => {
+    gameA.startGame(64646);
+    const originalSlots = gameA.config.mission.bountyBoard.slots;
+    gameA.config.mission.bountyBoard.slots = 1;
+    gameA.model.factions.helix_union = 70;
+    gameA.model.factions.drift_cartel = -20;
+    gameA.model.contrabandHeat = 0;
+    const helixCounts = { ufo_kills: 0, mission_clears: 0, asteroid_kills: 0, credits_earned: 0 };
+    for (let i = 0; i < 320; i += 1) {
+      gameA.ensureBountyBoardForSector(gameA.model.sector, { force: true });
+      for (const offer of gameA.model.bountyBoard.offers) {
+        helixCounts[offer.kind] = (helixCounts[offer.kind] ?? 0) + 1;
+      }
+    }
+
+    gameA.model.factions.helix_union = -20;
+    gameA.model.factions.drift_cartel = 70;
+    const driftCounts = { ufo_kills: 0, mission_clears: 0, asteroid_kills: 0, credits_earned: 0 };
+    for (let i = 0; i < 320; i += 1) {
+      gameA.ensureBountyBoardForSector(gameA.model.sector, { force: true });
+      for (const offer of gameA.model.bountyBoard.offers) {
+        driftCounts[offer.kind] = (driftCounts[offer.kind] ?? 0) + 1;
+      }
+    }
+
+    gameA.config.mission.bountyBoard.slots = originalSlots;
+
+    assert(
+      (helixCounts.ufo_kills ?? 0) + (helixCounts.mission_clears ?? 0) >
+        (driftCounts.ufo_kills ?? 0) + (driftCounts.mission_clears ?? 0),
+      "HELIX bounty profile should increase HELIX-preferred contract kinds versus DRIFT profile"
+    );
+    assert(
+      (driftCounts.asteroid_kills ?? 0) + (driftCounts.credits_earned ?? 0) >
+        (helixCounts.asteroid_kills ?? 0) + (helixCounts.credits_earned ?? 0),
+      "DRIFT bounty profile should increase DRIFT-preferred contract kinds versus HELIX profile"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(65656);
+    gameA.model.contrabandHeat = 0;
+    const baseline = gameA.getBountyRerollCost(gameA.model.sector);
+    gameA.model.contrabandHeat = 6;
+    const heated = gameA.getBountyRerollCost(gameA.model.sector);
+    assert(heated > baseline, "Contraband heat should increase bounty board reroll cost");
+  });
+
+  tests.push(() => {
+    gameA.startGame(66666);
+    gameA.model.factions.helix_union = 0;
+    gameA.model.factions.drift_cartel = 0;
+    gameA.model.bountyBoard = {
+      sector: gameA.model.sector,
+      factionId: "helix_union",
+      rerollsUsed: 0,
+      offers: [
+        {
+          id: "claim_rep_test",
+          templateId: "claim_rep_test",
+          factionId: "helix_union",
+          kind: "mission_clears",
+          labelKey: "game.bounty.kind.mission_clears",
+          label: "Contract Runner",
+          target: 1,
+          progress: 1,
+          rewardCredits: 0,
+          rewardSalvage: 0,
+          completed: true,
+          claimed: false
+        }
+      ]
+    };
+    gameA.claimCompletedBounties();
+    assert(gameA.model.factions.helix_union > 0, "Claiming faction bounty should increase board faction reputation");
+    assert(gameA.model.factions.drift_cartel < 0, "Claiming faction bounty should reduce rival faction reputation");
   });
 
   tests.push(() => {

@@ -2241,14 +2241,21 @@
                   Math.max(0, model.sector - 1) * Math.max(0, Math.floor(Number(config.mission?.bountyBoard?.rerollCreditsStep) || 0))
               )
             : 0;
+        const bountyHeatRerollMul = Math.max(
+          1,
+          1 +
+            Math.max(0, Math.floor(Number(model.contrabandHeat) || 0)) *
+              Math.max(0, Number(config.mission?.bountyBoard?.heatRerollCostPerStack) || 0)
+        );
+        const bountyRerollCostFinal = Math.max(0, Math.floor(bountyRerollCost * bountyHeatRerollMul));
         pushAction(
           tr("render.hangar.bounty_claim_action", { count: claimableCount }),
           claimableCount > 0 ? "#9bf5bb" : "rgba(216,245,255,0.45)",
           loadoutBaseIndex + 7
         );
         pushAction(
-          tr("render.hangar.bounty_reroll_action", { cost: bountyRerollCost, used: bountyRerollUsed, max: bountyRerollMax }),
-          bountyRerollUsed < bountyRerollMax && model.credits >= bountyRerollCost ? "#ffd785" : "rgba(216,245,255,0.45)",
+          tr("render.hangar.bounty_reroll_action", { cost: bountyRerollCostFinal, used: bountyRerollUsed, max: bountyRerollMax }),
+          bountyRerollUsed < bountyRerollMax && model.credits >= bountyRerollCostFinal ? "#ffd785" : "rgba(216,245,255,0.45)",
           loadoutBaseIndex + 8
         );
         const rowStep = 14;
@@ -2373,12 +2380,18 @@
         statusRightY += statusGap;
         const bountyBoard = model.bountyBoard || {};
         const bountySector = Math.max(1, Math.floor(Number(bountyBoard.sector) || model.sector));
+        const bountyFactionLabel = bountyBoard.factionId ? tr(`game.faction.${bountyBoard.factionId}`) : tr("hud.unknown");
         const bountyRerollUsedStatus = Math.max(0, Math.floor(Number(bountyBoard.rerollsUsed) || 0));
         const bountyRerollMaxStatus = Math.max(0, Math.floor(Number(config.mission?.bountyBoard?.maxRerollsPerSector) || 0));
         drawRow(
           statusRightX,
           statusRightY,
-          tr("render.hangar.bounty_title", { sector: bountySector, used: bountyRerollUsedStatus, max: bountyRerollMaxStatus }),
+          tr("render.hangar.bounty_title", {
+            sector: bountySector,
+            faction: bountyFactionLabel,
+            used: bountyRerollUsedStatus,
+            max: bountyRerollMaxStatus
+          }),
           "#ffd785",
           "700 12px Trebuchet MS",
           statusColW

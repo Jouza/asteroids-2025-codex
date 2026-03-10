@@ -701,6 +701,30 @@
           effects: { shopPriceMul: 0.9, creditsMul: 1.12, salvageMul: 1.1 }
         }
       ],
+      bountyBoardProfiles: {
+        helix_union: {
+          templateWeightByKind: {
+            ufo_kills: 1.35,
+            mission_clears: 1.2,
+            asteroid_kills: 0.86,
+            credits_earned: 0.94
+          },
+          rewardCreditsMul: 1.08,
+          rewardSalvageMul: 0.94,
+          repOnClaim: 1
+        },
+        drift_cartel: {
+          templateWeightByKind: {
+            ufo_kills: 0.86,
+            mission_clears: 0.94,
+            asteroid_kills: 1.35,
+            credits_earned: 1.18
+          },
+          rewardCreditsMul: 0.94,
+          rewardSalvageMul: 1.08,
+          repOnClaim: 1
+        }
+      },
       lootIdentity: {
         helix_union: {
           affixWeights: {
@@ -834,6 +858,9 @@
         maxRerollsPerSector: 1,
         rerollCreditsBase: 22,
         rerollCreditsStep: 4,
+        heatRerollCostPerStack: 0.06,
+        heatRewardCreditsPerStack: 0.04,
+        heatRewardSalvagePerStack: 0.03,
         templates: [
           {
             id: "ufo_hunter",
@@ -1216,6 +1243,12 @@
           config.mission.bountyBoard.rerollCreditsBase >= 0 &&
           Number.isFinite(config.mission.bountyBoard.rerollCreditsStep) &&
           config.mission.bountyBoard.rerollCreditsStep >= 0 &&
+          Number.isFinite(config.mission.bountyBoard.heatRerollCostPerStack) &&
+          config.mission.bountyBoard.heatRerollCostPerStack >= 0 &&
+          Number.isFinite(config.mission.bountyBoard.heatRewardCreditsPerStack) &&
+          config.mission.bountyBoard.heatRewardCreditsPerStack >= 0 &&
+          Number.isFinite(config.mission.bountyBoard.heatRewardSalvagePerStack) &&
+          config.mission.bountyBoard.heatRewardSalvagePerStack >= 0 &&
           Array.isArray(config.mission.bountyBoard.templates) &&
           config.mission.bountyBoard.templates.length >= 1,
         msg: "mission.bountyBoard missing or invalid"
@@ -1242,6 +1275,12 @@
           config.faction?.lootIdentity == null ||
           (typeof config.faction.lootIdentity === "object" && !Array.isArray(config.faction.lootIdentity)),
         msg: "faction.lootIdentity invalid"
+      },
+      {
+        ok:
+          config.faction?.bountyBoardProfiles == null ||
+          (typeof config.faction.bountyBoardProfiles === "object" && !Array.isArray(config.faction.bountyBoardProfiles)),
+        msg: "faction.bountyBoardProfiles invalid"
       }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);

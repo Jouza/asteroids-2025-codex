@@ -294,6 +294,7 @@
         },
         bountyBoard: {
           sector: 1,
+          factionId: null,
           offers: [],
           rerollsUsed: 0
         },
@@ -1511,7 +1512,7 @@
       this.model.victorySummary = null;
       this.model.gameOverSummary = null;
       this.model.missionCompleteSummary = null;
-      this.model.bountyBoard = { sector: 1, offers: [], rerollsUsed: 0 };
+      this.model.bountyBoard = { sector: 1, factionId: null, offers: [], rerollsUsed: 0 };
       if (!this.model.endlessUnlocked) this.model.runMode = "campaign";
       this.model.flightModel = "arcade";
       this.model.dotEffects = [];
@@ -2845,24 +2846,96 @@
       return templates.filter((entry) => entry && typeof entry.id === "string" && typeof entry.kind === "string");
     }
 
-    createBountyOffer(template, sector, slotIndex) {
+    getBountyBoardFactionId() {
+      const missionFaction = this.model.currentMission?.biomeFactionId;
+      if (missionFaction) return missionFaction;
+      const dominant = this.getDominantFactionState();
+      return dominant?.id || null;
+    }
+
+    getBountyFactionProfile(factionId = this.getBountyBoardFactionId()) {
+      if (!factionId) return { factionId: null, templateWeightByKind: {}, rewardCreditsMul: 1, rewardSalvageMul: 1, repOnClaim: 0 };
+      const raw = this.config.faction?.bountyBoardProfiles?.[factionId];
+      if (!raw || typeof raw !== "object") {
+        return { factionId, templateWeightByKind: {}, rewardCreditsMul: 1, rewardSalvageMul: 1, repOnClaim: 0 };
+      }
+      const templateWeightByKindRaw =
+        raw.templateWeightByKind && typeof raw.templateWeightByKind === "object" ? raw.templateWeightByKind : {};
+      const templateWeightByKind = {};
+      for (const key of Object.keys(templateWeightByKindRaw)) {
+        templateWeightByKind[key] = this.clamp(Number(templateWeightByKindRaw[key]) || 1, 0.25, 3.5);
+      }
+      return {
+        factionId,
+        templateWeightByKind,
+        rewardCreditsMul: this.clamp(Number(raw.rewardCreditsMul) || 1, 0.6, 1.8),
+        rewardSalvageMul: this.clamp(Number(raw.rewardSalvageMul) || 1, 0.6, 1.8),
+        repOnClaim: Math.max(0, Math.floor(Number(raw.repOnClaim) || 0))
+      };
+    }
+
+    getBountyTemplateWeight(template, factionProfile = null) {
+      if (!template) return 0;
+      const kind = template.kind;
+      const base = 1;
+      const factionMul = factionProfile?.templateWeightByKind?.[kind] ?? 1;
+      return Math.max(0.1, base * factionMul);
+    }
+
+    pickBountyTemplates(templates, count, factionProfile = null) {
+      const pool = Array.isArray(templates) ? templates.slice() : [];
+      const picked = [];
+      while (picked.length < count && pool.length > 0) {
+        const next = this.rollWeighted(pool, (entry) => this.getBountyTemplateWeight(entry, factionProfile));
+        if (!next) break;
+        picked.push(next);
+        const removeIndex = pool.findIndex((entry) => entry.id === next.id);
+        if (removeIndex >= 0) pool.splice(removeIndex, 1);
+      }
+      return picked;
+    }
+
+    getBountyHeatRewardMultiplier() {
+      const cfg = this.getBountyBoardConfig();
+      const perStack = Math.max(0, Number(cfg.heatRewardCreditsPerStack) || 0);
+      const heat = this.getContrabandHeat();
+      return this.clamp(1 + heat * perStack, 1, 2.2);
+    }
+
+    getBountyHeatSalvageMultiplier() {
+      const cfg = this.getBountyBoardConfig();
+      const perStack = Math.max(0, Number(cfg.heatRewardSalvagePerStack) || 0);
+      const heat = this.getContrabandHeat();
+      return this.clamp(1 + heat * perStack, 1, 2.2);
+    }
+
+    createBountyOffer(template, sector, slotIndex, factionProfile = this.getBountyFactionProfile()) {
       const safeSector = Math.max(1, Math.floor(Number(sector) || 1));
       const stepEvery = Math.max(1, Math.floor(Number(template.targetStepEverySectors) || 1));
       const scalingSteps = Math.floor((safeSector - 1) / stepEvery);
       const target = Math.max(1, Math.floor(Number(template.baseTarget) || 1) + scalingSteps * Math.max(0, Math.floor(Number(template.targetStep) || 0)));
-      const rewardCredits = Math.max(
+      const rewardCreditsBase = Math.max(
         0,
         Math.floor(Number(template.rewardCreditsBase) || 0) + Math.max(0, safeSector - 1) * Math.max(0, Math.floor(Number(template.rewardCreditsStep) || 0))
       );
-      const rewardSalvage = Math.max(
+      const rewardSalvageBase = Math.max(
         0,
         Math.floor(Number(template.rewardSalvageBase) || 0) + Math.max(0, safeSector - 1) * Math.max(0, Math.floor(Number(template.rewardSalvageStep) || 0))
+      );
+      const rewardCredits = Math.max(
+        0,
+        Math.floor(rewardCreditsBase * (factionProfile?.rewardCreditsMul ?? 1) * this.getBountyHeatRewardMultiplier())
+      );
+      const rewardSalvage = Math.max(
+        0,
+        Math.floor(rewardSalvageBase * (factionProfile?.rewardSalvageMul ?? 1) * this.getBountyHeatSalvageMultiplier())
       );
       const id = `${template.id}_${safeSector}_${slotIndex}_${Math.floor(this.rng() * 1e6)}`;
       const labelKey = template.labelKey || `game.bounty.kind.${template.kind}`;
       return {
         id,
         templateId: template.id,
+        factionId: factionProfile?.factionId || null,
         kind: template.kind,
         labelKey,
         label: tr(labelKey),
@@ -2882,26 +2955,24 @@
       this.model.bountyBoard =
         this.model.bountyBoard && typeof this.model.bountyBoard === "object"
           ? this.model.bountyBoard
-          : { sector: safeSector, offers: [], rerollsUsed: 0 };
+          : { sector: safeSector, factionId: null, offers: [], rerollsUsed: 0 };
       const board = this.model.bountyBoard;
       const templates = this.getBountyTemplates();
       const slots = Math.max(1, Math.floor(Number(this.getBountyBoardConfig().slots) || 3));
+      const factionProfile = this.getBountyFactionProfile();
       if (!templates.length) {
         board.sector = safeSector;
+        board.factionId = factionProfile.factionId || null;
         board.offers = [];
         board.rerollsUsed = 0;
         return board;
       }
       const shouldReroll = force || board.sector !== safeSector || !Array.isArray(board.offers) || board.offers.length === 0;
       if (!shouldReroll) return board;
-      const pool = templates.slice();
-      const offers = [];
-      while (offers.length < slots && pool.length > 0) {
-        const idx = Math.floor(this.rng() * pool.length);
-        const template = pool.splice(idx, 1)[0];
-        offers.push(this.createBountyOffer(template, safeSector, offers.length));
-      }
+      const selectedTemplates = this.pickBountyTemplates(templates, slots, factionProfile);
+      const offers = selectedTemplates.map((template, index) => this.createBountyOffer(template, safeSector, index, factionProfile));
       board.sector = safeSector;
+      board.factionId = factionProfile.factionId || null;
       board.offers = offers;
       if (force || sectorChanged) board.rerollsUsed = 0;
       board.rerollsUsed = Math.max(0, Math.floor(Number(board.rerollsUsed) || 0));
@@ -2913,7 +2984,44 @@
       const safeSector = Math.max(1, Math.floor(Number(sector) || 1));
       const base = Math.max(0, Math.floor(Number(cfg.rerollCreditsBase) || 0));
       const step = Math.max(0, Math.floor(Number(cfg.rerollCreditsStep) || 0));
-      return base + Math.max(0, safeSector - 1) * step;
+      const baseCost = base + Math.max(0, safeSector - 1) * step;
+      const heatPerStack = Math.max(0, Number(cfg.heatRerollCostPerStack) || 0);
+      const heatMul = this.clamp(1 + this.getContrabandHeat() * heatPerStack, 1, 2.5);
+      return Math.max(0, Math.floor(baseCost * heatMul));
+    }
+
+    applyBountyClaimFactionImpact(claimedCount) {
+      const count = Math.max(0, Math.floor(Number(claimedCount) || 0));
+      if (count <= 0) return 0;
+      const factionId = this.model.bountyBoard?.factionId || this.getBountyBoardFactionId();
+      if (!factionId) return 0;
+      const profile = this.getBountyFactionProfile(factionId);
+      const gain = Math.max(0, Math.floor(Number(profile.repOnClaim) || 0)) * count;
+      if (gain <= 0) return 0;
+      let totalApplied = 0;
+      const primary = this.addFactionReputation(factionId, gain, {
+        reasonKey: "game.faction.reason.bounty_claim",
+        announce: false,
+        saveProfile: false
+      });
+      totalApplied += Math.abs(primary);
+      if (primary > 0) {
+        const rivalLossMul = Math.max(0, Number(this.config.faction?.rivalRepLossOnGainMul) || 0);
+        if (rivalLossMul > 0) {
+          const rivalLoss = Math.max(1, Math.round(primary * rivalLossMul));
+          for (const faction of this.getFactionDefs()) {
+            if (faction.id === factionId) continue;
+            const appliedLoss = this.addFactionReputation(faction.id, -rivalLoss, {
+              reasonKey: "game.faction.reason.bounty_claim",
+              announce: false,
+              saveProfile: false
+            });
+            totalApplied += Math.abs(appliedLoss);
+          }
+        }
+      }
+      if (totalApplied > 0) this.saveProfile("bounty_claim_reputation");
+      return totalApplied;
     }
 
     claimCompletedBounties() {
@@ -2938,6 +3046,8 @@
         this.model.telemetry.creditsEarned += totalCredits;
       }
       if (totalSalvage > 0) this.model.salvageParts += totalSalvage;
+      this.applyBountyClaimFactionImpact(claimedCount);
+      this.saveProfile("bounty_claim");
       this.model.hangar.message = tr("game.bounty.claimed", {
         count: claimedCount,
         credits: totalCredits,
@@ -2969,6 +3079,7 @@
         used: board.rerollsUsed,
         max: maxRerolls
       });
+      this.saveProfile("bounty_reroll");
       return true;
     }
 

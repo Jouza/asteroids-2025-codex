@@ -50,15 +50,21 @@
 - [x] Endgame / replayability - Bounty board (MVP) slice 1
   - [x] Data-driven `mission.bountyBoard` templates (target/reward scaling) v config/content vrstve
   - [x] Runtime bounty board model na sektor + auto generovani offeru
-  - [x] Mission-complete hook pro progress + auto payout (credits/salvage) pri splneni kontraktu
+  - [x] Mission-complete hook pro progress kontraktu podle vysledku mise
   - [x] Hangar `TACTICAL STATUS` zobrazuje bounty board kontrakty a progress
-  - [x] Harness coverage pro board generation + mission payout flow
+  - [x] Harness coverage pro board generation + mission progress flow
 
 - [x] Endgame / replayability - Bounty board (MVP) slice 2 (manual claim + reroll UX)
   - [x] Bounty completion uz nevyplaci reward automaticky; kontrakty cekaji na manual `Claim`
   - [x] Hangar action list rozsireny o `Claim completed` a `Reroll board`
   - [x] Reroll ma data-driven cenu + sektorovy limit (`maxRerollsPerSector`)
   - [x] Harness coverage pro manual claim flow, reroll cost gate a reroll limit
+
+- [x] Endgame / replayability - Bounty board (MVP) slice 3 (faction + heat interactions)
+  - [x] Faction profily biasuji typy bounty kontraktu (`templateWeightByKind`) podle dominantni frakce
+  - [x] Faction profil modifikuje bounty reward ekonomiku (credits/salvage) a claim reputacni dopad
+  - [x] `contrabandHeat` navazuje na bounty ekonomiku (vyssi reward multipliery + vyssi reroll cost)
+  - [x] Harness coverage pro faction bias, heat reroll pressure a faction rep dopad claimu
 
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)

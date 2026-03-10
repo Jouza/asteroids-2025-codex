@@ -190,6 +190,55 @@ function validateContentData(contentData, issues) {
       }
     }
   }
+  const bountyProfiles = contentData.faction?.bountyBoardProfiles;
+  if (bountyProfiles != null) {
+    assert(
+      bountyProfiles && typeof bountyProfiles === "object" && !Array.isArray(bountyProfiles),
+      "faction.bountyBoardProfiles must be an object when provided",
+      issues
+    );
+    if (bountyProfiles && typeof bountyProfiles === "object" && !Array.isArray(bountyProfiles)) {
+      for (const factionId of Object.keys(bountyProfiles)) {
+        const profile = bountyProfiles[factionId];
+        assert(profile && typeof profile === "object" && !Array.isArray(profile), `faction.bountyBoardProfiles.${factionId} must be an object`, issues);
+        if (!profile || typeof profile !== "object" || Array.isArray(profile)) continue;
+        if (profile.templateWeightByKind != null) {
+          assert(
+            profile.templateWeightByKind && typeof profile.templateWeightByKind === "object" && !Array.isArray(profile.templateWeightByKind),
+            `faction.bountyBoardProfiles.${factionId}.templateWeightByKind must be an object`,
+            issues
+          );
+          if (profile.templateWeightByKind && typeof profile.templateWeightByKind === "object" && !Array.isArray(profile.templateWeightByKind)) {
+            for (const kind of Object.keys(profile.templateWeightByKind)) {
+              const value = Number(profile.templateWeightByKind[kind]);
+              assert(
+                Number.isFinite(value) && value > 0,
+                `faction.bountyBoardProfiles.${factionId}.templateWeightByKind.${kind} must be > 0`,
+                issues
+              );
+            }
+          }
+        }
+        for (const key of ["rewardCreditsMul", "rewardSalvageMul"]) {
+          if (profile[key] == null) continue;
+          const value = Number(profile[key]);
+          assert(
+            Number.isFinite(value) && value > 0,
+            `faction.bountyBoardProfiles.${factionId}.${key} must be > 0`,
+            issues
+          );
+        }
+        if (profile.repOnClaim != null) {
+          const value = Number(profile.repOnClaim);
+          assert(
+            Number.isFinite(value) && value >= 0,
+            `faction.bountyBoardProfiles.${factionId}.repOnClaim must be >= 0`,
+            issues
+          );
+        }
+      }
+    }
+  }
 
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);
@@ -225,6 +274,21 @@ function validateContentData(contentData, issues) {
       assert(
         Number.isFinite(Number(bountyBoard.rerollCreditsStep)) && Number(bountyBoard.rerollCreditsStep) >= 0,
         "mission.bountyBoard.rerollCreditsStep must be >= 0",
+        issues
+      );
+      assert(
+        Number.isFinite(Number(bountyBoard.heatRerollCostPerStack)) && Number(bountyBoard.heatRerollCostPerStack) >= 0,
+        "mission.bountyBoard.heatRerollCostPerStack must be >= 0",
+        issues
+      );
+      assert(
+        Number.isFinite(Number(bountyBoard.heatRewardCreditsPerStack)) && Number(bountyBoard.heatRewardCreditsPerStack) >= 0,
+        "mission.bountyBoard.heatRewardCreditsPerStack must be >= 0",
+        issues
+      );
+      assert(
+        Number.isFinite(Number(bountyBoard.heatRewardSalvagePerStack)) && Number(bountyBoard.heatRewardSalvagePerStack) >= 0,
+        "mission.bountyBoard.heatRewardSalvagePerStack must be >= 0",
         issues
       );
       const templates = bountyBoard.templates;
