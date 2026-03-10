@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] Backlog reprioritization (focus: visual + gameplay experience)
+  - [x] `todo/backlog/veci-k-realizaci.md` preusporadan podle prioritni fronty pro herni zazitek
+  - [x] Hotove podbody odstraneny z backlogu (zustavaji pouze aktivni polozky)
+  - [x] Doplneny nove gameplay/vizual kandidati: Combat readability 2.0, Biome atmosphere 2.0, Hangar UX follow-up
+
 - [x] Frakce a reputace (MVP) - komplet
   - [x] Dokonceny zaklad 2 frakci, reputacni persistence/migrace, gain/loss hooky a rival pressure
   - [x] Frakcni reward scaling + biasovana hangar shop nabidka/ceny podle reputace

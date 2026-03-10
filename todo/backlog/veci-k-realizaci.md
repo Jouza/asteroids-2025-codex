@@ -1,6 +1,26 @@
 # Veci k realizaci
 
-## Dalsi chybejici temata (zatim neevidovana)
+## Prioritni fronta (herni zazitek: vizual + gameplay)
+
+- [ ] Endgame / replayability
+  - [ ] Samostatna reward tabulka pro final clear (campaign + boss rush)
+  - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
+  - [ ] Boss Rush depth pass (variace encounter flow mezi sektory, ne jen linearni mini-boss loop)
+
+- [ ] Combat readability / telegraph 2.0
+  - [ ] Silnejsi telegraphy pro nejrizikovejsi hazard ticky (pred-tick warning + pulse intenzita)
+  - [ ] Off-screen warning indikator pro velke boss/hazard hrozby mimo viewport
+  - [ ] Hit clarity pass: odlisit incoming damage typy (kinetic/explosive/dot) pres VFX cue
+
+- [ ] Biome atmosphere pass 2.0
+  - [ ] Vetsi vizualni rozdily biome behem boje (parallax/debris density/ambient cadence)
+  - [ ] Kontextove "event beats" (svetlo/fog pulse) pri mission phase transitions a boss phase
+
+- [ ] Hangar visual/gameplay UX follow-up
+  - [ ] Tactical status viewport/scroll pro nizsi vysky (stejny princip jako SHOP & OPS)
+  - [ ] Lepsi vizualni oddeleni high-priority akci (repair/claim/reroll) od utility akci
+
+## Dalsi chybejici temata (sekundarni)
 
 - [ ] Accessibility / readability options
   - [ ] Colorblind-safe rezim pro hazard a resource warning barvy
@@ -12,26 +32,9 @@
   - [ ] Volitelne gamepad mapovani (MVP)
 
 - [ ] Pilot RPG layer
-  - [x] MVP: XP + levely pilota
-  - [x] MVP: Atributy (Reflex/Systems/Grit/Instinct)
-  - [x] MVP: Skill perky + unlock flow v hangaru
   - [ ] Rozsireni tree na 10-12+ perku + branch synergie
 
-- [ ] Endgame / replayability
-  - [x] Bounty board (MVP) - data/model + hangar board UI + mission auto-payout hook
-  - [x] Mutatory (MVP) - selectable run mutator presets + persistence + gameplay scaling multipliers
-  - [x] Endless sektor (run loop bez finalniho win-state)
-  - [x] Boss rush (MVP) - samostatny run mode s mini-boss only mission flow
-  - [x] Win-state follow-up po MVP (Boss Rush ma vlastni final clear + odlisny victory status)
-  - [ ] Samostatna reward tabulka pro final clear (clear bonus/meta reward)
-  - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
-  - [x] Jasnejsi mode select UX (Campaign/Endless jako explicitni volba v UI, ne jen toggle klavesou)
-  - [x] Endless pacing pass po unlocku (skalovani, anti-snowball ekonomika, delka runu)
-
 - [ ] Audio UX controls
-  - [x] Mute toggle (M)
-  - [x] Ovladas hlasitosti v UI
-  - [x] Persist nastaveni hlasitosti/mute do localStorage
   - [ ] Samostatne volume bus pro UI/gameplay warningy (pokrocilejsi mix)
 
 - [ ] Security / backend readiness
