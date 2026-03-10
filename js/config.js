@@ -1130,7 +1130,13 @@
       { ok: Number.isFinite(config.faction?.blackMarketPriceMul) && config.faction.blackMarketPriceMul >= 1, msg: "faction.blackMarketPriceMul invalid" },
       { ok: Array.isArray(config.faction?.repThresholds) && config.faction.repThresholds.length >= 1, msg: "faction.repThresholds missing" },
       { ok: Array.isArray(config.faction?.contrabandItemIds) && config.faction.contrabandItemIds.length >= 1, msg: "faction.contrabandItemIds missing" },
-      { ok: Number.isFinite(config.faction?.contrabandDiscountMul) && config.faction.contrabandDiscountMul > 0, msg: "faction.contrabandDiscountMul invalid" }
+      { ok: Number.isFinite(config.faction?.contrabandDiscountMul) && config.faction.contrabandDiscountMul > 0, msg: "faction.contrabandDiscountMul invalid" },
+      {
+        ok:
+          config.faction?.missionDirectives == null ||
+          (typeof config.faction.missionDirectives === "object" && !Array.isArray(config.faction.missionDirectives)),
+        msg: "faction.missionDirectives invalid"
+      }
     ];
     const issues = checks.filter((check) => !check.ok).map((check) => check.msg);
     if (issues.length > 0) {

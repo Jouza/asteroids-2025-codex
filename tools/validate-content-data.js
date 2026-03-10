@@ -93,6 +93,48 @@ function validateContentData(contentData, issues) {
       }
     }
   }
+  const missionDirectives = contentData.faction?.missionDirectives;
+  if (missionDirectives != null) {
+    assert(
+      missionDirectives && typeof missionDirectives === "object" && !Array.isArray(missionDirectives),
+      "faction.missionDirectives must be an object when provided",
+      issues
+    );
+    if (missionDirectives && typeof missionDirectives === "object" && !Array.isArray(missionDirectives)) {
+      const allowedMissionIds = new Set(["ufo_hunt", "asteroid_storm"]);
+      for (const factionId of Object.keys(missionDirectives)) {
+        const factionEntry = missionDirectives[factionId];
+        assert(
+          factionEntry && typeof factionEntry === "object" && factionEntry.byMission && typeof factionEntry.byMission === "object",
+          `faction.missionDirectives.${factionId}.byMission must be an object`,
+          issues
+        );
+        if (!factionEntry || typeof factionEntry !== "object" || !factionEntry.byMission || typeof factionEntry.byMission !== "object") continue;
+        for (const missionId of Object.keys(factionEntry.byMission)) {
+          const directive = factionEntry.byMission[missionId];
+          assert(allowedMissionIds.has(missionId), `faction ${factionId} mission directive contains unsupported mission id: ${missionId}`, issues);
+          assert(
+            directive && typeof directive === "object",
+            `faction ${factionId} mission directive ${missionId} must be an object`,
+            issues
+          );
+          if (!directive || typeof directive !== "object") continue;
+          assert(
+            Number.isFinite(Number(directive.objectiveMul)) && Number(directive.objectiveMul) > 0,
+            `faction ${factionId} mission directive ${missionId} objectiveMul must be > 0`,
+            issues
+          );
+          if (directive.spawnIntervalMul != null) {
+            assert(
+              Number.isFinite(Number(directive.spawnIntervalMul)) && Number(directive.spawnIntervalMul) > 0,
+              `faction ${factionId} mission directive ${missionId} spawnIntervalMul must be > 0`,
+              issues
+            );
+          }
+        }
+      }
+    }
+  }
 
   const missionOrder = contentData.mission?.order;
   const allowedMissions = new Set(["survive", "ufo_hunt", "asteroid_storm", "mini_boss"]);

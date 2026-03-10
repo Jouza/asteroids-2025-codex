@@ -19,7 +19,9 @@
     "mission.weakpoint_open": "Weakpoint OPEN {seconds}s",
     "mission.weakpoint_in": "Weakpoint in {seconds}s",
     "mission.phase_status": "Phase {phase} | HP {hp}/{maxHp} | {weakpoint}",
-    "mission.context": "{biome} | {modifier}"
+    "mission.context": "{biome} | {modifier}",
+    "mission.context_with_directive": "{biome} | {modifier} | {directive}",
+    "mission.directive.none": "No directive"
   };
 
   const tr = (key, params = {}) => {
@@ -296,6 +298,10 @@
       const difficulty =
         this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1) * intelPressureMul * contrabandPressureMul;
       const context = this.buildMissionContext(level);
+      const factionDirective =
+        typeof g.getFactionMissionDirective === "function"
+          ? g.getFactionMissionDirective(context.biomeFactionId, type)
+          : null;
       g.model.currentMission = {
         type,
         label: type.toUpperCase(),
@@ -306,6 +312,7 @@
         difficulty,
         intelProfile,
         intelRepApplied: false,
+        factionDirective,
         ...context
       };
       g.model.missionTimer = 0;
@@ -350,7 +357,15 @@
           missionCfg.ufoHunt.baseKills + Math.floor((level - 1) / 2) * missionCfg.ufoHunt.killStep;
         g.model.missionSpawnBudget = Math.max(
           1,
-          Math.round(this.applyMissionVariance(baseKills * difficulty * endless.objectiveMul, 0.1))
+          Math.round(
+            this.applyMissionVariance(
+              baseKills *
+                difficulty *
+                endless.objectiveMul *
+                (g.model.currentMission.factionDirective?.objectiveMul ?? 1),
+              0.1
+            )
+          )
         );
         g.model.missionSpawnTimer = 0.2;
         g.model.currentMission.maxConcurrentUfos = Math.min(
@@ -368,6 +383,7 @@
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
+        g.model.currentMission.spawnIntervalSeconds *= g.model.currentMission.factionDirective?.spawnIntervalMul ?? 1;
         g.model.currentMission.label = tr("mission.label.ufo_hunt");
         g.model.currentMission.objectiveText = tr("mission.destroy_ufos", { kills: 0, target: g.model.missionSpawnBudget });
       }
@@ -377,7 +393,15 @@
           missionCfg.asteroidStorm.baseTarget + (level - 1) * missionCfg.asteroidStorm.targetStep;
         g.model.missionSpawnBudget = Math.max(
           6,
-          Math.round(this.applyMissionVariance(baseTarget * difficulty * endless.objectiveMul, 0.1))
+          Math.round(
+            this.applyMissionVariance(
+              baseTarget *
+                difficulty *
+                endless.objectiveMul *
+                (g.model.currentMission.factionDirective?.objectiveMul ?? 1),
+              0.1
+            )
+          )
         );
         const initialLarge =
           missionCfg.asteroidStorm.initialLargeCount + Math.floor((level - 1) / 4) + (difficulty >= 1.2 ? 1 : 0);
@@ -396,6 +420,7 @@
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
+        g.model.currentMission.spawnIntervalSeconds *= g.model.currentMission.factionDirective?.spawnIntervalMul ?? 1;
         g.model.currentMission.label = tr("mission.label.asteroid_storm");
         g.model.currentMission.objectiveText = tr("mission.break_asteroids", {
           kills: 0,
@@ -670,10 +695,14 @@
         if (!boss && threatsRemaining === 0) mission.completed = true;
       }
 
-      mission.contextText = tr("mission.context", {
+      const contextParams = {
         biome: mission.biomeLabel || tr("mission.outer_void"),
-        modifier: mission.modifierLabel || tr("mission.clear_skies")
-      });
+        modifier: mission.modifierLabel || tr("mission.clear_skies"),
+        directive: mission.factionDirective?.label || tr("mission.directive.none")
+      };
+      mission.contextText = mission.factionDirective
+        ? tr("mission.context_with_directive", contextParams)
+        : tr("mission.context", contextParams);
 
       if (mission.completed && !g.model.sectorCompletionHandled) {
         g.onMissionCompleted();

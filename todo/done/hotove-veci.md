@@ -29,6 +29,12 @@
   - [x] `contrabandHeat` zvysuje mission pressure a po mission complete se postupne snizuje
   - [x] Harness coverage pro contraband purchase penalizaci + heat-driven pressure
 
+- [x] Frakce a reputace (Phase 2) - frakcni varianty mission cilu
+  - [x] Faction directives napojene na `ufo_hunt`/`asteroid_storm` bez nove mission architektury
+  - [x] HELIX vs DRIFT direktivy meni objective target i spawn pacing podle biome faction
+  - [x] Mission context rozsireny o directive text (`Biome | Modifier | Directive`)
+  - [x] Harness coverage pro smerove rozdily target/pacing mezi frakcemi
+
 - [x] Frakce a reputace (MVP) - slice 4 (UI status + clamp coverage)
   - [x] Hangar tactical status zobrazuje reputaci obou frakci (i18n `hud.status.faction_rep`)
   - [x] Doplnen harness test na clamp reputace pri loadu profilu

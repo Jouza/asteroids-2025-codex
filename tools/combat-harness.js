@@ -835,6 +835,113 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(48484);
+    gameA.model.sector = 6;
+    const missionSystem = gameA.missionSystem;
+    const originalBuildContext = missionSystem.buildMissionContext.bind(missionSystem);
+    const originalVariance = missionSystem.applyMissionVariance.bind(missionSystem);
+    missionSystem.applyMissionVariance = (value) => value;
+    missionSystem.buildMissionContext = () => ({
+      biomeId: "directive_test",
+      biomeLabel: "Directive Test",
+      biomeFactionId: "helix_union",
+      biomeAudio: null,
+      biomeMiniEvent: null,
+      biomeMiniEventApplied: false,
+      biomeEventText: "",
+      biomeHazards: [],
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierDescription: "",
+      modifierEffects: { shieldRegenMul: 1, shieldDrainPerSecond: 0, fogAlpha: 0, pullStrength: 0, radius: 0 },
+      gravityAnomaly: null
+    });
+    missionSystem.startMission(2);
+    const helixBudget = gameA.model.missionSpawnBudget;
+    const helixInterval = gameA.model.currentMission.spawnIntervalSeconds;
+    missionSystem.updateMission(0);
+    const helixContext = gameA.model.currentMission.contextText || "";
+
+    missionSystem.buildMissionContext = () => ({
+      biomeId: "directive_test",
+      biomeLabel: "Directive Test",
+      biomeFactionId: "drift_cartel",
+      biomeAudio: null,
+      biomeMiniEvent: null,
+      biomeMiniEventApplied: false,
+      biomeEventText: "",
+      biomeHazards: [],
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierDescription: "",
+      modifierEffects: { shieldRegenMul: 1, shieldDrainPerSecond: 0, fogAlpha: 0, pullStrength: 0, radius: 0 },
+      gravityAnomaly: null
+    });
+    missionSystem.startMission(2);
+    const driftBudget = gameA.model.missionSpawnBudget;
+    const driftInterval = gameA.model.currentMission.spawnIntervalSeconds;
+
+    missionSystem.buildMissionContext = originalBuildContext;
+    missionSystem.applyMissionVariance = originalVariance;
+
+    assert(helixBudget > driftBudget, "HELIX directive should increase UFO hunt target compared to DRIFT");
+    assert(helixInterval < driftInterval, "HELIX directive should increase UFO hunt pacing");
+    assert(helixContext.includes("Directive"), "Mission context should include faction directive text when active");
+  });
+
+  tests.push(() => {
+    gameA.startGame(49494);
+    gameA.model.sector = 6;
+    const missionSystem = gameA.missionSystem;
+    const originalBuildContext = missionSystem.buildMissionContext.bind(missionSystem);
+    const originalVariance = missionSystem.applyMissionVariance.bind(missionSystem);
+    missionSystem.applyMissionVariance = (value) => value;
+    missionSystem.buildMissionContext = () => ({
+      biomeId: "directive_test",
+      biomeLabel: "Directive Test",
+      biomeFactionId: "helix_union",
+      biomeAudio: null,
+      biomeMiniEvent: null,
+      biomeMiniEventApplied: false,
+      biomeEventText: "",
+      biomeHazards: [],
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierDescription: "",
+      modifierEffects: { shieldRegenMul: 1, shieldDrainPerSecond: 0, fogAlpha: 0, pullStrength: 0, radius: 0 },
+      gravityAnomaly: null
+    });
+    missionSystem.startMission(3);
+    const helixBudget = gameA.model.missionSpawnBudget;
+    const helixInterval = gameA.model.currentMission.spawnIntervalSeconds;
+
+    missionSystem.buildMissionContext = () => ({
+      biomeId: "directive_test",
+      biomeLabel: "Directive Test",
+      biomeFactionId: "drift_cartel",
+      biomeAudio: null,
+      biomeMiniEvent: null,
+      biomeMiniEventApplied: false,
+      biomeEventText: "",
+      biomeHazards: [],
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierDescription: "",
+      modifierEffects: { shieldRegenMul: 1, shieldDrainPerSecond: 0, fogAlpha: 0, pullStrength: 0, radius: 0 },
+      gravityAnomaly: null
+    });
+    missionSystem.startMission(3);
+    const driftBudget = gameA.model.missionSpawnBudget;
+    const driftInterval = gameA.model.currentMission.spawnIntervalSeconds;
+
+    missionSystem.buildMissionContext = originalBuildContext;
+    missionSystem.applyMissionVariance = originalVariance;
+
+    assert(driftBudget > helixBudget, "DRIFT directive should increase asteroid storm target compared to HELIX");
+    assert(driftInterval < helixInterval, "DRIFT directive should increase asteroid storm pacing");
+  });
+
+  tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.VICTORY;
     gameA.model.overlaySettingsRow = 2;
     gameA.model.runSeed = 1234;

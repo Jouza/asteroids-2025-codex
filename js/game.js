@@ -627,6 +627,32 @@
       return active;
     }
 
+    getFactionMissionDirective(factionId = this.model.currentMission?.biomeFactionId || null, missionType = this.model.currentMission?.type || null) {
+      if (!factionId || !missionType) return null;
+      const directives = this.config.faction?.missionDirectives;
+      if (!directives || typeof directives !== "object") return null;
+      const factionDirective = directives[factionId];
+      const byMission =
+        factionDirective && typeof factionDirective === "object" && factionDirective.byMission && typeof factionDirective.byMission === "object"
+          ? factionDirective.byMission
+          : null;
+      if (!byMission) return null;
+      const raw = byMission[missionType];
+      if (!raw || typeof raw !== "object") return null;
+      const objectiveMul = this.clamp(Number(raw.objectiveMul) || 1, 0.7, 1.4);
+      const spawnIntervalMul = this.clamp(Number(raw.spawnIntervalMul) || 1, 0.7, 1.4);
+      const id = typeof raw.id === "string" && raw.id.length > 0 ? raw.id : `${factionId}_${missionType}`;
+      const labelKey =
+        typeof raw.labelKey === "string" && raw.labelKey.length > 0 ? raw.labelKey : `mission.directive.${id}`;
+      return {
+        id,
+        labelKey,
+        label: tr(labelKey),
+        objectiveMul,
+        spawnIntervalMul
+      };
+    }
+
     addFactionReputation(factionId, delta, options = {}) {
       const defs = this.getFactionDefs();
       if (!defs.some((entry) => entry.id === factionId)) return 0;

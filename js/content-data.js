@@ -55,6 +55,40 @@
           effects: { shopPriceMul: 0.9, creditsMul: 1.12, salvageMul: 1.1 }
         }
       ],
+      missionDirectives: {
+        helix_union: {
+          byMission: {
+            ufo_hunt: {
+              id: "helix_sweep",
+              labelKey: "mission.directive.helix_sweep",
+              objectiveMul: 1.14,
+              spawnIntervalMul: 0.95
+            },
+            asteroid_storm: {
+              id: "helix_route_secure",
+              labelKey: "mission.directive.helix_route_secure",
+              objectiveMul: 0.9,
+              spawnIntervalMul: 1.08
+            }
+          }
+        },
+        drift_cartel: {
+          byMission: {
+            ufo_hunt: {
+              id: "drift_hunt_quiet",
+              labelKey: "mission.directive.drift_hunt_quiet",
+              objectiveMul: 0.9,
+              spawnIntervalMul: 1.08
+            },
+            asteroid_storm: {
+              id: "drift_scrap_quota",
+              labelKey: "mission.directive.drift_scrap_quota",
+              objectiveMul: 1.14,
+              spawnIntervalMul: 0.95
+            }
+          }
+        }
+      },
       intelOptions: [
         {
           id: "balanced",
