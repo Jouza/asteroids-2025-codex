@@ -942,6 +942,9 @@
         this.tryEnterFullscreenFromGesture();
         return;
       }
+      if (this.model.gameState === GAME_STATE.PLAYING) {
+        return;
+      }
       const overlayActionZone = touch.ui?.overlayActionCtaZone;
       if (
         overlayActionZone &&

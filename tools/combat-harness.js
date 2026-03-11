@@ -2651,6 +2651,20 @@ function runTests() {
     assert(gameA.model.gameState === AsteroidsA.GAME_STATE.START, "Hidden combat action button should not start run on START");
   });
 
+  tests.push(() => {
+    gameA.model.inputMode = "touch";
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.touchControls.ui.overlayActionCtaZone = { x: 100, y: 120, w: 220, h: 64 };
+    gameA.handleTouchTapNavigation(160, 150);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.PLAYING, "Touch START CTA should transition into PLAYING");
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const right = gameA.model.touchControls.layout.rightStick;
+    gameA.onTouchPointerDown(77, right.x, right.y);
+    gameA.onTouchPointerMove(77, right.x + right.radius * 0.8, right.y);
+    gameA.updateTouchInputState(1 / 60);
+    assert(gameA.getTouchCombatActions().fireActive, "After START CTA, right stick should still enable primary fire in PLAYING");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     sharedStorage.clear();
