@@ -1,5 +1,14 @@
 # Hotove veci
 
+- [x] Touch Controls MVP (combat + overlay/hangar tap flow)
+  - [x] Pridana touch input vrstva (`inputMode`, sticks/buttons/pointers, touch action queue) nad existujici combat intenty
+  - [x] Combat integrace: left stick = turn/thrust, right stick = aim + primary auto-fire, `EVADE` tap = dash, hold = boost
+  - [x] Touch action queue je napojena na stejne flow jako klavesy (`secondary`/`utility`/`dash`) bez zmeny economy/damage/cooldown pravidel
+  - [x] Render touch HUD overlay: levy/pravy stick + tlacitka `SECONDARY`/`UTILITY`/`EVADE` + `ACTION` se stavy ready/cooldown
+  - [x] Touch tap navigace pro Start/Game Over/Victory (run setup rows, end-summary page switch) a Hangar (loot/shop selection + action)
+  - [x] Help/i18n coverage doplnena o kartu `Touch Controls (MVP)` a touch label/hint texty
+  - [x] Harness coverage doplnena pro touch mode activation, EVADE tap/hold, aim->auto-fire a secondary/utility touch action routing
+
 - [x] Combat readability follow-up (post Telegraph 2.0)
   - [x] Pridano data-driven `missionDirector.hazardTelegraphScaling` (difficulty + mutator class) pro jemne vizualni skaly telegraph vrstvy
   - [x] Mission runtime doplnuje `hazard.telegraphVisualMul` bez zasahu do hazard timing/damage logiky

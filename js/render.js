@@ -11,6 +11,7 @@
     }
 
     render(model, input) {
+      this.resetTouchUiZones(model);
       this.clear();
       this.drawStarfield();
       this.drawDeepSpaceBackdrop(model);
@@ -40,6 +41,7 @@
       if (model.gameState !== GAME_STATE.PLAYING) {
         this.drawOverlay(model);
       }
+      this.drawTouchControls(model, input);
     }
 
     clear() {
@@ -218,7 +220,13 @@
         ctx.stroke();
       }
 
-      if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowUp")) {
+      const touchLeft = model.touchControls?.leftStick;
+      const touchModeActive = model.inputMode === "touch";
+      const touchThrusting = touchModeActive && touchLeft?.active && touchLeft.mag >= 0.16;
+      const touchTurningLeft = touchModeActive && touchLeft?.active && touchLeft.nx <= -0.22;
+      const touchTurningRight = touchModeActive && touchLeft?.active && touchLeft.nx >= 0.22;
+
+      if (model.gameState === GAME_STATE.PLAYING && (input.isDown("ArrowUp") || touchThrusting)) {
         const jetGradient = ctx.createLinearGradient(-ship.radius * 1.6, 0, -ship.radius * 0.8, 0);
         jetGradient.addColorStop(0, shipStyle.thrustOuter);
         jetGradient.addColorStop(1, shipStyle.thrustInner);
@@ -233,7 +241,7 @@
         ctx.fill();
       }
 
-      if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowLeft")) {
+      if (model.gameState === GAME_STATE.PLAYING && (input.isDown("ArrowLeft") || touchTurningLeft)) {
         ctx.fillStyle = shipStyle.sideFlame;
         ctx.shadowColor = shipStyle.sideFlame;
         ctx.shadowBlur = 12;
@@ -245,7 +253,7 @@
         ctx.fill();
       }
 
-      if (model.gameState === GAME_STATE.PLAYING && input.isDown("ArrowRight")) {
+      if (model.gameState === GAME_STATE.PLAYING && (input.isDown("ArrowRight") || touchTurningRight)) {
         ctx.fillStyle = shipStyle.sideFlame;
         ctx.shadowColor = shipStyle.sideFlame;
         ctx.shadowBlur = 12;
@@ -629,6 +637,95 @@
         ctx.fillText(item.text || "", item.x, item.y);
       }
       ctx.restore();
+    }
+
+    resetTouchUiZones(model) {
+      const ui = model?.touchControls?.ui;
+      if (!ui) return;
+      ui.overlayRows = [];
+      ui.hangarLootRows = [];
+      ui.hangarShopRows = [];
+      ui.endSummaryTapZones = null;
+    }
+
+    drawTouchControls(model, input) {
+      if (model.inputMode !== "touch") return;
+      const touch = model.touchControls;
+      const layout = touch?.layout;
+      if (!touch || !layout || !layout.buttons) return;
+      const { ctx } = this;
+      const buttonDefs = [
+        { key: "secondary", label: tr("touch.button.secondary"), down: touch.buttons?.secondary?.down, cooldown: model.secondaryCooldown },
+        { key: "utility", label: tr("touch.button.utility"), down: touch.buttons?.utility?.down, cooldown: model.utilityCooldown },
+        { key: "evade", label: tr("touch.button.evade"), down: touch.buttons?.evade?.down, cooldown: model.dashCooldown }
+      ];
+      const drawStick = (stickLayout, stickState, tintRgb) => {
+        ctx.save();
+        ctx.strokeStyle = `rgba(${tintRgb},0.42)`;
+        ctx.fillStyle = `rgba(${tintRgb},0.08)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(stickLayout.x, stickLayout.y, stickLayout.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        const handleX = stickState?.active ? stickState.baseX + stickState.nx * stickLayout.radius * stickState.mag : stickLayout.x;
+        const handleY = stickState?.active ? stickState.baseY + stickState.ny * stickLayout.radius * stickState.mag : stickLayout.y;
+        ctx.fillStyle = `rgba(${tintRgb},0.18)`;
+        ctx.strokeStyle = `rgba(${tintRgb},0.86)`;
+        ctx.beginPath();
+        ctx.arc(handleX, handleY, Math.max(16, stickLayout.radius * 0.34), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      };
+      const drawButton = (btnLayout, label, down, cooldown = 0, readyColor = "120,240,196") => {
+        const cd = Math.max(0, Number(cooldown) || 0);
+        const ready = cd <= 0.001;
+        ctx.save();
+        ctx.fillStyle = down ? "rgba(255,231,168,0.24)" : `rgba(${ready ? readyColor : "160,190,210"},0.12)`;
+        ctx.strokeStyle = down ? "rgba(255,231,168,0.92)" : `rgba(${ready ? readyColor : "160,190,210"},0.72)`;
+        ctx.lineWidth = down ? 2.1 : 1.6;
+        ctx.beginPath();
+        ctx.arc(btnLayout.x, btnLayout.y, btnLayout.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.textAlign = "center";
+        ctx.fillStyle = ready ? "#d8f5ff" : "rgba(200,220,232,0.9)";
+        ctx.font = "700 11px Trebuchet MS";
+        ctx.fillText(label, btnLayout.x, btnLayout.y + 4);
+        if (!ready) {
+          ctx.font = "600 10px Trebuchet MS";
+          ctx.fillStyle = "rgba(255,208,152,0.95)";
+          ctx.fillText(cd.toFixed(1), btnLayout.x, btnLayout.y + 17);
+        }
+        ctx.restore();
+      };
+
+      drawStick(layout.leftStick, touch.leftStick, "108,216,255");
+      drawStick(layout.rightStick, touch.rightStick, "182,222,255");
+      for (const def of buttonDefs) {
+        drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown);
+      }
+
+      const actionLabelKey =
+        model.gameState === GAME_STATE.START
+          ? "touch.button.action.start"
+          : model.gameState === GAME_STATE.HANGAR
+            ? "touch.button.action.confirm"
+            : model.gameState === GAME_STATE.GAME_OVER || model.gameState === GAME_STATE.VICTORY
+              ? "touch.button.action.new_run"
+              : "touch.button.action.confirm";
+      const actionBtn = layout.buttons.action;
+      drawButton(actionBtn, tr(actionLabelKey), false, 0, "255,214,140");
+
+      if (model.gameState === GAME_STATE.PLAYING) {
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.font = "500 11px Trebuchet MS";
+        ctx.fillStyle = "rgba(192,228,245,0.82)";
+        ctx.fillText(tr("touch.hud.hint"), this.config.canvas.width / 2, this.config.canvas.height - 10);
+        ctx.restore();
+      }
     }
 
     drawMiniBoss(boss) {
@@ -2313,6 +2410,7 @@
       const { ctx, config } = this;
       const cx = config.canvas.width / 2;
       const cy = config.canvas.height / 2;
+      const touchUi = model.touchControls?.ui;
       this.drawOverlayBlock(cx, cy + 42, 730, 430);
       ctx.textAlign = "center";
       ctx.fillStyle = "#d8f5ff";
@@ -2329,6 +2427,14 @@
       ctx.font = "500 12px Trebuchet MS";
       ctx.fillStyle = "rgba(180,223,244,0.9)";
       ctx.fillText(tr("overlay.end_summary.switch_hint"), cx, cy + 224);
+      if (touchUi) {
+        const zoneW = 220;
+        const zoneH = 44;
+        touchUi.endSummaryTapZones = {
+          left: { x: cx - 300, y: cy + 200, w: zoneW, h: zoneH },
+          right: { x: cx + 80, y: cy + 200, w: zoneW, h: zoneH }
+        };
+      }
       ctx.font = "600 17px Trebuchet MS";
       ctx.fillStyle = "rgba(255,231,168,0.95)";
       ctx.fillText(tr("overlay.enter_new_run"), cx, cy + 248);
@@ -2383,6 +2489,8 @@
       const gap = 8;
       const topY = centerY;
       const pointer = model.pointer || { inside: false, x: 0, y: 0 };
+      const touchUi = model.touchControls?.ui;
+      if (touchUi) touchUi.overlayRows = [];
       let showPilotReference = false;
       ctx.textAlign = "center";
       ctx.font = "600 16px Trebuchet MS";
@@ -2393,6 +2501,19 @@
         const row = rows[i];
         const y = topY + i * (rowH + gap);
         const active = i === selected;
+        if (touchUi) {
+          const sideW = Math.max(38, Math.round(rowW * 0.2));
+          touchUi.overlayRows.push({
+            id: row.id,
+            x: centerX - rowW / 2,
+            y,
+            w: rowW,
+            h: rowH,
+            leftX: centerX - rowW / 2,
+            rightX: centerX + rowW / 2 - sideW,
+            sideW
+          });
+        }
         ctx.fillStyle = active ? "rgba(255,231,168,0.16)" : "rgba(6,18,34,0.7)";
         ctx.fillRect(centerX - rowW / 2, y, rowW, rowH);
         ctx.strokeStyle = active ? "rgba(255,231,168,0.9)" : "rgba(108,216,255,0.46)";
@@ -2587,6 +2708,7 @@
         const bottomColX0 = layoutX;
         const bottomColX1 = bottomColX0 + bottomColW0 + panelGap;
         const hangar = model.hangar;
+        const touchUi = model.touchControls?.ui;
         const lootCrate = hangar.lootCrate || [];
         const inventory = model.inventory || [];
         const equipment = model.equipment || {};
@@ -2854,6 +2976,7 @@
         const listBarX = colX0 + colW0 - 11;
         for (let i = 0; i < listRows; i += 1) {
           const item = merged[listStart + i];
+          const rowY = selY - 13;
           if (!item && merged.length === 0 && i === 0) {
             drawSelectableRow(selX, selY, colW0 - 22, tr("render.hangar.empty_selection"), false, "rgba(216,245,255,0.7)");
           } else if (!item) {
@@ -2870,6 +2993,16 @@
               selected,
               rarity?.color || "#d8f5ff"
             );
+            if (touchUi) {
+              touchUi.hangarLootRows.push({
+                source: item.source,
+                index: item.idx,
+                x: selX - 4,
+                y: rowY,
+                w: colW0 - 22,
+                h: 18
+              });
+            }
           }
           selY += 17;
         }
@@ -3107,6 +3240,15 @@
             navSection === "shop" && shopIndex === row.actionIndex,
             row.color
           );
+          if (touchUi) {
+            touchUi.hangarShopRows.push({
+              actionIndex: row.actionIndex,
+              x: actX - 4,
+              y: actY - 13,
+              w: bottomColW0 - 22,
+              h: 18
+            });
+          }
           actY += rowHeight;
           actionUsed += rowHeight;
         }

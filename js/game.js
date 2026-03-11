@@ -224,6 +224,60 @@
     };
   }
 
+  function createDefaultTouchControlsState() {
+    return {
+      inputMode: "keyboard_mouse",
+      pointers: {},
+      leftStick: {
+        active: false,
+        pointerId: null,
+        baseX: 0,
+        baseY: 0,
+        x: 0,
+        y: 0,
+        nx: 0,
+        ny: 0,
+        mag: 0
+      },
+      rightStick: {
+        active: false,
+        pointerId: null,
+        baseX: 0,
+        baseY: 0,
+        x: 0,
+        y: 0,
+        nx: 0,
+        ny: 0,
+        mag: 0
+      },
+      buttons: {
+        secondary: { down: false, pointerId: null },
+        utility: { down: false, pointerId: null },
+        evade: { down: false, pointerId: null, heldSeconds: 0, tapPending: false }
+      },
+      actions: {
+        secondaryPressed: false,
+        utilityPressed: false,
+        dashPressed: false,
+        boostActive: false,
+        fireActive: false
+      },
+      layout: null,
+      ui: {
+        overlayRows: [],
+        hangarLootRows: [],
+        hangarShopRows: [],
+        endSummaryTapZones: null
+      },
+      actionButton: {
+        visible: false,
+        x: 0,
+        y: 0,
+        radius: 0
+      }
+    };
+  }
+
   class Game {
     constructor(canvas, renderer, hud, input, config = GAME_CONFIG, audio = null) {
       this.canvas = canvas;
@@ -301,6 +355,8 @@
           y: 0,
           inside: false
         },
+        inputMode: "keyboard_mouse",
+        touchControls: createDefaultTouchControlsState(),
         hangar: {
           message: tr("game.hangar.controls"),
           shopItems: [],
@@ -402,18 +458,28 @@
       this.identityMigrationNoticePending = false;
 
       this.attachPointerTracking();
+      this.attachTouchControls();
+    }
+
+    mapPointerToCanvas(event) {
+      if (!event || typeof this.canvas?.getBoundingClientRect !== "function") return null;
+      const rect = this.canvas.getBoundingClientRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+      const scaleX = this.config.canvas.width / rect.width;
+      const scaleY = this.config.canvas.height / rect.height;
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
+      };
     }
 
     attachPointerTracking() {
       if (!this.canvas || typeof this.canvas.addEventListener !== "function") return;
       const updatePointer = (event) => {
-        if (typeof this.canvas.getBoundingClientRect !== "function") return;
-        const rect = this.canvas.getBoundingClientRect();
-        if (!rect || rect.width <= 0 || rect.height <= 0) return;
-        const scaleX = this.config.canvas.width / rect.width;
-        const scaleY = this.config.canvas.height / rect.height;
-        this.model.pointer.x = (event.clientX - rect.left) * scaleX;
-        this.model.pointer.y = (event.clientY - rect.top) * scaleY;
+        const point = this.mapPointerToCanvas(event);
+        if (!point) return;
+        this.model.pointer.x = point.x;
+        this.model.pointer.y = point.y;
         this.model.pointer.inside = true;
       };
       this.canvas.addEventListener("mousemove", updatePointer);
@@ -423,12 +489,387 @@
       });
     }
 
+    attachTouchControls() {
+      if (!this.canvas || typeof this.canvas.addEventListener !== "function") return;
+      if (this.canvas.style) this.canvas.style.touchAction = "none";
+
+      const getPointerId = (event) => {
+        const id = event?.pointerId;
+        return Number.isFinite(Number(id)) ? Number(id) : -1;
+      };
+
+      this.canvas.addEventListener("pointerdown", (event) => {
+        if (event.pointerType !== "touch") return;
+        if (this.model.uiModal) return;
+        const point = this.mapPointerToCanvas(event);
+        if (!point) return;
+        this.model.inputMode = "touch";
+        this.model.touchControls.inputMode = "touch";
+        this.model.pointer.x = point.x;
+        this.model.pointer.y = point.y;
+        this.model.pointer.inside = true;
+        const pointerId = getPointerId(event);
+        this.model.touchControls.pointers[pointerId] = { id: pointerId, x: point.x, y: point.y };
+        this.onTouchPointerDown(pointerId, point.x, point.y);
+        if (typeof this.canvas.setPointerCapture === "function") {
+          try {
+            this.canvas.setPointerCapture(event.pointerId);
+          } catch (error) {
+            // Ignore unsupported capture errors.
+          }
+        }
+        event.preventDefault();
+      });
+
+      this.canvas.addEventListener("pointermove", (event) => {
+        if (event.pointerType !== "touch") return;
+        const point = this.mapPointerToCanvas(event);
+        if (!point) return;
+        const pointerId = getPointerId(event);
+        this.model.pointer.x = point.x;
+        this.model.pointer.y = point.y;
+        this.model.pointer.inside = true;
+        this.model.touchControls.pointers[pointerId] = { id: pointerId, x: point.x, y: point.y };
+        this.onTouchPointerMove(pointerId, point.x, point.y);
+        event.preventDefault();
+      });
+
+      const release = (event) => {
+        if (event.pointerType !== "touch") return;
+        const point = this.mapPointerToCanvas(event) || { x: this.model.pointer.x, y: this.model.pointer.y };
+        const pointerId = getPointerId(event);
+        delete this.model.touchControls.pointers[pointerId];
+        this.onTouchPointerUp(pointerId, point.x, point.y);
+        if (typeof this.canvas.releasePointerCapture === "function") {
+          try {
+            this.canvas.releasePointerCapture(event.pointerId);
+          } catch (error) {
+            // Ignore unsupported release errors.
+          }
+        }
+        event.preventDefault();
+      };
+
+      this.canvas.addEventListener("pointerup", release);
+      this.canvas.addEventListener("pointercancel", release);
+    }
+
     clamp(value, min, max) {
       return clamp(value, min, max);
     }
 
     setUiModal(modalId = null) {
       this.model.uiModal = modalId || null;
+    }
+
+    resetTouchControlRuntime() {
+      const touch = createDefaultTouchControlsState();
+      touch.inputMode = this.model.inputMode || "keyboard_mouse";
+      this.model.touchControls = touch;
+    }
+
+    getTouchLayout() {
+      const width = this.config.canvas.width;
+      const height = this.config.canvas.height;
+      const baseRadius = Math.round(Math.min(width, height) * 0.11);
+      const stickRadius = this.clamp(baseRadius, 56, 84);
+      const margin = this.clamp(Math.round(stickRadius * 1.05), 58, 96);
+      const buttonRadius = this.clamp(Math.round(stickRadius * 0.48), 24, 40);
+      const buttonX = width - margin * 0.8;
+      const buttonGap = Math.round(buttonRadius * 2.35);
+      return {
+        leftStick: { x: margin, y: height - margin, radius: stickRadius },
+        rightStick: { x: width - margin, y: height - margin, radius: stickRadius },
+        buttons: {
+          secondary: { x: buttonX, y: height - margin - buttonGap * 2.15, radius: buttonRadius },
+          utility: { x: buttonX, y: height - margin - buttonGap * 1.08, radius: buttonRadius },
+          evade: { x: buttonX, y: height - margin + buttonGap * 0.06, radius: buttonRadius * 1.1 },
+          action: { x: buttonX - buttonGap * 1.15, y: height - margin + buttonGap * 0.04, radius: buttonRadius * 0.95 }
+        }
+      };
+    }
+
+    updateTouchInputState(dt) {
+      const touch = this.model.touchControls;
+      if (!touch || this.model.inputMode !== "touch") return;
+      touch.layout = this.getTouchLayout();
+      if (touch.buttons.evade.down) {
+        touch.buttons.evade.heldSeconds += dt;
+      } else {
+        touch.buttons.evade.heldSeconds = 0;
+      }
+      touch.actions.boostActive = touch.buttons.evade.down && touch.buttons.evade.heldSeconds >= 0.18;
+      touch.actions.fireActive = touch.rightStick.active && touch.rightStick.mag >= 0.2;
+      if (this.model.gameState !== GAME_STATE.PLAYING) {
+        touch.actions.fireActive = false;
+        touch.actions.boostActive = false;
+      }
+    }
+
+    getTouchMoveIntent() {
+      const touch = this.model.touchControls;
+      const ship = this.model.ship;
+      if (!touch || this.model.inputMode !== "touch" || !ship) return null;
+      const left = touch.leftStick;
+      if (!left.active || left.mag < 0.08) return null;
+      const angle = Math.atan2(left.ny, left.nx);
+      const delta = Math.atan2(Math.sin(angle - ship.angle), Math.cos(angle - ship.angle));
+      const turn = this.clamp(delta / 0.7, -1, 1);
+      return {
+        turn,
+        thrust: left.mag >= 0.16,
+        thrustScale: this.clamp(left.mag, 0, 1)
+      };
+    }
+
+    getTouchAimIntent() {
+      const touch = this.model.touchControls;
+      if (!touch || this.model.inputMode !== "touch") return null;
+      const right = touch.rightStick;
+      if (!right.active || right.mag < 0.2) return null;
+      return {
+        angle: Math.atan2(right.ny, right.nx),
+        active: true
+      };
+    }
+
+    getTouchCombatActions() {
+      const touch = this.model.touchControls;
+      if (!touch || this.model.inputMode !== "touch") {
+        return {
+          fireActive: false,
+          secondaryPressed: false,
+          utilityPressed: false,
+          dashPressed: false,
+          boostActive: false
+        };
+      }
+      return { ...touch.actions };
+    }
+
+    consumeTouchCombatAction(actionKey) {
+      const touch = this.model.touchControls;
+      if (!touch || !touch.actions) return;
+      if (actionKey === "secondaryPressed") touch.actions.secondaryPressed = false;
+      else if (actionKey === "utilityPressed") touch.actions.utilityPressed = false;
+      else if (actionKey === "dashPressed") touch.actions.dashPressed = false;
+    }
+
+    onTouchPointerDown(pointerId, x, y) {
+      const touch = this.model.touchControls;
+      if (!touch) return;
+      if (this.model.inputMode !== "touch") {
+        this.model.inputMode = "touch";
+        touch.inputMode = "touch";
+      }
+      touch.layout = this.getTouchLayout();
+      const layout = touch.layout;
+      const distTo = (pt) => Math.hypot(x - pt.x, y - pt.y);
+      const claimStick = (stick, anchor) => {
+        stick.active = true;
+        stick.pointerId = pointerId;
+        stick.baseX = anchor.x;
+        stick.baseY = anchor.y;
+        stick.x = x;
+        stick.y = y;
+      };
+      const buttons = layout.buttons;
+      const candidates = [];
+      const pushCandidate = (kind, id, ratio) => {
+        if (ratio <= 1) candidates.push({ kind, id, ratio });
+      };
+      if (!touch.leftStick.active) {
+        const limit = Math.max(1, layout.leftStick.radius * 1.25);
+        pushCandidate("stick", "left", distTo(layout.leftStick) / limit);
+      }
+      if (!touch.rightStick.active) {
+        const limit = Math.max(1, layout.rightStick.radius * 1.25);
+        pushCandidate("stick", "right", distTo(layout.rightStick) / limit);
+      }
+      if (!touch.buttons.secondary.down) {
+        const limit = Math.max(1, buttons.secondary.radius * 1.22);
+        pushCandidate("button", "secondary", distTo(buttons.secondary) / limit);
+      }
+      if (!touch.buttons.utility.down) {
+        const limit = Math.max(1, buttons.utility.radius * 1.22);
+        pushCandidate("button", "utility", distTo(buttons.utility) / limit);
+      }
+      if (!touch.buttons.evade.down) {
+        const limit = Math.max(1, buttons.evade.radius * 1.22);
+        pushCandidate("button", "evade", distTo(buttons.evade) / limit);
+      }
+      if (!candidates.length) return;
+      candidates.sort((a, b) => a.ratio - b.ratio);
+      const winner = candidates[0];
+      if (winner.kind === "stick") {
+        if (winner.id === "left") {
+          claimStick(touch.leftStick, layout.leftStick);
+          this.updateTouchStickState(touch.leftStick, layout.leftStick.radius);
+        } else {
+          claimStick(touch.rightStick, layout.rightStick);
+          this.updateTouchStickState(touch.rightStick, layout.rightStick.radius);
+        }
+        return;
+      }
+      if (winner.id === "secondary") {
+        touch.buttons.secondary.down = true;
+        touch.buttons.secondary.pointerId = pointerId;
+        touch.actions.secondaryPressed = true;
+        return;
+      }
+      if (winner.id === "utility") {
+        touch.buttons.utility.down = true;
+        touch.buttons.utility.pointerId = pointerId;
+        touch.actions.utilityPressed = true;
+        return;
+      }
+      if (winner.id === "evade") {
+        touch.buttons.evade.down = true;
+        touch.buttons.evade.pointerId = pointerId;
+        touch.buttons.evade.heldSeconds = 0;
+      }
+    }
+
+    onTouchPointerMove(pointerId, x, y) {
+      const touch = this.model.touchControls;
+      if (!touch || !touch.layout) return;
+      const updateIf = (stick, radius) => {
+        if (!stick.active || stick.pointerId !== pointerId) return false;
+        stick.x = x;
+        stick.y = y;
+        this.updateTouchStickState(stick, radius);
+        return true;
+      };
+      if (updateIf(touch.leftStick, touch.layout.leftStick.radius)) return;
+      updateIf(touch.rightStick, touch.layout.rightStick.radius);
+    }
+
+    onTouchPointerUp(pointerId, x, y) {
+      const touch = this.model.touchControls;
+      if (!touch) return;
+      if (touch.leftStick.active && touch.leftStick.pointerId === pointerId) {
+        touch.leftStick.active = false;
+        touch.leftStick.pointerId = null;
+        touch.leftStick.nx = 0;
+        touch.leftStick.ny = 0;
+        touch.leftStick.mag = 0;
+      }
+      if (touch.rightStick.active && touch.rightStick.pointerId === pointerId) {
+        touch.rightStick.active = false;
+        touch.rightStick.pointerId = null;
+        touch.rightStick.nx = 0;
+        touch.rightStick.ny = 0;
+        touch.rightStick.mag = 0;
+      }
+      if (touch.buttons.secondary.pointerId === pointerId) {
+        touch.buttons.secondary.down = false;
+        touch.buttons.secondary.pointerId = null;
+      }
+      if (touch.buttons.utility.pointerId === pointerId) {
+        touch.buttons.utility.down = false;
+        touch.buttons.utility.pointerId = null;
+      }
+      if (touch.buttons.evade.pointerId === pointerId) {
+        const held = touch.buttons.evade.heldSeconds;
+        if (held < 0.18) {
+          touch.actions.dashPressed = true;
+        }
+        touch.buttons.evade.down = false;
+        touch.buttons.evade.pointerId = null;
+        touch.buttons.evade.heldSeconds = 0;
+      }
+      this.handleTouchTapNavigation(x, y);
+    }
+
+    updateTouchStickState(stick, radius) {
+      const dx = stick.x - stick.baseX;
+      const dy = stick.y - stick.baseY;
+      const dist = Math.hypot(dx, dy);
+      const safeRadius = Math.max(1, radius);
+      const clamped = Math.min(dist, safeRadius);
+      const nx = dist > 0.0001 ? dx / dist : 0;
+      const ny = dist > 0.0001 ? dy / dist : 0;
+      stick.nx = nx;
+      stick.ny = ny;
+      stick.mag = this.clamp(clamped / safeRadius, 0, 1);
+    }
+
+    handleTouchTapNavigation(x, y) {
+      if (this.model.inputMode !== "touch" || this.model.uiModal) return;
+      const touch = this.model.touchControls;
+      if (!touch) return;
+      const layout = touch.layout || this.getTouchLayout();
+      const actionBtn = layout.buttons?.action;
+      if (actionBtn && Math.hypot(x - actionBtn.x, y - actionBtn.y) <= actionBtn.radius * 1.28) {
+        if (this.model.gameState === GAME_STATE.HANGAR) {
+          this.hangarSystem.activateNavSelection();
+        } else if (this.model.gameState === GAME_STATE.START) {
+          this.startGame(this.model.runSeed ?? generateRunSeed());
+        } else if (this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY) {
+          this.model.overlaySettingsRow = 0;
+          this.model.overlayEndSummaryPage = "overview";
+          this.model.gameState = GAME_STATE.START;
+          this.model.runSeed = generateRunSeed();
+          this.hud.sync(this.model);
+        }
+        return;
+      }
+      if (this.model.gameState === GAME_STATE.START) this.handleTouchRunSetupTap(x, y);
+      else if (this.model.gameState === GAME_STATE.HANGAR) this.handleTouchHangarTap(x, y);
+      else if (this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY) {
+        this.handleTouchEndSummaryTap(x, y);
+      }
+    }
+
+    handleTouchRunSetupTap(x, y) {
+      const rows = this.model.touchControls?.ui?.overlayRows;
+      if (!Array.isArray(rows) || !rows.length) return;
+      for (const row of rows) {
+        if (x >= row.x && x <= row.x + row.w && y >= row.y && y <= row.y + row.h) {
+          const order = this.getOverlaySettingRows();
+          const index = order.indexOf(row.id);
+          if (index >= 0) this.model.overlaySettingsRow = index;
+          if (x <= row.leftX + row.sideW) this.adjustSelectedOverlaySetting(-1);
+          else if (x >= row.rightX) this.adjustSelectedOverlaySetting(1);
+          return;
+        }
+      }
+    }
+
+    handleTouchEndSummaryTap(x, y) {
+      const zones = this.model.touchControls?.ui?.endSummaryTapZones;
+      if (!zones) return;
+      if (x >= zones.left.x && x <= zones.left.x + zones.left.w && y >= zones.left.y && y <= zones.left.y + zones.left.h) {
+        this.cycleOverlayEndSummaryPage(-1);
+        return;
+      }
+      if (x >= zones.right.x && x <= zones.right.x + zones.right.w && y >= zones.right.y && y <= zones.right.y + zones.right.h) {
+        this.cycleOverlayEndSummaryPage(1);
+      }
+    }
+
+    handleTouchHangarTap(x, y) {
+      const ui = this.model.touchControls?.ui;
+      if (!ui) return;
+      const lootRows = Array.isArray(ui.hangarLootRows) ? ui.hangarLootRows : [];
+      for (const row of lootRows) {
+        if (x >= row.x && x <= row.x + row.w && y >= row.y && y <= row.y + row.h) {
+          this.model.hangar.navSection = "loot";
+          this.model.hangar.selectionSource = row.source;
+          this.model.hangar.selectionIndex = row.index;
+          this.hangarSystem.clampSelection();
+          return;
+        }
+      }
+      const shopRows = Array.isArray(ui.hangarShopRows) ? ui.hangarShopRows : [];
+      for (const row of shopRows) {
+        if (x >= row.x && x <= row.x + row.w && y >= row.y && y <= row.y + row.h) {
+          this.model.hangar.navSection = "shop";
+          this.model.hangar.shopIndex = row.actionIndex;
+          this.hangarSystem.ensureNavState();
+          return;
+        }
+      }
     }
 
     getDefaultProfile() {
@@ -1287,6 +1728,7 @@
     }
 
     handleMetaInput() {
+      this.updateTouchInputState(1 / 60);
       if (typeof this.audio.updateBiomeAmbience === "function") {
         this.audio.updateBiomeAmbience(1 / 60, {
           gameState: this.model.gameState,
@@ -1367,6 +1809,19 @@
         if (this.input.wasPressed("KeyX")) this.combatSystem.tryUseSecondary();
         if (this.input.wasPressed("KeyC")) this.combatSystem.tryUseUtility();
         if (this.input.wasPressed("KeyV")) this.combatSystem.tryDash();
+        const touchActions = this.getTouchCombatActions();
+        if (touchActions.secondaryPressed) {
+          this.combatSystem.tryUseSecondary();
+          this.consumeTouchCombatAction("secondaryPressed");
+        }
+        if (touchActions.utilityPressed) {
+          this.combatSystem.tryUseUtility();
+          this.consumeTouchCombatAction("utilityPressed");
+        }
+        if (touchActions.dashPressed) {
+          this.combatSystem.tryDash();
+          this.consumeTouchCombatAction("dashPressed");
+        }
       }
     }
 
@@ -2474,6 +2929,7 @@
 
     update(dt) {
       if (this.model.gameState !== GAME_STATE.PLAYING) return;
+      this.updateTouchInputState(dt);
       if (typeof this.audio.updateBiomeAmbience === "function") {
         this.audio.updateBiomeAmbience(dt, {
           gameState: this.model.gameState,
@@ -2516,7 +2972,9 @@
         return;
       }
 
-      if (this.input.isDown("Space") && this.model.shootTimer <= 0) {
+      const touchActions = this.getTouchCombatActions();
+      const wantsPrimaryFire = this.input.isDown("Space") || touchActions.fireActive;
+      if (wantsPrimaryFire && this.model.shootTimer <= 0) {
         const didFire = this.combatSystem.fireBullet();
         if (didFire) this.model.shootTimer = this.getCurrentBulletCooldown();
       }

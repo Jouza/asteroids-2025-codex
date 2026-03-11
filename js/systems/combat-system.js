@@ -236,9 +236,15 @@
 
       const c = g.config;
       const profile = g.getCurrentFlightProfile();
+      const touchMove = typeof g.getTouchMoveIntent === "function" ? g.getTouchMoveIntent() : null;
+      const touchAim = typeof g.getTouchAimIntent === "function" ? g.getTouchAimIntent() : null;
+      const touchActions = typeof g.getTouchCombatActions === "function" ? g.getTouchCombatActions() : null;
       let turnInput = 0;
       if (g.input.isDown("ArrowLeft")) turnInput -= 1;
       if (g.input.isDown("ArrowRight")) turnInput += 1;
+      if (touchMove?.turn && !touchAim?.active) {
+        turnInput = g.clamp(turnInput + touchMove.turn, -1, 1);
+      }
 
       if (turnInput !== 0) {
         ship.angularVelocity += turnInput * profile.rotationAcceleration * dt;
@@ -246,10 +252,17 @@
       ship.angularVelocity *= profile.rotationDamping;
       ship.angularVelocity = g.clamp(ship.angularVelocity, -profile.rotationSpeed, profile.rotationSpeed);
       ship.angle += ship.angularVelocity * dt;
+      if (touchAim?.active) {
+        ship.angle = touchAim.angle;
+        ship.angularVelocity = 0;
+      }
 
-      if (g.input.isDown("ArrowUp")) {
-        let thrust = profile.thrust;
-        const boosting = g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight");
+      const thrustActive = g.input.isDown("ArrowUp") || Boolean(touchMove?.thrust);
+      if (thrustActive) {
+        const thrustScale = touchMove?.thrustScale ? g.clamp(touchMove.thrustScale, 0.45, 1) : 1;
+        let thrust = profile.thrust * thrustScale;
+        const boosting =
+          g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight") || Boolean(touchActions?.boostActive);
         if (boosting && ship.energy > 0) {
           const boostCfg = c.ship.boost;
           const energySpend = Math.min(ship.energy, boostCfg.energyCostPerSecond * dt);

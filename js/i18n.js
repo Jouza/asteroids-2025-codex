@@ -22,6 +22,13 @@
       "overlay.settings_ship": "Ship",
       "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
+      "touch.hud.hint": "Touch: left stick move, right stick aim/fire, EVADE tap dash hold boost",
+      "touch.button.secondary": "SECONDARY",
+      "touch.button.utility": "UTILITY",
+      "touch.button.evade": "EVADE",
+      "touch.button.action.start": "START",
+      "touch.button.action.confirm": "ACTION",
+      "touch.button.action.new_run": "NEW RUN",
       "overlay.onboarding_title": "Quick Start",
       "overlay.onboarding_line1": "Actions spend Energy + Shield together.",
       "overlay.onboarding_line2": "No shield = no shot/ability. Watch Heat and cooldowns.",
@@ -456,6 +463,12 @@
         "Mutators add a second run-wide ruleset on top of difficulty. Volatile Space boosts credits/loot but intensifies hazards, Scavenger Code favors salvage tempo, Blackout Protocol is a high-pressure challenge profile.",
       "help.card.mutator_presets.impact":
         "<strong>Impact:</strong> use mutators to change run economy/risk identity without switching base difficulty.",
+      "help.card.touch_controls_mvp.name": "Touch Controls (MVP)",
+      "help.card.touch_controls_mvp.tag": "Mobile input",
+      "help.card.touch_controls_mvp.line":
+        "Left stick controls turn/thrust, right stick controls aim with primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (tap dash, hold boost).",
+      "help.card.touch_controls_mvp.impact":
+        "<strong>Impact:</strong> full combat flow is playable on phone/tablet without changing damage, cooldown, or economy rules.",
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.entities": "Combat Entities",

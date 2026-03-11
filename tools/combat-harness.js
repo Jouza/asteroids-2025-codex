@@ -2513,6 +2513,71 @@ function runTests() {
     assert(gameA.model.pilot.skillPoints === 0, "Unlocking perk should spend one skill point");
   });
 
+  tests.push(() => {
+    gameA.model.inputMode = "keyboard_mouse";
+    const layout = gameA.getTouchLayout();
+    gameA.onTouchPointerDown(11, layout.leftStick.x, layout.leftStick.y);
+    assert(gameA.model.inputMode === "touch", "Touch pointer input should switch input mode to touch");
+  });
+
+  tests.push(() => {
+    gameA.startGame(15151);
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const evade = gameA.model.touchControls.layout.buttons.evade;
+    gameA.onTouchPointerDown(21, evade.x, evade.y);
+    gameA.updateTouchInputState(0.06);
+    gameA.onTouchPointerUp(21, evade.x, evade.y);
+    assert(gameA.getTouchCombatActions().dashPressed, "EVADE quick tap should queue dash action");
+
+    gameA.resetTouchControlRuntime();
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const evadeHold = gameA.model.touchControls.layout.buttons.evade;
+    gameA.onTouchPointerDown(22, evadeHold.x, evadeHold.y);
+    gameA.updateTouchInputState(0.26);
+    const actionsHold = gameA.getTouchCombatActions();
+    assert(actionsHold.boostActive, "EVADE hold should activate boost state");
+    gameA.onTouchPointerUp(22, evadeHold.x, evadeHold.y);
+    assert(!gameA.getTouchCombatActions().dashPressed, "EVADE hold release should not queue dash action");
+  });
+
+  tests.push(() => {
+    gameA.startGame(16161);
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const right = gameA.model.touchControls.layout.rightStick;
+    gameA.onTouchPointerDown(31, right.x, right.y);
+    gameA.onTouchPointerMove(31, right.x + right.radius * 0.82, right.y);
+    gameA.updateTouchInputState(1 / 60);
+    const actions = gameA.getTouchCombatActions();
+    assert(actions.fireActive, "Active aim stick should enable touch primary auto-fire");
+  });
+
+  tests.push(() => {
+    gameA.startGame(17172);
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.actions.secondaryPressed = true;
+    gameA.model.touchControls.actions.utilityPressed = true;
+    let secondaryCalls = 0;
+    let utilityCalls = 0;
+    const prevSecondary = gameA.combatSystem.tryUseSecondary.bind(gameA.combatSystem);
+    const prevUtility = gameA.combatSystem.tryUseUtility.bind(gameA.combatSystem);
+    gameA.combatSystem.tryUseSecondary = () => {
+      secondaryCalls += 1;
+      return prevSecondary();
+    };
+    gameA.combatSystem.tryUseUtility = () => {
+      utilityCalls += 1;
+      return prevUtility();
+    };
+    gameA.handleMetaInput();
+    assert(secondaryCalls === 1, "Touch SECONDARY action should call same flow as KeyX");
+    assert(utilityCalls === 1, "Touch UTILITY action should call same flow as KeyC");
+    assert(!gameA.getTouchCombatActions().secondaryPressed, "Secondary touch action should be consumed after meta input");
+    assert(!gameA.getTouchCombatActions().utilityPressed, "Utility touch action should be consumed after meta input");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     sharedStorage.clear();
