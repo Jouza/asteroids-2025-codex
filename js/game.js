@@ -2957,6 +2957,10 @@
           ship.hull = Math.max(0, ship.hull - remaining);
         }
         this.pushIncomingHitCue({
+          kind:
+            typeof overrides.hitCueKind === "string" && overrides.hitCueKind.length > 0
+              ? overrides.hitCueKind
+              : resolved.damageType || event?.damageType || "kinetic",
           damageType: resolved.damageType || event?.damageType || "kinetic",
           isCrit: Boolean(resolved.isCrit),
           shieldAbsorb,
@@ -4010,6 +4014,12 @@
       if (!cue || typeof cue !== "object") return;
       const ttl = cue.isCrit ? 0.58 : 0.44;
       const item = {
+        kind:
+          typeof cue.kind === "string" && cue.kind.length > 0
+            ? cue.kind
+            : typeof cue.damageType === "string"
+              ? cue.damageType
+              : "kinetic",
         damageType: typeof cue.damageType === "string" ? cue.damageType : "kinetic",
         isCrit: Boolean(cue.isCrit),
         shieldAbsorb: Math.max(0, Number(cue.shieldAbsorb) || 0),

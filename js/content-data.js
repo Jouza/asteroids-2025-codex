@@ -312,6 +312,7 @@
       mutators: [
         {
           id: "standard",
+          telegraphClass: "standard",
           pressureMul: 1.0,
           enemyDamageTakenMul: 1.0,
           playerDamageMul: 1.0,
@@ -322,6 +323,7 @@
         },
         {
           id: "volatile_space",
+          telegraphClass: "high_noise",
           pressureMul: 1.08,
           enemyDamageTakenMul: 1.06,
           playerDamageMul: 0.98,
@@ -332,6 +334,7 @@
         },
         {
           id: "scavenger_code",
+          telegraphClass: "standard",
           pressureMul: 0.95,
           enemyDamageTakenMul: 0.94,
           playerDamageMul: 1.04,
@@ -342,6 +345,7 @@
         },
         {
           id: "blackout_protocol",
+          telegraphClass: "pressure",
           pressureMul: 1.15,
           enemyDamageTakenMul: 1.16,
           playerDamageMul: 0.9,
@@ -419,6 +423,21 @@
         { maxSector: 8, difficulty: 1.24 },
         { maxSector: 999, difficulty: 1.34 }
       ],
+      hazardTelegraphScaling: {
+        clampMin: 0.72,
+        clampMax: 1.45,
+        difficulty: {
+          rookie: 0.9,
+          normal: 1.0,
+          veteran: 1.08,
+          ace: 1.16
+        },
+        mutatorClass: {
+          standard: 1.0,
+          pressure: 1.08,
+          high_noise: 1.14
+        }
+      },
       biomes: [
         {
           id: "belt",

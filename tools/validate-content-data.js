@@ -253,6 +253,13 @@ function validateContentData(contentData, issues) {
   if (Array.isArray(missionMutators)) {
     for (const [index, mutator] of missionMutators.entries()) {
       assert(typeof mutator.id === "string" && mutator.id.length > 0, `mission.mutators[${index}] id is required`, issues);
+      if (mutator.telegraphClass != null) {
+        assert(
+          typeof mutator.telegraphClass === "string" && mutator.telegraphClass.length > 0,
+          `mission mutator ${mutator.id || index} telegraphClass must be a non-empty string`,
+          issues
+        );
+      }
       for (const key of [
         "pressureMul",
         "enemyDamageTakenMul",
@@ -264,6 +271,39 @@ function validateContentData(contentData, issues) {
       ]) {
         const value = Number(mutator[key]);
         assert(Number.isFinite(value) && value > 0, `mission mutator ${mutator.id || index} ${key} must be > 0`, issues);
+      }
+    }
+  }
+  const telegraphScaling = contentData.missionDirector?.hazardTelegraphScaling;
+  if (telegraphScaling != null) {
+    assert(
+      telegraphScaling && typeof telegraphScaling === "object" && !Array.isArray(telegraphScaling),
+      "missionDirector.hazardTelegraphScaling must be an object when provided",
+      issues
+    );
+    if (telegraphScaling && typeof telegraphScaling === "object" && !Array.isArray(telegraphScaling)) {
+      for (const key of ["clampMin", "clampMax"]) {
+        if (telegraphScaling[key] == null) continue;
+        const value = Number(telegraphScaling[key]);
+        assert(Number.isFinite(value) && value > 0, `missionDirector.hazardTelegraphScaling.${key} must be > 0`, issues);
+      }
+      for (const mapKey of ["difficulty", "mutatorClass"]) {
+        const map = telegraphScaling[mapKey];
+        if (map == null) continue;
+        assert(
+          map && typeof map === "object" && !Array.isArray(map),
+          `missionDirector.hazardTelegraphScaling.${mapKey} must be an object`,
+          issues
+        );
+        if (!map || typeof map !== "object" || Array.isArray(map)) continue;
+        for (const [entryId, rawMul] of Object.entries(map)) {
+          const value = Number(rawMul);
+          assert(
+            Number.isFinite(value) && value > 0,
+            `missionDirector.hazardTelegraphScaling.${mapKey}.${entryId} must be > 0`,
+            issues
+          );
+        }
       }
     }
   }

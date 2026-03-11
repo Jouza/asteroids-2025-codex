@@ -994,7 +994,8 @@
         collision: "255,182,126",
         explosive: "255,154,126",
         plasma: "192,255,182",
-        dot_thermal: "255,138,114"
+        dot_thermal: "255,138,114",
+        emp_jam_pressure: "178,160,255"
       };
       ctx.save();
       for (const cue of cues) {
@@ -1002,19 +1003,25 @@
         const maxTtl = Math.max(0.01, Number(cue.maxTtl) || ttl || 0.45);
         const ratio = Math.max(0, Math.min(1, ttl / maxTtl));
         const severity = Math.max(0.18, Math.min(1, (Number(cue.shieldAbsorb) || 0) * 0.02 + (Number(cue.hullDamage) || 0) * 0.04));
-        const color = palette[cue.damageType] || "212,228,255";
+        const cueKind = typeof cue.kind === "string" ? cue.kind : cue.damageType;
+        const color = palette[cueKind] || palette[cue.damageType] || "212,228,255";
         const alpha = Math.max(0.05, Math.min(0.4, ratio * severity * (cue.isCrit ? 0.56 : 0.38)));
+        const isEmpJam = cueKind === "emp_jam_pressure";
         const radius = ship.radius + 16 + (1 - ratio) * 26;
         ctx.strokeStyle = `rgba(${color},${alpha})`;
         ctx.lineWidth = cue.isCrit ? 3 : 2;
         ctx.beginPath();
-        ctx.arc(ship.x, ship.y, radius, -Math.PI * 0.2, Math.PI * 1.2);
+        if (isEmpJam) {
+          ctx.arc(ship.x, ship.y, radius, -Math.PI * 0.42, Math.PI * 0.72);
+        } else {
+          ctx.arc(ship.x, ship.y, radius, -Math.PI * 0.2, Math.PI * 1.2);
+        }
         ctx.stroke();
-        ctx.fillStyle = `rgba(${color},${alpha * 0.32})`;
+        ctx.fillStyle = `rgba(${color},${alpha * (isEmpJam ? 0.24 : 0.32)})`;
         ctx.beginPath();
-        ctx.arc(ship.x, ship.y, ship.radius + 7 + (1 - ratio) * 10, 0, Math.PI * 2);
+        ctx.arc(ship.x, ship.y, ship.radius + 7 + (1 - ratio) * (isEmpJam ? 7 : 10), 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = `rgba(${color},${alpha * 0.22})`;
+        ctx.fillStyle = `rgba(${color},${alpha * (isEmpJam ? 0.12 : 0.22)})`;
         ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
       }
       ctx.restore();
@@ -1302,15 +1309,16 @@
       const biomeHazards = mission.biomeHazards || [];
       for (const hazard of biomeHazards) {
         const hazardBeatBoost = 1 + beatPulse * 0.16;
+        const telegraphVisualMul = Math.max(0.65, Math.min(1.7, Number(hazard.telegraphVisualMul) || 1));
         const telegraphRatio = Math.max(0, Math.min(1, Number(hazard.telegraphRatio) || 0));
-        const telegraphPulse = hazard.telegraphActive ? 0.45 + telegraphRatio * 0.55 : 0;
+        const telegraphPulse = hazard.telegraphActive ? (0.45 + telegraphRatio * 0.55) * telegraphVisualMul : 0;
         const telegraphCfg = hazard.telegraphProfile || {};
         const telegraphColor =
           typeof telegraphCfg.pulseColor === "string" && telegraphCfg.pulseColor.length > 0
             ? telegraphCfg.pulseColor
             : "255,204,148";
-        const ringBoost = Math.max(0, Number(telegraphCfg.ringBoost) || 0);
-        const lineBoost = Math.max(0, Number(telegraphCfg.lineBoost) || 0);
+        const ringBoost = Math.max(0, Number(telegraphCfg.ringBoost) || 0) * telegraphVisualMul;
+        const lineBoost = Math.max(0, Number(telegraphCfg.lineBoost) || 0) * telegraphVisualMul;
         const pulseRadius =
           hazard.type === "plasma_vent"
             ? hazard.radius * (0.84 + Math.sin((hazard.phase ?? 0) * 2.8) * 0.16) * hazardBeatBoost * (1 + telegraphPulse * ringBoost)
@@ -1433,7 +1441,10 @@
           }
         }
         if (hazard.telegraphActive) {
-          const teleAlpha = Math.max(0.14, Math.min(0.62, (Number(telegraphCfg.pulseAlpha) || 0.22) * (0.6 + telegraphPulse * 0.9)));
+          const teleAlpha = Math.max(
+            0.12,
+            Math.min(0.7, (Number(telegraphCfg.pulseAlpha) || 0.22) * telegraphVisualMul * (0.58 + telegraphPulse * 0.86))
+          );
           ctx.strokeStyle = `rgba(${telegraphColor},${teleAlpha})`;
           ctx.lineWidth = 1.4 + telegraphPulse * (2.2 + lineBoost * 2.5);
           ctx.beginPath();

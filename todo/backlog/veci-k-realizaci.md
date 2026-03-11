@@ -2,10 +2,6 @@
 
 ## Prioritni fronta (herni zazitek: vizual + gameplay)
 
-- [ ] Combat readability follow-up (post Telegraph 2.0)
-  - [ ] Jemne doladeni prahu intenzity telegraphu podle obtiznosti/mutatoru (vizual only)
-  - [ ] Rozsireni hit-type cue palety o odliseni EMP/jam tlak vs cisty damage
-
 - [ ] Atmosphere follow-up (post Raw Space v1)
   - [ ] Lokalni slider/preset pro intenzitu ambient VFX (Low/Default/High) pro slabsi GPU
   - [ ] Dalsi "event beat" varianty podle hazard typu (unikatni signature pulse)

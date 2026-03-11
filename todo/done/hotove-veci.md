@@ -1,5 +1,14 @@
 # Hotove veci
 
+- [x] Combat readability follow-up (post Telegraph 2.0)
+  - [x] Pridano data-driven `missionDirector.hazardTelegraphScaling` (difficulty + mutator class) pro jemne vizualni skaly telegraph vrstvy
+  - [x] Mission runtime doplnuje `hazard.telegraphVisualMul` bez zasahu do hazard timing/damage logiky
+  - [x] Incoming hit cue pipeline rozsirena o `kind: emp_jam_pressure` pro jammer/EMP tlak odliseny od cisteho damage typu
+  - [x] Render hit-cue pass ma novou EMP/JAM barevnou a tvarovou signaturu (interference arc) oddelenou od standardnich damage cue
+  - [x] Relay/neon hazard pressure hooky emituji EMP/JAM cue i pro systemovy tlak (cooldown/energy), tick damage drzi stejny gameplay
+  - [x] Help/i18n karta `Hazard Readability 2.0` aktualizovana o risk-profile telegraph scaling + EMP/JAM cue vysvetleni
+  - [x] Harness coverage doplnena pro telegraph scaling (difficulty/mutator) a `emp_jam_pressure` cue flow
+
 - [x] Endgame / replayability - Boss Rush depth pass (MVP slice 1)
   - [x] Pridany data-driven `run.bossRush.depthTemplates` (sektory 1-4) s `bossTuning`, `arenaPressure` a `phaseBeatIntensityMul`
   - [x] Boss Rush `mini_boss` mise nahrava template do `currentMission.bossRushDepth` + `bossRushPressure` runtime state

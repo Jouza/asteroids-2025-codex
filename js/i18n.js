@@ -724,9 +724,9 @@
       "help.card.hazard_readability_telegraph.name": "Hazard Readability 2.0",
       "help.card.hazard_readability_telegraph.tag": "Combat telegraph",
       "help.card.hazard_readability_telegraph.line":
-        "Tick hazards now telegraph with incoming pulses before damage windows. Off-screen indicators mark boss/hazard/anomaly threats outside view, and incoming damage cues show hit type.",
+        "Tick hazards telegraph with incoming pulses before damage windows, and telegraph intensity now scales with run risk profile (difficulty + mutator class). Off-screen indicators mark boss/hazard/anomaly threats outside view.",
       "help.card.hazard_readability_telegraph.impact":
-        "<strong>Impact:</strong> faster threat parsing under pressure with no gameplay rule changes.",
+        "<strong>Impact:</strong> faster threat parsing under pressure with no gameplay rule changes; EMP/jam pressure now uses a distinct incoming cue from pure damage hits.",
       "help.weapon.slot.primary": "Primary",
       "help.weapon.slot.secondary": "Secondary",
       "help.weapon.slot.utility": "Utility",

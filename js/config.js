@@ -951,6 +951,7 @@
       mutators: [
         {
           id: "standard",
+          telegraphClass: "standard",
           pressureMul: 1.0,
           enemyDamageTakenMul: 1.0,
           playerDamageMul: 1.0,
@@ -961,6 +962,7 @@
         },
         {
           id: "volatile_space",
+          telegraphClass: "high_noise",
           pressureMul: 1.08,
           enemyDamageTakenMul: 1.06,
           playerDamageMul: 0.98,
@@ -971,6 +973,7 @@
         },
         {
           id: "scavenger_code",
+          telegraphClass: "standard",
           pressureMul: 0.95,
           enemyDamageTakenMul: 0.94,
           playerDamageMul: 1.04,
@@ -981,6 +984,7 @@
         },
         {
           id: "blackout_protocol",
+          telegraphClass: "pressure",
           pressureMul: 1.15,
           enemyDamageTakenMul: 1.16,
           playerDamageMul: 0.9,
@@ -1555,6 +1559,21 @@
           warningPriority: 2
         }
       },
+      hazardTelegraphScaling: {
+        clampMin: 0.72,
+        clampMax: 1.45,
+        difficulty: {
+          rookie: 0.9,
+          normal: 1.0,
+          veteran: 1.08,
+          ace: 1.16
+        },
+        mutatorClass: {
+          standard: 1.0,
+          pressure: 1.08,
+          high_noise: 1.14
+        }
+      },
       biomes: [
         {
           id: "belt",
@@ -1945,6 +1964,13 @@
           typeof config.missionDirector?.hazardTelegraphs === "object" &&
           typeof config.missionDirector?.hazardTelegraphs?.default === "object",
         msg: "missionDirector.hazardTelegraphs missing or invalid"
+      },
+      {
+        ok:
+          config.missionDirector?.hazardTelegraphScaling == null ||
+          (typeof config.missionDirector.hazardTelegraphScaling === "object" &&
+            !Array.isArray(config.missionDirector.hazardTelegraphScaling)),
+        msg: "missionDirector.hazardTelegraphScaling invalid"
       },
       { ok: config.mission.asteroidStorm.baseTarget >= 1, msg: "mission.asteroidStorm.baseTarget must be >= 1" },
       { ok: config.ufo.speedScaleMaxBonus >= 0, msg: "ufo.speedScaleMaxBonus must be >= 0" },

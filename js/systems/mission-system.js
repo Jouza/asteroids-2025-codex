@@ -137,6 +137,28 @@
       };
     }
 
+    getHazardTelegraphVisualMultiplier() {
+      const g = this.game;
+      const scaling = g.config.missionDirector?.hazardTelegraphScaling || {};
+      const difficultyMap = scaling.difficulty && typeof scaling.difficulty === "object" ? scaling.difficulty : {};
+      const mutatorClassMap = scaling.mutatorClass && typeof scaling.mutatorClass === "object" ? scaling.mutatorClass : {};
+      const runDiff =
+        typeof g.getRunDifficultyMultipliers === "function"
+          ? g.getRunDifficultyMultipliers()
+          : { difficultyId: g.model?.runDifficultyId || "normal" };
+      const difficultyId = typeof runDiff.difficultyId === "string" && runDiff.difficultyId.length > 0 ? runDiff.difficultyId : "normal";
+      const mutatorProfile = typeof g.getRunMutatorProfile === "function" ? g.getRunMutatorProfile() : null;
+      const mutatorClass =
+        typeof mutatorProfile?.telegraphClass === "string" && mutatorProfile.telegraphClass.length > 0
+          ? mutatorProfile.telegraphClass
+          : "standard";
+      const difficultyMul = Math.max(0.35, Number(difficultyMap[difficultyId]) || 1);
+      const mutatorMul = Math.max(0.35, Number(mutatorClassMap[mutatorClass]) || 1);
+      const clampMin = g.clamp(Number(scaling.clampMin) || 0.72, 0.35, 1.5);
+      const clampMax = g.clamp(Number(scaling.clampMax) || 1.45, clampMin, 2.2);
+      return g.clamp(difficultyMul * mutatorMul, clampMin, clampMax);
+    }
+
     createMissionVisualFxState(biomeId) {
       const profile = this.getBiomeVisualProfile(biomeId);
       return {
@@ -413,7 +435,9 @@
           telegraphActive: false,
           telegraphRatio: 0,
           telegraphKind: "",
-          lastTickAt: -999
+          lastTickAt: -999,
+          telegraphVisualMul: 1,
+          jamCueTimer: 0
         });
       }
       return hazards;
@@ -1015,12 +1039,15 @@
       }
 
       const hazards = mission.biomeHazards || [];
+      const telegraphVisualMul = this.getHazardTelegraphVisualMultiplier();
       for (const hazard of hazards) {
         hazard.phase += dt;
+        hazard.jamCueTimer = Math.max(0, (hazard.jamCueTimer ?? 0) - dt);
         if (hazard.type === "relay_jammer_burst") hazard.pulseActive = false;
         hazard.telegraphActive = false;
         hazard.telegraphRatio = 0;
         hazard.telegraphKind = "";
+        hazard.telegraphVisualMul = telegraphVisualMul;
         if (!hazard.telegraphProfile || typeof hazard.telegraphProfile !== "object") {
           hazard.telegraphProfile = this.getHazardTelegraphProfile(hazard.type);
         }
@@ -1097,9 +1124,20 @@
           g.model.secondaryCooldown += cooldownPressure * 0.6;
           g.model.utilityCooldown += cooldownPressure * 0.45;
           g.model.dashCooldown += cooldownPressure * 0.55;
+          if (hazard.jamCueTimer <= 0) {
+            g.pushIncomingHitCue({
+              kind: "emp_jam_pressure",
+              damageType: "plasma",
+              isCrit: false,
+              shieldAbsorb: 0.8,
+              hullDamage: 0
+            });
+            hazard.jamCueTimer = 0.46;
+          }
           if (hazard.tickTimer <= 0) {
             g.applyDamageToShip("enemy_bullet_support", {
               baseDamage: hazard.tickDamage * hazardMul,
+              hitCueKind: "emp_jam_pressure",
               critChance: 0,
               critMultiplier: 1
             });
@@ -1120,10 +1158,21 @@
           g.model.secondaryCooldown += cooldownPressure * 0.7;
           g.model.utilityCooldown += cooldownPressure * 0.55;
           g.model.dashCooldown += cooldownPressure * 0.4;
+          if (hazard.jamCueTimer <= 0) {
+            g.pushIncomingHitCue({
+              kind: "emp_jam_pressure",
+              damageType: "plasma",
+              isCrit: false,
+              shieldAbsorb: 0.7,
+              hullDamage: 0
+            });
+            hazard.jamCueTimer = 0.52;
+          }
           if (hazard.tickTimer <= 0) {
             g.applyDamageToShip("enemy_bullet_support", {
               baseDamage: hazard.tickDamage * hazardMul,
               damageType: "plasma",
+              hitCueKind: "emp_jam_pressure",
               critChance: 0,
               critMultiplier: 1
             });

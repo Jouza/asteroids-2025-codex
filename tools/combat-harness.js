@@ -841,6 +841,95 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(8831);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    gameA.model.runMutatorId = "standard";
+    gameA.model.runDifficultyId = "rookie";
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-scale",
+          type: "debris_field",
+          x: 480,
+          y: 360,
+          radius: 100,
+          tickSeconds: 0.8,
+          tickDamage: 8,
+          slowMul: 0.99,
+          tickTimer: 0.1,
+          phase: 0.2,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("debris_field"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const rookieMul = Number(gameA.model.currentMission.biomeHazards[0].telegraphVisualMul) || 0;
+    gameA.model.runDifficultyId = "ace";
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const aceMul = Number(gameA.model.currentMission.biomeHazards[0].telegraphVisualMul) || 0;
+    assert(aceMul > rookieMul, "Hazard telegraph visual multiplier should be higher on Ace than Rookie");
+  });
+
+  tests.push(() => {
+    gameA.startGame(8832);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    gameA.model.runDifficultyId = "normal";
+    gameA.model.runMutatorId = "standard";
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-scale-mut",
+          type: "plasma_vent",
+          x: 480,
+          y: 360,
+          radius: 100,
+          tickSeconds: 0.6,
+          tickDamage: 7,
+          tickTimer: 0.1,
+          phase: 0.3,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("plasma_vent"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const standardMul = Number(gameA.model.currentMission.biomeHazards[0].telegraphVisualMul) || 0;
+    gameA.model.runMutatorId = "volatile_space";
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 60);
+    const noiseMul = Number(gameA.model.currentMission.biomeHazards[0].telegraphVisualMul) || 0;
+    assert(noiseMul > standardMul, "Mutator telegraph class should scale hazard telegraph visual multiplier");
+  });
+
+  tests.push(() => {
     gameA.startGame(8888);
     const ship = gameA.model.ship;
     ship.x = 480;
@@ -960,6 +1049,63 @@ function runTests() {
     assert(gameA.model.incomingHitCues.length > beforeCount, "Damage to ship should create incoming hit cue");
     const cue = gameA.model.incomingHitCues[gameA.model.incomingHitCues.length - 1];
     assert(cue.damageType === "plasma", "Incoming hit cue should keep resolved damage type");
+  });
+
+  tests.push(() => {
+    gameA.startGame(9342);
+    gameA.model.ship.invulnMs = 0;
+    gameA.applyDamageToShip("enemy_bullet_support", {
+      baseDamage: 8,
+      critChance: 0,
+      hitCueKind: "emp_jam_pressure"
+    });
+    const cue = gameA.model.incomingHitCues[gameA.model.incomingHitCues.length - 1];
+    assert(cue.kind === "emp_jam_pressure", "Incoming hit cue should keep explicit EMP/JAM cue kind");
+  });
+
+  tests.push(() => {
+    gameA.startGame(9343);
+    const ship = gameA.model.ship;
+    ship.x = 480;
+    ship.y = 360;
+    ship.invulnMs = 0;
+    gameA.model.currentMission = {
+      type: "survive",
+      label: "SURVIVE",
+      objectiveText: "",
+      completed: false,
+      modifierId: "clear_skies",
+      modifierLabel: "Clear Skies",
+      modifierEffects: {},
+      biomeHazards: [
+        {
+          id: "hz-relay-cue",
+          type: "relay_jammer_burst",
+          x: 480,
+          y: 360,
+          radius: 110,
+          tickSeconds: 0.3,
+          tickDamage: 4,
+          pulseCycleSeconds: 2.6,
+          pulseWindowSeconds: 0.72,
+          jamCooldownPerSecond: 0.6,
+          jamDragMul: 0.995,
+          angularDragMul: 0.965,
+          tickTimer: 0.4,
+          phase: 0.2,
+          pulseActive: false,
+          active: false,
+          telegraphProfile: gameA.missionSystem.getHazardTelegraphProfile("relay_jammer_burst"),
+          telegraphActive: false,
+          telegraphRatio: 0,
+          telegraphKind: "",
+          lastTickAt: -999
+        }
+      ]
+    };
+    gameA.missionSystem.applyMissionEnvironmentalEffects(1 / 30);
+    const cue = gameA.model.incomingHitCues[gameA.model.incomingHitCues.length - 1];
+    assert(cue?.kind === "emp_jam_pressure", "Relay jammer pressure should emit EMP/JAM incoming cue");
   });
 
   tests.push(() => {
