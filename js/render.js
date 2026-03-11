@@ -2168,6 +2168,34 @@
         const statusKey = summary.statusKey || "overlay.campaign_complete";
         ctx.fillStyle = "rgba(255,231,168,0.95)";
         ctx.fillText(tr(statusKey), centerX, y);
+        const finalRewards = summary.finalClearRewards;
+        if (finalRewards) {
+          y += 28;
+          ctx.fillStyle = "rgba(194,237,255,0.95)";
+          ctx.font = "600 16px Trebuchet MS";
+          ctx.fillText(tr("overlay.end_summary.final_rewards_title"), centerX, y);
+          y += 19;
+          ctx.font = "500 13px Trebuchet MS";
+          ctx.fillStyle = "rgba(216,245,255,0.95)";
+          ctx.fillText(
+            tr("overlay.end_summary.final_rewards_mode", {
+              mode: finalRewards.mode === "boss_rush" ? tr("game.run_mode.boss_rush") : tr("game.run_mode.campaign")
+            }),
+            centerX,
+            y
+          );
+          y += 17;
+          ctx.fillText(
+            tr("overlay.end_summary.final_rewards_values", {
+              credits: Math.max(0, Math.floor(Number(finalRewards.credits) || 0)),
+              salvage: Math.max(0, Math.floor(Number(finalRewards.salvage) || 0)),
+              score: Math.max(0, Math.floor(Number(finalRewards.score) || 0)),
+              drops: Math.max(0, Math.floor(Number(finalRewards.dropsCount) || 0))
+            }),
+            centerX,
+            y
+          );
+        }
       }
       return y;
     }

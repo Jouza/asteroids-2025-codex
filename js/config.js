@@ -787,6 +787,22 @@
         finalSector: 4,
         finalMissionType: "mini_boss"
       },
+      finalClearRewards: {
+        campaign: {
+          creditsBase: 180,
+          salvageBase: 5,
+          scoreBonus: 600,
+          guaranteedDrops: 2,
+          dropRarityFloor: "rare"
+        },
+        boss_rush: {
+          creditsBase: 140,
+          salvageBase: 4,
+          scoreBonus: 480,
+          guaranteedDrops: 1,
+          dropRarityFloor: "rare"
+        }
+      },
       difficultyPresets: [
         {
           id: "rookie",

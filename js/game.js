@@ -289,6 +289,8 @@
         endlessUnlocked: false,
         victorySummary: null,
         gameOverSummary: null,
+        finalClearRewards: null,
+        finalClearRewardGranted: false,
         missionCompleteSummary: null,
         flightModel: "arcade",
         runDifficultyId: "normal",
@@ -1539,6 +1541,15 @@
         salvageParts: this.model.salvageParts,
         missionsCompleted: this.model.telemetry.completedMissions,
         miniBossKills: this.model.telemetry.kills.miniBosses,
+        finalClearRewards: this.model.finalClearRewards
+          ? {
+              mode: this.model.finalClearRewards.mode,
+              credits: this.model.finalClearRewards.credits,
+              salvage: this.model.finalClearRewards.salvage,
+              score: this.model.finalClearRewards.score,
+              dropsCount: this.model.finalClearRewards.dropsCount
+            }
+          : null,
         runSummary: {
           damageTakenTotal: {
             shieldAbsorb: Math.max(0, Number(runSummary.damageTakenTotal?.shieldAbsorb) || 0),
@@ -1568,8 +1579,79 @@
       } else if (!resolvedStatusKey) {
         resolvedStatusKey = this.isBossRushMode() ? "overlay.boss_rush_complete" : "overlay.campaign_complete";
       }
+      this.applyFinalClearRewards();
       this.model.victorySummary = this.buildVictorySummary({ statusKey: resolvedStatusKey });
       this.endRun(GAME_STATE.VICTORY, "victory", "mission_complete");
+    }
+
+    getFinalClearRewardProfile() {
+      const profiles = this.config.run?.finalClearRewards;
+      if (!profiles || typeof profiles !== "object") return null;
+      if (this.isBossRushMode()) return profiles.boss_rush || null;
+      if (this.isCampaignMode()) return profiles.campaign || null;
+      return null;
+    }
+
+    getRarityRankMap() {
+      const map = {};
+      const rarities = Array.isArray(this.config.loot?.rarities) ? this.config.loot.rarities : [];
+      for (let i = 0; i < rarities.length; i += 1) {
+        const rarity = rarities[i];
+        if (!rarity?.id) continue;
+        map[rarity.id] = Number.isFinite(Number(rarity.rank)) ? Number(rarity.rank) : i;
+      }
+      return map;
+    }
+
+    createModuleDropWithRarityFloor(floorId = null) {
+      const normalizedFloor = typeof floorId === "string" && floorId.length > 0 ? floorId : null;
+      if (!normalizedFloor) return this.createModuleDrop();
+      const ranks = this.getRarityRankMap();
+      const floorRank = Number.isFinite(Number(ranks[normalizedFloor])) ? Number(ranks[normalizedFloor]) : null;
+      if (floorRank == null) return this.createModuleDrop();
+      let best = this.createModuleDrop();
+      let bestRank = Number.isFinite(Number(ranks[best.rarityId])) ? Number(ranks[best.rarityId]) : -1;
+      for (let i = 0; i < 8 && bestRank < floorRank; i += 1) {
+        const candidate = this.createModuleDrop();
+        const candidateRank = Number.isFinite(Number(ranks[candidate.rarityId])) ? Number(ranks[candidate.rarityId]) : -1;
+        if (candidateRank > bestRank) {
+          best = candidate;
+          bestRank = candidateRank;
+        }
+        if (candidateRank >= floorRank) return candidate;
+      }
+      return best;
+    }
+
+    applyFinalClearRewards() {
+      if (this.model.finalClearRewardGranted) return this.model.finalClearRewards || null;
+      const profile = this.getFinalClearRewardProfile();
+      if (!profile) return null;
+      const credits = Math.max(0, Math.floor(Number(profile.creditsBase) || 0));
+      const salvage = Math.max(0, Math.floor(Number(profile.salvageBase) || 0));
+      const score = Math.max(0, Math.floor(Number(profile.scoreBonus) || 0));
+      const guaranteedDrops = Math.max(0, Math.floor(Number(profile.guaranteedDrops) || 0));
+      const dropRarityFloor = typeof profile.dropRarityFloor === "string" ? profile.dropRarityFloor : null;
+      if (credits > 0) {
+        this.model.credits += credits;
+        this.model.telemetry.creditsEarned += credits;
+      }
+      if (salvage > 0) this.model.salvageParts += salvage;
+      if (score > 0) this.registerScore(score, true);
+      for (let i = 0; i < guaranteedDrops; i += 1) {
+        const drop = this.createModuleDropWithRarityFloor(dropRarityFloor);
+        this.model.hangar.lootCrate.push(drop);
+        this.recordRunSummaryDrop(drop, "finalClear");
+      }
+      this.model.finalClearRewards = {
+        mode: this.isBossRushMode() ? "boss_rush" : "campaign",
+        credits,
+        salvage,
+        score,
+        dropsCount: guaranteedDrops
+      };
+      this.model.finalClearRewardGranted = true;
+      return this.model.finalClearRewards;
     }
 
     onMissionCompletionResolved() {
@@ -1638,6 +1720,8 @@
       this.model.currentMission = null;
       this.model.victorySummary = null;
       this.model.gameOverSummary = null;
+      this.model.finalClearRewards = null;
+      this.model.finalClearRewardGranted = false;
       this.model.missionCompleteSummary = null;
       this.model.bountyBoard = { sector: 1, factionId: null, offers: [], rerollsUsed: 0 };
       if (!this.model.endlessUnlocked && this.model.runMode === "endless") this.model.runMode = "campaign";

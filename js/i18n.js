@@ -53,6 +53,9 @@
       "overlay.end_summary.page_indicator": "Page {current}/{total}",
       "overlay.end_summary.switch_hint": "Left/Right switch page",
       "overlay.end_summary.overview_progress": "Missions {missions} | Boss kills {bosses} | Salvage {salvage}",
+      "overlay.end_summary.final_rewards_title": "Final Clear Reward Table",
+      "overlay.end_summary.final_rewards_mode": "Mode: {mode}",
+      "overlay.end_summary.final_rewards_values": "+{credits}cr | +{salvage} salvage | +{score} score | Drops {drops}",
       "overlay.end_summary.damage_title": "Damage Taken",
       "overlay.end_summary.damage_shield": "Shield absorbed: {value}",
       "overlay.end_summary.damage_hull": "Hull lost: {value}",
@@ -62,6 +65,7 @@
       "overlay.end_summary.source.asteroid": "Asteroid",
       "overlay.end_summary.source.ufo": "UFO",
       "overlay.end_summary.source.miniBoss": "Boss",
+      "overlay.end_summary.source.finalClear": "Final Clear",
       "overlay.end_summary.source.unknown": "Unknown",
       "overlay.end_summary.timeline_title": "Mission Timeline",
       "overlay.end_summary.no_timeline": "No completed missions recorded.",
@@ -413,7 +417,7 @@
       "help.card.end_run_summary.name": "Victory Summary 2.0",
       "help.card.end_run_summary.tag": "End-run debrief",
       "help.card.end_run_summary.line":
-        "Victory and Game Over now use a 3-page debrief with Overview, Drops+Damage, and Timeline+Faction tabs (Left/Right switch).",
+        "Victory and Game Over now use a 3-page debrief with Overview, Drops+Damage, and Timeline+Faction tabs (Left/Right switch). Victory Overview also includes a dedicated Final Clear Reward Table.",
       "help.card.end_run_summary.impact":
         "<strong>Impact:</strong> clearer run recap with top drops, shield/hull damage totals, and per-mission timeline context.",
       "help.section.biomes": "Biomes",

@@ -992,6 +992,10 @@ function runTests() {
   tests.push(() => {
     gameA.startGame(15151);
     const finalSector = gameA.config.run.finalSector;
+    const rewardCfg = gameA.config.run?.finalClearRewards?.campaign || {};
+    const creditsBefore = gameA.model.credits;
+    const salvageBefore = gameA.model.salvageParts;
+    const scoreBefore = gameA.model.score;
     gameA.model.sector = finalSector;
     gameA.missionSystem.startMission(finalSector);
     gameA.model.miniBoss = null;
@@ -1002,6 +1006,22 @@ function runTests() {
     assert(gameA.model.gameState === AsteroidsA.GAME_STATE.VICTORY, "Campaign final encounter should end in VICTORY");
     assert(gameA.model.endlessUnlocked, "Campaign clear should unlock endless mode");
     assert(gameA.model.unlocks.endlessMode, "Endless unlock should persist in progression unlocks");
+    assert(gameA.model.victorySummary?.finalClearRewards?.mode === "campaign", "Campaign clear should include campaign final reward table");
+    assert(
+      gameA.model.credits - creditsBefore >= Math.max(0, Math.floor(Number(rewardCfg.creditsBase) || 0)),
+      "Campaign final clear should grant configured credits bonus once"
+    );
+    assert(
+      gameA.model.salvageParts - salvageBefore >= Math.max(0, Math.floor(Number(rewardCfg.salvageBase) || 0)),
+      "Campaign final clear should grant configured salvage bonus once"
+    );
+    assert(
+      gameA.model.score - scoreBefore >= Math.max(0, Math.floor(Number(rewardCfg.scoreBonus) || 0)),
+      "Campaign final clear should grant configured score bonus once"
+    );
+    const creditsAfterFirstApply = gameA.model.credits;
+    gameA.applyFinalClearRewards();
+    assert(gameA.model.credits === creditsAfterFirstApply, "Final clear reward should not be claimable twice");
   });
 
   tests.push(() => {
@@ -1046,6 +1066,10 @@ function runTests() {
     gameA.model.endlessUnlocked = false;
     gameA.model.unlocks.endlessMode = false;
     gameA.model.runMode = "boss_rush";
+    const rewardCfg = gameA.config.run?.finalClearRewards?.boss_rush || {};
+    const creditsBefore = gameA.model.credits;
+    const salvageBefore = gameA.model.salvageParts;
+    const scoreBefore = gameA.model.score;
     const finalSector = Math.max(1, Math.floor(gameA.config.run?.bossRush?.finalSector ?? gameA.config.run.finalSector));
     gameA.model.sector = finalSector;
     gameA.missionSystem.startMission(finalSector);
@@ -1060,6 +1084,19 @@ function runTests() {
     assert(
       gameA.model.victorySummary?.statusKey === "overlay.boss_rush_complete",
       "Boss Rush victory should use dedicated overlay status text"
+    );
+    assert(gameA.model.victorySummary?.finalClearRewards?.mode === "boss_rush", "Boss Rush clear should include boss-rush final reward table");
+    assert(
+      gameA.model.credits - creditsBefore >= Math.max(0, Math.floor(Number(rewardCfg.creditsBase) || 0)),
+      "Boss Rush final clear should grant configured credits bonus once"
+    );
+    assert(
+      gameA.model.salvageParts - salvageBefore >= Math.max(0, Math.floor(Number(rewardCfg.salvageBase) || 0)),
+      "Boss Rush final clear should grant configured salvage bonus once"
+    );
+    assert(
+      gameA.model.score - scoreBefore >= Math.max(0, Math.floor(Number(rewardCfg.scoreBonus) || 0)),
+      "Boss Rush final clear should grant configured score bonus once"
     );
   });
 

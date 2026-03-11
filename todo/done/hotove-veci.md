@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Endgame / replayability - final clear reward table (campaign + boss rush)
+  - [x] Data-driven `run.finalClearRewards` profily pro `campaign` a `boss_rush` v config/content override
+  - [x] Final clear payout je aplikovan jednorazove pri `VICTORY` (`credits/salvage/score` + guaranteed drops)
+  - [x] Guaranteed drops z final reward tabulky se loguji do runSummary drop highlights (`source: finalClear`)
+  - [x] `Victory Summary 2.0` overview doplnen o dedikovany blok `Final Clear Reward Table`
+  - [x] Harness coverage doplnena pro campaign/boss-rush payout a anti-double-claim guard
+
 - [x] Endgame / replayability - Victory summary 2.0
   - [x] End-run debrief sjednocen pro `VICTORY` i `GAME OVER` do 3-tab overlaye (`Overview`, `Drops+Damage`, `Timeline+Faction`) bez overflow
   - [x] Runtime `runSummary` trackuje cely run: mission timeline, drop highlights a total incoming damage (`shieldAbsorb`/`hullDamage`)

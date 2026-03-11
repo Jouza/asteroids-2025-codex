@@ -3,7 +3,6 @@
 ## Prioritni fronta (herni zazitek: vizual + gameplay)
 
 - [ ] Endgame / replayability
-  - [ ] Samostatna reward tabulka pro final clear (campaign + boss rush)
   - [ ] Boss Rush depth pass (variace encounter flow mezi sektory, ne jen linearni mini-boss loop)
 
 - [ ] Combat readability follow-up (post Telegraph 2.0)
