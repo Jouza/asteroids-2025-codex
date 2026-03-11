@@ -596,6 +596,40 @@ strong {
   cursor: default;
 }
 
+.touch-mobile-ui {
+  padding: 0;
+  overflow: hidden;
+}
+
+.touch-mobile-ui .game-shell {
+  width: 100vw;
+  height: 100vh;
+}
+
+.touch-mobile-ui .layout {
+  grid-template-columns: 1fr;
+  gap: 0;
+  height: 100vh;
+}
+
+.touch-mobile-ui .status-column {
+  display: none;
+}
+
+.touch-mobile-ui .play-column {
+  width: 100vw;
+  height: 100vh;
+}
+
+.touch-mobile-ui #gameCanvas {
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  box-shadow: none;
+  background: #02050b;
+  object-fit: contain;
+}
+
 @media (max-width: 900px) {
   .pilot-hero-card {
     grid-template-columns: 1fr;

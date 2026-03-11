@@ -2578,6 +2578,48 @@ function runTests() {
     assert(!gameA.getTouchCombatActions().utilityPressed, "Utility touch action should be consumed after meta input");
   });
 
+  tests.push(() => {
+    gameA.startGame(18181);
+    gameA.model.inputMode = "touch";
+    gameA.model.mobileUi.viewportOverride = { width: 620, height: 980 };
+    const runtimeBefore = gameA.model.runtimeSeconds;
+    gameA.update(1 / 60);
+    assert(gameA.model.mobileUi.orientationBlocked, "Touch mobile portrait should activate orientation gate");
+    assert(gameA.model.runtimeSeconds === runtimeBefore, "Orientation gate should pause gameplay update progression");
+    gameA.model.mobileUi.viewportOverride = { width: 980, height: 620 };
+    gameA.updateMobileUiState(1 / 60);
+    assert(!gameA.model.mobileUi.orientationBlocked, "Landscape should clear orientation gate");
+  });
+
+  tests.push(() => {
+    gameA.model.mobileUi.fullscreenState = "inactive";
+    gameA.setFullscreenRequestHandler(() => true);
+    const accepted = gameA.tryEnterFullscreenFromGesture();
+    assert(accepted, "Fullscreen gesture helper should return true when handler accepts request");
+    assert(gameA.model.mobileUi.fullscreenState === "requested", "Accepted fullscreen request should set requested state");
+    gameA.setFullscreenRequestHandler(() => false);
+    const denied = gameA.tryEnterFullscreenFromGesture();
+    assert(!denied, "Fullscreen gesture helper should return false when handler denies request");
+    assert(gameA.model.mobileUi.fullscreenState === "denied", "Denied fullscreen request should set denied state");
+  });
+
+  tests.push(() => {
+    gameA.startGame(19191);
+    gameA.model.inputMode = "touch";
+    gameA.model.secondaryCooldown = 2.5;
+    gameA.model.utilityCooldown = 3.1;
+    gameA.model.enemyBullets = [];
+    gameA.model.ufos = [];
+    gameA.model.miniBoss = null;
+    gameA.updateMobileActionVisibility(1 / 60);
+    assert(gameA.model.mobileUi.actionVisibility.secondary.state === "low", "Secondary should de-emphasize when cooldown and low threat");
+    assert(gameA.model.mobileUi.actionVisibility.utility.state === "low", "Utility should de-emphasize when cooldown and low threat");
+    gameA.model.enemyBullets = new Array(12).fill({ x: 0, y: 0, vx: 0, vy: 0, radius: 2, ttl: 1 });
+    gameA.updateMobileActionVisibility(1 / 60);
+    assert(gameA.model.mobileUi.actionVisibility.secondary.state === "high", "Threat pressure should promote secondary visibility");
+    assert(gameA.model.mobileUi.actionVisibility.utility.state === "high", "Threat pressure should promote utility visibility");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     sharedStorage.clear();

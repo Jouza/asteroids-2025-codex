@@ -1,5 +1,14 @@
 # Hotove veci
 
+- [x] Mobile/Tablet UX pass (landscape-first + smart fullscreen + adaptive touch)
+  - [x] Runtime `deviceMode` + `mobileUi` stav pro touch/mobile flow
+  - [x] Landscape gate pro touch mobile: portrait zobrazi rotate overlay a pozastavi gameplay update bez resetu runu
+  - [x] Smart fullscreen prompt v combatu (`Tap for Fullscreen`) s gesture-only request flow a fallbackem pri deny
+  - [x] Mobile layout branch: skryti desktop sidebaru, canvas full viewport, kompakni in-canvas top strip
+  - [x] Adaptive visibility pro `SECONDARY/UTILITY` podle ready/threat kontextu pri zachovani stejne mechaniky akci
+  - [x] Touch hangar flow rozsireny o sticky bottom bar (`Back / Action / Launch`) + vetsi touch hitboxy v run setup
+  - [x] Help/i18n pokryti pro mobile landscape/fullscreen flow
+
 - [x] Touch Controls MVP (combat + overlay/hangar tap flow)
   - [x] Pridana touch input vrstva (`inputMode`, sticks/buttons/pointers, touch action queue) nad existujici combat intenty
   - [x] Combat integrace: left stick = turn/thrust, right stick = aim + primary auto-fire, `EVADE` tap = dash, hold = boost

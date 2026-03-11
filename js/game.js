@@ -267,7 +267,9 @@
         overlayRows: [],
         hangarLootRows: [],
         hangarShopRows: [],
-        endSummaryTapZones: null
+        endSummaryTapZones: null,
+        fullscreenTapZone: null,
+        hangarBottomActions: null
       },
       actionButton: {
         visible: false,
@@ -275,6 +277,28 @@
         y: 0,
         radius: 0
       }
+    };
+  }
+
+  function createDefaultMobileUiState() {
+    return {
+      isLandscape: true,
+      orientationBlocked: false,
+      fullscreenState: "inactive",
+      fullscreenPromptVisible: false,
+      fullscreenPromptDismissed: false,
+      compactHints: true,
+      threatContext: {
+        bossPressure: false,
+        hazardPressure: false,
+        enemyPressure: false
+      },
+      actionVisibility: {
+        secondary: { state: "high", alpha: 1, scale: 1 },
+        utility: { state: "high", alpha: 1, scale: 1 },
+        evade: { state: "high", alpha: 1, scale: 1 }
+      },
+      viewportOverride: null
     };
   }
 
@@ -355,7 +379,9 @@
           y: 0,
           inside: false
         },
+        deviceMode: "desktop",
         inputMode: "keyboard_mouse",
+        mobileUi: createDefaultMobileUiState(),
         touchControls: createDefaultTouchControlsState(),
         hangar: {
           message: tr("game.hangar.controls"),
@@ -456,6 +482,7 @@
       this.combatSystem = new CombatSystem(this);
       this.enemySystem = new EnemySystem(this);
       this.identityMigrationNoticePending = false;
+      this.fullscreenRequestHandler = null;
 
       this.attachPointerTracking();
       this.attachTouchControls();
@@ -562,10 +589,115 @@
       this.model.uiModal = modalId || null;
     }
 
+    setFullscreenRequestHandler(handler = null) {
+      this.fullscreenRequestHandler = typeof handler === "function" ? handler : null;
+    }
+
     resetTouchControlRuntime() {
       const touch = createDefaultTouchControlsState();
       touch.inputMode = this.model.inputMode || "keyboard_mouse";
       this.model.touchControls = touch;
+    }
+
+    getViewportInfo() {
+      const override = this.model.mobileUi?.viewportOverride;
+      if (override && Number.isFinite(Number(override.width)) && Number.isFinite(Number(override.height))) {
+        return {
+          width: Math.max(1, Math.floor(Number(override.width))),
+          height: Math.max(1, Math.floor(Number(override.height)))
+        };
+      }
+      const win = this.canvas?.ownerDocument?.defaultView || (typeof window !== "undefined" ? window : null);
+      if (win && Number.isFinite(Number(win.innerWidth)) && Number.isFinite(Number(win.innerHeight))) {
+        return {
+          width: Math.max(1, Math.floor(Number(win.innerWidth))),
+          height: Math.max(1, Math.floor(Number(win.innerHeight)))
+        };
+      }
+      return {
+        width: Math.max(1, Math.floor(Number(this.config?.canvas?.width) || 960)),
+        height: Math.max(1, Math.floor(Number(this.config?.canvas?.height) || 720))
+      };
+    }
+
+    updateMobileActionVisibility(dt = 0) {
+      const mobileUi = this.model.mobileUi;
+      if (!mobileUi) return;
+      const hazards = Array.isArray(this.model.currentMission?.biomeHazards) ? this.model.currentMission.biomeHazards : [];
+      const hazardPressure = hazards.some((hazard) => hazard?.telegraphActive);
+      const enemyPressure =
+        this.model.enemyBullets.length >= 10 || this.model.ufos.length >= 3 || this.model.sentryRelays.length >= 1;
+      const bossPressure = Boolean(this.model.miniBoss);
+      mobileUi.threatContext = {
+        bossPressure,
+        hazardPressure,
+        enemyPressure
+      };
+      const threatLevel = bossPressure ? 1 : hazardPressure || enemyPressure ? 0.72 : 0.28;
+      const settle = this.clamp(Number(dt) || 0.016, 0.001, 0.08) * 6;
+      const resolveAction = (ready, cooldown) => {
+        const shouldHigh = ready || threatLevel >= 0.7;
+        const targetAlpha = shouldHigh ? 0.96 : cooldown > 0.01 ? 0.34 : 0.42;
+        const targetScale = shouldHigh ? 1 : 0.92;
+        return { shouldHigh, targetAlpha, targetScale };
+      };
+      const updateEntry = (entry, ready, cooldown) => {
+        if (!entry) return;
+        const { shouldHigh, targetAlpha, targetScale } = resolveAction(ready, cooldown);
+        const prevAlpha = Number(entry.alpha) || targetAlpha;
+        const prevScale = Number(entry.scale) || targetScale;
+        entry.state = shouldHigh ? "high" : "low";
+        entry.alpha = prevAlpha + (targetAlpha - prevAlpha) * settle;
+        entry.scale = prevScale + (targetScale - prevScale) * settle;
+      };
+      updateEntry(mobileUi.actionVisibility.secondary, this.model.secondaryCooldown <= 0.01, this.model.secondaryCooldown);
+      updateEntry(mobileUi.actionVisibility.utility, this.model.utilityCooldown <= 0.01, this.model.utilityCooldown);
+      const evadeReady = this.model.dashCooldown <= 0.01 || threatLevel >= 0.7;
+      updateEntry(mobileUi.actionVisibility.evade, evadeReady, this.model.dashCooldown);
+    }
+
+    updateMobileUiState(dt = 0) {
+      const mobileUi = this.model.mobileUi;
+      if (!mobileUi) return;
+      const viewport = this.getViewportInfo();
+      const touchActive = this.model.inputMode === "touch" || this.model.touchControls?.inputMode === "touch";
+      const smallViewport = viewport.width <= 1024;
+      const nextMode = touchActive || smallViewport ? "touch_mobile" : "desktop";
+      this.model.deviceMode = nextMode;
+      mobileUi.isLandscape = viewport.width >= viewport.height;
+      mobileUi.orientationBlocked = nextMode === "touch_mobile" && !mobileUi.isLandscape;
+      const fullscreenActive = mobileUi.fullscreenState === "active";
+      mobileUi.fullscreenPromptVisible =
+        nextMode === "touch_mobile" &&
+        this.model.gameState === GAME_STATE.PLAYING &&
+        mobileUi.isLandscape &&
+        !mobileUi.orientationBlocked &&
+        !fullscreenActive &&
+        !mobileUi.fullscreenPromptDismissed;
+      this.updateMobileActionVisibility(dt);
+    }
+
+    shouldPauseForMobileOrientation() {
+      const mobileUi = this.model.mobileUi;
+      return Boolean(this.model.deviceMode === "touch_mobile" && mobileUi?.orientationBlocked);
+    }
+
+    tryEnterFullscreenFromGesture() {
+      const mobileUi = this.model.mobileUi;
+      if (!mobileUi) return false;
+      mobileUi.fullscreenState = "requested";
+      if (typeof this.fullscreenRequestHandler !== "function") {
+        mobileUi.fullscreenState = "denied";
+        return false;
+      }
+      const success = this.fullscreenRequestHandler();
+      mobileUi.fullscreenState = success ? "requested" : "denied";
+      if (success) {
+        mobileUi.fullscreenPromptVisible = false;
+      } else {
+        this.model.hangar.message = tr("touch.mobile.fullscreen_denied");
+      }
+      return success;
     }
 
     getTouchLayout() {
@@ -798,6 +930,17 @@
       if (this.model.inputMode !== "touch" || this.model.uiModal) return;
       const touch = this.model.touchControls;
       if (!touch) return;
+      const fullscreenZone = touch.ui?.fullscreenTapZone;
+      if (
+        fullscreenZone &&
+        x >= fullscreenZone.x &&
+        x <= fullscreenZone.x + fullscreenZone.w &&
+        y >= fullscreenZone.y &&
+        y <= fullscreenZone.y + fullscreenZone.h
+      ) {
+        this.tryEnterFullscreenFromGesture();
+        return;
+      }
       const layout = touch.layout || this.getTouchLayout();
       const actionBtn = layout.buttons?.action;
       if (actionBtn && Math.hypot(x - actionBtn.x, y - actionBtn.y) <= actionBtn.radius * 1.28) {
@@ -825,7 +968,8 @@
       const rows = this.model.touchControls?.ui?.overlayRows;
       if (!Array.isArray(rows) || !rows.length) return;
       for (const row of rows) {
-        if (x >= row.x && x <= row.x + row.w && y >= row.y && y <= row.y + row.h) {
+        const pad = 8;
+        if (x >= row.x - pad && x <= row.x + row.w + pad && y >= row.y - pad && y <= row.y + row.h + pad) {
           const order = this.getOverlaySettingRows();
           const index = order.indexOf(row.id);
           if (index >= 0) this.model.overlaySettingsRow = index;
@@ -851,6 +995,25 @@
     handleTouchHangarTap(x, y) {
       const ui = this.model.touchControls?.ui;
       if (!ui) return;
+      const actions = ui.hangarBottomActions;
+      if (actions) {
+        const inRect = (zone) => x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h;
+        if (actions.action && inRect(actions.action)) {
+          this.hangarSystem.activateNavSelection();
+          return;
+        }
+        if (actions.launch && inRect(actions.launch)) {
+          this.hangarSystem.beginNextSectorFromHangar();
+          this.hud.sync(this.model);
+          return;
+        }
+        if (actions.back && inRect(actions.back)) {
+          this.model.hangar.navSection = "shop";
+          this.hangarSystem.ensureNavState();
+          this.hud.sync(this.model);
+          return;
+        }
+      }
       const lootRows = Array.isArray(ui.hangarLootRows) ? ui.hangarLootRows : [];
       for (const row of lootRows) {
         if (x >= row.x && x <= row.x + row.w && y >= row.y && y <= row.y + row.h) {
@@ -1728,6 +1891,7 @@
     }
 
     handleMetaInput() {
+      this.updateMobileUiState(1 / 60);
       this.updateTouchInputState(1 / 60);
       if (typeof this.audio.updateBiomeAmbience === "function") {
         this.audio.updateBiomeAmbience(1 / 60, {
@@ -2193,6 +2357,13 @@
       this.model.hangar.navSection = "shop";
       this.model.hangar.shopIndex = 0;
       this.model.hangar.pilotCursor = 0;
+      const persistedMobilePrefs = {
+        compactHints: Boolean(this.model.mobileUi?.compactHints),
+        fullscreenPromptDismissed: Boolean(this.model.mobileUi?.fullscreenPromptDismissed)
+      };
+      this.model.mobileUi = createDefaultMobileUiState();
+      this.model.mobileUi.compactHints = persistedMobilePrefs.compactHints;
+      this.model.mobileUi.fullscreenPromptDismissed = persistedMobilePrefs.fullscreenPromptDismissed;
       this.model.factionRepGainTracker = {};
       this.model.runSummary = createRunSummaryState();
       this.model.campaignBiomeOrder = [];
@@ -2929,6 +3100,11 @@
 
     update(dt) {
       if (this.model.gameState !== GAME_STATE.PLAYING) return;
+      this.updateMobileUiState(dt);
+      if (this.shouldPauseForMobileOrientation()) {
+        this.hud.sync(this.model);
+        return;
+      }
       this.updateTouchInputState(dt);
       if (typeof this.audio.updateBiomeAmbience === "function") {
         this.audio.updateBiomeAmbience(dt, {

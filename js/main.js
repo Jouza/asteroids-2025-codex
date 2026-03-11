@@ -10,6 +10,7 @@
   const input = new InputController();
   const audio = new AudioSystem();
   const AUDIO_SETTINGS_KEY = "starfang_audio_settings_v1";
+  const MOBILE_UI_SETTINGS_KEY = "starfang_mobile_ui_v1";
   const renderer = new Renderer(canvas, ctx, GAME_CONFIG);
   const game = new Game(canvas, renderer, hud, input, GAME_CONFIG, audio);
   const volumeSlider = document.getElementById("volumeSlider");
@@ -29,6 +30,87 @@
   const pilotModalContent = document.getElementById("pilotModalContent");
 
   let activeModal = null;
+  let fullscreenManager = null;
+
+  function createFullscreenManager(targetElement) {
+    const doc = targetElement?.ownerDocument || document;
+    const view = doc.defaultView || window;
+    const getFullscreenElement = () =>
+      doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement || null;
+    const requestFullscreen = () => {
+      if (!targetElement) return false;
+      const fn =
+        targetElement.requestFullscreen ||
+        targetElement.webkitRequestFullscreen ||
+        targetElement.msRequestFullscreen ||
+        null;
+      if (typeof fn !== "function") return false;
+      try {
+        const result = fn.call(targetElement);
+        if (result && typeof result.catch === "function") {
+          result.catch(() => {});
+        }
+        return true;
+      } catch (error) {
+        return false;
+      }
+    };
+    const manager = {
+      isActive() {
+        return Boolean(getFullscreenElement());
+      },
+      requestFromGesture() {
+        return requestFullscreen();
+      },
+      syncStateToModel() {
+        const mobileUi = game.model.mobileUi;
+        if (!mobileUi) return;
+        if (manager.isActive()) mobileUi.fullscreenState = "active";
+        else if (mobileUi.fullscreenState === "active" || mobileUi.fullscreenState === "requested") {
+          mobileUi.fullscreenState = "inactive";
+        }
+      }
+    };
+    const onFullscreenChange = () => manager.syncStateToModel();
+    doc.addEventListener("fullscreenchange", onFullscreenChange);
+    doc.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    view.addEventListener("orientationchange", onFullscreenChange);
+    view.addEventListener("resize", onFullscreenChange);
+    return manager;
+  }
+
+  function loadMobileUiSettings() {
+    const defaults = {
+      compactHints: true,
+      fullscreenPromptDismissed: false
+    };
+    try {
+      const raw = window.localStorage.getItem(MOBILE_UI_SETTINGS_KEY);
+      if (!raw) return defaults;
+      const parsed = JSON.parse(raw);
+      return {
+        compactHints: parsed?.compactHints !== false,
+        fullscreenPromptDismissed: Boolean(parsed?.fullscreenPromptDismissed)
+      };
+    } catch (error) {
+      return defaults;
+    }
+  }
+
+  function saveMobileUiSettings() {
+    try {
+      const mobileUi = game.model.mobileUi || {};
+      window.localStorage.setItem(
+        MOBILE_UI_SETTINGS_KEY,
+        JSON.stringify({
+          compactHints: mobileUi.compactHints !== false,
+          fullscreenPromptDismissed: Boolean(mobileUi.fullscreenPromptDismissed)
+        })
+      );
+    } catch (error) {
+      // Ignore storage write issues.
+    }
+  }
 
   function setActiveModal(modalId = null) {
     activeModal = modalId;
@@ -290,6 +372,7 @@
   if (i18n) i18n.applyTranslations(document);
   syncVolumeUi();
   let lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
+  let lastMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}`;
   if (volumeSlider) {
     volumeSlider.addEventListener("input", () => {
       audio.setVolume(Number(volumeSlider.value) / 100);
@@ -346,6 +429,11 @@
 
   input.attach();
   game.initGame();
+  fullscreenManager = createFullscreenManager(document.documentElement);
+  game.setFullscreenRequestHandler(() => (fullscreenManager ? fullscreenManager.requestFromGesture() : false));
+  const mobileUiSettings = loadMobileUiSettings();
+  game.model.mobileUi.compactHints = mobileUiSettings.compactHints !== false;
+  game.model.mobileUi.fullscreenPromptDismissed = Boolean(mobileUiSettings.fullscreenPromptDismissed);
 
   let lastTimestamp = 0;
   let accumulator = 0;
@@ -359,6 +447,10 @@
     const rawDelta = (timestamp - lastTimestamp) / 1000;
     lastTimestamp = timestamp;
     const frameDelta = game.applyFrameDelta(rawDelta);
+    game.updateMobileUiState(1 / 60);
+    if (fullscreenManager) fullscreenManager.syncStateToModel();
+    document.body.classList.toggle("touch-mobile-ui", game.model.deviceMode === "touch_mobile");
+    document.body.classList.toggle("mobile-portrait-blocked", Boolean(game.model.mobileUi?.orientationBlocked));
 
     if (activeModal) {
       game.render();
@@ -372,6 +464,11 @@
       saveAudioSettings();
       syncVolumeUi();
       lastAudioState = currentAudioState;
+    }
+    const currentMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}`;
+    if (currentMobileUiState !== lastMobileUiState) {
+      saveMobileUiSettings();
+      lastMobileUiState = currentMobileUiState;
     }
     accumulator += frameDelta;
 

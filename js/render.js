@@ -41,7 +41,10 @@
       if (model.gameState !== GAME_STATE.PLAYING) {
         this.drawOverlay(model);
       }
+      this.drawMobileTopStrip(model);
       this.drawTouchControls(model, input);
+      this.drawFullscreenPrompt(model);
+      this.drawRotateOverlay(model);
     }
 
     clear() {
@@ -646,6 +649,32 @@
       ui.hangarLootRows = [];
       ui.hangarShopRows = [];
       ui.endSummaryTapZones = null;
+      ui.fullscreenTapZone = null;
+      ui.hangarBottomActions = null;
+    }
+
+    drawMobileTopStrip(model) {
+      if (model.deviceMode !== "touch_mobile" || model.gameState !== GAME_STATE.PLAYING) return;
+      const { ctx, config } = this;
+      ctx.save();
+      const stripH = 22;
+      ctx.fillStyle = "rgba(2,10,20,0.76)";
+      ctx.fillRect(0, 0, config.canvas.width, stripH);
+      ctx.strokeStyle = "rgba(83,247,255,0.26)";
+      ctx.beginPath();
+      ctx.moveTo(0, stripH + 0.5);
+      ctx.lineTo(config.canvas.width, stripH + 0.5);
+      ctx.stroke();
+      ctx.textAlign = "left";
+      ctx.font = "600 11px Trebuchet MS";
+      ctx.fillStyle = "rgba(192,236,255,0.94)";
+      const setText = String(model.setStatusText || tr("hud.no_active_set"));
+      ctx.fillText(`CR ${Math.floor(model.credits || 0)}  |  SC ${Math.floor(model.score || 0)}  |  ${setText}`, 8, 15);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "rgba(170,228,248,0.9)";
+      const ident = String(model.identityStatusText || tr("hud.identity_unknown"));
+      ctx.fillText(ident, config.canvas.width - 8, 15);
+      ctx.restore();
     }
 
     drawTouchControls(model, input) {
@@ -654,10 +683,33 @@
       const layout = touch?.layout;
       if (!touch || !layout || !layout.buttons) return;
       const { ctx } = this;
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+      const vis = model.mobileUi?.actionVisibility || {};
       const buttonDefs = [
-        { key: "secondary", label: tr("touch.button.secondary"), down: touch.buttons?.secondary?.down, cooldown: model.secondaryCooldown },
-        { key: "utility", label: tr("touch.button.utility"), down: touch.buttons?.utility?.down, cooldown: model.utilityCooldown },
-        { key: "evade", label: tr("touch.button.evade"), down: touch.buttons?.evade?.down, cooldown: model.dashCooldown }
+        {
+          key: "secondary",
+          label: tr("touch.button.secondary"),
+          down: touch.buttons?.secondary?.down,
+          cooldown: model.secondaryCooldown,
+          alpha: clamp(Number(vis.secondary?.alpha) || 0.9, 0.2, 1),
+          scale: clamp(Number(vis.secondary?.scale) || 1, 0.85, 1.05)
+        },
+        {
+          key: "utility",
+          label: tr("touch.button.utility"),
+          down: touch.buttons?.utility?.down,
+          cooldown: model.utilityCooldown,
+          alpha: clamp(Number(vis.utility?.alpha) || 0.9, 0.2, 1),
+          scale: clamp(Number(vis.utility?.scale) || 1, 0.85, 1.05)
+        },
+        {
+          key: "evade",
+          label: tr("touch.button.evade"),
+          down: touch.buttons?.evade?.down,
+          cooldown: model.dashCooldown,
+          alpha: clamp(Number(vis.evade?.alpha) || 0.95, 0.28, 1),
+          scale: clamp(Number(vis.evade?.scale) || 1, 0.9, 1.08)
+        }
       ];
       const drawStick = (stickLayout, stickState, tintRgb) => {
         ctx.save();
@@ -678,25 +730,28 @@
         ctx.stroke();
         ctx.restore();
       };
-      const drawButton = (btnLayout, label, down, cooldown = 0, readyColor = "120,240,196") => {
+      const drawButton = (btnLayout, label, down, cooldown = 0, readyColor = "120,240,196", alphaMul = 1, scale = 1) => {
         const cd = Math.max(0, Number(cooldown) || 0);
         const ready = cd <= 0.001;
         ctx.save();
+        ctx.translate(btnLayout.x, btnLayout.y);
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = clamp(alphaMul, 0.2, 1);
         ctx.fillStyle = down ? "rgba(255,231,168,0.24)" : `rgba(${ready ? readyColor : "160,190,210"},0.12)`;
         ctx.strokeStyle = down ? "rgba(255,231,168,0.92)" : `rgba(${ready ? readyColor : "160,190,210"},0.72)`;
         ctx.lineWidth = down ? 2.1 : 1.6;
         ctx.beginPath();
-        ctx.arc(btnLayout.x, btnLayout.y, btnLayout.radius, 0, Math.PI * 2);
+        ctx.arc(0, 0, btnLayout.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.textAlign = "center";
         ctx.fillStyle = ready ? "#d8f5ff" : "rgba(200,220,232,0.9)";
         ctx.font = "700 11px Trebuchet MS";
-        ctx.fillText(label, btnLayout.x, btnLayout.y + 4);
+        ctx.fillText(label, 0, 4);
         if (!ready) {
           ctx.font = "600 10px Trebuchet MS";
           ctx.fillStyle = "rgba(255,208,152,0.95)";
-          ctx.fillText(cd.toFixed(1), btnLayout.x, btnLayout.y + 17);
+          ctx.fillText(cd.toFixed(1), 0, 17);
         }
         ctx.restore();
       };
@@ -704,7 +759,7 @@
       drawStick(layout.leftStick, touch.leftStick, "108,216,255");
       drawStick(layout.rightStick, touch.rightStick, "182,222,255");
       for (const def of buttonDefs) {
-        drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown);
+        drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
       }
 
       const actionLabelKey =
@@ -726,6 +781,48 @@
         ctx.fillText(tr("touch.hud.hint"), this.config.canvas.width / 2, this.config.canvas.height - 10);
         ctx.restore();
       }
+    }
+
+    drawFullscreenPrompt(model) {
+      if (model.deviceMode !== "touch_mobile") return;
+      const mobileUi = model.mobileUi || {};
+      if (!mobileUi.fullscreenPromptVisible || model.gameState !== GAME_STATE.PLAYING) return;
+      const { ctx, config } = this;
+      const ui = model.touchControls?.ui;
+      const w = 220;
+      const h = 34;
+      const x = config.canvas.width / 2 - w / 2;
+      const y = config.canvas.height - 132;
+      if (ui) {
+        ui.fullscreenTapZone = { x, y, w, h };
+      }
+      ctx.save();
+      ctx.fillStyle = "rgba(14,28,42,0.82)";
+      ctx.strokeStyle = "rgba(144,237,255,0.78)";
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeRect(x, y, w, h);
+      ctx.textAlign = "center";
+      ctx.font = "700 12px Trebuchet MS";
+      ctx.fillStyle = "#c9f4ff";
+      ctx.fillText(tr("touch.mobile.fullscreen_cta"), x + w / 2, y + 22);
+      ctx.restore();
+    }
+
+    drawRotateOverlay(model) {
+      if (model.deviceMode !== "touch_mobile" || !model.mobileUi?.orientationBlocked) return;
+      const { ctx, config } = this;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.72)";
+      ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#d8f5ff";
+      ctx.font = "700 34px Trebuchet MS";
+      ctx.fillText(tr("touch.mobile.rotate_title"), config.canvas.width / 2, config.canvas.height / 2 - 14);
+      ctx.font = "600 18px Trebuchet MS";
+      ctx.fillStyle = "rgba(186,232,255,0.94)";
+      ctx.fillText(tr("touch.mobile.rotate_hint"), config.canvas.width / 2, config.canvas.height / 2 + 24);
+      ctx.restore();
     }
 
     drawMiniBoss(boss) {
@@ -3423,6 +3520,37 @@
         ctx.font = "600 14px Trebuchet MS";
         ctx.fillStyle = "#b9f8c3";
         ctx.fillText(hangar.message, centerX, Math.min(config.canvas.height - 8, actionBarY + 42));
+
+        if (model.deviceMode === "touch_mobile") {
+          const barY = Math.min(config.canvas.height - 42, actionBarY + 48);
+          const barH = 28;
+          const gap = 10;
+          const colW = Math.floor((layoutW - gap * 2) / 3);
+          const leftX = layoutX;
+          const middleX = leftX + colW + gap;
+          const rightX = middleX + colW + gap;
+          const drawTouchBarBtn = (x, label, active = false) => {
+            ctx.fillStyle = active ? "rgba(255,231,168,0.2)" : "rgba(7,16,28,0.86)";
+            ctx.strokeStyle = active ? "rgba(255,231,168,0.8)" : "rgba(83,247,255,0.42)";
+            ctx.lineWidth = 1.2;
+            ctx.fillRect(x, barY, colW, barH);
+            ctx.strokeRect(x, barY, colW, barH);
+            ctx.fillStyle = active ? "#ffe7a8" : "#d8f5ff";
+            ctx.textAlign = "center";
+            ctx.font = "700 12px Trebuchet MS";
+            ctx.fillText(label, x + colW / 2, barY + 18);
+          };
+          drawTouchBarBtn(leftX, tr("touch.mobile.hangar.back"), navSection !== "shop");
+          drawTouchBarBtn(middleX, tr("touch.mobile.hangar.action"), true);
+          drawTouchBarBtn(rightX, tr("touch.mobile.hangar.launch"), false);
+          if (touchUi) {
+            touchUi.hangarBottomActions = {
+              back: { x: leftX, y: barY, w: colW, h: barH },
+              action: { x: middleX, y: barY, w: colW, h: barH },
+              launch: { x: rightX, y: barY, w: colW, h: barH }
+            };
+          }
+        }
       }
 
       ctx.restore();

@@ -29,6 +29,13 @@
       "touch.button.action.start": "START",
       "touch.button.action.confirm": "ACTION",
       "touch.button.action.new_run": "NEW RUN",
+      "touch.mobile.rotate_title": "ROTATE DEVICE",
+      "touch.mobile.rotate_hint": "Landscape is required for touch combat.",
+      "touch.mobile.fullscreen_cta": "Tap for Fullscreen",
+      "touch.mobile.fullscreen_denied": "Fullscreen request denied by browser.",
+      "touch.mobile.hangar.back": "BACK",
+      "touch.mobile.hangar.action": "ACTION",
+      "touch.mobile.hangar.launch": "LAUNCH",
       "overlay.onboarding_title": "Quick Start",
       "overlay.onboarding_line1": "Actions spend Energy + Shield together.",
       "overlay.onboarding_line2": "No shield = no shot/ability. Watch Heat and cooldowns.",
@@ -469,6 +476,12 @@
         "Left stick controls turn/thrust, right stick controls aim with primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (tap dash, hold boost).",
       "help.card.touch_controls_mvp.impact":
         "<strong>Impact:</strong> full combat flow is playable on phone/tablet without changing damage, cooldown, or economy rules.",
+      "help.card.mobile_landscape_mode.name": "Mobile Landscape Mode",
+      "help.card.mobile_landscape_mode.tag": "UX flow",
+      "help.card.mobile_landscape_mode.line":
+        "Touch mobile mode uses landscape-first flow, a smart fullscreen prompt in combat, and adaptive visibility for Secondary/Utility buttons.",
+      "help.card.mobile_landscape_mode.impact":
+        "<strong>Impact:</strong> cleaner screen space and stronger readability under pressure without changing gameplay rules.",
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.entities": "Combat Entities",
