@@ -267,13 +267,13 @@
       difficultyPresets: [
         {
           id: "rookie",
-          pressureMul: 0.9,
-          enemyDamageTakenMul: 0.82,
-          playerDamageMul: 1.1,
-          economyCreditsMul: 1.12,
-          economySalvageMul: 1.1,
-          lootDropMul: 1.08,
-          hazardIntensityMul: 0.86
+          pressureMul: 0.78,
+          enemyDamageTakenMul: 0.72,
+          playerDamageMul: 1.2,
+          economyCreditsMul: 1.2,
+          economySalvageMul: 1.16,
+          lootDropMul: 1.12,
+          hazardIntensityMul: 0.74
         },
         {
           id: "normal",
@@ -427,7 +427,7 @@
         clampMin: 0.72,
         clampMax: 1.45,
         difficulty: {
-          rookie: 0.9,
+          rookie: 1.06,
           normal: 1.0,
           veteran: 1.08,
           ace: 1.16
