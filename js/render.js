@@ -1494,6 +1494,9 @@
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "neon_arc_field")) warnings.push("NEON ARC");
       if (biomeHazards.some((hazard) => hazard.active && hazard.type === "dust_squall")) warnings.push("DUST SQUALL");
       if ((model.sentryRelays || []).some((relay) => relay.telegraphActive)) warnings.push(tr("warning.sentry_lock"));
+      if ((mission.bossRushPressure?.active || mission.bossRushPressure?.pulseTtl > 0) && model.runMode === "boss_rush") {
+        warnings.push(tr("warning.boss_rush_pressure"));
+      }
       if (model.miniBoss?.phaseAnnounceTimer > 0) warnings.push(`BOSS PHASE ${model.miniBoss.phaseIndex + 1}`);
       if (model.uiAlerts?.lowHull) warnings.push("HULL CRITICAL");
       if (model.uiAlerts?.highHeat) warnings.push("HEAT CRITICAL");

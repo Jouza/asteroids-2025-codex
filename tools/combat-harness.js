@@ -998,6 +998,7 @@ function runTests() {
     const scoreBefore = gameA.model.score;
     gameA.model.sector = finalSector;
     gameA.missionSystem.startMission(finalSector);
+    assert(gameA.model.currentMission?.bossRushDepth == null, "Campaign mini-boss mission should not use boss-rush depth template");
     gameA.model.miniBoss = null;
     gameA.model.asteroids = [];
     gameA.model.ufos = [];
@@ -1059,6 +1060,59 @@ function runTests() {
       gameA.model.gameState === AsteroidsA.GAME_STATE.MISSION_COMPLETE,
       "Boss Rush completion should route to mission-complete flow instead of campaign victory"
     );
+  });
+
+  tests.push(() => {
+    gameA.startGame(17676);
+    gameA.model.runMode = "boss_rush";
+    const templates = gameA.config.run?.bossRush?.depthTemplates || {};
+    const templateOne = templates["1"] || templates[1];
+    const templateFour = templates["4"] || templates[4];
+    gameA.model.sector = 1;
+    gameA.missionSystem.startMission(1);
+    const missionOne = gameA.model.currentMission;
+    const bossOne = gameA.model.miniBoss;
+    assert(missionOne?.bossRushDepth != null, "Boss Rush sector should load depth template state");
+    assert(
+      missionOne?.bossRushDepth?.labelKey === templateOne?.labelKey,
+      "Boss Rush sector 1 should resolve configured depth template"
+    );
+    gameA.model.sector = 4;
+    gameA.missionSystem.startMission(4);
+    const missionFour = gameA.model.currentMission;
+    const bossFour = gameA.model.miniBoss;
+    assert(
+      missionFour?.bossRushDepth?.labelKey === templateFour?.labelKey,
+      "Boss Rush sector 4 should resolve configured depth template"
+    );
+    assert(
+      bossOne?.depthTuning?.shootCooldownMul !== bossFour?.depthTuning?.shootCooldownMul,
+      "Different Boss Rush templates should alter boss tuning values"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(17777);
+    gameA.model.runMode = "boss_rush";
+    gameA.model.sector = 3;
+    gameA.missionSystem.startMission(3);
+    const mission = gameA.model.currentMission;
+    mission.bossRushPressure.enabled = true;
+    mission.bossRushPressure.maxConcurrentAdds = 1;
+    mission.bossRushPressure.waveUfos = 2;
+    mission.bossRushPressure.timer = 0;
+    mission.bossRushPressure.maxEnemyBulletsForWindow = 99;
+    gameA.model.ufos = [];
+    gameA.model.enemyBullets = [];
+    gameA.missionSystem.updateMission(0.1);
+    assert(gameA.model.ufos.length === 1, "Boss Rush pressure should respect max concurrent add cap");
+    assert(mission.bossRushPressure.active, "Boss Rush pressure state should mark window as active after spawn");
+    mission.bossRushPressure.timer = 0;
+    gameA.model.ufos = [];
+    gameA.model.enemyBullets = new Array(120).fill({ x: 0, y: 0, vx: 0, vy: 0, ttl: 1, radius: 1 });
+    mission.bossRushPressure.maxEnemyBulletsForWindow = 40;
+    gameA.missionSystem.updateMission(0.1);
+    assert(gameA.model.ufos.length === 0, "Boss Rush pressure should skip spawning on low-readability bullet load");
   });
 
   tests.push(() => {

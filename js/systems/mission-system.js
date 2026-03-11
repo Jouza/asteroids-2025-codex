@@ -22,6 +22,8 @@
     "mission.phase_status": "Phase {phase} | HP {hp}/{maxHp} | {weakpoint}",
     "mission.context": "{biome} | {modifier}",
     "mission.context_with_directive": "{biome} | {modifier} | {directive}",
+    "mission.context_with_depth": "{biome} | {modifier} | {depth}",
+    "mission.boss_rush.depth.default": "BR Template",
     "mission.directive.none": "No directive"
   };
 
@@ -641,6 +643,96 @@
       return order[(missionIndex - 1) % order.length];
     }
 
+    getBossRushDepthTemplate(sector = this.game.model.sector) {
+      const g = this.game;
+      const templates = g.config.run?.bossRush?.depthTemplates || {};
+      const sectorKey = String(Math.max(1, Math.floor(Number(sector) || 1)));
+      const raw = templates[sectorKey] || templates[Math.max(1, Math.floor(Number(sector) || 1))] || null;
+      const bossTuning = raw?.bossTuning || {};
+      const arenaPressure = raw?.arenaPressure || {};
+      return {
+        labelKey:
+          typeof raw?.labelKey === "string" && raw.labelKey.length > 0 ? raw.labelKey : "mission.boss_rush.depth.default",
+        bossTuning: {
+          shootCooldownMul: g.clamp(Number(bossTuning.shootCooldownMul) || 1, 0.72, 1.35),
+          movementMul: g.clamp(Number(bossTuning.movementMul) || 1, 0.75, 1.4),
+          weakpointCycleMul: g.clamp(Number(bossTuning.weakpointCycleMul) || 1, 0.72, 1.35),
+          weakpointWindowMul: g.clamp(Number(bossTuning.weakpointWindowMul) || 1, 0.72, 1.4)
+        },
+        arenaPressure: {
+          enabled: Boolean(arenaPressure.enabled),
+          maxConcurrentAdds: Math.max(0, Math.min(2, Math.floor(Number(arenaPressure.maxConcurrentAdds) || 0))),
+          spawnIntervalSeconds: g.clamp(Number(arenaPressure.spawnIntervalSeconds) || 8.8, 4.2, 16),
+          waveUfos: Math.max(0, Math.min(2, Math.floor(Number(arenaPressure.waveUfos) || 0))),
+          maxEnemyBulletsForWindow: Math.max(8, Math.floor(Number(arenaPressure.maxEnemyBulletsForWindow) || 28)),
+          hazardPulse: Boolean(arenaPressure.hazardPulse)
+        },
+        phaseBeatIntensityMul: g.clamp(Number(raw?.phaseBeatIntensityMul) || 1, 0.8, 1.5)
+      };
+    }
+
+    createBossRushPressureState(template = null) {
+      const pressure = template?.arenaPressure || {};
+      return {
+        enabled: Boolean(pressure.enabled) && (pressure.maxConcurrentAdds ?? 0) > 0 && (pressure.waveUfos ?? 0) > 0,
+        maxConcurrentAdds: Math.max(0, Math.floor(Number(pressure.maxConcurrentAdds) || 0)),
+        waveUfos: Math.max(0, Math.floor(Number(pressure.waveUfos) || 0)),
+        timer: Math.max(0.5, Number(pressure.spawnIntervalSeconds) || 8.8),
+        intervalSeconds: Math.max(0.5, Number(pressure.spawnIntervalSeconds) || 8.8),
+        maxEnemyBulletsForWindow: Math.max(8, Math.floor(Number(pressure.maxEnemyBulletsForWindow) || 28)),
+        hazardPulse: Boolean(pressure.hazardPulse),
+        active: false,
+        pulseTtl: 0
+      };
+    }
+
+    updateBossRushPressure(dt, mission, boss) {
+      const g = this.game;
+      const state = mission?.bossRushPressure;
+      if (!state || !state.enabled) return;
+      state.pulseTtl = Math.max(0, (state.pulseTtl ?? 0) - dt);
+      if (!boss) {
+        state.active = false;
+        return;
+      }
+      const hpRatio = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+      const inFinalKillWindow = hpRatio <= 0.2 && boss.weakpointOpen;
+      if (inFinalKillWindow) {
+        state.active = false;
+        state.timer = Math.max(0.4, state.timer - dt * 0.25);
+        return;
+      }
+      if (g.model.ufos.length >= state.maxConcurrentAdds) {
+        state.active = false;
+        return;
+      }
+      if (g.model.enemyBullets.length > state.maxEnemyBulletsForWindow) {
+        state.active = false;
+        return;
+      }
+      state.timer -= dt;
+      if (state.timer > 0) {
+        state.active = false;
+        return;
+      }
+      const available = Math.max(0, state.maxConcurrentAdds - g.model.ufos.length);
+      const toSpawn = Math.min(available, state.waveUfos);
+      if (toSpawn <= 0) {
+        state.timer = Math.max(1.2, state.intervalSeconds * 0.5);
+        state.active = false;
+        return;
+      }
+      for (let i = 0; i < toSpawn; i += 1) {
+        g.enemySystem.spawnMissionUfo({ huntPhase: "boss_rush_pressure" });
+      }
+      state.timer = state.intervalSeconds;
+      state.active = true;
+      if (state.hazardPulse) {
+        state.pulseTtl = 1.1;
+        this.triggerMissionBeat("boss_phase", 0.58, 0.56);
+      }
+    }
+
     startMission(missionIndex) {
       const g = this.game;
       const type = this.getMissionTypeByIndex(missionIndex);
@@ -672,8 +764,17 @@
         intelProfile,
         intelRepApplied: false,
         factionDirective,
+        bossRushDepth: null,
+        bossRushDepthLabel: "",
+        bossRushPressure: null,
         ...context
       };
+      if (g.model.runMode === "boss_rush" && type === "mini_boss") {
+        const bossRushDepth = this.getBossRushDepthTemplate(level);
+        g.model.currentMission.bossRushDepth = bossRushDepth;
+        g.model.currentMission.bossRushDepthLabel = tr(bossRushDepth.labelKey);
+        g.model.currentMission.bossRushPressure = this.createBossRushPressureState(bossRushDepth);
+      }
       g.model.missionTimer = 0;
       g.model.missionSpawnTimer = 0;
       g.model.missionSpawnBudget = 0;
@@ -823,7 +924,10 @@
         g.model.currentMission.objectiveText = isFinalEncounter
           ? tr("mission.destroy_final_boss", { hp })
           : tr("mission.destroy_boss", { hp });
-        g.enemySystem.spawnMiniBoss(hp, { isFinalBoss: isFinalEncounter });
+        g.enemySystem.spawnMiniBoss(hp, {
+          isFinalBoss: isFinalEncounter,
+          depthTuning: g.model.currentMission?.bossRushDepth?.bossTuning || null
+        });
         this.spawnAsteroidPack(
           level,
           1 + Math.floor((level - 1) / 5) + (difficulty >= 1.25 ? 1 : 0),
@@ -1158,6 +1262,7 @@
 
       if (type === "mini_boss") {
         const boss = g.model.miniBoss;
+        if (g.model.runMode === "boss_rush") this.updateBossRushPressure(dt, mission, boss);
         if (boss) {
           const weakpointText = boss.weakpointOpen
             ? tr("mission.weakpoint_open", { seconds: Math.max(0, boss.weakpointOpenFor).toFixed(1) })
@@ -1179,9 +1284,12 @@
         modifier: mission.modifierLabel || tr("mission.clear_skies"),
         directive: mission.factionDirective?.label || tr("mission.directive.none")
       };
-      mission.contextText = mission.factionDirective
-        ? tr("mission.context_with_directive", contextParams)
-        : tr("mission.context", contextParams);
+      mission.contextText =
+        g.model.runMode === "boss_rush" && mission.bossRushDepthLabel
+          ? tr("mission.context_with_depth", { biome: contextParams.biome, modifier: contextParams.modifier, depth: mission.bossRushDepthLabel })
+          : mission.factionDirective
+            ? tr("mission.context_with_directive", contextParams)
+            : tr("mission.context", contextParams);
       if (g.model.salvageDrifters.length > 0 && mission.drifterStatus !== "captured" && mission.drifterStatus !== "lost") {
         mission.drifterStatus = "active";
       } else if (g.model.salvageDrifters.length === 0 && mission.drifterStatus === "active") {

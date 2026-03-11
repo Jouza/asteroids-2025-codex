@@ -172,7 +172,81 @@
       finalMissionType: "mini_boss",
       bossRush: {
         finalSector: 4,
-        finalMissionType: "mini_boss"
+        finalMissionType: "mini_boss",
+        depthTemplates: {
+          1: {
+            labelKey: "mission.boss_rush.depth.template_1",
+            bossTuning: {
+              shootCooldownMul: 1.08,
+              movementMul: 0.92,
+              weakpointCycleMul: 1.05,
+              weakpointWindowMul: 1.0
+            },
+            arenaPressure: {
+              enabled: true,
+              maxConcurrentAdds: 1,
+              spawnIntervalSeconds: 9.2,
+              waveUfos: 1,
+              maxEnemyBulletsForWindow: 28,
+              hazardPulse: false
+            },
+            phaseBeatIntensityMul: 1.0
+          },
+          2: {
+            labelKey: "mission.boss_rush.depth.template_2",
+            bossTuning: {
+              shootCooldownMul: 0.96,
+              movementMul: 1.0,
+              weakpointCycleMul: 0.96,
+              weakpointWindowMul: 1.05
+            },
+            arenaPressure: {
+              enabled: true,
+              maxConcurrentAdds: 1,
+              spawnIntervalSeconds: 8.3,
+              waveUfos: 1,
+              maxEnemyBulletsForWindow: 30,
+              hazardPulse: true
+            },
+            phaseBeatIntensityMul: 1.06
+          },
+          3: {
+            labelKey: "mission.boss_rush.depth.template_3",
+            bossTuning: {
+              shootCooldownMul: 0.92,
+              movementMul: 1.08,
+              weakpointCycleMul: 0.9,
+              weakpointWindowMul: 0.96
+            },
+            arenaPressure: {
+              enabled: true,
+              maxConcurrentAdds: 2,
+              spawnIntervalSeconds: 7.7,
+              waveUfos: 2,
+              maxEnemyBulletsForWindow: 34,
+              hazardPulse: true
+            },
+            phaseBeatIntensityMul: 1.12
+          },
+          4: {
+            labelKey: "mission.boss_rush.depth.template_4",
+            bossTuning: {
+              shootCooldownMul: 0.86,
+              movementMul: 1.14,
+              weakpointCycleMul: 0.84,
+              weakpointWindowMul: 0.9
+            },
+            arenaPressure: {
+              enabled: true,
+              maxConcurrentAdds: 2,
+              spawnIntervalSeconds: 7.2,
+              waveUfos: 2,
+              maxEnemyBulletsForWindow: 36,
+              hazardPulse: true
+            },
+            phaseBeatIntensityMul: 1.22
+          }
+        }
       },
       finalClearRewards: {
         campaign: {

@@ -144,6 +144,7 @@
       "game.boss.down": "Boss down: +{credits} credits, {drops} guaranteed module",
       "game.boss.final_down": "Final boss down: +{credits} credits, {drops} guaranteed module",
       "warning.sentry_lock": "SENTRY LOCK",
+      "warning.boss_rush_pressure": "BOSS RUSH PRESSURE",
       "mission.drifter.status": "Drifter: {status}",
       "mission.drifter.active": "active",
       "mission.drifter.captured": "captured",
@@ -241,6 +242,12 @@
       "mission.phase_status": "Phase {phase} | HP {hp}/{maxHp} | {weakpoint}",
       "mission.context": "{biome} | {modifier}",
       "mission.context_with_directive": "{biome} | {modifier} | {directive}",
+      "mission.context_with_depth": "{biome} | {modifier} | {depth}",
+      "mission.boss_rush.depth.default": "Boss Rush Template",
+      "mission.boss_rush.depth.template_1": "Template I: Control Burn",
+      "mission.boss_rush.depth.template_2": "Template II: Pulse Window",
+      "mission.boss_rush.depth.template_3": "Template III: Crossfire",
+      "mission.boss_rush.depth.template_4": "Template IV: Final Crush",
       "mission.directive.none": "No directive",
       "mission.directive.helix_sweep": "HELIX Sweep Directive",
       "mission.directive.helix_route_secure": "HELIX Route Secure Directive",
@@ -411,9 +418,9 @@
       "help.card.boss_rush_mode.name": "BOSS RUSH",
       "help.card.boss_rush_mode.tag": "Mode flow",
       "help.card.boss_rush_mode.line":
-        "Boss Rush skips standard mission rotation and starts mini-boss encounters every sector. The mode has a dedicated final clear branch at sector 4.",
+        "Boss Rush skips standard mission rotation and starts mini-boss encounters every sector. Sectors 1-4 now use deterministic depth templates with different boss pacing and light pressure windows.",
       "help.card.boss_rush_mode.impact":
-        "<strong>Impact:</strong> fast high-pressure boss practice loop with clear run-complete endpoint.",
+        "<strong>Impact:</strong> each sector has a distinct combat signature while keeping the same clear objective and economy rules.",
       "help.card.end_run_summary.name": "Victory Summary 2.0",
       "help.card.end_run_summary.tag": "End-run debrief",
       "help.card.end_run_summary.line":

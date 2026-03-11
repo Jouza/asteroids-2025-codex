@@ -6,6 +6,17 @@
       this.game = game;
     }
 
+    resolveBossDepthTuning(raw = null) {
+      const g = this.game;
+      const tuning = raw && typeof raw === "object" ? raw : {};
+      return {
+        shootCooldownMul: g.clamp(Number(tuning.shootCooldownMul) || 1, 0.72, 1.35),
+        movementMul: g.clamp(Number(tuning.movementMul) || 1, 0.75, 1.4),
+        weakpointCycleMul: g.clamp(Number(tuning.weakpointCycleMul) || 1, 0.72, 1.35),
+        weakpointWindowMul: g.clamp(Number(tuning.weakpointWindowMul) || 1, 0.72, 1.4)
+      };
+    }
+
     getEnemyBulletAsteroidCollisionMode(damageProfile) {
       const g = this.game;
       const type = g.config?.damage?.enemyHitProfiles?.[damageProfile]?.damageType;
@@ -276,6 +287,7 @@
       const miniCfg = g.config.mission.miniBoss;
       const finalCfg = g.config.run?.finalBoss || {};
       const cfg = isFinalBoss ? finalCfg : miniCfg;
+      const depthTuning = this.resolveBossDepthTuning(options.depthTuning);
       g.model.miniBoss = {
         x: g.config.canvas.width * 0.5,
         y: 120,
@@ -290,6 +302,7 @@
         weakpointOpenFor: 0,
         weakpointOpen: false,
         isFinalBoss,
+        depthTuning,
         shotCounter: 0
       };
     }
@@ -352,6 +365,7 @@
     updateMiniBossWeakpoint(boss, dt, cfg) {
       const g = this.game;
       const phase = boss.phaseIndex;
+      const depth = this.resolveBossDepthTuning(boss.depthTuning);
       if (boss.weakpointOpenFor > 0) {
         boss.weakpointOpenFor = Math.max(0, boss.weakpointOpenFor - dt);
         boss.weakpointOpen = boss.weakpointOpenFor > 0;
@@ -361,14 +375,15 @@
       boss.weakpointTimer = Math.max(0, boss.weakpointTimer - dt);
       if (boss.weakpointTimer > 0) return;
       boss.weakpointOpen = true;
-      boss.weakpointOpenFor = cfg.weakpointWindowSeconds[phase];
-      boss.weakpointTimer = cfg.weakpointCycleSeconds[phase];
+      boss.weakpointOpenFor = Math.max(0.2, cfg.weakpointWindowSeconds[phase] * depth.weakpointWindowMul);
+      boss.weakpointTimer = Math.max(0.3, cfg.weakpointCycleSeconds[phase] * depth.weakpointCycleMul);
       g.emitImpactParticles(boss.x, boss.y, 9, "126,237,255");
     }
 
     updateMiniBossPhaseState(boss) {
       const g = this.game;
       const cfg = boss.isFinalBoss ? g.config.run?.finalBoss || g.config.mission.miniBoss : g.config.mission.miniBoss;
+      const depth = this.resolveBossDepthTuning(boss.depthTuning);
       const ratio = boss.hp / boss.maxHp;
       const thresholds = cfg.phaseThresholds;
       const nextPhase =
@@ -376,14 +391,23 @@
       if (nextPhase <= boss.phaseIndex) return;
       boss.phaseIndex = nextPhase;
       boss.phaseAnnounceTimer = 1.4;
-      boss.weakpointTimer = Math.min(boss.weakpointTimer, cfg.weakpointCycleSeconds[nextPhase] * 0.55);
+      boss.weakpointTimer = Math.min(boss.weakpointTimer, cfg.weakpointCycleSeconds[nextPhase] * 0.55 * depth.weakpointCycleMul);
       if (boss.isFinalBoss) this.triggerFinalBossPhaseEvent(boss);
       else this.triggerMiniBossPhaseEvent(boss);
+      const missionDepthMul = g.model.currentMission?.bossRushDepth?.phaseBeatIntensityMul ?? 1;
       if (typeof g.missionSystem?.triggerMissionBeat === "function") {
-        g.missionSystem.triggerMissionBeat("boss_phase", boss.isFinalBoss ? 1.0 : 0.84, boss.isFinalBoss ? 1.05 : 0.88);
+        g.missionSystem.triggerMissionBeat(
+          "boss_phase",
+          (boss.isFinalBoss ? 1.0 : 0.84) * missionDepthMul,
+          (boss.isFinalBoss ? 1.05 : 0.88) * Math.max(0.86, missionDepthMul)
+        );
       }
       if (typeof g.missionSystem?.triggerMissionFlash === "function") {
-        g.missionSystem.triggerMissionFlash(boss.isFinalBoss ? 0.72 : 0.52, boss.isFinalBoss ? 0.84 : 0.62, "255,148,216");
+        g.missionSystem.triggerMissionFlash(
+          (boss.isFinalBoss ? 0.72 : 0.52) * Math.max(0.9, missionDepthMul),
+          (boss.isFinalBoss ? 0.84 : 0.62) * Math.max(0.9, missionDepthMul),
+          "255,148,216"
+        );
       }
     }
 
@@ -394,6 +418,7 @@
       if (!boss || !ship) return;
 
       const cfg = boss.isFinalBoss ? g.config.run?.finalBoss || g.config.mission.miniBoss : g.config.mission.miniBoss;
+      const depth = this.resolveBossDepthTuning(boss.depthTuning);
       boss.phase += dt;
       boss.phaseAnnounceTimer = Math.max(0, (boss.phaseAnnounceTimer ?? 0) - dt);
       this.updateMiniBossPhaseState(boss);
@@ -403,17 +428,17 @@
       if (boss.isFinalBoss) {
         const centerX = g.config.canvas.width * 0.5;
         const centerY = g.config.canvas.height * 0.34;
-        const orbitX = cfg.orbitRadiusX?.[phase] ?? 280;
-        const orbitY = cfg.orbitRadiusY?.[phase] ?? 140;
-        const orbitFreq = cfg.orbitFreq?.[phase] ?? 0.72;
-        const driftFreq = cfg.driftFreq?.[phase] ?? 1.35;
+        const orbitX = (cfg.orbitRadiusX?.[phase] ?? 280) * depth.movementMul;
+        const orbitY = (cfg.orbitRadiusY?.[phase] ?? 140) * depth.movementMul;
+        const orbitFreq = (cfg.orbitFreq?.[phase] ?? 0.72) * depth.movementMul;
+        const driftFreq = (cfg.driftFreq?.[phase] ?? 1.35) * depth.movementMul;
         boss.x = centerX + Math.cos(boss.phase * orbitFreq) * orbitX + Math.sin(boss.phase * driftFreq) * 24;
         boss.y = centerY + Math.sin(boss.phase * orbitFreq * 1.25) * orbitY;
       } else {
         boss.x =
           g.config.canvas.width * 0.5 +
-          Math.sin(boss.phase * cfg.movementFreqX[phase]) * cfg.movementAmplitudeX[phase];
-        boss.y = 120 + Math.sin(boss.phase * cfg.movementFreqY[phase]) * cfg.movementAmplitudeY[phase];
+          Math.sin(boss.phase * cfg.movementFreqX[phase] * depth.movementMul) * (cfg.movementAmplitudeX[phase] * depth.movementMul);
+        boss.y = 120 + Math.sin(boss.phase * cfg.movementFreqY[phase] * depth.movementMul) * (cfg.movementAmplitudeY[phase] * depth.movementMul);
       }
 
       boss.shootTimer = Math.max(0, boss.shootTimer - dt);
@@ -492,7 +517,7 @@
           g.config.ufo.fireRateScalePerSector,
           g.config.ufo.fireRateScaleMaxBonus
         );
-        boss.shootTimer = (cfg.shootCooldownSeconds?.[phase] ?? 1) / fireRateScale;
+        boss.shootTimer = ((cfg.shootCooldownSeconds?.[phase] ?? 1) * depth.shootCooldownMul) / fireRateScale;
       }
     }
   }

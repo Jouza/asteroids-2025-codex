@@ -1,5 +1,15 @@
 # Hotove veci
 
+- [x] Endgame / replayability - Boss Rush depth pass (MVP slice 1)
+  - [x] Pridany data-driven `run.bossRush.depthTemplates` (sektory 1-4) s `bossTuning`, `arenaPressure` a `phaseBeatIntensityMul`
+  - [x] Boss Rush `mini_boss` mise nahrava template do `currentMission.bossRushDepth` + `bossRushPressure` runtime state
+  - [x] Boss spawn pouziva sektorovy tuning (shoot cooldown, movement/orbit, weakpoint cycle/window)
+  - [x] Lehke pressure windows spawnuji capovane addy (1-2 UFO) s readability guardem podle bullet loadu
+  - [x] Mission context doplnen o depth label; warning row doplnen o `BOSS RUSH PRESSURE`
+  - [x] Phase beat intenzita je v Boss Rush modulovana podle template
+  - [x] Help/i18n karta `BOSS RUSH` aktualizovana na sektorove variace
+  - [x] Harness coverage doplnena pro template loading/tuning, pressure cap/readability guard a campaign isolation
+
 - [x] Endgame / replayability - final clear reward table (campaign + boss rush)
   - [x] Data-driven `run.finalClearRewards` profily pro `campaign` a `boss_rush` v config/content override
   - [x] Final clear payout je aplikovan jednorazove pri `VICTORY` (`credits/salvage/score` + guaranteed drops)

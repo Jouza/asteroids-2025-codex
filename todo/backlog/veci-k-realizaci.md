@@ -2,9 +2,6 @@
 
 ## Prioritni fronta (herni zazitek: vizual + gameplay)
 
-- [ ] Endgame / replayability
-  - [ ] Boss Rush depth pass (variace encounter flow mezi sektory, ne jen linearni mini-boss loop)
-
 - [ ] Combat readability follow-up (post Telegraph 2.0)
   - [ ] Jemne doladeni prahu intenzity telegraphu podle obtiznosti/mutatoru (vizual only)
   - [ ] Rozsireni hit-type cue palety o odliseni EMP/jam tlak vs cisty damage
