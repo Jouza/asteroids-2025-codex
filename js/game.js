@@ -116,6 +116,21 @@
     };
   }
 
+  function createRunSummaryState() {
+    return {
+      missions: [],
+      dropsSeen: [],
+      damageTakenTotal: {
+        shieldAbsorb: 0,
+        hullDamage: 0
+      },
+      limits: {
+        missions: 16,
+        dropsSeen: 48
+      }
+    };
+  }
+
   function createDefaultPilotProgression() {
     return {
       level: 1,
@@ -348,12 +363,14 @@
         factions: createDefaultFactionProgression(),
         factionRepGainTracker: {},
         factionRunSummary: null,
+        runSummary: createRunSummaryState(),
         campaignBiomeOrder: [],
         contrabandHeat: 0,
         pilot: createDefaultPilotProgression(),
         identity: createDefaultIdentitySelection(),
         identityStatusText: tr("hud.identity_unknown"),
         overlaySettingsRow: 0,
+        overlayEndSummaryPage: "overview",
         uiModal: null,
         salvageParts: 0,
         telemetry: createTelemetryState(false),
@@ -1307,6 +1324,12 @@
           this.cycleRunMode(1);
         }
       }
+      const canCycleEndSummaryPage =
+        this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY;
+      if (canCycleEndSummaryPage) {
+        if (this.input.wasPressed("ArrowLeft")) this.cycleOverlayEndSummaryPage(-1);
+        if (this.input.wasPressed("ArrowRight")) this.cycleOverlayEndSummaryPage(1);
+      }
 
       if (this.input.wasPressed("KeyP")) {
         if (this.model.gameState === GAME_STATE.PLAYING) this.model.gameState = GAME_STATE.PAUSED;
@@ -1324,12 +1347,14 @@
         } else if (this.model.gameState === GAME_STATE.GAME_OVER) {
           this.input.reset();
           this.model.overlaySettingsRow = 0;
+          this.model.overlayEndSummaryPage = "overview";
           this.model.gameState = GAME_STATE.START;
           this.model.runSeed = generateRunSeed();
           this.hud.sync(this.model);
         } else if (this.model.gameState === GAME_STATE.VICTORY) {
           this.input.reset();
           this.model.overlaySettingsRow = 0;
+          this.model.overlayEndSummaryPage = "overview";
           this.model.gameState = GAME_STATE.START;
           this.model.runSeed = generateRunSeed();
           this.hud.sync(this.model);
@@ -1400,6 +1425,19 @@
       return false;
     }
 
+    getOverlayEndSummaryPages() {
+      return ["overview", "drops_damage", "timeline_faction"];
+    }
+
+    cycleOverlayEndSummaryPage(direction = 1) {
+      const pages = this.getOverlayEndSummaryPages();
+      const current = this.model.overlayEndSummaryPage || pages[0];
+      const currentIndex = pages.indexOf(current);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      this.model.overlayEndSummaryPage = pages[(safeIndex + direction + pages.length) % pages.length];
+      this.hud.sync(this.model);
+    }
+
     trySetRunMode(mode) {
       if (!this.getRunModeDefs().includes(mode)) return false;
       if (mode === "endless" && !this.model.endlessUnlocked) {
@@ -1419,6 +1457,9 @@
       this.saveProfile(saveReason);
       this.input.reset();
       this.model.gameState = state;
+      if (state === GAME_STATE.GAME_OVER || state === GAME_STATE.VICTORY) {
+        this.model.overlayEndSummaryPage = "overview";
+      }
       if (this.model.factionRunSummary) this.model.factionRunSummary.active = false;
       this.audio.play(soundCue);
       this.hud.sync(this.model);
@@ -1453,9 +1494,32 @@
       return sector >= finalSector && missionType === finalMissionType;
     }
 
-    buildVictorySummary({ statusKey = null } = {}) {
+    buildEndRunSummary({ statusKey = null } = {}) {
       const selectedPilot = this.getSelectedIdentityPilot();
       const selectedShip = this.getSelectedIdentityShip();
+      const runSummary = this.model.runSummary || createRunSummaryState();
+      const rarityDefs = Array.isArray(this.config?.loot?.rarities) ? this.config.loot.rarities : [];
+      const rarityRankById = {};
+      for (let i = 0; i < rarityDefs.length; i += 1) {
+        const rarity = rarityDefs[i];
+        if (!rarity?.id) continue;
+        rarityRankById[rarity.id] = Number.isFinite(Number(rarity.rank)) ? Number(rarity.rank) : i;
+      }
+      const toDropRank = (drop) => {
+        const id = drop?.rarityId;
+        return Number.isFinite(Number(rarityRankById[id])) ? Number(rarityRankById[id]) : 0;
+      };
+      const topDrops = Array.isArray(runSummary.dropsSeen)
+        ? runSummary.dropsSeen
+            .slice()
+            .sort((a, b) => {
+              const rankDelta = toDropRank(b) - toDropRank(a);
+              if (rankDelta !== 0) return rankDelta;
+              return (Number(b.runtimeSeconds) || 0) - (Number(a.runtimeSeconds) || 0);
+            })
+            .slice(0, 6)
+        : [];
+      const missionTimeline = Array.isArray(runSummary.missions) ? runSummary.missions.slice(-6) : [];
       return {
         runMode: this.model.runMode || "campaign",
         statusKey,
@@ -1474,23 +1538,24 @@
         factionSummary: this.buildFactionRunSummarySnapshot(),
         salvageParts: this.model.salvageParts,
         missionsCompleted: this.model.telemetry.completedMissions,
-        miniBossKills: this.model.telemetry.kills.miniBosses
+        miniBossKills: this.model.telemetry.kills.miniBosses,
+        runSummary: {
+          damageTakenTotal: {
+            shieldAbsorb: Math.max(0, Number(runSummary.damageTakenTotal?.shieldAbsorb) || 0),
+            hullDamage: Math.max(0, Number(runSummary.damageTakenTotal?.hullDamage) || 0)
+          },
+          topDrops,
+          missionTimeline
+        }
       };
     }
 
+    buildVictorySummary({ statusKey = null } = {}) {
+      return this.buildEndRunSummary({ statusKey });
+    }
+
     buildGameOverSummary() {
-      const selectedPilot = this.getSelectedIdentityPilot();
-      const selectedShip = this.getSelectedIdentityShip();
-      return {
-        score: this.model.score,
-        sector: this.model.sector,
-        runtimeSeconds: this.model.runtimeSeconds,
-        identity: {
-          pilot: selectedPilot ? tr(`identity.pilot.${selectedPilot.id}.callsign`) : "-",
-          ship: selectedShip ? tr(`identity.ship.${selectedShip.id}.name`) : "-"
-        },
-        factionSummary: this.buildFactionRunSummarySnapshot()
-      };
+      return this.buildEndRunSummary();
     }
 
     completeRunVictory({ unlockEndless = false, statusKey = null } = {}) {
@@ -1590,8 +1655,10 @@
       this.model.hangar.shopIndex = 0;
       this.model.hangar.pilotCursor = 0;
       this.model.factionRepGainTracker = {};
+      this.model.runSummary = createRunSummaryState();
       this.model.campaignBiomeOrder = [];
       this.model.overlaySettingsRow = 0;
+      this.model.overlayEndSummaryPage = "overview";
       this.applyProfileToModel(this.model.profile);
       this.model.runSeed = seed >>> 0;
       this.model.telemetry = createTelemetryState(telemetryEnabled);
@@ -2314,6 +2381,7 @@
 
       const drop = this.createModuleDrop();
       this.model.hangar.lootCrate.push(drop);
+      this.recordRunSummaryDrop(drop, source);
       this.model.hangar.message = `Recovered module: ${drop.name}`;
       if (this.model.hangar.lootCrate.length === 1 && this.model.hangar.selectionSource === "crate") {
         this.model.hangar.selectionIndex = 0;
@@ -2810,6 +2878,7 @@
           shieldAbsorb,
           hullDamage
         });
+        this.recordRunSummaryDamage(shieldAbsorb, hullDamage);
 
         if (overrides.countAsHit !== false) this.recordPlayerHit();
         this.model.flashMs = Math.max(this.model.flashMs, resolved.isCrit ? 210 : 160);
@@ -3296,7 +3365,9 @@
         miniBossKillsStart: this.model.telemetry.kills.miniBosses,
         secondaryUsesStart: this.model.telemetry.shots.secondary,
         utilityUsesStart: this.model.telemetry.shots.utility,
-        playerHitsStart: this.model.telemetry.playerHitsTaken
+        playerHitsStart: this.model.telemetry.playerHitsTaken,
+        damageShieldStart: Math.max(0, Number(this.model.runSummary?.damageTakenTotal?.shieldAbsorb) || 0),
+        damageHullStart: Math.max(0, Number(this.model.runSummary?.damageTakenTotal?.hullDamage) || 0)
       };
     }
 
@@ -3408,6 +3479,25 @@
         utilityUses: this.model.telemetry.shots.utility - active.utilityUsesStart,
         playerHitsTaken: this.model.telemetry.playerHitsTaken - active.playerHitsStart
       };
+      this.recordRunSummaryMission({
+        sector: active.sector,
+        type: active.type,
+        label: active.label,
+        durationSeconds: this.model.telemetry.lastMission.durationSeconds,
+        scoreGained: this.model.telemetry.lastMission.scoreGained,
+        creditsGained: this.model.telemetry.lastMission.creditsGained,
+        asteroidKills: this.model.telemetry.lastMission.asteroidKills,
+        ufoKills: this.model.telemetry.lastMission.ufoKills,
+        miniBossKills: this.model.telemetry.lastMission.miniBossKills,
+        playerHitsTaken: this.model.telemetry.lastMission.playerHitsTaken,
+        shieldDamageTaken:
+          Math.max(0, Number(this.model.runSummary?.damageTakenTotal?.shieldAbsorb) || 0) -
+          Math.max(0, Number(active.damageShieldStart) || 0),
+        hullDamageTaken:
+          Math.max(0, Number(this.model.runSummary?.damageTakenTotal?.hullDamage) || 0) -
+          Math.max(0, Number(active.damageHullStart) || 0),
+        runtimeSeconds: Math.max(0, Number(this.model.runtimeSeconds) || 0)
+      });
       this.processBountyBoardMissionResult(this.model.telemetry.lastMission);
       this.model.telemetry.activeMission = null;
       const missionType = this.model.currentMission?.type ?? active.type;
@@ -3892,10 +3982,67 @@
       for (let i = 0; i < rewards.guaranteedDrops; i += 1) {
         const drop = this.createModuleDrop();
         this.model.hangar.lootCrate.push(drop);
+        this.recordRunSummaryDrop(drop, "miniBoss");
       }
       this.model.hangar.message = isFinalEncounter
         ? tr("game.boss.final_down", { credits: creditsGain, drops: rewards.guaranteedDrops })
         : tr("game.boss.down", { credits: creditsGain, drops: rewards.guaranteedDrops });
+    }
+
+    recordRunSummaryDamage(shieldAbsorb = 0, hullDamage = 0) {
+      if (!this.model.runSummary || typeof this.model.runSummary !== "object") {
+        this.model.runSummary = createRunSummaryState();
+      }
+      const totals = this.model.runSummary.damageTakenTotal || { shieldAbsorb: 0, hullDamage: 0 };
+      totals.shieldAbsorb = Math.max(0, Number(totals.shieldAbsorb) || 0) + Math.max(0, Number(shieldAbsorb) || 0);
+      totals.hullDamage = Math.max(0, Number(totals.hullDamage) || 0) + Math.max(0, Number(hullDamage) || 0);
+      this.model.runSummary.damageTakenTotal = totals;
+    }
+
+    recordRunSummaryDrop(drop, source = "unknown") {
+      if (!drop || typeof drop !== "object") return;
+      if (!this.model.runSummary || typeof this.model.runSummary !== "object") {
+        this.model.runSummary = createRunSummaryState();
+      }
+      const list = Array.isArray(this.model.runSummary.dropsSeen) ? this.model.runSummary.dropsSeen : [];
+      list.push({
+        name: String(drop.name || "-"),
+        rarityId: String(drop.rarityId || "common"),
+        rarityLabel: String(drop.rarityLabel || "Common"),
+        slot: String(drop.slot || "module"),
+        source: String(source || "unknown"),
+        sector: Math.max(1, Math.floor(Number(this.model.sector) || 1)),
+        runtimeSeconds: Math.max(0, Number(this.model.runtimeSeconds) || 0)
+      });
+      const cap = Math.max(12, Math.floor(Number(this.model.runSummary?.limits?.dropsSeen) || 48));
+      if (list.length > cap) list.splice(0, list.length - cap);
+      this.model.runSummary.dropsSeen = list;
+    }
+
+    recordRunSummaryMission(entry) {
+      if (!entry || typeof entry !== "object") return;
+      if (!this.model.runSummary || typeof this.model.runSummary !== "object") {
+        this.model.runSummary = createRunSummaryState();
+      }
+      const list = Array.isArray(this.model.runSummary.missions) ? this.model.runSummary.missions : [];
+      list.push({
+        sector: Math.max(1, Math.floor(Number(entry.sector) || 1)),
+        type: String(entry.type || "unknown"),
+        label: String(entry.label || String(entry.type || "UNKNOWN")).toUpperCase(),
+        durationSeconds: Math.max(0, Number(entry.durationSeconds) || 0),
+        scoreGained: Math.floor(Number(entry.scoreGained) || 0),
+        creditsGained: Math.floor(Number(entry.creditsGained) || 0),
+        asteroidKills: Math.max(0, Math.floor(Number(entry.asteroidKills) || 0)),
+        ufoKills: Math.max(0, Math.floor(Number(entry.ufoKills) || 0)),
+        miniBossKills: Math.max(0, Math.floor(Number(entry.miniBossKills) || 0)),
+        playerHitsTaken: Math.max(0, Math.floor(Number(entry.playerHitsTaken) || 0)),
+        shieldDamageTaken: Math.max(0, Number(entry.shieldDamageTaken) || 0),
+        hullDamageTaken: Math.max(0, Number(entry.hullDamageTaken) || 0),
+        runtimeSeconds: Math.max(0, Number(entry.runtimeSeconds) || 0)
+      });
+      const cap = Math.max(8, Math.floor(Number(this.model.runSummary?.limits?.missions) || 16));
+      if (list.length > cap) list.splice(0, list.length - cap);
+      this.model.runSummary.missions = list;
     }
 
     findClosestChainTarget(fromX, fromY, radius) {

@@ -1352,8 +1352,75 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(59696);
+    gameA.model.ship.invulnMs = 0;
+    const beforeShield = gameA.model.runSummary?.damageTakenTotal?.shieldAbsorb ?? 0;
+    const beforeHull = gameA.model.runSummary?.damageTakenTotal?.hullDamage ?? 0;
+    gameA.applyDamageToShip("enemy_bullet_hunter", {
+      baseDamage: 42,
+      critChance: 0,
+      bypassInvulnerability: true,
+      applyHitInvulnerability: false
+    });
+    const afterShield = gameA.model.runSummary?.damageTakenTotal?.shieldAbsorb ?? 0;
+    const afterHull = gameA.model.runSummary?.damageTakenTotal?.hullDamage ?? 0;
+    assert(afterShield + afterHull > beforeShield + beforeHull, "Run summary damage totals should increase after ship damage");
+  });
+
+  tests.push(() => {
+    gameA.startGame(59797);
+    const dropChanceCfg = gameA.config.loot.dropChance.ufo.hunter;
+    gameA.config.loot.dropChance.ufo.hunter = 1;
+    gameA.tryDropModule("ufo", "hunter");
+    gameA.config.loot.dropChance.ufo.hunter = dropChanceCfg;
+    gameA.model.hangar.lootCrate = [];
+    const summary = gameA.buildGameOverSummary();
+    assert(
+      Array.isArray(summary.runSummary?.topDrops) && summary.runSummary.topDrops.length >= 1,
+      "End-run summary should keep drop highlights even after crate changes"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(59898);
+    for (let i = 0; i < 30; i += 1) {
+      gameA.recordRunSummaryMission({
+        sector: i + 1,
+        type: "survive",
+        label: "SURVIVE",
+        durationSeconds: 10 + i,
+        scoreGained: 50 + i,
+        creditsGained: 8 + i,
+        asteroidKills: i,
+        ufoKills: i % 3,
+        miniBossKills: 0,
+        playerHitsTaken: i % 2,
+        shieldDamageTaken: i + 0.5,
+        hullDamageTaken: i * 0.25,
+        runtimeSeconds: i + 1
+      });
+    }
+    assert(gameA.model.runSummary.missions.length <= 16, "Run summary mission log should respect cap");
+    const victorySummary = gameA.buildVictorySummary();
+    assert(
+      Array.isArray(victorySummary.runSummary?.missionTimeline) && victorySummary.runSummary.missionTimeline.length <= 6,
+      "Victory summary should expose capped mission timeline subset"
+    );
+  });
+
+  tests.push(() => {
+    gameA.model.gameState = AsteroidsA.GAME_STATE.GAME_OVER;
+    gameA.model.overlayEndSummaryPage = "overview";
+    gameA.input.wasPressed = (code) => code === "ArrowRight";
+    gameA.handleMetaInput();
+    gameA.input.wasPressed = () => false;
+    assert(gameA.model.overlayEndSummaryPage === "drops_damage", "ArrowRight should switch end-summary page on GAME OVER");
+  });
+
+  tests.push(() => {
     gameA.model.gameState = AsteroidsA.GAME_STATE.VICTORY;
     gameA.model.overlaySettingsRow = 2;
+    gameA.model.overlayEndSummaryPage = "overview";
     gameA.model.runSeed = 1234;
     gameA.model.victorySummary = gameA.buildVictorySummary();
     let enterConsumed = false;
@@ -1367,7 +1434,9 @@ function runTests() {
     gameA.input.wasPressed = () => false;
     assert(gameA.model.gameState === AsteroidsA.GAME_STATE.START, "Enter on VICTORY should route to START overlay");
     assert(gameA.model.overlaySettingsRow === 0, "Victory confirmation should reset run-setup row selection");
+    assert(gameA.model.overlayEndSummaryPage === "overview", "Victory confirmation should reset end-summary page");
     assert(gameA.model.runSeed !== 1234, "Victory confirmation should generate a fresh run seed");
+    assert(gameA.model.victorySummary?.runSummary != null, "Victory summary should include run summary payload");
   });
 
   tests.push(() => {
@@ -1452,6 +1521,7 @@ function runTests() {
         gameA.model.gameOverSummary.factionSummary.byFaction.length >= 2,
       "Game over summary should include faction run summary"
     );
+    assert(gameA.model.gameOverSummary?.runSummary != null, "Game over summary should include run summary payload");
   });
 
   tests.push(() => {

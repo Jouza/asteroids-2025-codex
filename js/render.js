@@ -2073,6 +2073,225 @@
       return y;
     }
 
+    getEndSummaryPages() {
+      return [
+        { id: "overview", labelKey: "overlay.end_summary.tab.overview" },
+        { id: "drops_damage", labelKey: "overlay.end_summary.tab.drops_damage" },
+        { id: "timeline_faction", labelKey: "overlay.end_summary.tab.timeline_faction" }
+      ];
+    }
+
+    getEndSummaryPageIndex(pageId) {
+      const pages = this.getEndSummaryPages();
+      const index = pages.findIndex((entry) => entry.id === pageId);
+      return index >= 0 ? index : 0;
+    }
+
+    drawEndSummaryHeader(centerX, y, pageId) {
+      const { ctx } = this;
+      const pages = this.getEndSummaryPages();
+      const index = this.getEndSummaryPageIndex(pageId);
+      const active = pages[index];
+      ctx.textAlign = "center";
+      ctx.font = "600 15px Trebuchet MS";
+      ctx.fillStyle = "rgba(190,236,255,0.92)";
+      ctx.fillText(tr(active.labelKey), centerX, y);
+      ctx.font = "500 12px Trebuchet MS";
+      ctx.fillStyle = "rgba(170,218,242,0.85)";
+      ctx.fillText(
+        tr("overlay.end_summary.page_indicator", { current: index + 1, total: pages.length }),
+        centerX,
+        y + 16
+      );
+    }
+
+    getEndSummarySourceLabel(sourceId) {
+      const key = `overlay.end_summary.source.${sourceId}`;
+      const resolved = tr(key);
+      if (resolved === key) return String(sourceId || "unknown").toUpperCase();
+      return resolved;
+    }
+
+    drawEndSummaryOverviewPage(summary, centerX, startY, isVictory = false) {
+      const { ctx } = this;
+      let y = startY;
+      ctx.font = "600 20px Trebuchet MS";
+      ctx.fillStyle = "#d8f5ff";
+      ctx.fillText(tr("overlay.score", { score: summary.score ?? 0 }), centerX, y);
+      y += 28;
+      ctx.font = "500 15px Trebuchet MS";
+      ctx.fillStyle = "rgba(206,238,255,0.95)";
+      ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? 1 }), centerX, y);
+      y += 24;
+      y = this.drawWrappedText(
+        tr("overlay.identity_status", {
+          pilot: summary.identity?.pilot || "-",
+          ship: summary.identity?.ship || "-"
+        }),
+        centerX,
+        y,
+        660,
+        22,
+        2
+      );
+      y += 24;
+      y = this.drawWrappedText(
+        tr("overlay.build", {
+          primary: summary.loadout?.primary || "-",
+          secondary: summary.loadout?.secondary || "-",
+          utility: summary.loadout?.utility || "-"
+        }),
+        centerX,
+        y,
+        660,
+        22,
+        2
+      );
+      y += 26;
+      ctx.fillText(
+        tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? 0).toFixed(1) }),
+        centerX,
+        y
+      );
+      y += 24;
+      ctx.fillText(
+        tr("overlay.end_summary.overview_progress", {
+          missions: Math.max(0, Number(summary.missionsCompleted) || 0),
+          bosses: Math.max(0, Number(summary.miniBossKills) || 0),
+          salvage: Math.max(0, Number(summary.salvageParts) || 0)
+        }),
+        centerX,
+        y
+      );
+      if (isVictory) {
+        y += 28;
+        const statusKey = summary.statusKey || "overlay.campaign_complete";
+        ctx.fillStyle = "rgba(255,231,168,0.95)";
+        ctx.fillText(tr(statusKey), centerX, y);
+      }
+      return y;
+    }
+
+    drawEndSummaryDropsDamagePage(summary, centerX, startY) {
+      const { ctx } = this;
+      let y = startY;
+      const totals = summary.runSummary?.damageTakenTotal || {};
+      const shieldAbsorb = Math.max(0, Number(totals.shieldAbsorb) || 0);
+      const hullDamage = Math.max(0, Number(totals.hullDamage) || 0);
+      ctx.textAlign = "center";
+      ctx.font = "600 16px Trebuchet MS";
+      ctx.fillStyle = "rgba(194,237,255,0.95)";
+      ctx.fillText(tr("overlay.end_summary.damage_title"), centerX, y);
+      y += 22;
+      ctx.font = "500 14px Trebuchet MS";
+      ctx.fillStyle = "rgba(216,245,255,0.95)";
+      ctx.fillText(tr("overlay.end_summary.damage_shield", { value: shieldAbsorb.toFixed(1) }), centerX, y);
+      y += 18;
+      ctx.fillText(tr("overlay.end_summary.damage_hull", { value: hullDamage.toFixed(1) }), centerX, y);
+      y += 30;
+      ctx.font = "600 16px Trebuchet MS";
+      ctx.fillStyle = "rgba(194,237,255,0.95)";
+      ctx.fillText(tr("overlay.end_summary.drop_title"), centerX, y);
+      y += 22;
+      const topDrops = Array.isArray(summary.runSummary?.topDrops) ? summary.runSummary.topDrops : [];
+      ctx.font = "500 13px Trebuchet MS";
+      if (!topDrops.length) {
+        ctx.fillStyle = "rgba(170,214,236,0.86)";
+        ctx.fillText(tr("overlay.end_summary.no_drops"), centerX, y);
+        return y;
+      }
+      for (const drop of topDrops.slice(0, 6)) {
+        ctx.fillStyle = "rgba(216,245,255,0.95)";
+        const line = tr("overlay.end_summary.drop_row", {
+          rarity: drop.rarityLabel || "Common",
+          name: drop.name || "-",
+          slot: String(drop.slot || "-").toUpperCase(),
+          source: this.getEndSummarySourceLabel(drop.source || "unknown"),
+          sector: Math.max(1, Math.floor(Number(drop.sector) || 1))
+        });
+        y = this.drawWrappedText(line, centerX, y, 660, 16, 2) + 14;
+      }
+      return y;
+    }
+
+    drawEndSummaryTimelineFactionPage(summary, centerX, startY) {
+      const { ctx } = this;
+      let y = startY;
+      const missionTimeline = Array.isArray(summary.runSummary?.missionTimeline) ? summary.runSummary.missionTimeline : [];
+      ctx.textAlign = "center";
+      ctx.font = "600 16px Trebuchet MS";
+      ctx.fillStyle = "rgba(194,237,255,0.95)";
+      ctx.fillText(tr("overlay.end_summary.timeline_title"), centerX, y);
+      y += 20;
+      ctx.font = "500 12px Trebuchet MS";
+      if (!missionTimeline.length) {
+        ctx.fillStyle = "rgba(170,214,236,0.86)";
+        ctx.fillText(tr("overlay.end_summary.no_timeline"), centerX, y);
+        y += 20;
+      } else {
+        ctx.fillStyle = "rgba(216,245,255,0.95)";
+        for (const entry of missionTimeline.slice(-6)) {
+          const line = tr("overlay.end_summary.timeline_row", {
+            sector: Math.max(1, Math.floor(Number(entry.sector) || 1)),
+            label: entry.label || String(entry.type || "MISSION").toUpperCase(),
+            score: Math.floor(Number(entry.scoreGained) || 0),
+            credits: Math.floor(Number(entry.creditsGained) || 0),
+            hits: Math.max(0, Math.floor(Number(entry.playerHitsTaken) || 0)),
+            sh: Math.max(0, Number(entry.shieldDamageTaken) || 0).toFixed(1),
+            hu: Math.max(0, Number(entry.hullDamageTaken) || 0).toFixed(1)
+          });
+          y = this.drawWrappedText(line, centerX, y, 660, 15, 2) + 10;
+        }
+      }
+
+      const factionSummary = summary.factionSummary;
+      if (factionSummary && Array.isArray(factionSummary.byFaction) && factionSummary.byFaction.length > 0) {
+        y += 8;
+        ctx.font = "600 15px Trebuchet MS";
+        ctx.fillStyle = "rgba(196,238,255,0.9)";
+        ctx.fillText(tr("overlay.faction_summary.title"), centerX, y);
+        y += 18;
+        ctx.font = "500 12px Trebuchet MS";
+        ctx.fillStyle = "rgba(216,245,255,0.9)";
+        for (const faction of factionSummary.byFaction) {
+          const line = tr("overlay.faction_summary.row", {
+            faction: tr(`game.faction.${faction.factionId}`),
+            start: faction.startRep,
+            end: faction.endRep,
+            delta: this.formatSignedInteger(faction.deltaRep)
+          });
+          ctx.fillText(line, centerX, y);
+          y += 15;
+        }
+      }
+      return y;
+    }
+
+    drawEndRunOverlay(model, summary, titleKey, isVictory = false) {
+      const { ctx, config } = this;
+      const cx = config.canvas.width / 2;
+      const cy = config.canvas.height / 2;
+      this.drawOverlayBlock(cx, cy + 42, 730, 430);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#d8f5ff";
+      ctx.font = "700 38px Trebuchet MS";
+      ctx.fillText(tr(titleKey), cx, cy - 142);
+
+      const pageId = model.overlayEndSummaryPage || "overview";
+      this.drawEndSummaryHeader(cx, cy - 110, pageId);
+      const contentTop = cy - 72;
+      if (pageId === "drops_damage") this.drawEndSummaryDropsDamagePage(summary, cx, contentTop);
+      else if (pageId === "timeline_faction") this.drawEndSummaryTimelineFactionPage(summary, cx, contentTop);
+      else this.drawEndSummaryOverviewPage(summary, cx, contentTop, isVictory);
+
+      ctx.font = "500 12px Trebuchet MS";
+      ctx.fillStyle = "rgba(180,223,244,0.9)";
+      ctx.fillText(tr("overlay.end_summary.switch_hint"), cx, cy + 224);
+      ctx.font = "600 17px Trebuchet MS";
+      ctx.fillStyle = "rgba(255,231,168,0.95)";
+      ctx.fillText(tr("overlay.enter_new_run"), cx, cy + 248);
+    }
+
     getRunSettingsRows(model) {
       const difficultyId = model.runDifficultyId || "normal";
       const mutatorId = model.runMutatorId || "standard";
@@ -2257,94 +2476,13 @@
       }
 
       if (model.gameState === GAME_STATE.GAME_OVER) {
-        const cx = config.canvas.width / 2;
-        const cy = config.canvas.height / 2;
         const summary = model.gameOverSummary || model.victorySummary || {};
-        const pilotLabelFromId = tr(`identity.pilot.${model.identity?.pilotId}.callsign`);
-        const shipLabelFromId = tr(`identity.ship.${model.identity?.shipId}.name`);
-        const pilotLabel = summary.identity?.pilot || (pilotLabelFromId.includes("identity.pilot.") ? "-" : pilotLabelFromId);
-        const shipLabel = summary.identity?.ship || (shipLabelFromId.includes("identity.ship.") ? "-" : shipLabelFromId);
-        this.drawOverlayBlock(cx, cy + 42, 600, 320);
-        ctx.fillStyle = "#d8f5ff";
-        ctx.textAlign = "center";
-        ctx.font = "700 38px Trebuchet MS";
-        ctx.fillText(tr("overlay.game_over"), cx, cy - 48);
-        ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(tr("overlay.score", { score: model.score }), cx, cy - 10);
-        const sectorLabelY = cy + 24;
-        if (model.comboScoringEnabled) {
-          ctx.fillText(`End combo: x${model.comboMultiplier.toFixed(2)}`, cx, sectorLabelY);
-        } else {
-          ctx.fillText(tr("overlay.sector_reached", { sector: model.sector }), cx, sectorLabelY);
-        }
-        this.drawWrappedText(
-          tr("overlay.identity_status", {
-            pilot: pilotLabel,
-            ship: shipLabel
-          }),
-          cx,
-          cy + 56,
-          760,
-          24,
-          2
-        );
-        const factionBottomY = this.drawFactionEndSummary(cx, cy + 94, summary.factionSummary);
-        ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr("overlay.enter_new_run"), cx, factionBottomY + 16);
+        this.drawEndRunOverlay(model, summary, "overlay.game_over", false);
       }
 
       if (model.gameState === GAME_STATE.VICTORY) {
         const summary = model.victorySummary || {};
-        const cx = config.canvas.width / 2;
-        const cy = config.canvas.height / 2;
-        this.drawOverlayBlock(cx, cy + 54, 600, 380);
-        ctx.fillStyle = "#d8f5ff";
-        ctx.textAlign = "center";
-        ctx.font = "700 38px Trebuchet MS";
-        ctx.fillText(tr("overlay.victory"), cx, cy - 54);
-        ctx.font = "600 20px Trebuchet MS";
-        ctx.fillText(tr("overlay.score", { score: summary.score ?? model.score }), cx, cy - 18);
-        ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? model.sector }), cx, cy + 10);
-        const identityBottomY = this.drawWrappedText(
-          tr("overlay.identity_status", {
-            pilot: summary.identity?.pilot || "-",
-            ship: summary.identity?.ship || "-"
-          }),
-          cx,
-          cy + 40,
-          760,
-          26,
-          2
-        );
-        const buildBottomY = this.drawWrappedText(
-          tr("overlay.build", {
-            primary: summary.loadout?.primary || "-",
-            secondary: summary.loadout?.secondary || "-",
-            utility: summary.loadout?.utility || "-"
-          }),
-          cx,
-          identityBottomY + 30,
-          760,
-          24,
-          2
-        );
-        ctx.font = "600 17px Trebuchet MS";
-        ctx.fillText(
-          tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? model.runtimeSeconds).toFixed(1) }),
-          cx,
-          buildBottomY + 30
-        );
-        const unlockY = buildBottomY + 58;
-        const summaryStatusKey =
-          summary.statusKey || (model.endlessUnlocked ? "overlay.endless_unlocked" : "overlay.campaign_complete");
-        ctx.fillText(
-          tr(summaryStatusKey),
-          cx,
-          unlockY
-        );
-        const factionBottomY = this.drawFactionEndSummary(cx, unlockY + 28, summary.factionSummary);
-        ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr("overlay.enter_new_run"), cx, factionBottomY + 12);
+        this.drawEndRunOverlay(model, summary, "overlay.victory", true);
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {

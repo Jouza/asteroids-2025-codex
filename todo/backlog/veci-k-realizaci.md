@@ -4,7 +4,6 @@
 
 - [ ] Endgame / replayability
   - [ ] Samostatna reward tabulka pro final clear (campaign + boss rush)
-  - [ ] Victory summary 2.0 (drop highlights, damage taken, mission timeline)
   - [ ] Boss Rush depth pass (variace encounter flow mezi sektory, ne jen linearni mini-boss loop)
 
 - [ ] Combat readability follow-up (post Telegraph 2.0)

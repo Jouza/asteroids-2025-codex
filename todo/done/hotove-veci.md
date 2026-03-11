@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Endgame / replayability - Victory summary 2.0
+  - [x] End-run debrief sjednocen pro `VICTORY` i `GAME OVER` do 3-tab overlaye (`Overview`, `Drops+Damage`, `Timeline+Faction`) bez overflow
+  - [x] Runtime `runSummary` trackuje cely run: mission timeline, drop highlights a total incoming damage (`shieldAbsorb`/`hullDamage`)
+  - [x] Drop highlights berou top 6 dropu z celeho runu (rarity desc + recency), nezavisle na finalnim stavu crate/inventory
+  - [x] Timeline/faction stranka kombinuje posledni mise s kompaktnim faction debriefem
+  - [x] i18n/help coverage doplnena o Summary 2.0 texty a kartu v `Mission Types`
+  - [x] Harness coverage doplnena pro runSummary payload, damage/drop tracking, timeline cap a end-summary page cycling
+
 - [x] Mechanics pack: drain_core + echo_shell + sentry_relay + salvage_drifter
   - [x] Pridany asteroid typy `drain_core` a `echo_shell` (score bonus + runtime chovani)
   - [x] `drain_core` aura drainuje energii a pridava heat podle vzdalenosti

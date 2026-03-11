@@ -678,6 +678,7 @@
       const missionCards = Array.from(new Set((cfg.mission?.order || []).map(toMissionCard)));
       if (!missionCards.includes("mission_mini_boss")) missionCards.push("mission_mini_boss");
       if (!missionCards.includes("boss_rush_mode")) missionCards.push("boss_rush_mode");
+      if (!missionCards.includes("end_run_summary")) missionCards.push("end_run_summary");
       appendSection({
         titleKey: "help.section.mission_types",
         hintKey: "help.section.mission_types_hint",
