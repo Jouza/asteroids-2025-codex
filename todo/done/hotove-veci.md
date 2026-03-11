@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Touch overlay hotfix + audio settings XL
+  - [x] Combat touch prvky se uz nekresli na `START/GAME OVER/VICTORY`, aby neprekryvaly setup/start obsah
+  - [x] Pridano samostatne overlay CTA tlacitko (`START` / `NEW RUN`) s vlastni tap zonou mimo combat action bublinu
+  - [x] Tap handling priorita upravena: fullscreen CTA -> overlay CTA -> setup/hangar/end-summary interakce
+  - [x] Touch-mobile `Audio Settings` modal zvetsen (panel, typografie, radky, close hitbox, slider thumb)
+
 - [x] Mobile/Tablet UX pass (landscape-first + smart fullscreen + adaptive touch)
   - [x] Runtime `deviceMode` + `mobileUi` stav pro touch/mobile flow
   - [x] Landscape gate pro touch mobile: portrait zobrazi rotate overlay a pozastavi gameplay update bez resetu runu

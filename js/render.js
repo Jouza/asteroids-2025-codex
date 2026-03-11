@@ -42,6 +42,7 @@
         this.drawOverlay(model);
       }
       this.drawMobileTopStrip(model);
+      this.drawOverlayTouchActionCta(model);
       this.drawTouchControls(model, input);
       this.drawFullscreenPrompt(model);
       this.drawRotateOverlay(model);
@@ -649,6 +650,7 @@
       ui.hangarLootRows = [];
       ui.hangarShopRows = [];
       ui.endSummaryTapZones = null;
+      ui.overlayActionCtaZone = null;
       ui.fullscreenTapZone = null;
       ui.hangarBottomActions = null;
     }
@@ -684,6 +686,8 @@
       if (!touch || !layout || !layout.buttons) return;
       const { ctx } = this;
       const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+      const showCombatControls = model.gameState === GAME_STATE.PLAYING;
+      const showActionButton = model.gameState === GAME_STATE.HANGAR;
       const vis = model.mobileUi?.actionVisibility || {};
       const buttonDefs = [
         {
@@ -756,24 +760,20 @@
         ctx.restore();
       };
 
-      drawStick(layout.leftStick, touch.leftStick, "108,216,255");
-      drawStick(layout.rightStick, touch.rightStick, "182,222,255");
-      for (const def of buttonDefs) {
-        drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
+      if (showCombatControls) {
+        drawStick(layout.leftStick, touch.leftStick, "108,216,255");
+        drawStick(layout.rightStick, touch.rightStick, "182,222,255");
+        for (const def of buttonDefs) {
+          drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
+        }
       }
 
-      const actionLabelKey =
-        model.gameState === GAME_STATE.START
-          ? "touch.button.action.start"
-          : model.gameState === GAME_STATE.HANGAR
-            ? "touch.button.action.confirm"
-            : model.gameState === GAME_STATE.GAME_OVER || model.gameState === GAME_STATE.VICTORY
-              ? "touch.button.action.new_run"
-              : "touch.button.action.confirm";
-      const actionBtn = layout.buttons.action;
-      drawButton(actionBtn, tr(actionLabelKey), false, 0, "255,214,140");
+      if (showActionButton) {
+        const actionBtn = layout.buttons.action;
+        drawButton(actionBtn, tr("touch.button.action.confirm"), false, 0, "255,214,140");
+      }
 
-      if (model.gameState === GAME_STATE.PLAYING) {
+      if (showCombatControls) {
         ctx.save();
         ctx.textAlign = "center";
         ctx.font = "500 11px Trebuchet MS";
@@ -781,6 +781,37 @@
         ctx.fillText(tr("touch.hud.hint"), this.config.canvas.width / 2, this.config.canvas.height - 10);
         ctx.restore();
       }
+    }
+
+    drawOverlayTouchActionCta(model) {
+      if (model.inputMode !== "touch") return;
+      const isOverlayState =
+        model.gameState === GAME_STATE.START ||
+        model.gameState === GAME_STATE.GAME_OVER ||
+        model.gameState === GAME_STATE.VICTORY;
+      if (!isOverlayState) return;
+      const ui = model.touchControls?.ui;
+      if (!ui) return;
+      const { ctx, config } = this;
+      const w = Math.max(220, Math.round(config.canvas.width * 0.28));
+      const h = 52;
+      const x = Math.round((config.canvas.width - w) / 2);
+      const y = Math.max(16, config.canvas.height - 78);
+      ui.overlayActionCtaZone = { x, y, w, h };
+      const labelKey = model.gameState === GAME_STATE.START ? "touch.button.action.start" : "touch.button.action.new_run";
+
+      ctx.save();
+      ctx.fillStyle = "rgba(16,32,46,0.88)";
+      ctx.strokeStyle = "rgba(142,240,255,0.88)";
+      ctx.lineWidth = 2;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeRect(x, y, w, h);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "700 18px Trebuchet MS";
+      ctx.fillStyle = "#dcf7ff";
+      ctx.fillText(tr(labelKey), x + w / 2, y + h / 2);
+      ctx.restore();
     }
 
     drawFullscreenPrompt(model) {

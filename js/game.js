@@ -268,6 +268,7 @@
         hangarLootRows: [],
         hangarShopRows: [],
         endSummaryTapZones: null,
+        overlayActionCtaZone: null,
         fullscreenTapZone: null,
         hangarBottomActions: null
       },
@@ -941,12 +942,15 @@
         this.tryEnterFullscreenFromGesture();
         return;
       }
-      const layout = touch.layout || this.getTouchLayout();
-      const actionBtn = layout.buttons?.action;
-      if (actionBtn && Math.hypot(x - actionBtn.x, y - actionBtn.y) <= actionBtn.radius * 1.28) {
-        if (this.model.gameState === GAME_STATE.HANGAR) {
-          this.hangarSystem.activateNavSelection();
-        } else if (this.model.gameState === GAME_STATE.START) {
+      const overlayActionZone = touch.ui?.overlayActionCtaZone;
+      if (
+        overlayActionZone &&
+        x >= overlayActionZone.x &&
+        x <= overlayActionZone.x + overlayActionZone.w &&
+        y >= overlayActionZone.y &&
+        y <= overlayActionZone.y + overlayActionZone.h
+      ) {
+        if (this.model.gameState === GAME_STATE.START) {
           this.startGame(this.model.runSeed ?? generateRunSeed());
         } else if (this.model.gameState === GAME_STATE.GAME_OVER || this.model.gameState === GAME_STATE.VICTORY) {
           this.model.overlaySettingsRow = 0;
@@ -955,6 +959,16 @@
           this.model.runSeed = generateRunSeed();
           this.hud.sync(this.model);
         }
+        return;
+      }
+      const layout = touch.layout || this.getTouchLayout();
+      const actionBtn = layout.buttons?.action;
+      if (
+        this.model.gameState === GAME_STATE.HANGAR &&
+        actionBtn &&
+        Math.hypot(x - actionBtn.x, y - actionBtn.y) <= actionBtn.radius * 1.28
+      ) {
+        this.hangarSystem.activateNavSelection();
         return;
       }
       if (this.model.gameState === GAME_STATE.START) this.handleTouchRunSetupTap(x, y);

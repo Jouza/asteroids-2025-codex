@@ -630,6 +630,67 @@ strong {
   object-fit: contain;
 }
 
+.touch-mobile-ui #audioModal .modal-panel {
+  width: min(760px, calc(100vw - 20px));
+  margin: 24px auto 0;
+  padding: 18px 18px 16px;
+}
+
+.touch-mobile-ui #audioModal .modal-header h2 {
+  font-size: 1.32rem;
+}
+
+.touch-mobile-ui #audioModal .modal-close {
+  min-height: 44px;
+  font-size: 0.98rem;
+  padding: 8px 14px;
+}
+
+.touch-mobile-ui #audioModal .modal-hint,
+.touch-mobile-ui #audioModal .modal-muted-hint {
+  font-size: 0.98rem;
+  line-height: 1.35;
+  margin: 8px 0 10px;
+}
+
+.touch-mobile-ui #audioModal .modal-row {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  min-height: 56px;
+  padding: 12px;
+}
+
+.touch-mobile-ui #audioModal .modal-row label {
+  font-size: 1.02rem;
+}
+
+.touch-mobile-ui #audioModal .modal-slider {
+  height: 34px;
+}
+
+.touch-mobile-ui #audioModal .modal-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #9cf4ff;
+  border: 1px solid rgba(13, 24, 36, 0.95);
+}
+
+.touch-mobile-ui #audioModal .modal-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #9cf4ff;
+  border: 1px solid rgba(13, 24, 36, 0.95);
+}
+
+.touch-mobile-ui #audioModal .modal-value {
+  min-width: 0;
+  text-align: left;
+  font-size: 1.02rem;
+}
+
 @media (max-width: 900px) {
   .pilot-hero-card {
     grid-template-columns: 1fr;

@@ -2620,6 +2620,37 @@ function runTests() {
     assert(gameA.model.mobileUi.actionVisibility.utility.state === "high", "Threat pressure should promote utility visibility");
   });
 
+  tests.push(() => {
+    gameA.model.inputMode = "touch";
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.touchControls.ui.overlayActionCtaZone = { x: 100, y: 120, w: 180, h: 56 };
+    gameA.handleTouchTapNavigation(140, 150);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.PLAYING, "Overlay CTA tap on START should begin new run");
+  });
+
+  tests.push(() => {
+    gameA.startGame(20206);
+    gameA.model.inputMode = "touch";
+    gameA.model.gameState = AsteroidsA.GAME_STATE.GAME_OVER;
+    gameA.model.overlaySettingsRow = 3;
+    gameA.model.overlayEndSummaryPage = "timeline_faction";
+    gameA.model.touchControls.ui.overlayActionCtaZone = { x: 160, y: 220, w: 200, h: 56 };
+    gameA.handleTouchTapNavigation(200, 248);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.START, "Overlay CTA tap on GAME OVER should return to START");
+    assert(gameA.model.overlaySettingsRow === 0, "Overlay CTA tap should reset run-setup selected row");
+    assert(gameA.model.overlayEndSummaryPage === "overview", "Overlay CTA tap should reset summary page");
+  });
+
+  tests.push(() => {
+    gameA.model.inputMode = "touch";
+    gameA.model.gameState = AsteroidsA.GAME_STATE.START;
+    gameA.model.touchControls.ui.overlayActionCtaZone = null;
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const action = gameA.model.touchControls.layout.buttons.action;
+    gameA.handleTouchTapNavigation(action.x, action.y);
+    assert(gameA.model.gameState === AsteroidsA.GAME_STATE.START, "Hidden combat action button should not start run on START");
+  });
+
   let passed = 0;
   for (let i = 0; i < tests.length; i += 1) {
     sharedStorage.clear();
