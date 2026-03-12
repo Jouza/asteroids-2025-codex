@@ -1,0 +1,21 @@
+{
+  "name": "STARFANG",
+  "short_name": "STARFANG",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#02050b",
+  "theme_color": "#07142a",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

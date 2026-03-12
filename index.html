@@ -3,9 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07142a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="STARFANG">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'">
   <meta name="referrer" content="no-referrer">
   <title>STARFANG</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -167,6 +175,13 @@
       <div id="pilotModalContent" class="pilot-modal-content"></div>
     </section>
   </div>
+
+  <aside id="iosInstallHint" class="install-hint hidden" aria-live="polite">
+    <p id="iosInstallHintText" class="install-hint-text" data-i18n="index.install_hint.body">Install on iPhone: open Share and tap Add to Home Screen.</p>
+    <div class="install-hint-actions">
+      <button id="iosInstallHintDismiss" class="install-hint-btn" type="button" data-i18n="index.install_hint.dismiss">Don't show again</button>
+    </div>
+  </aside>
 
   <script src="js/version.js"></script>
   <script src="js/content-data.js"></script>

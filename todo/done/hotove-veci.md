@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] iOS Add-to-Home MVP (icon + install hint)
+  - [x] Doplneny iOS web-app head metadata (`apple-mobile-web-app-*`, `theme-color`) + `manifest.webmanifest`
+  - [x] Pridany app ikony lodi (`180`, `192`, `512`) pro home screen/install branding
+  - [x] Pridany iOS Safari install hint panel (`Share -> Add to Home Screen`) s `Don't show again` persistenci
+  - [x] Help/i18n coverage doplnena o iOS install flow a rozdil oproti nativnimu install promptu
+
 - [x] Atmosphere follow-up (MVP slice 1): ambient VFX intensity preset
   - [x] Data-driven `visualFxIntensityPresets` (`low/default/high`) pro deep-space/scars/dust + overlay alpha cap
   - [x] Runtime/UI preference `mobileUi.ambientFxPreset` s persistenci v local UI settings (invalid -> `default`)

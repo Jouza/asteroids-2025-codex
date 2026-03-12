@@ -11,6 +11,7 @@
   const audio = new AudioSystem();
   const AUDIO_SETTINGS_KEY = "starfang_audio_settings_v1";
   const MOBILE_UI_SETTINGS_KEY = "starfang_mobile_ui_v1";
+  const IOS_INSTALL_HINT_KEY = "starfang_ios_install_hint_v1";
   const renderer = new Renderer(canvas, ctx, GAME_CONFIG);
   const game = new Game(canvas, renderer, hud, input, GAME_CONFIG, audio);
   const volumeSlider = document.getElementById("volumeSlider");
@@ -35,9 +36,51 @@
   const pilotModalBackdrop = pilotModal ? pilotModal.querySelector(".modal-backdrop") : null;
   const pilotModalHint = document.getElementById("pilotModalHint");
   const pilotModalContent = document.getElementById("pilotModalContent");
+  const iosInstallHint = document.getElementById("iosInstallHint");
+  const iosInstallHintDismiss = document.getElementById("iosInstallHintDismiss");
 
   let activeModal = null;
   let fullscreenManager = null;
+  let iosInstallHintDismissed = false;
+
+  function isIosSafari() {
+    const ua = String(window.navigator?.userAgent || "");
+    const isiOS = /iPhone|iPad|iPod/.test(ua);
+    const isWebkit = /WebKit/.test(ua);
+    const blocked = /CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|YaBrowser|Brave|UCBrowser/.test(ua);
+    return isiOS && isWebkit && !blocked;
+  }
+
+  function isStandaloneMode() {
+    const navStandalone = window.navigator?.standalone === true;
+    const matchStandalone = typeof window.matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches;
+    return navStandalone || matchStandalone;
+  }
+
+  function loadIosInstallHintState() {
+    try {
+      const raw = window.localStorage.getItem(IOS_INSTALL_HINT_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return Boolean(parsed?.dismissed);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function saveIosInstallHintState(dismissed) {
+    try {
+      window.localStorage.setItem(IOS_INSTALL_HINT_KEY, JSON.stringify({ dismissed: Boolean(dismissed) }));
+    } catch (error) {
+      // Ignore storage write issues.
+    }
+  }
+
+  function syncIosInstallHintVisibility() {
+    if (!iosInstallHint) return;
+    const shouldShow = isIosSafari() && !isStandaloneMode() && !iosInstallHintDismissed;
+    iosInstallHint.classList.toggle("hidden", !shouldShow);
+  }
 
   function createFullscreenManager(targetElement) {
     const doc = targetElement?.ownerDocument || document;
@@ -423,9 +466,11 @@
   window.addEventListener("keydown", unlockAudio);
   window.addEventListener("pointerdown", unlockAudio);
   loadAudioSettings();
+  iosInstallHintDismissed = loadIosInstallHintState();
   if (i18n) i18n.applyTranslations(document);
   syncVolumeUi();
   syncTouchSettingsUi();
+  syncIosInstallHintVisibility();
   let lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
   let lastMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}|${game.model.mobileUi?.aimAssistEnabled}|${game.model.mobileUi?.aimAssistStrength}|${game.model.mobileUi?.aimSmoothing}|${game.model.mobileUi?.ambientFxPreset}`;
   if (volumeSlider) {
@@ -492,6 +537,13 @@
   if (pilotModalBackdrop) {
     pilotModalBackdrop.addEventListener("click", () => setActiveModal(null));
   }
+  if (iosInstallHintDismiss) {
+    iosInstallHintDismiss.addEventListener("click", () => {
+      iosInstallHintDismissed = true;
+      saveIosInstallHintState(true);
+      syncIosInstallHintVisibility();
+    });
+  }
   window.addEventListener(
     "keydown",
     (event) => {
@@ -545,6 +597,7 @@
     const frameDelta = game.applyFrameDelta(rawDelta);
     game.updateMobileUiState(1 / 60);
     if (fullscreenManager) fullscreenManager.syncStateToModel();
+    syncIosInstallHintVisibility();
     document.body.classList.toggle("touch-mobile-ui", game.model.deviceMode === "touch_mobile");
     document.body.classList.toggle("mobile-portrait-blocked", Boolean(game.model.mobileUi?.orientationBlocked));
 
