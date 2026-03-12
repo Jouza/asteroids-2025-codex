@@ -760,13 +760,24 @@
         ctx.restore();
       };
 
-      if (showCombatControls) {
-        drawStick(layout.leftStick, touch.leftStick, "108,216,255");
-        drawStick(layout.rightStick, touch.rightStick, "182,222,255");
-        for (const def of buttonDefs) {
-          drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
+        if (showCombatControls) {
+          drawStick(layout.leftStick, touch.leftStick, "108,216,255");
+          drawStick(layout.rightStick, touch.rightStick, "182,222,255");
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.font = "700 10px Trebuchet MS";
+          ctx.fillStyle = "rgba(188,226,245,0.8)";
+          ctx.fillText(tr("touch.stick.move"), layout.leftStick.x, layout.leftStick.y - layout.leftStick.radius - 10);
+          ctx.fillText(
+            tr("touch.stick.aim_fire"),
+            layout.rightStick.x,
+            layout.rightStick.y - layout.rightStick.radius - 10
+          );
+          ctx.restore();
+          for (const def of buttonDefs) {
+            drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
+          }
         }
-      }
 
       if (showActionButton) {
         const actionBtn = layout.buttons.action;

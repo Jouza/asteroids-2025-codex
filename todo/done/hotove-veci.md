@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] iOS touch input conflict hotfix (left-stick dead vs right aim/fire)
+  - [x] Touch routing v combatu prepnut na zonove prirazeni (`x <= splitX` left stick, `x > splitX` right stick)
+  - [x] Pridana explicitni `pointerRoles` mapa, ktera stabilizuje vlastnictvi pointeru po celou dobu drzeni
+  - [x] `onTouchPointerMove` routuje podle role pointeru; odstraneno nejednoznacne fallback update poradim
+  - [x] `fireActive` je navazany jen na validni pravy stick role state (bez kolizi z jinych pointer stavu)
+  - [x] Touch HUD doplnen o popisky `MOVE` a `AIM/FIRE` pro vyssi citelnost
+  - [x] Harness coverage doplnena o left/right zony, role stabilitu, role cleanup a anti-fire pro left stick
+
 - [x] iOS mobile viewport white-side-bars hotfix
   - [x] `index.html` viewport doplnen o `viewport-fit=cover` pro iOS landscape safe-area
   - [x] Touch-mobile layout prepnuty na `dvw/dvh` (s `vw/vh` fallback) pro stabilni fullscreen sizing

@@ -23,6 +23,8 @@
       "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
       "touch.hud.hint": "Touch: left stick move, right stick aim/fire, EVADE tap dash hold boost",
+      "touch.stick.move": "MOVE",
+      "touch.stick.aim_fire": "AIM/FIRE",
       "touch.button.secondary": "SECONDARY",
       "touch.button.utility": "UTILITY",
       "touch.button.evade": "EVADE",

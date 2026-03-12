@@ -228,6 +228,7 @@
     return {
       inputMode: "keyboard_mouse",
       pointers: {},
+      pointerRoles: {},
       leftStick: {
         active: false,
         pointerId: null,
@@ -740,6 +741,13 @@
       };
     }
 
+    getTouchSplitX(layout) {
+      if (layout?.leftStick && layout?.rightStick) {
+        return (Number(layout.leftStick.x) + Number(layout.rightStick.x)) / 2;
+      }
+      return this.config.canvas.width * 0.5;
+    }
+
     getTouchAimTuningConfig() {
       const aimCfg = this.config?.touchControls?.aimInput || {};
       const multipliers = aimCfg.smoothingMultipliers && typeof aimCfg.smoothingMultipliers === "object" ? aimCfg.smoothingMultipliers : {};
@@ -857,7 +865,10 @@
         touch.buttons.evade.heldSeconds = 0;
       }
       touch.actions.boostActive = touch.buttons.evade.down && touch.buttons.evade.heldSeconds >= 0.18;
-      touch.actions.fireActive = touch.rightStick.active && touch.rightStick.mag >= aimTuning.fireThreshold;
+      const rightPointerRole =
+        touch.rightStick.pointerId == null ? "right_stick" : touch.pointerRoles?.[touch.rightStick.pointerId];
+      touch.actions.fireActive =
+        touch.rightStick.active && rightPointerRole === "right_stick" && touch.rightStick.mag >= aimTuning.fireThreshold;
       if (this.model.gameState !== GAME_STATE.PLAYING) {
         touch.actions.fireActive = false;
         touch.actions.boostActive = false;
@@ -941,6 +952,8 @@
       }
       touch.layout = this.getTouchLayout();
       const layout = touch.layout;
+      const roleMap = touch.pointerRoles || (touch.pointerRoles = {});
+      if (roleMap[pointerId]) return;
       const distTo = (pt) => Math.hypot(x - pt.x, y - pt.y);
       const claimStick = (stick, anchor) => {
         stick.active = true;
@@ -950,28 +963,36 @@
         stick.x = x;
         stick.y = y;
       };
-      const buttons = layout.buttons;
+      const buttons = layout.buttons || {};
+      const splitX = this.getTouchSplitX(layout);
+      const wantsLeftStick = x <= splitX;
+      if (wantsLeftStick) {
+        if (touch.leftStick.active) return;
+        const leftLimit = Math.max(1, layout.leftStick.radius * 1.25);
+        if (distTo(layout.leftStick) > leftLimit) return;
+        claimStick(touch.leftStick, layout.leftStick);
+        this.updateTouchStickState(touch.leftStick, layout.leftStick.radius);
+        roleMap[pointerId] = "left_stick";
+        return;
+      }
+
       const candidates = [];
       const pushCandidate = (kind, id, ratio) => {
         if (ratio <= 1) candidates.push({ kind, id, ratio });
       };
-      if (!touch.leftStick.active) {
-        const limit = Math.max(1, layout.leftStick.radius * 1.25);
-        pushCandidate("stick", "left", distTo(layout.leftStick) / limit);
-      }
       if (!touch.rightStick.active) {
-        const limit = Math.max(1, layout.rightStick.radius * 1.25);
-        pushCandidate("stick", "right", distTo(layout.rightStick) / limit);
+        const rightLimit = Math.max(1, layout.rightStick.radius * 1.25);
+        pushCandidate("stick", "right", distTo(layout.rightStick) / rightLimit);
       }
-      if (!touch.buttons.secondary.down) {
+      if (!touch.buttons.secondary.down && buttons.secondary) {
         const limit = Math.max(1, buttons.secondary.radius * 1.22);
         pushCandidate("button", "secondary", distTo(buttons.secondary) / limit);
       }
-      if (!touch.buttons.utility.down) {
+      if (!touch.buttons.utility.down && buttons.utility) {
         const limit = Math.max(1, buttons.utility.radius * 1.22);
         pushCandidate("button", "utility", distTo(buttons.utility) / limit);
       }
-      if (!touch.buttons.evade.down) {
+      if (!touch.buttons.evade.down && buttons.evade) {
         const limit = Math.max(1, buttons.evade.radius * 1.22);
         pushCandidate("button", "evade", distTo(buttons.evade) / limit);
       }
@@ -979,51 +1000,56 @@
       candidates.sort((a, b) => a.ratio - b.ratio);
       const winner = candidates[0];
       if (winner.kind === "stick") {
-        if (winner.id === "left") {
-          claimStick(touch.leftStick, layout.leftStick);
-          this.updateTouchStickState(touch.leftStick, layout.leftStick.radius);
-        } else {
-          claimStick(touch.rightStick, layout.rightStick);
-          this.updateTouchStickState(touch.rightStick, layout.rightStick.radius);
-        }
+        claimStick(touch.rightStick, layout.rightStick);
+        this.updateTouchStickState(touch.rightStick, layout.rightStick.radius);
+        roleMap[pointerId] = "right_stick";
         return;
       }
       if (winner.id === "secondary") {
         touch.buttons.secondary.down = true;
         touch.buttons.secondary.pointerId = pointerId;
         touch.actions.secondaryPressed = true;
+        roleMap[pointerId] = "button_secondary";
         return;
       }
       if (winner.id === "utility") {
         touch.buttons.utility.down = true;
         touch.buttons.utility.pointerId = pointerId;
         touch.actions.utilityPressed = true;
+        roleMap[pointerId] = "button_utility";
         return;
       }
       if (winner.id === "evade") {
         touch.buttons.evade.down = true;
         touch.buttons.evade.pointerId = pointerId;
         touch.buttons.evade.heldSeconds = 0;
+        roleMap[pointerId] = "button_evade";
       }
     }
 
     onTouchPointerMove(pointerId, x, y) {
       const touch = this.model.touchControls;
       if (!touch || !touch.layout) return;
-      const updateIf = (stick, radius) => {
-        if (!stick.active || stick.pointerId !== pointerId) return false;
-        stick.x = x;
-        stick.y = y;
-        this.updateTouchStickState(stick, radius);
-        return true;
-      };
-      if (updateIf(touch.leftStick, touch.layout.leftStick.radius)) return;
-      updateIf(touch.rightStick, touch.layout.rightStick.radius);
+      const role = touch.pointerRoles?.[pointerId];
+      if (role === "left_stick" && touch.leftStick.active && touch.leftStick.pointerId === pointerId) {
+        touch.leftStick.x = x;
+        touch.leftStick.y = y;
+        this.updateTouchStickState(touch.leftStick, touch.layout.leftStick.radius);
+        return;
+      }
+      if (role === "right_stick" && touch.rightStick.active && touch.rightStick.pointerId === pointerId) {
+        touch.rightStick.x = x;
+        touch.rightStick.y = y;
+        this.updateTouchStickState(touch.rightStick, touch.layout.rightStick.radius);
+      }
     }
 
     onTouchPointerUp(pointerId, x, y) {
       const touch = this.model.touchControls;
       if (!touch) return;
+      if (touch.pointerRoles && Object.prototype.hasOwnProperty.call(touch.pointerRoles, pointerId)) {
+        delete touch.pointerRoles[pointerId];
+      }
       if (touch.leftStick.active && touch.leftStick.pointerId === pointerId) {
         touch.leftStick.active = false;
         touch.leftStick.pointerId = null;

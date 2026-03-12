@@ -2521,6 +2521,51 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(14901);
+    gameA.model.inputMode = "touch";
+    const layout = gameA.getTouchLayout();
+    gameA.onTouchPointerDown(12, layout.leftStick.x - layout.leftStick.radius * 0.45, layout.leftStick.y);
+    assert(gameA.model.touchControls.leftStick.active, "Left-half touch should activate left stick");
+    assert(!gameA.model.touchControls.rightStick.active, "Left-half touch should not activate right stick");
+    assert(gameA.model.touchControls.pointerRoles[12] === "left_stick", "Left-half pointer should own left_stick role");
+  });
+
+  tests.push(() => {
+    gameA.startGame(14902);
+    gameA.model.inputMode = "touch";
+    const layout = gameA.getTouchLayout();
+    gameA.onTouchPointerDown(13, layout.rightStick.x, layout.rightStick.y);
+    assert(gameA.model.touchControls.rightStick.active, "Right-half touch should activate right stick");
+    assert(!gameA.model.touchControls.leftStick.active, "Right-half touch should not activate left stick");
+    assert(gameA.model.touchControls.pointerRoles[13] === "right_stick", "Right-half pointer should own right_stick role");
+  });
+
+  tests.push(() => {
+    gameA.startGame(14903);
+    gameA.model.inputMode = "touch";
+    const layout = gameA.getTouchLayout();
+    gameA.onTouchPointerDown(14, layout.leftStick.x, layout.leftStick.y);
+    const splitX = (layout.leftStick.x + layout.rightStick.x) * 0.5;
+    gameA.onTouchPointerMove(14, splitX + layout.rightStick.radius, layout.leftStick.y);
+    assert(gameA.model.touchControls.pointerRoles[14] === "left_stick", "Pointer role should stay stable while held");
+    assert(gameA.model.touchControls.leftStick.active, "Left stick should remain active while held");
+    assert(!gameA.model.touchControls.rightStick.active, "Move across split should not steal right stick");
+    gameA.onTouchPointerUp(14, splitX + layout.rightStick.radius, layout.leftStick.y);
+    assert(!gameA.model.touchControls.leftStick.active, "Pointer release should deactivate left stick");
+    assert(!Object.prototype.hasOwnProperty.call(gameA.model.touchControls.pointerRoles, 14), "Pointer release should clear role");
+  });
+
+  tests.push(() => {
+    gameA.startGame(14904);
+    gameA.model.inputMode = "touch";
+    const layout = gameA.getTouchLayout();
+    gameA.onTouchPointerDown(15, layout.leftStick.x, layout.leftStick.y);
+    gameA.onTouchPointerMove(15, layout.leftStick.x + layout.leftStick.radius * 0.8, layout.leftStick.y);
+    gameA.updateTouchInputState(1 / 60);
+    assert(!gameA.getTouchCombatActions().fireActive, "Left stick movement should not activate primary fire");
+  });
+
+  tests.push(() => {
     gameA.startGame(15151);
     gameA.model.inputMode = "touch";
     gameA.model.touchControls.layout = gameA.getTouchLayout();
