@@ -596,6 +596,13 @@
       ? mobileUiSettings.ambientFxPreset
       : "default";
   syncTouchSettingsUi();
+  const handleViewportRefresh = () => {
+    game.updateMobileUiState(1 / 60);
+    game.updateAdaptiveViewport();
+  };
+  window.addEventListener("resize", handleViewportRefresh);
+  window.addEventListener("orientationchange", handleViewportRefresh);
+  handleViewportRefresh();
 
   let lastTimestamp = 0;
   let accumulator = 0;
@@ -610,6 +617,7 @@
     lastTimestamp = timestamp;
     const frameDelta = game.applyFrameDelta(rawDelta);
     game.updateMobileUiState(1 / 60);
+    game.updateAdaptiveViewport();
     if (fullscreenManager) fullscreenManager.syncStateToModel();
     syncIosInstallHintVisibility();
     document.body.classList.toggle("touch-mobile-ui", game.model.deviceMode === "touch_mobile");

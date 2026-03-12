@@ -2652,6 +2652,33 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.model.inputMode = "touch";
+    gameA.model.mobileUi.viewportOverride = { width: 932, height: 430 };
+    gameA.updateMobileUiState(1 / 60);
+    gameA.updateAdaptiveViewport();
+    const viewport = gameA.model.viewport;
+    assert(viewport && viewport.renderViewport, "Adaptive viewport should initialize viewport runtime state");
+    assert(viewport.renderViewport.cssWidth === 932, "Adaptive viewport should track CSS width from viewport override");
+    assert(viewport.renderViewport.cssHeight === 430, "Adaptive viewport should track CSS height from viewport override");
+    assert(gameA.config.canvas.width === 932 && gameA.config.canvas.height === 430, "Adaptive viewport should update world bounds");
+    const touchLayout = gameA.getTouchLayout();
+    assert(
+      touchLayout.buttons.thrust.x + touchLayout.buttons.thrust.w <= gameA.config.canvas.width + 0.01,
+      "Touch zones should remain inside adaptive world bounds"
+    );
+  });
+
+  tests.push(() => {
+    const base = gameA.model.viewport.balanceViewport;
+    gameA.model.viewport.worldBounds = { width: base.width * 1.45, height: base.height * 1.35 };
+    const largeWorldMul = gameA.missionSystem.getViewportPressureMultiplier();
+    gameA.model.viewport.worldBounds = { width: Math.floor(base.width * 0.78), height: Math.floor(base.height * 0.82) };
+    const smallWorldMul = gameA.missionSystem.getViewportPressureMultiplier();
+    assert(largeWorldMul > 1, "Viewport pressure multiplier should increase for larger-than-balance world area");
+    assert(smallWorldMul < 1, "Viewport pressure multiplier should decrease for smaller-than-balance world area");
+  });
+
+  tests.push(() => {
     gameA.model.mobileUi.fullscreenState = "inactive";
     gameA.setFullscreenRequestHandler(() => true);
     const accepted = gameA.tryEnterFullscreenFromGesture();

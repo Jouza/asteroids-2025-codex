@@ -224,6 +224,28 @@
     };
   }
 
+  function createDefaultViewportState(config) {
+    const baseWidth = Math.max(320, Math.floor(Number(config?.canvas?.width) || 960));
+    const baseHeight = Math.max(240, Math.floor(Number(config?.canvas?.height) || 720));
+    return {
+      renderViewport: {
+        cssWidth: baseWidth,
+        cssHeight: baseHeight,
+        pixelWidth: baseWidth,
+        pixelHeight: baseHeight,
+        dpr: 1
+      },
+      worldBounds: {
+        width: baseWidth,
+        height: baseHeight
+      },
+      balanceViewport: {
+        width: baseWidth,
+        height: baseHeight
+      }
+    };
+  }
+
   function createDefaultTouchControlsState() {
     return {
       inputMode: "keyboard_mouse",
@@ -475,6 +497,7 @@
         telemetry: createTelemetryState(false),
         performance: createPerformanceState(false),
         profile: createDefaultProfile(),
+        viewport: createDefaultViewportState(config),
         actionHint: {
           text: "",
           timer: 0,
@@ -507,8 +530,8 @@
       if (!event || typeof this.canvas?.getBoundingClientRect !== "function") return null;
       const rect = this.canvas.getBoundingClientRect();
       if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-      const canvasW = this.config.canvas.width;
-      const canvasH = this.config.canvas.height;
+      const canvasW = Math.max(1, Math.floor(Number(this.model.viewport?.worldBounds?.width) || this.config.canvas.width));
+      const canvasH = Math.max(1, Math.floor(Number(this.model.viewport?.worldBounds?.height) || this.config.canvas.height));
       const styleFit = String(this.canvas?.style?.objectFit || "").toLowerCase();
       let computedFit = "";
       if (typeof window !== "undefined" && typeof window.getComputedStyle === "function") {
@@ -651,6 +674,62 @@
       this.model.touchControls = touch;
     }
 
+    updateAdaptiveViewport(forceDesktopBaseline = false) {
+      const viewport = this.getViewportInfo();
+      const baseWidth = Math.max(320, Math.floor(Number(this.model.viewport?.balanceViewport?.width) || this.config.canvas.width || 960));
+      const baseHeight = Math.max(240, Math.floor(Number(this.model.viewport?.balanceViewport?.height) || this.config.canvas.height || 720));
+      const isTouchMobile = this.model.deviceMode === "touch_mobile";
+      const cssWidth = forceDesktopBaseline || !isTouchMobile ? baseWidth : Math.max(320, Math.floor(viewport.width));
+      const cssHeight = forceDesktopBaseline || !isTouchMobile ? baseHeight : Math.max(240, Math.floor(viewport.height));
+      const perf = this.model.performance || {};
+      const perfQuality = String(perf.qualityLevel || "high");
+      const perfDprCap = perfQuality === "low" ? 1.0 : perfQuality === "medium" ? 1.25 : 1.5;
+      const deviceDpr = Number(this.canvas?.ownerDocument?.defaultView?.devicePixelRatio || (typeof window !== "undefined" ? window.devicePixelRatio : 1) || 1);
+      const dpr = this.clamp(deviceDpr, 1, perfDprCap);
+      const pixelWidth = Math.max(1, Math.floor(cssWidth * dpr));
+      const pixelHeight = Math.max(1, Math.floor(cssHeight * dpr));
+      if (this.canvas) {
+        this.canvas.width = pixelWidth;
+        this.canvas.height = pixelHeight;
+      }
+      if (this.canvas?.style) {
+        this.canvas.style.width = `${cssWidth}px`;
+        this.canvas.style.height = `${cssHeight}px`;
+      }
+      if (this.renderer?.ctx && typeof this.renderer.ctx.setTransform === "function") {
+        this.renderer.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      this.config.canvas.width = cssWidth;
+      this.config.canvas.height = cssHeight;
+      if (!this.model.viewport || typeof this.model.viewport !== "object") {
+        this.model.viewport = createDefaultViewportState(this.config);
+      }
+      this.model.viewport.renderViewport = {
+        cssWidth,
+        cssHeight,
+        pixelWidth,
+        pixelHeight,
+        dpr
+      };
+      this.model.viewport.worldBounds = {
+        width: cssWidth,
+        height: cssHeight
+      };
+      if (this.model.ship) {
+        this.model.ship.x = this.clamp(this.model.ship.x, 0, cssWidth);
+        this.model.ship.y = this.clamp(this.model.ship.y, 0, cssHeight);
+      }
+    }
+
+    getBalanceNormalizedDistance(distance = 1) {
+      const world = this.model.viewport?.worldBounds || this.config.canvas;
+      const balance = this.model.viewport?.balanceViewport || this.config.canvas;
+      const worldArea = Math.max(1, Number(world.width || 1) * Number(world.height || 1));
+      const balanceArea = Math.max(1, Number(balance.width || 1) * Number(balance.height || 1));
+      const normalization = Math.sqrt(balanceArea / worldArea);
+      return Number(distance) * normalization;
+    }
+
     getViewportInfo() {
       const override = this.model.mobileUi?.viewportOverride;
       if (override && Number.isFinite(Number(override.width)) && Number.isFinite(Number(override.height))) {
@@ -660,6 +739,17 @@
         };
       }
       const win = this.canvas?.ownerDocument?.defaultView || (typeof window !== "undefined" ? window : null);
+      const visualViewport = win?.visualViewport;
+      if (
+        visualViewport &&
+        Number.isFinite(Number(visualViewport.width)) &&
+        Number.isFinite(Number(visualViewport.height))
+      ) {
+        return {
+          width: Math.max(1, Math.floor(Number(visualViewport.width))),
+          height: Math.max(1, Math.floor(Number(visualViewport.height)))
+        };
+      }
       if (win && Number.isFinite(Number(win.innerWidth)) && Number.isFinite(Number(win.innerHeight))) {
         return {
           width: Math.max(1, Math.floor(Number(win.innerWidth))),
@@ -2102,8 +2192,7 @@
     }
 
     initGame() {
-      this.canvas.width = this.config.canvas.width;
-      this.canvas.height = this.config.canvas.height;
+      this.updateAdaptiveViewport(true);
       if (typeof validateGameConfig === "function") validateGameConfig(this.config);
       this.model.ship = createShip(this.config);
       this.model.profile = this.loadProfile();

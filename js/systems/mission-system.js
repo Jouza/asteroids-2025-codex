@@ -511,6 +511,13 @@
       return Math.max(minInterval, baseInterval / scale);
     }
 
+    getViewportPressureMultiplier() {
+      const g = this.game;
+      if (typeof g.getBalanceNormalizedDistance !== "function") return 1;
+      const normalized = Math.max(0.65, Number(g.getBalanceNormalizedDistance(1)) || 1);
+      return g.clamp(1 / normalized, 0.82, 1.28);
+    }
+
     applyMissionVariance(value, variance = 0.14) {
       const g = this.game;
       const factor = 1 + (g.rng() * 2 - 1) * variance;
@@ -772,6 +779,7 @@
         typeof g.getContrabandPressureMultiplier === "function" ? g.getContrabandPressureMultiplier() : 1;
       const difficulty =
         this.getMissionDifficulty(level) * endless.difficultyMul * (runDiff.pressureMul ?? 1) * intelPressureMul * contrabandPressureMul;
+      const viewportPressureMul = this.getViewportPressureMultiplier();
       const context = this.buildMissionContext(level);
       const factionDirective =
         typeof g.getFactionMissionDirective === "function"
@@ -837,6 +845,15 @@
         );
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.72, difficulty);
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
+        g.model.currentMission.spawnIntervalSeconds /= viewportPressureMul;
+        g.model.currentMission.spawnLargeCount = Math.max(
+          1,
+          Math.round((g.model.currentMission.spawnLargeCount || 1) * viewportPressureMul)
+        );
+        g.model.currentMission.spawnMediumCount = Math.max(
+          0,
+          Math.round((g.model.currentMission.spawnMediumCount || 0) * viewportPressureMul)
+        );
         g.model.currentMission.label = tr("mission.label.survive");
         g.model.currentMission.objectiveText = tr("mission.hold_for", { seconds: g.model.missionTimer.toFixed(0) });
         g.model.currentMission.surviveCleanupBeatTriggered = false;
@@ -864,12 +881,12 @@
         );
         const finaleTarget = Math.max(1, Math.floor(missionCfg.ufoHunt.finaleConcurrentUfos ?? 2));
         g.model.currentMission.ufoHuntPhase = "prelude";
-        g.model.currentMission.preludeTargetUfos = preludeTarget;
+        g.model.currentMission.preludeTargetUfos = Math.max(1, Math.round(preludeTarget * viewportPressureMul));
         g.model.currentMission.preludeSpawnedUfos = 0;
         g.model.currentMission.finaleTargetUfos = finaleTarget;
         g.model.currentMission.finaleSpawnedUfos = 0;
         g.model.currentMission.maxConcurrentUfos = 1;
-        g.model.currentMission.totalTargetUfos = preludeTarget + finaleTarget;
+        g.model.currentMission.totalTargetUfos = g.model.currentMission.preludeTargetUfos + finaleTarget;
         g.model.missionSpawnBudget = g.model.currentMission.totalTargetUfos;
         g.model.missionSpawnTimer = 0.2;
         g.model.currentMission.spawnIntervalSeconds = this.getSpawnInterval(
@@ -881,10 +898,11 @@
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.spawnIntervalSeconds *= g.model.currentMission.factionDirective?.spawnIntervalMul ?? 1;
+        g.model.currentMission.spawnIntervalSeconds /= viewportPressureMul;
         g.model.currentMission.label = tr("mission.label.ufo_hunt");
         g.model.currentMission.objectiveText = tr("mission.ufo_hunt_staged", {
           preludeKills: 0,
-          preludeTarget,
+          preludeTarget: g.model.currentMission.preludeTargetUfos,
           finaleKills: 0,
           finaleTarget
         });
@@ -905,6 +923,7 @@
             )
           )
         );
+        g.model.missionSpawnBudget = Math.max(6, Math.round(g.model.missionSpawnBudget * viewportPressureMul));
         const initialLarge =
           missionCfg.asteroidStorm.initialLargeCount + Math.floor((level - 1) / 4) + (difficulty >= 1.2 ? 1 : 0);
         const initialMedium =
@@ -923,6 +942,7 @@
         g.model.currentMission.spawnIntervalSeconds /= Math.max(0.74, difficulty);
         g.model.currentMission.spawnIntervalSeconds *= endless.spawnIntervalMul;
         g.model.currentMission.spawnIntervalSeconds *= g.model.currentMission.factionDirective?.spawnIntervalMul ?? 1;
+        g.model.currentMission.spawnIntervalSeconds /= viewportPressureMul;
         g.model.currentMission.label = tr("mission.label.asteroid_storm");
         g.model.currentMission.objectiveText = tr("mission.break_asteroids", {
           kills: 0,
@@ -954,8 +974,8 @@
         });
         this.spawnAsteroidPack(
           level,
-          1 + Math.floor((level - 1) / 5) + (difficulty >= 1.25 ? 1 : 0),
-          1 + Math.floor((level - 1) / 4)
+          Math.max(1, Math.round((1 + Math.floor((level - 1) / 5) + (difficulty >= 1.25 ? 1 : 0)) * viewportPressureMul)),
+          Math.max(1, Math.round((1 + Math.floor((level - 1) / 4)) * viewportPressureMul))
         );
       }
 

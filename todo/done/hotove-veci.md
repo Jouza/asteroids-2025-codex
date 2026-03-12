@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Mobile full-space adaptation (no-crop) MVP
+  - [x] Pridany adaptivni viewport runtime (`renderViewport`, `worldBounds`, `balanceViewport`) s dynamickym canvas resize
+  - [x] iOS/mobile bere viewport z `visualViewport` a pointer/touch mapovani je vazane na aktualni world bounds
+  - [x] Mission pressure skaluje spawn tempo/cile podle pomeru `worldBounds` vs `balanceViewport` (anti-exploit ultra-wide)
+  - [x] DPR cap pro touch/mobile rendering navazany na existujici quality level
+  - [x] Touch/mobile modal layout respektuje safe-area insety (`env(safe-area-inset-*)`)
+  - [x] Harness pokryva adaptive viewport update a viewport pressure multiplier
+
 - [x] Touch controls v3: digitalni tlacitka (thrust + trysky + utoky 2/3)
   - [x] Touch combat input prepnut na button-first schema: `THRUST`, `TURN L`, `TURN R`, `SECONDARY`, `UTILITY`
   - [x] `PRIMARY` je na touch navazany na drzeni `THRUST` (autofire), bez joystick/aim routingu
