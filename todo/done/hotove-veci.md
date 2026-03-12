@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Atmosphere follow-up (MVP slice 1): ambient VFX intensity preset
+  - [x] Data-driven `visualFxIntensityPresets` (`low/default/high`) pro deep-space/scars/dust + overlay alpha cap
+  - [x] Runtime/UI preference `mobileUi.ambientFxPreset` s persistenci v local UI settings (invalid -> `default`)
+  - [x] Render pipeline skaluje ambient vrstvy pres preset pred perf guard redukci (bez gameplay dopadu)
+  - [x] Audio/Touch settings rozsireny o `Ambient VFX intensity` selector + i18n/help coverage
+  - [x] Backlog sync: dokonceny podbod presunut z aktivni fronty do done
+
 - [x] Mobile optimization phase 2 (input latency + light aim assist)
   - [x] Data-driven touch aim tuning (`deadzone`, response curve, smoothing) napojene na right-stick aim intent
   - [x] Light cone aim assist pro `touch_mobile`/`PLAYING` s jemnou limitovanou korekci (UFO + boss priorita)

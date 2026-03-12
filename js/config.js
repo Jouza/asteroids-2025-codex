@@ -1876,6 +1876,35 @@
         weakpointOpenBonus: 0.35
       }
     },
+    visualFxIntensityPresets: {
+      low: {
+        deepSpaceDensityMul: 0.72,
+        deepSpaceAlphaMul: 0.78,
+        warScarsDensityMul: 0.76,
+        warScarsAlphaMul: 0.8,
+        foregroundDustDensityMul: 0.68,
+        foregroundDustAlphaMul: 0.74,
+        overlayAlphaCap: 0.78
+      },
+      default: {
+        deepSpaceDensityMul: 1,
+        deepSpaceAlphaMul: 1,
+        warScarsDensityMul: 1,
+        warScarsAlphaMul: 1,
+        foregroundDustDensityMul: 1,
+        foregroundDustAlphaMul: 1,
+        overlayAlphaCap: 1
+      },
+      high: {
+        deepSpaceDensityMul: 1.18,
+        deepSpaceAlphaMul: 1.12,
+        warScarsDensityMul: 1.16,
+        warScarsAlphaMul: 1.08,
+        foregroundDustDensityMul: 1.2,
+        foregroundDustAlphaMul: 1.14,
+        overlayAlphaCap: 1.08
+      }
+    },
     simulation: {
       fixedStepSeconds: 1 / 120,
       maxFrameDeltaSeconds: 0.25,

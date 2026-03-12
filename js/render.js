@@ -980,6 +980,28 @@
       return 1;
     }
 
+    getVisualFxPresetProfile(model) {
+      const presets = this.config?.visualFxIntensityPresets || {};
+      const defaultProfile = presets.default || {
+        deepSpaceDensityMul: 1,
+        deepSpaceAlphaMul: 1,
+        warScarsDensityMul: 1,
+        warScarsAlphaMul: 1,
+        foregroundDustDensityMul: 1,
+        foregroundDustAlphaMul: 1,
+        overlayAlphaCap: 1
+      };
+      const key = model?.mobileUi?.ambientFxPreset;
+      if (key === "low" && presets.low) return presets.low;
+      if (key === "high" && presets.high) return presets.high;
+      return defaultProfile;
+    }
+
+    applyVisualFxPresetMultipliers(value, presetMul = 1, min = -Infinity, max = Infinity) {
+      const next = Number(value) * (Number.isFinite(Number(presetMul)) ? Number(presetMul) : 1);
+      return Math.max(min, Math.min(max, next));
+    }
+
     drawDeepSpaceBackdrop(model) {
       const mission = model.currentMission;
       if (!mission || model.gameState !== GAME_STATE.PLAYING) return;
@@ -989,13 +1011,16 @@
       const visualFx = mission.visualFx || {};
       const missionTime = Math.max(0, Number(visualFx.time) || 0);
       const seed = Number(visualFx.layerSeedA ?? visualFx.seed) || 0;
+      const preset = this.getVisualFxPresetProfile(model);
       const perfScale = this.getAtmospherePerfScale(model);
       const beatPulse = Math.max(0, Number(visualFx.beatIntensity) || 0) * (Math.max(0, Number(visualFx.beatTtl) || 0) > 0 ? 1 : 0);
       const fract = (value) => value - Math.floor(value);
       const nebulaBands = Math.max(1, Math.min(6, Math.floor(Number(deepSpace.nebulaBands) || 2)));
       const nebulaAlpha = Math.max(0.02, Math.min(0.3, Number(deepSpace.nebulaAlpha) || 0.09));
       const dustBands = Math.max(1, Math.min(4, Math.floor(Number(deepSpace.dustBands) || 2)));
-      const dustCount = Math.min(80, Math.max(18, Math.round(18 * dustBands * perfScale)));
+      const deepDensityMul = this.applyVisualFxPresetMultipliers(1, preset.deepSpaceDensityMul, 0.45, 1.5);
+      const deepAlphaMul = this.applyVisualFxPresetMultipliers(1, preset.deepSpaceAlphaMul, 0.55, 1.35);
+      const dustCount = Math.min(80, Math.max(18, Math.round(18 * dustBands * deepDensityMul * perfScale)));
 
       ctx.save();
       for (let i = 0; i < nebulaBands; i += 1) {
@@ -1004,7 +1029,7 @@
         const centerY = fract(basis * 9.53 + missionTime * 0.007 * (0.36 + i * 0.12)) * config.canvas.height;
         const radius = config.canvas.height * (0.24 + i * 0.08);
         const tintShift = 8 + i * 10;
-        const alpha = Math.min(0.22, nebulaAlpha * (0.72 + i * 0.14) * (1 + beatPulse * 0.08));
+        const alpha = Math.min(0.22, nebulaAlpha * (0.72 + i * 0.14) * (1 + beatPulse * 0.08) * deepAlphaMul);
         const glow = ctx.createRadialGradient(centerX, centerY, radius * 0.12, centerX, centerY, radius);
         glow.addColorStop(0, `rgba(${96 + tintShift},${128 + tintShift},${188 + tintShift},${alpha})`);
         glow.addColorStop(1, "rgba(8,12,24,0)");
@@ -1022,14 +1047,15 @@
       }
       ctx.restore();
 
-      this.drawWarScars(mission, missionTime, model);
+      this.drawWarScars(mission, missionTime, model, preset);
     }
 
-    drawWarScars(mission, missionTime, model) {
+    drawWarScars(mission, missionTime, model, presetProfile = null) {
       const { ctx, config } = this;
       const visual = mission.biomeVisualProfile || {};
       const scars = visual.warScars || {};
       const visualFx = mission.visualFx || {};
+      const preset = presetProfile || this.getVisualFxPresetProfile(model);
       const perfScale = this.getAtmospherePerfScale(model);
       const beatBoost = 1 + Math.max(0, Number(visualFx.beatIntensity) || 0) * (Number(visualFx.beatTtl) > 0 ? 0.14 : 0);
       const density = Math.max(0.2, Math.min(2.2, Number(scars.density) || 1));
@@ -1038,7 +1064,9 @@
       const flickerCadence = Math.max(0.2, Number(scars.flickerCadence) || 1);
       const silhouetteChance = Math.max(0, Math.min(0.95, Number(scars.silhouetteChance) || 0.16));
       const seed = Number(visualFx.layerSeedA ?? visualFx.seed) || 0;
-      const count = Math.min(36, Math.max(6, Math.round(14 * density * perfScale)));
+      const scarsDensityMul = this.applyVisualFxPresetMultipliers(1, preset.warScarsDensityMul, 0.45, 1.45);
+      const scarsAlphaMul = this.applyVisualFxPresetMultipliers(1, preset.warScarsAlphaMul, 0.55, 1.3);
+      const count = Math.min(36, Math.max(6, Math.round(14 * density * scarsDensityMul * perfScale)));
       const fract = (value) => value - Math.floor(value);
 
       ctx.save();
@@ -1047,7 +1075,7 @@
         const x = fract(basis * 13.17 + missionTime * 0.02) * config.canvas.width;
         const y = fract(basis * 7.91 + missionTime * 0.015) * config.canvas.height;
         const phase = missionTime * flickerCadence + i * 0.67;
-        const alpha = Math.max(0.04, 0.15 + Math.sin(phase) * 0.06) * beatBoost;
+        const alpha = Math.max(0.04, 0.15 + Math.sin(phase) * 0.06) * beatBoost * scarsAlphaMul;
         const len = lenMin + fract(basis * 29.11) * (lenMax - lenMin);
         const angle = (-0.45 + fract(basis * 19.37) * 0.9) * Math.PI;
         const dx = Math.cos(angle) * len;
@@ -1078,13 +1106,16 @@
       const visualFx = mission.visualFx || {};
       const missionTime = Math.max(0, Number(visualFx.time) || 0);
       const seed = Number(visualFx.layerSeedB ?? visualFx.seed) || 0;
+      const preset = this.getVisualFxPresetProfile(model);
       const perfScale = this.getAtmospherePerfScale(model);
       const density = Math.max(0.2, Math.min(2.5, Number(dust.density) || 1));
       const speedMul = Math.max(0.2, Math.min(2.8, Number(dust.speedMul) || 1));
       const alphaBase = Math.max(0.04, Math.min(0.5, Number(dust.alpha) || 0.22));
       const sizeMin = Math.max(0.2, Number(dust.sizeMin) || 0.8);
       const sizeMax = Math.max(sizeMin, Number(dust.sizeMax) || 2.2);
-      const count = Math.min(90, Math.max(16, Math.round(32 * density * perfScale)));
+      const fgDensityMul = this.applyVisualFxPresetMultipliers(1, preset.foregroundDustDensityMul, 0.45, 1.5);
+      const fgAlphaMul = this.applyVisualFxPresetMultipliers(1, preset.foregroundDustAlphaMul, 0.55, 1.35);
+      const count = Math.min(90, Math.max(16, Math.round(32 * density * fgDensityMul * perfScale)));
       const fract = (value) => value - Math.floor(value);
 
       ctx.save();
@@ -1094,7 +1125,7 @@
         const x = fract(basis * 31.37 + missionTime * speed * 0.03) * (config.canvas.width + 24) - 12;
         const y = fract(basis * 17.91 + missionTime * speed * 0.024) * (config.canvas.height + 24) - 12;
         const size = sizeMin + fract(basis * 23.41) * (sizeMax - sizeMin);
-        const alpha = Math.min(0.46, alphaBase * (0.72 + fract(basis * 29.7) * 0.42));
+        const alpha = Math.min(0.46, alphaBase * (0.72 + fract(basis * 29.7) * 0.42) * fgAlphaMul);
         ctx.fillStyle = `rgba(182,212,236,${alpha})`;
         ctx.fillRect(x, y, size, size);
       }
@@ -1140,6 +1171,7 @@
       const progress = Math.max(0, Math.min(1, beatTtl / beatMaxTtl));
       const { ctx, config } = this;
       const visual = mission.biomeVisualProfile || {};
+      const preset = this.getVisualFxPresetProfile(model);
       const baseColor = typeof visual.beatColor === "string" ? visual.beatColor : "176,222,255";
       const colorByKind = {
         mission_start: baseColor,
@@ -1150,7 +1182,8 @@
         boss_phase: "255,148,216"
       };
       const pulseColor = colorByKind[beatKind] || baseColor;
-      const alpha = Math.max(0.05, Math.min(0.45, progress * 0.32 * beatIntensity));
+      const overlayCap = this.applyVisualFxPresetMultipliers(1, preset.overlayAlphaCap, 0.6, 1.25);
+      const alpha = Math.max(0.05, Math.min(0.45, progress * 0.32 * beatIntensity * overlayCap));
       ctx.save();
       const fog = ctx.createRadialGradient(
         config.canvas.width * 0.5,
@@ -1185,10 +1218,12 @@
       const flashColor = typeof visualFx.flashColor === "string" && visualFx.flashColor.length > 0
         ? visualFx.flashColor
         : "176,222,255";
+      const preset = this.getVisualFxPresetProfile(model);
       const perfScale = this.getAtmospherePerfScale(model);
       const perfAlphaMul = perfScale < 1 ? 0.75 : 1;
+      const overlayCap = this.applyVisualFxPresetMultipliers(1, preset.overlayAlphaCap, 0.6, 1.25);
       const ratio = Math.max(0, Math.min(1, flashTtl / flashMaxTtl));
-      const alpha = Math.max(0.03, Math.min(0.34, ratio * flashIntensity * 0.42)) * perfAlphaMul;
+      const alpha = Math.max(0.03, Math.min(0.34, ratio * flashIntensity * 0.42 * overlayCap)) * perfAlphaMul;
       const { ctx, config } = this;
       ctx.save();
       ctx.fillStyle = `rgba(${flashColor},${alpha})`;

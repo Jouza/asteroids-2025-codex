@@ -2704,6 +2704,36 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.model.mobileUi.ambientFxPreset = "broken_value";
+    gameA.updateMobileUiState(1 / 60);
+    assert(gameA.model.mobileUi.ambientFxPreset === "default", "Invalid ambient FX preset should sanitize to default");
+    gameA.model.mobileUi.ambientFxPreset = "low";
+    gameA.resetGame(25252);
+    assert(gameA.model.mobileUi.ambientFxPreset === "low", "Ambient FX preset preference should persist through resetGame");
+  });
+
+  tests.push(() => {
+    const presets = gameA.config.visualFxIntensityPresets || {};
+    assert(presets.low && presets.default && presets.high, "visualFxIntensityPresets should define low/default/high profiles");
+    assert(
+      presets.low.foregroundDustDensityMul < presets.default.foregroundDustDensityMul &&
+        presets.default.foregroundDustDensityMul < presets.high.foregroundDustDensityMul,
+      "Ambient FX preset density ordering should be low < default < high"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(26262);
+    const baseCooldown = gameA.getCurrentBulletCooldown();
+    gameA.model.mobileUi.ambientFxPreset = "low";
+    const lowCooldown = gameA.getCurrentBulletCooldown();
+    gameA.model.mobileUi.ambientFxPreset = "high";
+    const highCooldown = gameA.getCurrentBulletCooldown();
+    assert(Math.abs(lowCooldown - baseCooldown) < 0.0001, "Ambient FX preset should not change primary cooldown");
+    assert(Math.abs(highCooldown - baseCooldown) < 0.0001, "Ambient FX preset should not change gameplay cooldown");
+  });
+
+  tests.push(() => {
     gameA.model.inputMode = "touch";
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
     gameA.model.touchControls.ui.overlayActionCtaZone = { x: 100, y: 120, w: 180, h: 56 };

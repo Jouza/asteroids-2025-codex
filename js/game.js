@@ -295,6 +295,7 @@
       aimAssistEnabled: true,
       aimAssistStrength: 0.64,
       aimSmoothing: "default",
+      ambientFxPreset: "default",
       threatContext: {
         bossPressure: false,
         hazardPressure: false,
@@ -675,6 +676,8 @@
       );
       mobileUi.aimSmoothing =
         mobileUi.aimSmoothing === "low" || mobileUi.aimSmoothing === "high" ? mobileUi.aimSmoothing : "default";
+      mobileUi.ambientFxPreset =
+        mobileUi.ambientFxPreset === "low" || mobileUi.ambientFxPreset === "high" ? mobileUi.ambientFxPreset : "default";
       const viewport = this.getViewportInfo();
       const touchActive = this.model.inputMode === "touch" || this.model.touchControls?.inputMode === "touch";
       const smallViewport = viewport.width <= 1024;
@@ -2523,7 +2526,8 @@
         fullscreenPromptDismissed: Boolean(this.model.mobileUi?.fullscreenPromptDismissed),
         aimAssistEnabled: this.model.mobileUi?.aimAssistEnabled !== false,
         aimAssistStrength: Number(this.model.mobileUi?.aimAssistStrength),
-        aimSmoothing: this.model.mobileUi?.aimSmoothing
+        aimSmoothing: this.model.mobileUi?.aimSmoothing,
+        ambientFxPreset: this.model.mobileUi?.ambientFxPreset
       };
       const assistCfg = this.getTouchAimAssistConfig();
       this.model.mobileUi = createDefaultMobileUiState();
@@ -2538,6 +2542,10 @@
       this.model.mobileUi.aimSmoothing =
         persistedMobilePrefs.aimSmoothing === "low" || persistedMobilePrefs.aimSmoothing === "high"
           ? persistedMobilePrefs.aimSmoothing
+          : "default";
+      this.model.mobileUi.ambientFxPreset =
+        persistedMobilePrefs.ambientFxPreset === "low" || persistedMobilePrefs.ambientFxPreset === "high"
+          ? persistedMobilePrefs.ambientFxPreset
           : "default";
       this.model.factionRepGainTracker = {};
       this.model.runSummary = createRunSummaryState();

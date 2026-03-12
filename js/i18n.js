@@ -372,6 +372,13 @@
       "index.audio_modal.touch_smoothing_value.low": "Low",
       "index.audio_modal.touch_smoothing_value.default": "Default",
       "index.audio_modal.touch_smoothing_value.high": "High",
+      "index.audio_modal.ambient_fx_preset": "Ambient VFX intensity",
+      "index.audio_modal.ambient_fx_preset.low": "Low",
+      "index.audio_modal.ambient_fx_preset.default": "Default",
+      "index.audio_modal.ambient_fx_preset.high": "High",
+      "index.audio_modal.ambient_fx_preset_value.low": "Low",
+      "index.audio_modal.ambient_fx_preset_value.default": "Default",
+      "index.audio_modal.ambient_fx_preset_value.high": "High",
       "index.audio_modal.mute_hint": "Mute toggle: M",
       "index.pilot_modal.title": "Pilot Console",
       "index.pilot_modal.close": "Close",
@@ -499,6 +506,12 @@
         "Right-stick aim now applies deadzone, response curve, and short smoothing, with optional light cone assist for nearby threats.",
       "help.card.mobile_aim_assist.impact":
         "<strong>Impact:</strong> lower micro-jitter and more stable tracking while preserving manual aim control.",
+      "help.card.mobile_vfx_intensity.name": "Ambient VFX Intensity Preset",
+      "help.card.mobile_vfx_intensity.tag": "Readability/perf",
+      "help.card.mobile_vfx_intensity.line":
+        "Ambient atmosphere layers support Low/Default/High intensity presets to scale deep-space, scars, dust, and overlay pulse intensity.",
+      "help.card.mobile_vfx_intensity.impact":
+        "<strong>Impact:</strong> helps weaker devices keep combat readability without touching damage, economy, or mission pacing.",
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.entities": "Combat Entities",
