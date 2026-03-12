@@ -2516,7 +2516,8 @@ function runTests() {
   tests.push(() => {
     gameA.model.inputMode = "keyboard_mouse";
     const layout = gameA.getTouchLayout();
-    gameA.onTouchPointerDown(11, layout.leftStick.x, layout.leftStick.y);
+    const thrust = layout.buttons.thrust;
+    gameA.onTouchPointerDown(11, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
     assert(gameA.model.inputMode === "touch", "Touch pointer input should switch input mode to touch");
   });
 
@@ -2540,34 +2541,32 @@ function runTests() {
     gameA.startGame(14901);
     gameA.model.inputMode = "touch";
     const layout = gameA.getTouchLayout();
-    gameA.onTouchPointerDown(12, layout.leftStick.x - layout.leftStick.radius * 0.45, layout.leftStick.y);
-    assert(gameA.model.touchControls.leftStick.active, "Left-half touch should activate left stick");
-    assert(!gameA.model.touchControls.rightStick.active, "Left-half touch should not activate right stick");
-    assert(gameA.model.touchControls.pointerRoles[12] === "left_stick", "Left-half pointer should own left_stick role");
+    const thrust = layout.buttons.thrust;
+    gameA.onTouchPointerDown(12, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
+    assert(gameA.model.touchControls.buttons.thrust.down, "Touch in THRUST zone should activate thrust button");
+    assert(gameA.model.touchControls.pointerRoles[12] === "button_thrust", "THRUST pointer should own thrust role");
   });
 
   tests.push(() => {
     gameA.startGame(14902);
     gameA.model.inputMode = "touch";
     const layout = gameA.getTouchLayout();
-    gameA.onTouchPointerDown(13, layout.rightStick.x, layout.rightStick.y);
-    assert(gameA.model.touchControls.rightStick.active, "Right-half touch should activate right stick");
-    assert(!gameA.model.touchControls.leftStick.active, "Right-half touch should not activate left stick");
-    assert(gameA.model.touchControls.pointerRoles[13] === "right_stick", "Right-half pointer should own right_stick role");
+    const turnLeft = layout.buttons.turnLeft;
+    gameA.onTouchPointerDown(13, turnLeft.x + turnLeft.w * 0.5, turnLeft.y + turnLeft.h * 0.5);
+    assert(gameA.model.touchControls.buttons.turnLeft.down, "Touch in TURN L zone should activate turn-left button");
+    assert(gameA.model.touchControls.pointerRoles[13] === "button_turn_left", "TURN L pointer should own turn-left role");
   });
 
   tests.push(() => {
     gameA.startGame(14903);
     gameA.model.inputMode = "touch";
     const layout = gameA.getTouchLayout();
-    gameA.onTouchPointerDown(14, layout.leftStick.x, layout.leftStick.y);
-    const splitX = (layout.leftStick.x + layout.rightStick.x) * 0.5;
-    gameA.onTouchPointerMove(14, splitX + layout.rightStick.radius, layout.leftStick.y);
-    assert(gameA.model.touchControls.pointerRoles[14] === "left_stick", "Pointer role should stay stable while held");
-    assert(gameA.model.touchControls.leftStick.active, "Left stick should remain active while held");
-    assert(!gameA.model.touchControls.rightStick.active, "Move across split should not steal right stick");
-    gameA.onTouchPointerUp(14, splitX + layout.rightStick.radius, layout.leftStick.y);
-    assert(!gameA.model.touchControls.leftStick.active, "Pointer release should deactivate left stick");
+    const turnRight = layout.buttons.turnRight;
+    gameA.onTouchPointerDown(14, turnRight.x + turnRight.w * 0.5, turnRight.y + turnRight.h * 0.5);
+    gameA.onTouchPointerMove(14, turnRight.x + turnRight.w + 20, turnRight.y + turnRight.h + 20);
+    assert(!gameA.model.touchControls.buttons.turnRight.down, "Moving outside TURN R zone should release held turn-right state");
+    gameA.onTouchPointerUp(14, turnRight.x + turnRight.w + 20, turnRight.y + turnRight.h + 20);
+    assert(!gameA.model.touchControls.buttons.turnRight.down, "Pointer release should keep turn-right button inactive");
     assert(!Object.prototype.hasOwnProperty.call(gameA.model.touchControls.pointerRoles, 14), "Pointer release should clear role");
   });
 
@@ -2575,74 +2574,44 @@ function runTests() {
     gameA.startGame(14904);
     gameA.model.inputMode = "touch";
     const layout = gameA.getTouchLayout();
-    gameA.onTouchPointerDown(15, layout.leftStick.x, layout.leftStick.y);
-    gameA.onTouchPointerMove(15, layout.leftStick.x + layout.leftStick.radius * 0.8, layout.leftStick.y);
+    const thrust = layout.buttons.thrust;
+    gameA.onTouchPointerDown(15, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
     gameA.updateTouchInputState(1 / 60);
-    assert(!gameA.getTouchCombatActions().fireActive, "Left stick movement should not activate primary fire");
-  });
-
-  tests.push(() => {
-    gameA.startGame(15151);
-    gameA.model.inputMode = "touch";
-    gameA.model.touchControls.layout = gameA.getTouchLayout();
-    const evade = gameA.model.touchControls.layout.buttons.evade;
-    gameA.onTouchPointerDown(21, evade.x, evade.y);
-    gameA.updateTouchInputState(0.06);
-    gameA.onTouchPointerUp(21, evade.x, evade.y);
-    assert(gameA.getTouchCombatActions().dashPressed, "EVADE quick tap should queue dash action");
-
-    gameA.resetTouchControlRuntime();
-    gameA.model.inputMode = "touch";
-    gameA.model.touchControls.layout = gameA.getTouchLayout();
-    const evadeHold = gameA.model.touchControls.layout.buttons.evade;
-    gameA.onTouchPointerDown(22, evadeHold.x, evadeHold.y);
-    gameA.updateTouchInputState(0.26);
-    const actionsHold = gameA.getTouchCombatActions();
-    assert(!actionsHold.boostActive, "EVADE hold should not activate boost state in dash-only mode");
-    gameA.onTouchPointerUp(22, evadeHold.x, evadeHold.y);
-    assert(gameA.getTouchCombatActions().dashPressed, "EVADE hold release should still queue dash action");
+    assert(gameA.getTouchCombatActions().fireActive, "THRUST hold should activate touch primary auto-fire");
+    gameA.onTouchPointerUp(15, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
+    gameA.updateTouchInputState(1 / 60);
+    const released = gameA.getTouchCombatActions();
+    assert(!released.fireActive, "THRUST release should stop touch primary auto-fire");
+    assert(!released.dashPressed, "Touch flow should not produce dashPressed in digital button schema");
+    assert(!released.boostActive, "Touch flow should not produce boostActive in digital button schema");
   });
 
   tests.push(() => {
     gameA.startGame(15161);
     gameA.model.inputMode = "touch";
     gameA.model.touchControls.layout = gameA.getTouchLayout();
-    const left = gameA.model.touchControls.layout.leftStick;
-    gameA.onTouchPointerDown(30, left.x, left.y);
-    gameA.onTouchPointerMove(30, left.x + left.radius * 0.75, left.y - left.radius * 0.7);
-    const move = gameA.getTouchMoveIntent();
-    assert(move && move.thrust, "Left stick should produce throttle intent");
-    assert(Number.isFinite(move.turn) && move.turn > 0.2, "Left stick positive X should produce positive turn intent");
-    gameA.onTouchPointerMove(30, left.x - left.radius * 0.75, left.y - left.radius * 0.7);
-    const moveLeft = gameA.getTouchMoveIntent();
-    assert(moveLeft && moveLeft.turn < -0.2, "Left stick negative X should produce negative turn intent");
-    const turnIntent = gameA.getTouchTurnIntent();
-    assert(!turnIntent, "Legacy touch turn intent should stay disabled");
+    const left = gameA.model.touchControls.layout.buttons.turnLeft;
+    const right = gameA.model.touchControls.layout.buttons.turnRight;
+    gameA.onTouchPointerDown(30, left.x + left.w * 0.5, left.y + left.h * 0.5);
+    let move = gameA.getTouchMoveIntent();
+    assert(move && move.turn === -1, "TURN L should produce turn=-1");
+    gameA.model.touchControls.buttons.turnRight.down = true;
+    move = gameA.getTouchMoveIntent();
+    assert(!move, "TURN L + TURN R together with no THRUST should cancel movement intent");
+    gameA.onTouchPointerUp(30, left.x + left.w * 0.5, left.y + left.h * 0.5);
+    move = gameA.getTouchMoveIntent();
+    assert(move && move.turn === 1, "TURN R alone should produce turn=+1");
+    gameA.model.touchControls.buttons.turnRight.down = false;
   });
 
   tests.push(() => {
     gameA.startGame(15162);
     gameA.model.inputMode = "touch";
     gameA.model.touchControls.layout = gameA.getTouchLayout();
-    const right = gameA.model.touchControls.layout.rightStick;
-    gameA.onTouchPointerDown(31, right.x, right.y);
-    gameA.onTouchPointerMove(31, right.x + right.radius * 0.8, right.y);
+    const thrust = gameA.model.touchControls.layout.buttons.thrust;
+    gameA.onTouchPointerDown(32, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
     const move = gameA.getTouchMoveIntent();
-    assert(!move, "Right stick should not produce movement intent");
-    const turnIntent = gameA.getTouchTurnIntent();
-    assert(!turnIntent, "Right stick should not produce separate turn intent in left-pad turn mode");
-  });
-
-  tests.push(() => {
-    gameA.startGame(16161);
-    gameA.model.inputMode = "touch";
-    gameA.model.touchControls.layout = gameA.getTouchLayout();
-    const right = gameA.model.touchControls.layout.rightStick;
-    gameA.onTouchPointerDown(32, right.x, right.y);
-    gameA.onTouchPointerMove(32, right.x + right.radius * 0.82, right.y);
-    gameA.updateTouchInputState(1 / 60);
-    const actions = gameA.getTouchCombatActions();
-    assert(actions.fireActive, "Active aim stick should enable touch primary auto-fire");
+    assert(move && move.thrust && move.thrustScale === 1, "THRUST should produce digital thrust intent with scale=1");
   });
 
   tests.push(() => {
@@ -2862,11 +2831,10 @@ function runTests() {
     gameA.handleTouchTapNavigation(160, 150);
     assert(gameA.model.gameState === AsteroidsA.GAME_STATE.PLAYING, "Touch START CTA should transition into PLAYING");
     gameA.model.touchControls.layout = gameA.getTouchLayout();
-    const right = gameA.model.touchControls.layout.rightStick;
-    gameA.onTouchPointerDown(77, right.x, right.y);
-    gameA.onTouchPointerMove(77, right.x + right.radius * 0.8, right.y);
+    const thrust = gameA.model.touchControls.layout.buttons.thrust;
+    gameA.onTouchPointerDown(77, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
     gameA.updateTouchInputState(1 / 60);
-    assert(gameA.getTouchCombatActions().fireActive, "After START CTA, right stick should still enable primary fire in PLAYING");
+    assert(gameA.getTouchCombatActions().fireActive, "After START CTA, THRUST hold should enable primary fire in PLAYING");
   });
 
   let passed = 0;

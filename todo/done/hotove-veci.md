@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Touch controls v3: digitalni tlacitka (thrust + trysky + utoky 2/3)
+  - [x] Touch combat input prepnut na button-first schema: `THRUST`, `TURN L`, `TURN R`, `SECONDARY`, `UTILITY`
+  - [x] `PRIMARY` je na touch navazany na drzeni `THRUST` (autofire), bez joystick/aim routingu
+  - [x] Touch `EVADE/DASH` odstraneno z UI i input flow; touch nequeueuje dash ani boost
+  - [x] Render touch HUD prekreslen na obdelnikova digitalni tlacitka bez sticku
+  - [x] i18n/help texty aktualizovany na nove touch mapovani
+  - [x] Harness coverage prepsana na digitalni touch scenare (`THRUST` fire, `TURN L/R`, `SECONDARY/UTILITY`, no-dash/no-boost)
+
 - [x] Touch control layout pass: rectangular pads (throttle/turn + fire)
   - [x] Kruhove touch joysticky nahrazeny obdelnikovymi pady s posuvnou packou
   - [x] Levy pad: nahoru/dolu plyn, doleva/doprava trysky na otaceni

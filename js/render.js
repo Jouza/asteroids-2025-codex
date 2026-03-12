@@ -224,11 +224,11 @@
         ctx.stroke();
       }
 
-      const touchLeft = model.touchControls?.leftStick;
+      const touchButtons = model.touchControls?.buttons;
       const touchModeActive = model.inputMode === "touch";
-      const touchThrusting = touchModeActive && touchLeft?.active && touchLeft.mag >= 0.16;
-      const touchTurningLeft = touchModeActive && touchLeft?.active && touchLeft.nx <= -0.22;
-      const touchTurningRight = touchModeActive && touchLeft?.active && touchLeft.nx >= 0.22;
+      const touchThrusting = touchModeActive && Boolean(touchButtons?.thrust?.down);
+      const touchTurningLeft = touchModeActive && Boolean(touchButtons?.turnLeft?.down);
+      const touchTurningRight = touchModeActive && Boolean(touchButtons?.turnRight?.down);
 
       if (model.gameState === GAME_STATE.PLAYING && (input.isDown("ArrowUp") || touchThrusting)) {
         const jetGradient = ctx.createLinearGradient(-ship.radius * 1.6, 0, -ship.radius * 0.8, 0);
@@ -691,6 +691,30 @@
       const vis = model.mobileUi?.actionVisibility || {};
       const buttonDefs = [
         {
+          key: "thrust",
+          label: tr("touch.button.thrust"),
+          down: touch.buttons?.thrust?.down,
+          cooldown: 0,
+          alpha: 0.96,
+          scale: 1
+        },
+        {
+          key: "turnLeft",
+          label: tr("touch.button.turn_left"),
+          down: touch.buttons?.turnLeft?.down,
+          cooldown: 0,
+          alpha: 0.92,
+          scale: 1
+        },
+        {
+          key: "turnRight",
+          label: tr("touch.button.turn_right"),
+          down: touch.buttons?.turnRight?.down,
+          cooldown: 0,
+          alpha: 0.92,
+          scale: 1
+        },
+        {
           key: "secondary",
           label: tr("touch.button.secondary"),
           down: touch.buttons?.secondary?.down,
@@ -705,58 +729,50 @@
           cooldown: model.utilityCooldown,
           alpha: clamp(Number(vis.utility?.alpha) || 0.9, 0.2, 1),
           scale: clamp(Number(vis.utility?.scale) || 1, 0.85, 1.05)
-        },
-        {
-          key: "evade",
-          label: tr("touch.button.evade"),
-          down: touch.buttons?.evade?.down,
-          cooldown: model.dashCooldown,
-          alpha: clamp(Number(vis.evade?.alpha) || 0.95, 0.28, 1),
-          scale: clamp(Number(vis.evade?.scale) || 1, 0.9, 1.08)
         }
       ];
-      const drawStick = (stickLayout, stickState, tintRgb) => {
-        const gateW = Math.max(90, Number(stickLayout.width) || stickLayout.radius * 2);
-        const gateH = Math.max(70, Number(stickLayout.height) || stickLayout.radius * 1.6);
-        const gateX = stickLayout.x - gateW / 2;
-        const gateY = stickLayout.y - gateH / 2;
-        const cornerR = Math.min(14, gateW * 0.14, gateH * 0.24);
-        const handleX = stickState?.active ? stickState.baseX + stickState.nx * (gateW / 2) : stickLayout.x;
-        const handleY = stickState?.active ? stickState.baseY + stickState.ny * (gateH / 2) : stickLayout.y;
+      const drawRectButton = (btnLayout, label, down, cooldown = 0, readyColor = "120,240,196", alphaMul = 1, scale = 1) => {
+        if (!btnLayout) return;
+        const w = Math.max(42, Number(btnLayout.w) || 0);
+        const h = Math.max(32, Number(btnLayout.h) || 0);
+        const x = Number(btnLayout.x) || 0;
+        const y = Number(btnLayout.y) || 0;
+        const r = Math.max(8, Math.min(16, h * 0.26));
         ctx.save();
-        ctx.strokeStyle = `rgba(${tintRgb},0.42)`;
-        ctx.fillStyle = `rgba(${tintRgb},0.08)`;
-        ctx.lineWidth = 2;
+        ctx.translate(x + w * 0.5, y + h * 0.5);
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = clamp(alphaMul, 0.2, 1);
+        const cd = Math.max(0, Number(cooldown) || 0);
+        const ready = cd <= 0.001;
+        ctx.fillStyle = down ? "rgba(255,231,168,0.24)" : `rgba(${ready ? readyColor : "160,190,210"},0.12)`;
+        ctx.strokeStyle = down ? "rgba(255,231,168,0.92)" : `rgba(${ready ? readyColor : "160,190,210"},0.72)`;
+        ctx.lineWidth = down ? 2.1 : 1.6;
         ctx.beginPath();
-        ctx.moveTo(gateX + cornerR, gateY);
-        ctx.lineTo(gateX + gateW - cornerR, gateY);
-        ctx.quadraticCurveTo(gateX + gateW, gateY, gateX + gateW, gateY + cornerR);
-        ctx.lineTo(gateX + gateW, gateY + gateH - cornerR);
-        ctx.quadraticCurveTo(gateX + gateW, gateY + gateH, gateX + gateW - cornerR, gateY + gateH);
-        ctx.lineTo(gateX + cornerR, gateY + gateH);
-        ctx.quadraticCurveTo(gateX, gateY + gateH, gateX, gateY + gateH - cornerR);
-        ctx.lineTo(gateX, gateY + cornerR);
-        ctx.quadraticCurveTo(gateX, gateY, gateX + cornerR, gateY);
+        ctx.moveTo(-w * 0.5 + r, -h * 0.5);
+        ctx.lineTo(w * 0.5 - r, -h * 0.5);
+        ctx.quadraticCurveTo(w * 0.5, -h * 0.5, w * 0.5, -h * 0.5 + r);
+        ctx.lineTo(w * 0.5, h * 0.5 - r);
+        ctx.quadraticCurveTo(w * 0.5, h * 0.5, w * 0.5 - r, h * 0.5);
+        ctx.lineTo(-w * 0.5 + r, h * 0.5);
+        ctx.quadraticCurveTo(-w * 0.5, h * 0.5, -w * 0.5, h * 0.5 - r);
+        ctx.lineTo(-w * 0.5, -h * 0.5 + r);
+        ctx.quadraticCurveTo(-w * 0.5, -h * 0.5, -w * 0.5 + r, -h * 0.5);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        ctx.strokeStyle = `rgba(${tintRgb},0.28)`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(stickLayout.x, gateY + 4);
-        ctx.lineTo(stickLayout.x, gateY + gateH - 4);
-        ctx.moveTo(gateX + 4, stickLayout.y);
-        ctx.lineTo(gateX + gateW - 4, stickLayout.y);
-        ctx.stroke();
-        ctx.fillStyle = `rgba(${tintRgb},0.18)`;
-        ctx.strokeStyle = `rgba(${tintRgb},0.86)`;
-        ctx.beginPath();
-        ctx.arc(handleX, handleY, Math.max(15, Math.min(gateW, gateH) * 0.22), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.textAlign = "center";
+        ctx.fillStyle = ready ? "#d8f5ff" : "rgba(200,220,232,0.9)";
+        ctx.font = "700 11px Trebuchet MS";
+        ctx.fillText(label, 0, 4);
+        if (!ready) {
+          ctx.font = "600 10px Trebuchet MS";
+          ctx.fillStyle = "rgba(255,208,152,0.95)";
+          ctx.fillText(cd.toFixed(1), 0, 17);
+        }
         ctx.restore();
       };
-      const drawButton = (btnLayout, label, down, cooldown = 0, readyColor = "120,240,196", alphaMul = 1, scale = 1) => {
+      const drawCircleButton = (btnLayout, label, down, cooldown = 0, readyColor = "120,240,196", alphaMul = 1, scale = 1) => {
+        if (!btnLayout) return;
         const cd = Math.max(0, Number(cooldown) || 0);
         const ready = cd <= 0.001;
         ctx.save();
@@ -782,28 +798,15 @@
         ctx.restore();
       };
 
-        if (showCombatControls) {
-          drawStick(layout.leftStick, touch.leftStick, "108,216,255");
-          drawStick(layout.rightStick, touch.rightStick, "182,222,255");
-          ctx.save();
-          ctx.textAlign = "center";
-          ctx.font = "700 10px Trebuchet MS";
-          ctx.fillStyle = "rgba(188,226,245,0.8)";
-          ctx.fillText(tr("touch.stick.move_turn"), layout.leftStick.x, layout.leftStick.y - layout.leftStick.radius - 10);
-          ctx.fillText(
-            tr("touch.stick.fire"),
-            layout.rightStick.x,
-            layout.rightStick.y - layout.rightStick.radius - 10
-          );
-          ctx.restore();
-          for (const def of buttonDefs) {
-            drawButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
-          }
+      if (showCombatControls) {
+        for (const def of buttonDefs) {
+          drawRectButton(layout.buttons[def.key], def.label, def.down, def.cooldown, "120,240,196", def.alpha, def.scale);
         }
+      }
 
       if (showActionButton) {
         const actionBtn = layout.buttons.action;
-        drawButton(actionBtn, tr("touch.button.action.confirm"), false, 0, "255,214,140");
+        drawCircleButton(actionBtn, tr("touch.button.action.confirm"), false, 0, "255,214,140");
       }
 
       if (showCombatControls) {

@@ -22,12 +22,12 @@
       "overlay.settings_ship": "Ship",
       "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
-      "touch.hud.hint": "Touch: left pad throttle/turn, right pad fire, EVADE dash",
-      "touch.stick.move_turn": "THROTTLE/TURN",
-      "touch.stick.fire": "FIRE",
+      "touch.hud.hint": "Touch: hold THRUST for drive + primary autofire, TURN L/R for rotation.",
+      "touch.button.thrust": "THRUST",
+      "touch.button.turn_left": "TURN L",
+      "touch.button.turn_right": "TURN R",
       "touch.button.secondary": "SECONDARY",
       "touch.button.utility": "UTILITY",
-      "touch.button.evade": "EVADE",
       "touch.button.action.start": "START",
       "touch.button.action.confirm": "ACTION",
       "touch.button.action.new_run": "NEW RUN",
@@ -495,7 +495,7 @@
       "help.card.touch_controls_mvp.name": "Touch Controls (MVP)",
       "help.card.touch_controls_mvp.tag": "Mobile input",
       "help.card.touch_controls_mvp.line":
-        "Left pad controls throttle (up/down) and turn thrusters (left/right). Right pad controls primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (dash only).",
+        "Touch uses digital buttons: THRUST on the left, TURN L and TURN R on the right, and SECONDARY/UTILITY above. Primary auto-fire runs while THRUST is held.",
       "help.card.touch_controls_mvp.impact":
         "<strong>Impact:</strong> full combat flow is playable on phone/tablet without changing damage, cooldown, or economy rules.",
       "help.card.mobile_landscape_mode.name": "Mobile Landscape Mode",
@@ -507,7 +507,7 @@
       "help.card.mobile_aim_assist.name": "Mobile Aim Assist",
       "help.card.mobile_aim_assist.tag": "Touch precision",
       "help.card.mobile_aim_assist.line":
-        "Legacy note: touch now uses right-stick relative turn + auto-fire and keeps touch aim-assist controls disabled.",
+        "Current touch profile is button-first (THRUST + TURN L/R), so analog aim-assist does not drive combat input.",
       "help.card.mobile_aim_assist.impact":
         "<strong>Impact:</strong> lower touch complexity and clearer role split between throttle and turn/fire control.",
       "help.card.mobile_vfx_intensity.name": "Ambient VFX Intensity Preset",

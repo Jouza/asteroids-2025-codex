@@ -256,8 +256,7 @@
       if (thrustActive) {
         const thrustScale = touchMove?.thrustScale ? g.clamp(touchMove.thrustScale, 0.45, 1) : 1;
         let thrust = profile.thrust * thrustScale;
-        const boosting =
-          g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight") || Boolean(touchActions?.boostActive);
+        const boosting = g.input.isDown("ShiftLeft") || g.input.isDown("ShiftRight");
         if (boosting && ship.energy > 0) {
           const boostCfg = c.ship.boost;
           const energySpend = Math.min(ship.energy, boostCfg.energyCostPerSecond * dt);

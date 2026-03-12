@@ -259,9 +259,11 @@
         aimMag: 0
       },
       buttons: {
+        thrust: { down: false, pointerId: null },
+        turnLeft: { down: false, pointerId: null },
+        turnRight: { down: false, pointerId: null },
         secondary: { down: false, pointerId: null },
-        utility: { down: false, pointerId: null },
-        evade: { down: false, pointerId: null, heldSeconds: 0, tapPending: false }
+        utility: { down: false, pointerId: null }
       },
       actions: {
         secondaryPressed: false,
@@ -764,22 +766,38 @@
     getTouchLayout() {
       const width = this.config.canvas.width;
       const height = this.config.canvas.height;
-      const baseRadius = Math.round(Math.min(width, height) * 0.11);
-      const stickRadius = this.clamp(baseRadius, 56, 84);
-      const stickWidth = Math.round(stickRadius * 2.25);
-      const stickHeight = Math.round(stickRadius * 1.7);
-      const margin = this.clamp(Math.round(stickRadius * 1.05), 58, 96);
-      const buttonRadius = this.clamp(Math.round(stickRadius * 0.48), 24, 40);
-      const buttonX = width - margin * 0.8;
-      const buttonGap = Math.round(buttonRadius * 2.35);
+      const margin = this.clamp(Math.round(Math.min(width, height) * 0.03), 14, 30);
+      const buttonGap = this.clamp(Math.round(Math.min(width, height) * 0.014), 8, 16);
+      const thrustW = this.clamp(Math.round(width * 0.24), 150, 250);
+      const thrustH = this.clamp(Math.round(height * 0.16), 84, 140);
+      const rightW = this.clamp(Math.round(width * 0.16), 106, 180);
+      const rightH = this.clamp(Math.round(height * 0.12), 62, 94);
+      const rightRightX = width - margin - rightW;
+      const rightLeftX = rightRightX - rightW - buttonGap;
+      const bottomY = height - margin - rightH;
+      const upperY = bottomY - rightH - buttonGap;
+      const thrustY = height - margin - thrustH;
+      const actionRadius = this.clamp(Math.round(Math.min(width, height) * 0.045), 24, 38);
       return {
-        leftStick: { x: margin, y: height - margin, radius: stickRadius, width: stickWidth, height: stickHeight },
-        rightStick: { x: width - margin, y: height - margin, radius: stickRadius, width: stickWidth, height: stickHeight },
+        leftStick: { x: margin + thrustW * 0.5, y: thrustY + thrustH * 0.5, radius: 0, width: thrustW, height: thrustH },
+        rightStick: {
+          x: rightRightX + rightW * 0.5,
+          y: bottomY + rightH * 0.5,
+          radius: 0,
+          width: rightW,
+          height: rightH
+        },
         buttons: {
-          secondary: { x: buttonX, y: height - margin - buttonGap * 2.15, radius: buttonRadius },
-          utility: { x: buttonX, y: height - margin - buttonGap * 1.08, radius: buttonRadius },
-          evade: { x: buttonX, y: height - margin + buttonGap * 0.06, radius: buttonRadius * 1.1 },
-          action: { x: buttonX - buttonGap * 1.15, y: height - margin + buttonGap * 0.04, radius: buttonRadius * 0.95 }
+          thrust: { x: margin, y: thrustY, w: thrustW, h: thrustH },
+          turnLeft: { x: rightLeftX, y: bottomY, w: rightW, h: rightH },
+          turnRight: { x: rightRightX, y: bottomY, w: rightW, h: rightH },
+          secondary: { x: rightLeftX, y: upperY, w: rightW, h: rightH },
+          utility: { x: rightRightX, y: upperY, w: rightW, h: rightH },
+          action: {
+            x: rightLeftX + (rightW * 2 + buttonGap) * 0.5,
+            y: bottomY - rightH * 0.4,
+            radius: actionRadius
+          }
         }
       };
     }
@@ -926,17 +944,9 @@
       const touch = this.model.touchControls;
       if (!touch || this.model.inputMode !== "touch") return;
       touch.layout = this.getTouchLayout();
-      const aimTuning = this.getTouchAimTuningConfig();
-      if (touch.buttons.evade.down) {
-        touch.buttons.evade.heldSeconds += dt;
-      } else {
-        touch.buttons.evade.heldSeconds = 0;
-      }
       touch.actions.boostActive = false;
-      const rightPointerRole =
-        touch.rightStick.pointerId == null ? "right_stick" : touch.pointerRoles?.[touch.rightStick.pointerId];
-      touch.actions.fireActive =
-        touch.rightStick.active && rightPointerRole === "right_stick" && touch.rightStick.mag >= aimTuning.fireThreshold;
+      touch.actions.dashPressed = false;
+      touch.actions.fireActive = Boolean(touch.buttons?.thrust?.down);
       if (this.model.gameState !== GAME_STATE.PLAYING) {
         touch.actions.fireActive = false;
         touch.actions.boostActive = false;
@@ -946,16 +956,17 @@
     getTouchMoveIntent() {
       const touch = this.model.touchControls;
       if (!touch || this.model.inputMode !== "touch") return null;
-      const left = touch.leftStick;
-      if (!left.active || left.mag < 0.08) return null;
-      const moveProfile = this.getTouchMoveProfile();
-      const throttleMag = moveProfile.throttleCurve === "linear" ? left.mag : left.mag;
-      const throttle = this.clamp(-left.ny, 0, 1);
-      const turn = this.clamp(left.nx, -1, 1);
+      const thrustDown = Boolean(touch.buttons?.thrust?.down);
+      const turnLeftDown = Boolean(touch.buttons?.turnLeft?.down);
+      const turnRightDown = Boolean(touch.buttons?.turnRight?.down);
+      let turn = 0;
+      if (turnLeftDown && !turnRightDown) turn = -1;
+      else if (turnRightDown && !turnLeftDown) turn = 1;
+      if (!thrustDown && turn === 0) return null;
       return {
         turn,
-        thrust: throttle >= 0.12,
-        thrustScale: this.clamp(throttle * throttleMag, 0, 1)
+        thrust: thrustDown,
+        thrustScale: thrustDown ? 1 : 0
       };
     }
 
@@ -1026,85 +1037,39 @@
       const layout = touch.layout;
       const roleMap = touch.pointerRoles || (touch.pointerRoles = {});
       if (roleMap[pointerId]) return;
-      const distTo = (pt) => Math.hypot(x - pt.x, y - pt.y);
-      const claimStick = (stick, anchor) => {
-        stick.active = true;
-        stick.pointerId = pointerId;
-        stick.baseX = anchor.x;
-        stick.baseY = anchor.y;
-        stick.width = anchor.width;
-        stick.height = anchor.height;
-        stick.x = x;
-        stick.y = y;
-      };
       const buttons = layout.buttons || {};
-      const splitX = this.getTouchSplitX(layout);
-      const wantsLeftStick = x <= splitX;
-      if (wantsLeftStick) {
-        if (touch.leftStick.active) return;
-        const leftHalfW = Math.max(1, (Number(layout.leftStick.width) || layout.leftStick.radius * 2) * 0.5);
-        const leftHalfH = Math.max(1, (Number(layout.leftStick.height) || layout.leftStick.radius * 2) * 0.5);
-        if (Math.abs(x - layout.leftStick.x) > leftHalfW || Math.abs(y - layout.leftStick.y) > leftHalfH) return;
-        claimStick(touch.leftStick, layout.leftStick);
-        this.updateTouchStickState(touch.leftStick, layout.leftStick.radius);
-        roleMap[pointerId] = "left_stick";
-        return;
-      }
-
-      const candidates = [];
-      const pushCandidate = (kind, id, ratio) => {
-        if (ratio <= 1) candidates.push({ kind, id, ratio });
-      };
-      if (!touch.rightStick.active) {
-        const rightHalfW = Math.max(1, (Number(layout.rightStick.width) || layout.rightStick.radius * 2) * 0.5);
-        const rightHalfH = Math.max(1, (Number(layout.rightStick.height) || layout.rightStick.radius * 2) * 0.5);
-        const dx = Math.abs(x - layout.rightStick.x);
-        const dy = Math.abs(y - layout.rightStick.y);
-        if (dx <= rightHalfW && dy <= rightHalfH) {
-          const ratio = Math.max(dx / rightHalfW, dy / rightHalfH);
-          pushCandidate("stick", "right", ratio);
-        }
-      }
-      if (!touch.buttons.secondary.down && buttons.secondary) {
-        const limit = Math.max(1, buttons.secondary.radius * 1.22);
-        pushCandidate("button", "secondary", distTo(buttons.secondary) / limit);
-      }
-      if (!touch.buttons.utility.down && buttons.utility) {
-        const limit = Math.max(1, buttons.utility.radius * 1.22);
-        pushCandidate("button", "utility", distTo(buttons.utility) / limit);
-      }
-      if (!touch.buttons.evade.down && buttons.evade) {
-        const limit = Math.max(1, buttons.evade.radius * 1.22);
-        pushCandidate("button", "evade", distTo(buttons.evade) / limit);
-      }
-      if (!candidates.length) return;
-      candidates.sort((a, b) => a.ratio - b.ratio);
-      const winner = candidates[0];
-      if (winner.kind === "stick") {
-        claimStick(touch.rightStick, layout.rightStick);
-        this.updateTouchStickState(touch.rightStick, layout.rightStick.radius);
-        roleMap[pointerId] = "right_stick";
-        return;
-      }
-      if (winner.id === "secondary") {
+      const hitRect = (rect) =>
+        rect && x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
+      if (!touch.buttons.secondary.down && hitRect(buttons.secondary)) {
         touch.buttons.secondary.down = true;
         touch.buttons.secondary.pointerId = pointerId;
         touch.actions.secondaryPressed = true;
         roleMap[pointerId] = "button_secondary";
         return;
       }
-      if (winner.id === "utility") {
+      if (!touch.buttons.utility.down && hitRect(buttons.utility)) {
         touch.buttons.utility.down = true;
         touch.buttons.utility.pointerId = pointerId;
         touch.actions.utilityPressed = true;
         roleMap[pointerId] = "button_utility";
         return;
       }
-      if (winner.id === "evade") {
-        touch.buttons.evade.down = true;
-        touch.buttons.evade.pointerId = pointerId;
-        touch.buttons.evade.heldSeconds = 0;
-        roleMap[pointerId] = "button_evade";
+      if (!touch.buttons.turnLeft.down && hitRect(buttons.turnLeft)) {
+        touch.buttons.turnLeft.down = true;
+        touch.buttons.turnLeft.pointerId = pointerId;
+        roleMap[pointerId] = "button_turn_left";
+        return;
+      }
+      if (!touch.buttons.turnRight.down && hitRect(buttons.turnRight)) {
+        touch.buttons.turnRight.down = true;
+        touch.buttons.turnRight.pointerId = pointerId;
+        roleMap[pointerId] = "button_turn_right";
+        return;
+      }
+      if (!touch.buttons.thrust.down && hitRect(buttons.thrust)) {
+        touch.buttons.thrust.down = true;
+        touch.buttons.thrust.pointerId = pointerId;
+        roleMap[pointerId] = "button_thrust";
       }
     }
 
@@ -1112,16 +1077,20 @@
       const touch = this.model.touchControls;
       if (!touch || !touch.layout) return;
       const role = touch.pointerRoles?.[pointerId];
-      if (role === "left_stick" && touch.leftStick.active && touch.leftStick.pointerId === pointerId) {
-        touch.leftStick.x = x;
-        touch.leftStick.y = y;
-        this.updateTouchStickState(touch.leftStick, touch.layout.leftStick.radius);
-        return;
-      }
-      if (role === "right_stick" && touch.rightStick.active && touch.rightStick.pointerId === pointerId) {
-        touch.rightStick.x = x;
-        touch.rightStick.y = y;
-        this.updateTouchStickState(touch.rightStick, touch.layout.rightStick.radius);
+      if (!role) return;
+      const buttons = touch.layout.buttons || {};
+      const hitRect = (rect) =>
+        rect && x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
+      if (role === "button_thrust" && touch.buttons.thrust.pointerId === pointerId) {
+        touch.buttons.thrust.down = hitRect(buttons.thrust);
+      } else if (role === "button_turn_left" && touch.buttons.turnLeft.pointerId === pointerId) {
+        touch.buttons.turnLeft.down = hitRect(buttons.turnLeft);
+      } else if (role === "button_turn_right" && touch.buttons.turnRight.pointerId === pointerId) {
+        touch.buttons.turnRight.down = hitRect(buttons.turnRight);
+      } else if (role === "button_secondary" && touch.buttons.secondary.pointerId === pointerId) {
+        touch.buttons.secondary.down = hitRect(buttons.secondary);
+      } else if (role === "button_utility" && touch.buttons.utility.pointerId === pointerId) {
+        touch.buttons.utility.down = hitRect(buttons.utility);
       }
     }
 
@@ -1131,26 +1100,17 @@
       if (touch.pointerRoles && Object.prototype.hasOwnProperty.call(touch.pointerRoles, pointerId)) {
         delete touch.pointerRoles[pointerId];
       }
-      if (touch.leftStick.active && touch.leftStick.pointerId === pointerId) {
-        touch.leftStick.active = false;
-        touch.leftStick.pointerId = null;
-        touch.leftStick.width = 0;
-        touch.leftStick.height = 0;
-        touch.leftStick.nx = 0;
-        touch.leftStick.ny = 0;
-        touch.leftStick.mag = 0;
+      if (touch.buttons.thrust.pointerId === pointerId) {
+        touch.buttons.thrust.down = false;
+        touch.buttons.thrust.pointerId = null;
       }
-      if (touch.rightStick.active && touch.rightStick.pointerId === pointerId) {
-        touch.rightStick.active = false;
-        touch.rightStick.pointerId = null;
-        touch.rightStick.width = 0;
-        touch.rightStick.height = 0;
-        touch.rightStick.nx = 0;
-        touch.rightStick.ny = 0;
-        touch.rightStick.mag = 0;
-        touch.rightStick.aimNx = 0;
-        touch.rightStick.aimNy = 0;
-        touch.rightStick.aimMag = 0;
+      if (touch.buttons.turnLeft.pointerId === pointerId) {
+        touch.buttons.turnLeft.down = false;
+        touch.buttons.turnLeft.pointerId = null;
+      }
+      if (touch.buttons.turnRight.pointerId === pointerId) {
+        touch.buttons.turnRight.down = false;
+        touch.buttons.turnRight.pointerId = null;
       }
       if (touch.buttons.secondary.pointerId === pointerId) {
         touch.buttons.secondary.down = false;
@@ -1159,15 +1119,6 @@
       if (touch.buttons.utility.pointerId === pointerId) {
         touch.buttons.utility.down = false;
         touch.buttons.utility.pointerId = null;
-      }
-      if (touch.buttons.evade.pointerId === pointerId) {
-        const evadeProfile = this.getTouchEvadeProfile();
-        if (evadeProfile.mode === "dash_only") {
-          touch.actions.dashPressed = true;
-        }
-        touch.buttons.evade.down = false;
-        touch.buttons.evade.pointerId = null;
-        touch.buttons.evade.heldSeconds = 0;
       }
       this.handleTouchTapNavigation(x, y);
     }
@@ -2255,10 +2206,6 @@
         if (touchActions.utilityPressed) {
           this.combatSystem.tryUseUtility();
           this.consumeTouchCombatAction("utilityPressed");
-        }
-        if (touchActions.dashPressed) {
-          this.combatSystem.tryDash();
-          this.consumeTouchCombatAction("dashPressed");
         }
       }
     }
