@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] Touch control rework v2 (throttle-left + right turn/autofire)
+  - [x] Levy stick je pouze progresivni plyn (linear), bez touch turn komponenty
+  - [x] Pravy stick ridi relativni otaceni (`-1..1` z `rightStick.nx`) + autofire
+  - [x] `EVADE` je v touch rezimu dash-only (tap i hold queue dash), touch boost je vypnuty
+  - [x] HUD touch labely/hinty aktualizovany na `MOVE` + `TURN/FIRE` + dash-only popis
+  - [x] Touch settings schovava/disable aim-assist prvky, ktere novy rezim nepouziva
+  - [x] Harness coverage doplnena pro throttle-only left, right turn sign a EVADE hold->dash behavior
+
 - [x] iOS touch coordinate mapping fix for contain canvas
   - [x] `mapPointerToCanvas` mapuje pointer na aktivni obsahovou oblast canvasu pri `object-fit: contain`
   - [x] Dotyky v letterbox okrajich se ignoruji misto chybneho prepoctu do herni plochy

@@ -2598,9 +2598,37 @@ function runTests() {
     gameA.onTouchPointerDown(22, evadeHold.x, evadeHold.y);
     gameA.updateTouchInputState(0.26);
     const actionsHold = gameA.getTouchCombatActions();
-    assert(actionsHold.boostActive, "EVADE hold should activate boost state");
+    assert(!actionsHold.boostActive, "EVADE hold should not activate boost state in dash-only mode");
     gameA.onTouchPointerUp(22, evadeHold.x, evadeHold.y);
-    assert(!gameA.getTouchCombatActions().dashPressed, "EVADE hold release should not queue dash action");
+    assert(gameA.getTouchCombatActions().dashPressed, "EVADE hold release should still queue dash action");
+  });
+
+  tests.push(() => {
+    gameA.startGame(15161);
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const left = gameA.model.touchControls.layout.leftStick;
+    gameA.onTouchPointerDown(30, left.x, left.y);
+    gameA.onTouchPointerMove(30, left.x + left.radius * 0.75, left.y);
+    const move = gameA.getTouchMoveIntent();
+    assert(move && move.thrust, "Left stick should produce throttle intent");
+    assert(!Object.prototype.hasOwnProperty.call(move, "turn"), "Left stick throttle intent should not include turn");
+    const turnIntent = gameA.getTouchTurnIntent();
+    assert(!turnIntent, "Left stick should not produce right-stick turn intent");
+  });
+
+  tests.push(() => {
+    gameA.startGame(15162);
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.layout = gameA.getTouchLayout();
+    const right = gameA.model.touchControls.layout.rightStick;
+    gameA.onTouchPointerDown(31, right.x, right.y);
+    gameA.onTouchPointerMove(31, right.x + right.radius * 0.8, right.y);
+    const turnRight = gameA.getTouchTurnIntent();
+    assert(turnRight && turnRight.turn > 0.2, "Right stick positive X should produce positive relative turn");
+    gameA.onTouchPointerMove(31, right.x - right.radius * 0.8, right.y);
+    const turnLeft = gameA.getTouchTurnIntent();
+    assert(turnLeft && turnLeft.turn < -0.2, "Right stick negative X should produce negative relative turn");
   });
 
   tests.push(() => {
@@ -2608,8 +2636,8 @@ function runTests() {
     gameA.model.inputMode = "touch";
     gameA.model.touchControls.layout = gameA.getTouchLayout();
     const right = gameA.model.touchControls.layout.rightStick;
-    gameA.onTouchPointerDown(31, right.x, right.y);
-    gameA.onTouchPointerMove(31, right.x + right.radius * 0.82, right.y);
+    gameA.onTouchPointerDown(32, right.x, right.y);
+    gameA.onTouchPointerMove(32, right.x + right.radius * 0.82, right.y);
     gameA.updateTouchInputState(1 / 60);
     const actions = gameA.getTouchCombatActions();
     assert(actions.fireActive, "Active aim stick should enable touch primary auto-fire");

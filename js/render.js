@@ -769,7 +769,7 @@
           ctx.fillStyle = "rgba(188,226,245,0.8)";
           ctx.fillText(tr("touch.stick.move"), layout.leftStick.x, layout.leftStick.y - layout.leftStick.radius - 10);
           ctx.fillText(
-            tr("touch.stick.aim_fire"),
+            tr("touch.stick.turn_fire"),
             layout.rightStick.x,
             layout.rightStick.y - layout.rightStick.radius - 10
           );

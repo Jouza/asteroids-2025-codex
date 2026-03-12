@@ -819,6 +819,31 @@
       };
     }
 
+    getTouchMoveProfile() {
+      const cfg = this.config?.touchControls?.move || {};
+      const curve = String(cfg.throttleCurve || "linear").toLowerCase();
+      return {
+        throttleCurve: curve === "linear" ? "linear" : "linear"
+      };
+    }
+
+    getTouchRightStickProfile() {
+      const cfg = this.config?.touchControls?.rightStick || {};
+      const mode = String(cfg.mode || "relative_turn").toLowerCase();
+      return {
+        mode: mode === "relative_turn" ? "relative_turn" : "relative_turn",
+        turnDeadzone: this.clamp(Number(cfg.turnDeadzone) || 0.14, 0.05, 0.5)
+      };
+    }
+
+    getTouchEvadeProfile() {
+      const cfg = this.config?.touchControls?.evade || {};
+      const mode = String(cfg.mode || "dash_only").toLowerCase();
+      return {
+        mode: mode === "dash_only" ? "dash_only" : "dash_only"
+      };
+    }
+
     getTouchAimSmoothingMode() {
       const mode = String(this.model.mobileUi?.aimSmoothing || "default").toLowerCase();
       return mode === "low" || mode === "high" ? mode : "default";
@@ -901,7 +926,7 @@
       } else {
         touch.buttons.evade.heldSeconds = 0;
       }
-      touch.actions.boostActive = touch.buttons.evade.down && touch.buttons.evade.heldSeconds >= 0.18;
+      touch.actions.boostActive = false;
       const rightPointerRole =
         touch.rightStick.pointerId == null ? "right_stick" : touch.pointerRoles?.[touch.rightStick.pointerId];
       touch.actions.fireActive =
@@ -914,18 +939,29 @@
 
     getTouchMoveIntent() {
       const touch = this.model.touchControls;
-      const ship = this.model.ship;
-      if (!touch || this.model.inputMode !== "touch" || !ship) return null;
+      if (!touch || this.model.inputMode !== "touch") return null;
       const left = touch.leftStick;
       if (!left.active || left.mag < 0.08) return null;
-      const angle = Math.atan2(left.ny, left.nx);
-      const delta = Math.atan2(Math.sin(angle - ship.angle), Math.cos(angle - ship.angle));
-      const turn = this.clamp(delta / 0.7, -1, 1);
+      const moveProfile = this.getTouchMoveProfile();
+      const throttleMag = moveProfile.throttleCurve === "linear" ? left.mag : left.mag;
       return {
-        turn,
-        thrust: left.mag >= 0.16,
-        thrustScale: this.clamp(left.mag, 0, 1)
+        thrust: throttleMag >= 0.16,
+        thrustScale: this.clamp(throttleMag, 0, 1)
       };
+    }
+
+    getTouchTurnIntent() {
+      const touch = this.model.touchControls;
+      if (!touch || this.model.inputMode !== "touch") return null;
+      const right = touch.rightStick;
+      if (!right.active) return null;
+      const profile = this.getTouchRightStickProfile();
+      if (profile.mode !== "relative_turn") return null;
+      if (right.mag < profile.turnDeadzone) return null;
+      const norm = this.clamp((right.mag - profile.turnDeadzone) / Math.max(0.001, 1 - profile.turnDeadzone), 0, 1);
+      const turn = this.clamp(right.nx * norm, -1, 1);
+      if (Math.abs(turn) < 0.01) return null;
+      return { turn };
     }
 
     getTouchAimIntent(dt = this.config.simulation?.fixedStepSeconds || 1 / 120) {
@@ -1113,8 +1149,8 @@
         touch.buttons.utility.pointerId = null;
       }
       if (touch.buttons.evade.pointerId === pointerId) {
-        const held = touch.buttons.evade.heldSeconds;
-        if (held < 0.18) {
+        const evadeProfile = this.getTouchEvadeProfile();
+        if (evadeProfile.mode === "dash_only") {
           touch.actions.dashPressed = true;
         }
         touch.buttons.evade.down = false;

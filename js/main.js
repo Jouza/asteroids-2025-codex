@@ -440,19 +440,29 @@
 
   function syncTouchSettingsUi() {
     const mobileUi = game.model.mobileUi || {};
+    mobileUi.aimAssistEnabled = false;
     const strength = Math.max(0.4, Math.min(1, Number(mobileUi.aimAssistStrength) || 0.64));
     const smoothing = mobileUi.aimSmoothing === "low" || mobileUi.aimSmoothing === "high" ? mobileUi.aimSmoothing : "default";
     if (touchAimAssistToggle) {
-      touchAimAssistToggle.checked = mobileUi.aimAssistEnabled !== false;
+      touchAimAssistToggle.checked = false;
+      touchAimAssistToggle.disabled = true;
+      const row = touchAimAssistToggle.closest(".modal-row");
+      if (row) row.style.display = "none";
     }
     if (touchAimAssistStrength) {
       touchAimAssistStrength.value = String(Math.round(strength * 100));
+      touchAimAssistStrength.disabled = true;
+      const row = touchAimAssistStrength.closest(".modal-row");
+      if (row) row.style.display = "none";
     }
     if (touchAimAssistStrengthValue) {
       touchAimAssistStrengthValue.textContent = `${Math.round(strength * 100)}%`;
     }
     if (touchAimSmoothing) {
       touchAimSmoothing.value = smoothing;
+      touchAimSmoothing.disabled = true;
+      const row = touchAimSmoothing.closest(".modal-row");
+      if (row) row.style.display = "none";
     }
     if (touchAimSmoothingValue) {
       touchAimSmoothingValue.textContent = tr(`index.audio_modal.touch_smoothing_value.${smoothing}`);

@@ -1852,6 +1852,16 @@
       }
     },
     touchControls: {
+      move: {
+        throttleCurve: "linear"
+      },
+      rightStick: {
+        mode: "relative_turn",
+        turnDeadzone: 0.14
+      },
+      evade: {
+        mode: "dash_only"
+      },
       aimInput: {
         deadzone: 0.16,
         responseExponent: 1.35,

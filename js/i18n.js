@@ -22,9 +22,9 @@
       "overlay.settings_ship": "Ship",
       "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
-      "touch.hud.hint": "Touch: left stick move, right stick aim/fire, EVADE tap dash hold boost",
+      "touch.hud.hint": "Touch: left stick throttle, right stick turn/fire, EVADE dash",
       "touch.stick.move": "MOVE",
-      "touch.stick.aim_fire": "AIM/FIRE",
+      "touch.stick.turn_fire": "TURN/FIRE",
       "touch.button.secondary": "SECONDARY",
       "touch.button.utility": "UTILITY",
       "touch.button.evade": "EVADE",
@@ -365,7 +365,7 @@
       "index.audio_modal.hint": "Adjust SFX and ambient cue mix. Press G or Esc to close.",
       "index.audio_modal.master": "SFX volume",
       "index.audio_modal.ambient": "Ambient cue volume",
-      "index.audio_modal.touch_title": "Touch Aim Settings",
+      "index.audio_modal.touch_title": "Touch Controls",
       "index.audio_modal.touch_aim_assist": "Aim assist",
       "index.audio_modal.touch_toggle_hint": "On/Off",
       "index.audio_modal.touch_aim_strength": "Aim assist strength",
@@ -495,7 +495,7 @@
       "help.card.touch_controls_mvp.name": "Touch Controls (MVP)",
       "help.card.touch_controls_mvp.tag": "Mobile input",
       "help.card.touch_controls_mvp.line":
-        "Left stick controls turn/thrust, right stick controls aim with primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (tap dash, hold boost).",
+        "Left stick controls throttle only, right stick controls relative turn with primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (dash only).",
       "help.card.touch_controls_mvp.impact":
         "<strong>Impact:</strong> full combat flow is playable on phone/tablet without changing damage, cooldown, or economy rules.",
       "help.card.mobile_landscape_mode.name": "Mobile Landscape Mode",
@@ -507,9 +507,9 @@
       "help.card.mobile_aim_assist.name": "Mobile Aim Assist",
       "help.card.mobile_aim_assist.tag": "Touch precision",
       "help.card.mobile_aim_assist.line":
-        "Right-stick aim now applies deadzone, response curve, and short smoothing, with optional light cone assist for nearby threats.",
+        "Legacy note: touch now uses right-stick relative turn + auto-fire and keeps touch aim-assist controls disabled.",
       "help.card.mobile_aim_assist.impact":
-        "<strong>Impact:</strong> lower micro-jitter and more stable tracking while preserving manual aim control.",
+        "<strong>Impact:</strong> lower touch complexity and clearer role split between throttle and turn/fire control.",
       "help.card.mobile_vfx_intensity.name": "Ambient VFX Intensity Preset",
       "help.card.mobile_vfx_intensity.tag": "Readability/perf",
       "help.card.mobile_vfx_intensity.line":
