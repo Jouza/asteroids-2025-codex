@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] iOS mobile viewport white-side-bars hotfix
+  - [x] `index.html` viewport doplnen o `viewport-fit=cover` pro iOS landscape safe-area
+  - [x] Touch-mobile layout prepnuty na `dvw/dvh` (s `vw/vh` fallback) pro stabilni fullscreen sizing
+  - [x] `html/body/layout/play-column/canvas` maji explicitni tmave pozadi, aby nevznikaly bile okraje
+
 - [x] iOS install hint input-block hotfix (START-only)
   - [x] `iosInstallHint` viditelny pouze na `START` (iOS Safari, non-standalone, non-dismissed)
   - [x] Pri prechodu `START -> PLAYING` se hint skryje, aby neblokoval touch ovladani v boji
