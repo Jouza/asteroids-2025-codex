@@ -350,7 +350,7 @@
       "index.icon.flight_mode.title": "Flight mode: Arcade or Sim Lite.",
       "index.icon.flight_mode.aria": "Flight Mode",
       "index.help_link": "HELP: objects and hazards reference",
-      "index.install_hint.body": "Install on iPhone: open Share and tap Add to Home Screen.",
+      "index.install_hint.body": "Install on iPhone from START screen: open Share and tap Add to Home Screen.",
       "index.install_hint.dismiss": "Don't show again",
       "index.audio_summary_default": "SFX 60% | Amb 40%",
       "index.audio_summary": "SFX {sfx}% | Amb {ambient}%",
@@ -517,9 +517,9 @@
       "help.card.ios_add_to_home.name": "iOS Add to Home Screen",
       "help.card.ios_add_to_home.tag": "Install flow",
       "help.card.ios_add_to_home.line":
-        "On iPhone Safari, use Share -> Add to Home Screen to install STARFANG with a ship icon. iOS does not provide a reliable native install popup.",
+        "On iPhone Safari, use Share -> Add to Home Screen from START to install STARFANG with a ship icon. iOS does not provide a reliable native install popup.",
       "help.card.ios_add_to_home.impact":
-        "<strong>Impact:</strong> launches in standalone app-like mode from home screen for faster access and cleaner focus.",
+        "<strong>Impact:</strong> clean onboarding on START without blocking combat touch controls in active runs.",
       "help.section.asteroids": "Asteroids",
       "help.section.ufo_types": "UFO Types",
       "help.section.entities": "Combat Entities",

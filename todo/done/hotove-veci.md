@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] iOS install hint input-block hotfix (START-only)
+  - [x] `iosInstallHint` viditelny pouze na `START` (iOS Safari, non-standalone, non-dismissed)
+  - [x] Pri prechodu `START -> PLAYING` se hint skryje, aby neblokoval touch ovladani v boji
+  - [x] CSS safety: `.install-hint { pointer-events: none; }` + `.install-hint-btn { pointer-events: auto; }`
+  - [x] i18n/help wording upresnen na START-only install onboarding
+
 - [x] iOS Add-to-Home MVP (icon + install hint)
   - [x] Doplneny iOS web-app head metadata (`apple-mobile-web-app-*`, `theme-color`) + `manifest.webmanifest`
   - [x] Pridany app ikony lodi (`180`, `192`, `512`) pro home screen/install branding

@@ -631,6 +631,7 @@ strong {
   background: rgba(5, 12, 24, 0.94);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.42);
   padding: 10px 12px;
+  pointer-events: none;
 }
 
 .install-hint.hidden {
@@ -658,6 +659,7 @@ strong {
   font-size: 0.85rem;
   padding: 6px 10px;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .touch-mobile-ui .layout {

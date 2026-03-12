@@ -78,7 +78,11 @@
 
   function syncIosInstallHintVisibility() {
     if (!iosInstallHint) return;
-    const shouldShow = isIosSafari() && !isStandaloneMode() && !iosInstallHintDismissed;
+    const shouldShow =
+      isIosSafari() &&
+      !isStandaloneMode() &&
+      !iosInstallHintDismissed &&
+      game.model?.gameState === window.Asteroids.GAME_STATE.START;
     iosInstallHint.classList.toggle("hidden", !shouldShow);
   }
 
