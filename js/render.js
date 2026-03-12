@@ -716,20 +716,42 @@
         }
       ];
       const drawStick = (stickLayout, stickState, tintRgb) => {
+        const gateW = Math.max(90, Number(stickLayout.width) || stickLayout.radius * 2);
+        const gateH = Math.max(70, Number(stickLayout.height) || stickLayout.radius * 1.6);
+        const gateX = stickLayout.x - gateW / 2;
+        const gateY = stickLayout.y - gateH / 2;
+        const cornerR = Math.min(14, gateW * 0.14, gateH * 0.24);
+        const handleX = stickState?.active ? stickState.baseX + stickState.nx * (gateW / 2) : stickLayout.x;
+        const handleY = stickState?.active ? stickState.baseY + stickState.ny * (gateH / 2) : stickLayout.y;
         ctx.save();
         ctx.strokeStyle = `rgba(${tintRgb},0.42)`;
         ctx.fillStyle = `rgba(${tintRgb},0.08)`;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(stickLayout.x, stickLayout.y, stickLayout.radius, 0, Math.PI * 2);
+        ctx.moveTo(gateX + cornerR, gateY);
+        ctx.lineTo(gateX + gateW - cornerR, gateY);
+        ctx.quadraticCurveTo(gateX + gateW, gateY, gateX + gateW, gateY + cornerR);
+        ctx.lineTo(gateX + gateW, gateY + gateH - cornerR);
+        ctx.quadraticCurveTo(gateX + gateW, gateY + gateH, gateX + gateW - cornerR, gateY + gateH);
+        ctx.lineTo(gateX + cornerR, gateY + gateH);
+        ctx.quadraticCurveTo(gateX, gateY + gateH, gateX, gateY + gateH - cornerR);
+        ctx.lineTo(gateX, gateY + cornerR);
+        ctx.quadraticCurveTo(gateX, gateY, gateX + cornerR, gateY);
+        ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        const handleX = stickState?.active ? stickState.baseX + stickState.nx * stickLayout.radius * stickState.mag : stickLayout.x;
-        const handleY = stickState?.active ? stickState.baseY + stickState.ny * stickLayout.radius * stickState.mag : stickLayout.y;
+        ctx.strokeStyle = `rgba(${tintRgb},0.28)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(stickLayout.x, gateY + 4);
+        ctx.lineTo(stickLayout.x, gateY + gateH - 4);
+        ctx.moveTo(gateX + 4, stickLayout.y);
+        ctx.lineTo(gateX + gateW - 4, stickLayout.y);
+        ctx.stroke();
         ctx.fillStyle = `rgba(${tintRgb},0.18)`;
         ctx.strokeStyle = `rgba(${tintRgb},0.86)`;
         ctx.beginPath();
-        ctx.arc(handleX, handleY, Math.max(16, stickLayout.radius * 0.34), 0, Math.PI * 2);
+        ctx.arc(handleX, handleY, Math.max(15, Math.min(gateW, gateH) * 0.22), 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -767,9 +789,9 @@
           ctx.textAlign = "center";
           ctx.font = "700 10px Trebuchet MS";
           ctx.fillStyle = "rgba(188,226,245,0.8)";
-          ctx.fillText(tr("touch.stick.move"), layout.leftStick.x, layout.leftStick.y - layout.leftStick.radius - 10);
+          ctx.fillText(tr("touch.stick.move_turn"), layout.leftStick.x, layout.leftStick.y - layout.leftStick.radius - 10);
           ctx.fillText(
-            tr("touch.stick.turn_fire"),
+            tr("touch.stick.fire"),
             layout.rightStick.x,
             layout.rightStick.y - layout.rightStick.radius - 10
           );

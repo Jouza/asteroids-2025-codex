@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Touch control layout pass: rectangular pads (throttle/turn + fire)
+  - [x] Kruhove touch joysticky nahrazeny obdelnikovymi pady s posuvnou packou
+  - [x] Levy pad: nahoru/dolu plyn, doleva/doprava trysky na otaceni
+  - [x] Pravy pad: primary fire trigger pad (bez turn komponenty)
+  - [x] Touch HUD hinty/labely aktualizovany na `THROTTLE/TURN` a `FIRE`
+  - [x] Harness coverage upravena na levy turn intent + right-pad non-move + fire flow
+
 - [x] Touch control rework v2 (throttle-left + right turn/autofire)
   - [x] Levy stick je pouze progresivni plyn (linear), bez touch turn komponenty
   - [x] Pravy stick ridi relativni otaceni (`-1..1` z `rightStick.nx`) + autofire

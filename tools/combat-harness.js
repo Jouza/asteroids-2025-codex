@@ -2609,12 +2609,15 @@ function runTests() {
     gameA.model.touchControls.layout = gameA.getTouchLayout();
     const left = gameA.model.touchControls.layout.leftStick;
     gameA.onTouchPointerDown(30, left.x, left.y);
-    gameA.onTouchPointerMove(30, left.x + left.radius * 0.75, left.y);
+    gameA.onTouchPointerMove(30, left.x + left.radius * 0.75, left.y - left.radius * 0.7);
     const move = gameA.getTouchMoveIntent();
     assert(move && move.thrust, "Left stick should produce throttle intent");
-    assert(!Object.prototype.hasOwnProperty.call(move, "turn"), "Left stick throttle intent should not include turn");
+    assert(Number.isFinite(move.turn) && move.turn > 0.2, "Left stick positive X should produce positive turn intent");
+    gameA.onTouchPointerMove(30, left.x - left.radius * 0.75, left.y - left.radius * 0.7);
+    const moveLeft = gameA.getTouchMoveIntent();
+    assert(moveLeft && moveLeft.turn < -0.2, "Left stick negative X should produce negative turn intent");
     const turnIntent = gameA.getTouchTurnIntent();
-    assert(!turnIntent, "Left stick should not produce right-stick turn intent");
+    assert(!turnIntent, "Legacy touch turn intent should stay disabled");
   });
 
   tests.push(() => {
@@ -2624,11 +2627,10 @@ function runTests() {
     const right = gameA.model.touchControls.layout.rightStick;
     gameA.onTouchPointerDown(31, right.x, right.y);
     gameA.onTouchPointerMove(31, right.x + right.radius * 0.8, right.y);
-    const turnRight = gameA.getTouchTurnIntent();
-    assert(turnRight && turnRight.turn > 0.2, "Right stick positive X should produce positive relative turn");
-    gameA.onTouchPointerMove(31, right.x - right.radius * 0.8, right.y);
-    const turnLeft = gameA.getTouchTurnIntent();
-    assert(turnLeft && turnLeft.turn < -0.2, "Right stick negative X should produce negative relative turn");
+    const move = gameA.getTouchMoveIntent();
+    assert(!move, "Right stick should not produce movement intent");
+    const turnIntent = gameA.getTouchTurnIntent();
+    assert(!turnIntent, "Right stick should not produce separate turn intent in left-pad turn mode");
   });
 
   tests.push(() => {

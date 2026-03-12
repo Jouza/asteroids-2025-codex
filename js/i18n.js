@@ -22,9 +22,9 @@
       "overlay.settings_ship": "Ship",
       "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
-      "touch.hud.hint": "Touch: left stick throttle, right stick turn/fire, EVADE dash",
-      "touch.stick.move": "MOVE",
-      "touch.stick.turn_fire": "TURN/FIRE",
+      "touch.hud.hint": "Touch: left pad throttle/turn, right pad fire, EVADE dash",
+      "touch.stick.move_turn": "THROTTLE/TURN",
+      "touch.stick.fire": "FIRE",
       "touch.button.secondary": "SECONDARY",
       "touch.button.utility": "UTILITY",
       "touch.button.evade": "EVADE",
@@ -495,7 +495,7 @@
       "help.card.touch_controls_mvp.name": "Touch Controls (MVP)",
       "help.card.touch_controls_mvp.tag": "Mobile input",
       "help.card.touch_controls_mvp.line":
-        "Left stick controls throttle only, right stick controls relative turn with primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (dash only).",
+        "Left pad controls throttle (up/down) and turn thrusters (left/right). Right pad controls primary auto-fire. Action buttons are SECONDARY, UTILITY, and EVADE (dash only).",
       "help.card.touch_controls_mvp.impact":
         "<strong>Impact:</strong> full combat flow is playable on phone/tablet without changing damage, cooldown, or economy rules.",
       "help.card.mobile_landscape_mode.name": "Mobile Landscape Mode",

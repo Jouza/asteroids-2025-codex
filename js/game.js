@@ -234,6 +234,8 @@
         pointerId: null,
         baseX: 0,
         baseY: 0,
+        width: 0,
+        height: 0,
         x: 0,
         y: 0,
         nx: 0,
@@ -245,6 +247,8 @@
         pointerId: null,
         baseX: 0,
         baseY: 0,
+        width: 0,
+        height: 0,
         x: 0,
         y: 0,
         nx: 0,
@@ -762,13 +766,15 @@
       const height = this.config.canvas.height;
       const baseRadius = Math.round(Math.min(width, height) * 0.11);
       const stickRadius = this.clamp(baseRadius, 56, 84);
+      const stickWidth = Math.round(stickRadius * 2.25);
+      const stickHeight = Math.round(stickRadius * 1.7);
       const margin = this.clamp(Math.round(stickRadius * 1.05), 58, 96);
       const buttonRadius = this.clamp(Math.round(stickRadius * 0.48), 24, 40);
       const buttonX = width - margin * 0.8;
       const buttonGap = Math.round(buttonRadius * 2.35);
       return {
-        leftStick: { x: margin, y: height - margin, radius: stickRadius },
-        rightStick: { x: width - margin, y: height - margin, radius: stickRadius },
+        leftStick: { x: margin, y: height - margin, radius: stickRadius, width: stickWidth, height: stickHeight },
+        rightStick: { x: width - margin, y: height - margin, radius: stickRadius, width: stickWidth, height: stickHeight },
         buttons: {
           secondary: { x: buttonX, y: height - margin - buttonGap * 2.15, radius: buttonRadius },
           utility: { x: buttonX, y: height - margin - buttonGap * 1.08, radius: buttonRadius },
@@ -944,24 +950,17 @@
       if (!left.active || left.mag < 0.08) return null;
       const moveProfile = this.getTouchMoveProfile();
       const throttleMag = moveProfile.throttleCurve === "linear" ? left.mag : left.mag;
+      const throttle = this.clamp(-left.ny, 0, 1);
+      const turn = this.clamp(left.nx, -1, 1);
       return {
-        thrust: throttleMag >= 0.16,
-        thrustScale: this.clamp(throttleMag, 0, 1)
+        turn,
+        thrust: throttle >= 0.12,
+        thrustScale: this.clamp(throttle * throttleMag, 0, 1)
       };
     }
 
     getTouchTurnIntent() {
-      const touch = this.model.touchControls;
-      if (!touch || this.model.inputMode !== "touch") return null;
-      const right = touch.rightStick;
-      if (!right.active) return null;
-      const profile = this.getTouchRightStickProfile();
-      if (profile.mode !== "relative_turn") return null;
-      if (right.mag < profile.turnDeadzone) return null;
-      const norm = this.clamp((right.mag - profile.turnDeadzone) / Math.max(0.001, 1 - profile.turnDeadzone), 0, 1);
-      const turn = this.clamp(right.nx * norm, -1, 1);
-      if (Math.abs(turn) < 0.01) return null;
-      return { turn };
+      return null;
     }
 
     getTouchAimIntent(dt = this.config.simulation?.fixedStepSeconds || 1 / 120) {
@@ -1033,6 +1032,8 @@
         stick.pointerId = pointerId;
         stick.baseX = anchor.x;
         stick.baseY = anchor.y;
+        stick.width = anchor.width;
+        stick.height = anchor.height;
         stick.x = x;
         stick.y = y;
       };
@@ -1041,8 +1042,9 @@
       const wantsLeftStick = x <= splitX;
       if (wantsLeftStick) {
         if (touch.leftStick.active) return;
-        const leftLimit = Math.max(1, layout.leftStick.radius * 1.25);
-        if (distTo(layout.leftStick) > leftLimit) return;
+        const leftHalfW = Math.max(1, (Number(layout.leftStick.width) || layout.leftStick.radius * 2) * 0.5);
+        const leftHalfH = Math.max(1, (Number(layout.leftStick.height) || layout.leftStick.radius * 2) * 0.5);
+        if (Math.abs(x - layout.leftStick.x) > leftHalfW || Math.abs(y - layout.leftStick.y) > leftHalfH) return;
         claimStick(touch.leftStick, layout.leftStick);
         this.updateTouchStickState(touch.leftStick, layout.leftStick.radius);
         roleMap[pointerId] = "left_stick";
@@ -1054,8 +1056,14 @@
         if (ratio <= 1) candidates.push({ kind, id, ratio });
       };
       if (!touch.rightStick.active) {
-        const rightLimit = Math.max(1, layout.rightStick.radius * 1.25);
-        pushCandidate("stick", "right", distTo(layout.rightStick) / rightLimit);
+        const rightHalfW = Math.max(1, (Number(layout.rightStick.width) || layout.rightStick.radius * 2) * 0.5);
+        const rightHalfH = Math.max(1, (Number(layout.rightStick.height) || layout.rightStick.radius * 2) * 0.5);
+        const dx = Math.abs(x - layout.rightStick.x);
+        const dy = Math.abs(y - layout.rightStick.y);
+        if (dx <= rightHalfW && dy <= rightHalfH) {
+          const ratio = Math.max(dx / rightHalfW, dy / rightHalfH);
+          pushCandidate("stick", "right", ratio);
+        }
       }
       if (!touch.buttons.secondary.down && buttons.secondary) {
         const limit = Math.max(1, buttons.secondary.radius * 1.22);
@@ -1126,6 +1134,8 @@
       if (touch.leftStick.active && touch.leftStick.pointerId === pointerId) {
         touch.leftStick.active = false;
         touch.leftStick.pointerId = null;
+        touch.leftStick.width = 0;
+        touch.leftStick.height = 0;
         touch.leftStick.nx = 0;
         touch.leftStick.ny = 0;
         touch.leftStick.mag = 0;
@@ -1133,6 +1143,8 @@
       if (touch.rightStick.active && touch.rightStick.pointerId === pointerId) {
         touch.rightStick.active = false;
         touch.rightStick.pointerId = null;
+        touch.rightStick.width = 0;
+        touch.rightStick.height = 0;
         touch.rightStick.nx = 0;
         touch.rightStick.ny = 0;
         touch.rightStick.mag = 0;
@@ -1163,14 +1175,13 @@
     updateTouchStickState(stick, radius) {
       const dx = stick.x - stick.baseX;
       const dy = stick.y - stick.baseY;
-      const dist = Math.hypot(dx, dy);
-      const safeRadius = Math.max(1, radius);
-      const clamped = Math.min(dist, safeRadius);
-      const nx = dist > 0.0001 ? dx / dist : 0;
-      const ny = dist > 0.0001 ? dy / dist : 0;
-      stick.nx = nx;
-      stick.ny = ny;
-      stick.mag = this.clamp(clamped / safeRadius, 0, 1);
+      const halfW = Math.max(1, (Number(stick.width) || radius * 2) * 0.5);
+      const halfH = Math.max(1, (Number(stick.height) || radius * 2) * 0.5);
+      const normX = this.clamp(dx / halfW, -1, 1);
+      const normY = this.clamp(dy / halfH, -1, 1);
+      stick.nx = normX;
+      stick.ny = normY;
+      stick.mag = this.clamp(Math.max(Math.abs(normX), Math.abs(normY)), 0, 1);
     }
 
     handleTouchTapNavigation(x, y) {

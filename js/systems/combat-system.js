@@ -237,13 +237,12 @@
       const c = g.config;
       const profile = g.getCurrentFlightProfile();
       const touchMove = typeof g.getTouchMoveIntent === "function" ? g.getTouchMoveIntent() : null;
-      const touchTurn = typeof g.getTouchTurnIntent === "function" ? g.getTouchTurnIntent() : null;
       const touchActions = typeof g.getTouchCombatActions === "function" ? g.getTouchCombatActions() : null;
       let turnInput = 0;
       if (g.input.isDown("ArrowLeft")) turnInput -= 1;
       if (g.input.isDown("ArrowRight")) turnInput += 1;
-      if (touchTurn?.turn) {
-        turnInput = g.clamp(turnInput + touchTurn.turn, -1, 1);
+      if (touchMove?.turn) {
+        turnInput = g.clamp(turnInput + touchMove.turn, -1, 1);
       }
 
       if (turnInput !== 0) {
