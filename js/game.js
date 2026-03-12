@@ -501,11 +501,48 @@
       if (!event || typeof this.canvas?.getBoundingClientRect !== "function") return null;
       const rect = this.canvas.getBoundingClientRect();
       if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-      const scaleX = this.config.canvas.width / rect.width;
-      const scaleY = this.config.canvas.height / rect.height;
+      const canvasW = this.config.canvas.width;
+      const canvasH = this.config.canvas.height;
+      const styleFit = String(this.canvas?.style?.objectFit || "").toLowerCase();
+      let computedFit = "";
+      if (typeof window !== "undefined" && typeof window.getComputedStyle === "function") {
+        try {
+          computedFit = String(window.getComputedStyle(this.canvas)?.objectFit || "").toLowerCase();
+        } catch (error) {
+          // Ignore style lookup failures.
+        }
+      }
+      const useContainMap = styleFit === "contain" || computedFit === "contain";
+      if (!useContainMap) {
+        const scaleX = canvasW / rect.width;
+        const scaleY = canvasH / rect.height;
+        return {
+          x: (event.clientX - rect.left) * scaleX,
+          y: (event.clientY - rect.top) * scaleY
+        };
+      }
+
+      const canvasAspect = canvasW / canvasH;
+      const rectAspect = rect.width / rect.height;
+      let contentLeft = rect.left;
+      let contentTop = rect.top;
+      let contentWidth = rect.width;
+      let contentHeight = rect.height;
+      if (rectAspect > canvasAspect) {
+        contentHeight = rect.height;
+        contentWidth = contentHeight * canvasAspect;
+        contentLeft = rect.left + (rect.width - contentWidth) * 0.5;
+      } else if (rectAspect < canvasAspect) {
+        contentWidth = rect.width;
+        contentHeight = contentWidth / canvasAspect;
+        contentTop = rect.top + (rect.height - contentHeight) * 0.5;
+      }
+      const localX = event.clientX - contentLeft;
+      const localY = event.clientY - contentTop;
+      if (localX < 0 || localY < 0 || localX > contentWidth || localY > contentHeight) return null;
       return {
-        x: (event.clientX - rect.left) * scaleX,
-        y: (event.clientY - rect.top) * scaleY
+        x: (localX / Math.max(1, contentWidth)) * canvasW,
+        y: (localY / Math.max(1, contentHeight)) * canvasH
       };
     }
 

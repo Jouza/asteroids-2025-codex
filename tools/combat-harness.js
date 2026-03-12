@@ -2521,6 +2521,22 @@ function runTests() {
   });
 
   tests.push(() => {
+    const prevRect = gameA.canvas.getBoundingClientRect;
+    const prevStyle = gameA.canvas.style;
+    if (!gameA.canvas.style) gameA.canvas.style = {};
+    const prevFit = gameA.canvas.style.objectFit;
+    gameA.canvas.style.objectFit = "contain";
+    gameA.canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 500 });
+    const mappedCenter = gameA.mapPointerToCanvas({ clientX: 500, clientY: 250 });
+    assert(mappedCenter && mappedCenter.x > 470 && mappedCenter.x < 490, "Contain map should convert center point to canvas space");
+    const mappedOutside = gameA.mapPointerToCanvas({ clientX: 10, clientY: 250 });
+    assert(mappedOutside === null, "Contain map should ignore touches in horizontal letterbox area");
+    gameA.canvas.style.objectFit = prevFit;
+    if (!prevStyle) gameA.canvas.style = prevStyle;
+    gameA.canvas.getBoundingClientRect = prevRect;
+  });
+
+  tests.push(() => {
     gameA.startGame(14901);
     gameA.model.inputMode = "touch";
     const layout = gameA.getTouchLayout();

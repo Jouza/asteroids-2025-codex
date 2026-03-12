@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] iOS touch coordinate mapping fix for contain canvas
+  - [x] `mapPointerToCanvas` mapuje pointer na aktivni obsahovou oblast canvasu pri `object-fit: contain`
+  - [x] Dotyky v letterbox okrajich se ignoruji misto chybneho prepoctu do herni plochy
+  - [x] Harness coverage doplnena o contain-mapping center + outside-letterbox scenar
+
 - [x] iOS touch input conflict hotfix (left-stick dead vs right aim/fire)
   - [x] Touch routing v combatu prepnut na zonove prirazeni (`x <= splitX` left stick, `x > splitX` right stick)
   - [x] Pridana explicitni `pointerRoles` mapa, ktera stabilizuje vlastnictvi pointeru po celou dobu drzeni
