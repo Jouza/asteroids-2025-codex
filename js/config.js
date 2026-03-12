@@ -1851,6 +1851,31 @@
         }
       }
     },
+    touchControls: {
+      aimInput: {
+        deadzone: 0.16,
+        responseExponent: 1.35,
+        fireThreshold: 0.22,
+        baseSmoothingSeconds: 0.06,
+        smoothingMultipliers: {
+          low: 0.72,
+          default: 1,
+          high: 1.34
+        }
+      },
+      aimAssist: {
+        enabledDefault: true,
+        strengthDefault: 0.64,
+        strengthMin: 0.4,
+        strengthMax: 1,
+        coneDegrees: 22,
+        maxCorrectionDegrees: 10,
+        maxRange: 500,
+        ufoPriority: 1,
+        bossPriority: 1.45,
+        weakpointOpenBonus: 0.35
+      }
+    },
     simulation: {
       fixedStepSeconds: 1 / 120,
       maxFrameDeltaSeconds: 0.25,

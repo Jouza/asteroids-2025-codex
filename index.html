@@ -123,6 +123,26 @@
         <input id="ambientSlider" class="modal-slider" type="range" min="0" max="100" step="1" value="40" data-i18n-aria-label="index.ambient_volume_aria">
         <span id="ambientValue" class="modal-value">40%</span>
       </div>
+      <p class="modal-hint" data-i18n="index.audio_modal.touch_title">Touch Aim Settings</p>
+      <div class="modal-row modal-row-toggle">
+        <label for="touchAimAssistToggle" data-i18n="index.audio_modal.touch_aim_assist">Aim assist</label>
+        <input id="touchAimAssistToggle" type="checkbox" checked>
+        <span class="modal-value" data-i18n="index.audio_modal.touch_toggle_hint">On/Off</span>
+      </div>
+      <div class="modal-row">
+        <label for="touchAimAssistStrength" data-i18n="index.audio_modal.touch_aim_strength">Aim assist strength</label>
+        <input id="touchAimAssistStrength" class="modal-slider" type="range" min="40" max="100" step="1" value="64">
+        <span id="touchAimAssistStrengthValue" class="modal-value">64%</span>
+      </div>
+      <div class="modal-row">
+        <label for="touchAimSmoothing" data-i18n="index.audio_modal.touch_smoothing">Aim smoothing</label>
+        <select id="touchAimSmoothing" class="modal-select">
+          <option value="low" data-i18n="index.audio_modal.touch_smoothing.low">Low</option>
+          <option value="default" data-i18n="index.audio_modal.touch_smoothing.default">Default</option>
+          <option value="high" data-i18n="index.audio_modal.touch_smoothing.high">High</option>
+        </select>
+        <span id="touchAimSmoothingValue" class="modal-value">Default</span>
+      </div>
       <p class="modal-muted-hint" data-i18n="index.audio_modal.mute_hint">Mute toggle: M</p>
     </section>
   </div>

@@ -248,7 +248,10 @@
         y: 0,
         nx: 0,
         ny: 0,
-        mag: 0
+        mag: 0,
+        aimNx: 0,
+        aimNy: 0,
+        aimMag: 0
       },
       buttons: {
         secondary: { down: false, pointerId: null },
@@ -289,6 +292,9 @@
       fullscreenPromptVisible: false,
       fullscreenPromptDismissed: false,
       compactHints: true,
+      aimAssistEnabled: true,
+      aimAssistStrength: 0.64,
+      aimSmoothing: "default",
       threatContext: {
         bossPressure: false,
         hazardPressure: false,
@@ -660,6 +666,15 @@
     updateMobileUiState(dt = 0) {
       const mobileUi = this.model.mobileUi;
       if (!mobileUi) return;
+      const assistCfg = this.getTouchAimAssistConfig();
+      mobileUi.aimAssistEnabled = mobileUi.aimAssistEnabled !== false;
+      mobileUi.aimAssistStrength = this.clamp(
+        Number.isFinite(Number(mobileUi.aimAssistStrength)) ? Number(mobileUi.aimAssistStrength) : assistCfg.strengthDefault,
+        assistCfg.strengthMin,
+        assistCfg.strengthMax
+      );
+      mobileUi.aimSmoothing =
+        mobileUi.aimSmoothing === "low" || mobileUi.aimSmoothing === "high" ? mobileUi.aimSmoothing : "default";
       const viewport = this.getViewportInfo();
       const touchActive = this.model.inputMode === "touch" || this.model.touchControls?.inputMode === "touch";
       const smallViewport = viewport.width <= 1024;
@@ -722,17 +737,124 @@
       };
     }
 
+    getTouchAimTuningConfig() {
+      const aimCfg = this.config?.touchControls?.aimInput || {};
+      const multipliers = aimCfg.smoothingMultipliers && typeof aimCfg.smoothingMultipliers === "object" ? aimCfg.smoothingMultipliers : {};
+      return {
+        deadzone: this.clamp(Number(aimCfg.deadzone) || 0.16, 0.04, 0.5),
+        responseExponent: this.clamp(Number(aimCfg.responseExponent) || 1.35, 0.7, 2.5),
+        fireThreshold: this.clamp(Number(aimCfg.fireThreshold) || 0.22, 0.05, 0.9),
+        baseSmoothingSeconds: this.clamp(Number(aimCfg.baseSmoothingSeconds) || 0.06, 0.005, 0.2),
+        smoothingMultipliers: {
+          low: this.clamp(Number(multipliers.low) || 0.72, 0.4, 1.6),
+          default: this.clamp(Number(multipliers.default) || 1, 0.4, 1.6),
+          high: this.clamp(Number(multipliers.high) || 1.34, 0.4, 1.8)
+        }
+      };
+    }
+
+    getTouchAimAssistConfig() {
+      const cfg = this.config?.touchControls?.aimAssist || {};
+      const min = this.clamp(Number(cfg.strengthMin) || 0.4, 0.05, 1);
+      const max = this.clamp(Number(cfg.strengthMax) || 1, min, 1.8);
+      return {
+        enabledDefault: cfg.enabledDefault !== false,
+        strengthMin: min,
+        strengthMax: max,
+        strengthDefault: this.clamp(Number(cfg.strengthDefault) || 0.64, min, max),
+        coneRad: (this.clamp(Number(cfg.coneDegrees) || 22, 4, 55) * Math.PI) / 180,
+        maxCorrectionRad: (this.clamp(Number(cfg.maxCorrectionDegrees) || 10, 2, 28) * Math.PI) / 180,
+        maxRange: this.clamp(Number(cfg.maxRange) || 500, 120, 1400),
+        ufoPriority: this.clamp(Number(cfg.ufoPriority) || 1, 0.4, 2.2),
+        bossPriority: this.clamp(Number(cfg.bossPriority) || 1.45, 0.4, 2.5),
+        weakpointOpenBonus: this.clamp(Number(cfg.weakpointOpenBonus) || 0.35, 0, 1)
+      };
+    }
+
+    getTouchAimSmoothingMode() {
+      const mode = String(this.model.mobileUi?.aimSmoothing || "default").toLowerCase();
+      return mode === "low" || mode === "high" ? mode : "default";
+    }
+
+    getTouchAimSmoothingSeconds() {
+      const tuning = this.getTouchAimTuningConfig();
+      const mode = this.getTouchAimSmoothingMode();
+      const mul = tuning.smoothingMultipliers?.[mode] ?? tuning.smoothingMultipliers.default;
+      return this.clamp(tuning.baseSmoothingSeconds * mul, 0.005, 0.26);
+    }
+
+    resolveTouchAimAssist(rawAngle) {
+      if (this.model.gameState !== GAME_STATE.PLAYING) return rawAngle;
+      if (this.model.deviceMode !== "touch_mobile" || this.model.inputMode !== "touch") return rawAngle;
+      const ship = this.model.ship;
+      if (!ship) return rawAngle;
+      const assistCfg = this.getTouchAimAssistConfig();
+      const mobileUi = this.model.mobileUi || {};
+      const assistEnabled = mobileUi.aimAssistEnabled !== false;
+      if (!assistEnabled) return rawAngle;
+      const strength = this.clamp(
+        Number(mobileUi.aimAssistStrength),
+        assistCfg.strengthMin,
+        assistCfg.strengthMax
+      );
+      const candidates = [];
+      for (const ufo of this.model.ufos) {
+        if (!ufo) continue;
+        candidates.push({
+          x: ufo.x,
+          y: ufo.y,
+          radius: Math.max(8, Number(ufo.radius) || 16),
+          priority: assistCfg.ufoPriority
+        });
+      }
+      const boss = this.model.miniBoss;
+      if (boss) {
+        const bonus = boss.weakpointOpen ? assistCfg.weakpointOpenBonus : 0;
+        candidates.push({
+          x: boss.x,
+          y: boss.y,
+          radius: Math.max(14, Number(boss.radius) || 28),
+          priority: assistCfg.bossPriority + bonus
+        });
+      }
+      if (!candidates.length) return rawAngle;
+      let best = null;
+      for (const target of candidates) {
+        const dx = target.x - ship.x;
+        const dy = target.y - ship.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > assistCfg.maxRange) continue;
+        const angleToTarget = Math.atan2(dy, dx);
+        const delta = Math.atan2(Math.sin(angleToTarget - rawAngle), Math.cos(angleToTarget - rawAngle));
+        const absDelta = Math.abs(delta);
+        if (absDelta > assistCfg.coneRad) continue;
+        const angleScore = 1 - absDelta / assistCfg.coneRad;
+        const distanceScore = 1 - this.clamp(dist / assistCfg.maxRange, 0, 1);
+        const radiusScore = this.clamp((target.radius || 0) / 44, 0, 0.32);
+        const score = (angleScore * 0.72 + distanceScore * 0.28 + radiusScore) * target.priority;
+        if (!best || score > best.score) {
+          best = { delta, score, angleScore };
+        }
+      }
+      if (!best) return rawAngle;
+      const correctionLimit = assistCfg.maxCorrectionRad;
+      const limitedDelta = this.clamp(best.delta, -correctionLimit, correctionLimit);
+      const blend = this.clamp(strength * (0.22 + best.angleScore * 0.38), 0, 0.72);
+      return rawAngle + limitedDelta * blend;
+    }
+
     updateTouchInputState(dt) {
       const touch = this.model.touchControls;
       if (!touch || this.model.inputMode !== "touch") return;
       touch.layout = this.getTouchLayout();
+      const aimTuning = this.getTouchAimTuningConfig();
       if (touch.buttons.evade.down) {
         touch.buttons.evade.heldSeconds += dt;
       } else {
         touch.buttons.evade.heldSeconds = 0;
       }
       touch.actions.boostActive = touch.buttons.evade.down && touch.buttons.evade.heldSeconds >= 0.18;
-      touch.actions.fireActive = touch.rightStick.active && touch.rightStick.mag >= 0.2;
+      touch.actions.fireActive = touch.rightStick.active && touch.rightStick.mag >= aimTuning.fireThreshold;
       if (this.model.gameState !== GAME_STATE.PLAYING) {
         touch.actions.fireActive = false;
         touch.actions.boostActive = false;
@@ -755,13 +877,32 @@
       };
     }
 
-    getTouchAimIntent() {
+    getTouchAimIntent(dt = this.config.simulation?.fixedStepSeconds || 1 / 120) {
       const touch = this.model.touchControls;
       if (!touch || this.model.inputMode !== "touch") return null;
       const right = touch.rightStick;
-      if (!right.active || right.mag < 0.2) return null;
+      const tuning = this.getTouchAimTuningConfig();
+      if (!right.active || right.mag < tuning.deadzone) return null;
+      const rawAngle = Math.atan2(right.ny, right.nx);
+      const normalizedMagnitude = this.clamp((right.mag - tuning.deadzone) / Math.max(0.001, 1 - tuning.deadzone), 0, 1);
+      const curvedMag = Math.pow(normalizedMagnitude, tuning.responseExponent);
+      const targetNx = Math.cos(rawAngle) * curvedMag;
+      const targetNy = Math.sin(rawAngle) * curvedMag;
+      const smoothingSeconds = this.getTouchAimSmoothingSeconds();
+      const alpha = this.clamp((Number(dt) || 0.0083) / Math.max(0.001, smoothingSeconds + (Number(dt) || 0.0083)), 0.08, 1);
+      if (!Number.isFinite(right.aimNx) || !Number.isFinite(right.aimNy)) {
+        right.aimNx = targetNx;
+        right.aimNy = targetNy;
+      } else {
+        right.aimNx += (targetNx - right.aimNx) * alpha;
+        right.aimNy += (targetNy - right.aimNy) * alpha;
+      }
+      right.aimMag = Math.hypot(right.aimNx, right.aimNy);
+      if (right.aimMag < 0.04) return null;
+      const smoothedAngle = Math.atan2(right.aimNy, right.aimNx);
+      const assistedAngle = this.resolveTouchAimAssist(smoothedAngle);
       return {
-        angle: Math.atan2(right.ny, right.nx),
+        angle: assistedAngle,
         active: true
       };
     }
@@ -893,6 +1034,9 @@
         touch.rightStick.nx = 0;
         touch.rightStick.ny = 0;
         touch.rightStick.mag = 0;
+        touch.rightStick.aimNx = 0;
+        touch.rightStick.aimNy = 0;
+        touch.rightStick.aimMag = 0;
       }
       if (touch.buttons.secondary.pointerId === pointerId) {
         touch.buttons.secondary.down = false;
@@ -2376,11 +2520,25 @@
       this.model.hangar.pilotCursor = 0;
       const persistedMobilePrefs = {
         compactHints: Boolean(this.model.mobileUi?.compactHints),
-        fullscreenPromptDismissed: Boolean(this.model.mobileUi?.fullscreenPromptDismissed)
+        fullscreenPromptDismissed: Boolean(this.model.mobileUi?.fullscreenPromptDismissed),
+        aimAssistEnabled: this.model.mobileUi?.aimAssistEnabled !== false,
+        aimAssistStrength: Number(this.model.mobileUi?.aimAssistStrength),
+        aimSmoothing: this.model.mobileUi?.aimSmoothing
       };
+      const assistCfg = this.getTouchAimAssistConfig();
       this.model.mobileUi = createDefaultMobileUiState();
       this.model.mobileUi.compactHints = persistedMobilePrefs.compactHints;
       this.model.mobileUi.fullscreenPromptDismissed = persistedMobilePrefs.fullscreenPromptDismissed;
+      this.model.mobileUi.aimAssistEnabled = persistedMobilePrefs.aimAssistEnabled;
+      this.model.mobileUi.aimAssistStrength = this.clamp(
+        Number.isFinite(persistedMobilePrefs.aimAssistStrength) ? persistedMobilePrefs.aimAssistStrength : assistCfg.strengthDefault,
+        assistCfg.strengthMin,
+        assistCfg.strengthMax
+      );
+      this.model.mobileUi.aimSmoothing =
+        persistedMobilePrefs.aimSmoothing === "low" || persistedMobilePrefs.aimSmoothing === "high"
+          ? persistedMobilePrefs.aimSmoothing
+          : "default";
       this.model.factionRepGainTracker = {};
       this.model.runSummary = createRunSummaryState();
       this.model.campaignBiomeOrder = [];

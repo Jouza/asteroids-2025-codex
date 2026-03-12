@@ -2621,6 +2621,89 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(21212);
+    gameA.model.inputMode = "touch";
+    gameA.updateMobileUiState(1 / 60);
+    gameA.model.mobileUi.aimAssistEnabled = false;
+    const right = gameA.model.touchControls.rightStick;
+    right.active = true;
+    right.nx = 0.1;
+    right.ny = 0;
+    right.mag = 0.1;
+    assert(!gameA.getTouchAimIntent(1 / 120), "Right-stick input under deadzone should not produce aim intent");
+    right.nx = 1;
+    right.ny = 0;
+    right.mag = 1;
+    const first = gameA.getTouchAimIntent(1 / 120);
+    right.nx = 0;
+    right.ny = 1;
+    right.mag = 1;
+    const second = gameA.getTouchAimIntent(1 / 120);
+    assert(first && second, "Touch aim intent should be available above deadzone");
+    assert(second.angle < 1.45, "Aim smoothing should prevent instant full-angle jump on abrupt stick turn");
+  });
+
+  tests.push(() => {
+    gameA.startGame(22223);
+    gameA.model.inputMode = "touch";
+    gameA.updateMobileUiState(1 / 60);
+    gameA.model.mobileUi.aimAssistEnabled = true;
+    gameA.model.mobileUi.aimAssistStrength = 1;
+    gameA.model.ship.x = 420;
+    gameA.model.ship.y = 320;
+    gameA.model.ufos = [{ x: 620, y: 342, radius: 16, hp: 10 }];
+    const raw = 0;
+    const assisted = gameA.resolveTouchAimAssist(raw);
+    assert(assisted > raw, "Aim assist should bias angle toward in-cone UFO target");
+    gameA.model.ufos = [{ x: 420, y: 560, radius: 16, hp: 10 }];
+    const outsideCone = gameA.resolveTouchAimAssist(raw);
+    assert(Math.abs(outsideCone - raw) < 0.0001, "Aim assist should ignore targets outside assist cone");
+  });
+
+  tests.push(() => {
+    gameA.startGame(23234);
+    gameA.model.inputMode = "touch";
+    gameA.updateMobileUiState(1 / 60);
+    gameA.model.mobileUi.aimAssistEnabled = true;
+    gameA.model.mobileUi.aimAssistStrength = 1;
+    gameA.model.ship.x = 400;
+    gameA.model.ship.y = 300;
+    const ufoTarget = { x: 640, y: 334, radius: 16, hp: 10 };
+    const bossTarget = { x: 622, y: 342, radius: 42, weakpointOpen: true, hp: 500 };
+    gameA.model.ufos = [ufoTarget];
+    gameA.model.miniBoss = null;
+    const ufoOnly = gameA.resolveTouchAimAssist(0);
+    gameA.model.ufos = [];
+    gameA.model.miniBoss = bossTarget;
+    const bossOnly = gameA.resolveTouchAimAssist(0);
+    gameA.model.ufos = [ufoTarget];
+    gameA.model.miniBoss = bossTarget;
+    const withBoth = gameA.resolveTouchAimAssist(0);
+    assert(
+      Math.abs(withBoth - bossOnly) < Math.abs(withBoth - ufoOnly),
+      "Boss target with weakpoint bonus should take priority over nearby UFO candidate"
+    );
+  });
+
+  tests.push(() => {
+    gameA.startGame(24245);
+    gameA.model.inputMode = "touch";
+    gameA.updateMobileUiState(1 / 60);
+    gameA.model.deviceMode = "desktop";
+    gameA.model.mobileUi.aimAssistEnabled = true;
+    gameA.model.ship.x = 400;
+    gameA.model.ship.y = 300;
+    gameA.model.ufos = [{ x: 620, y: 320, radius: 16, hp: 10 }];
+    const raw = 0;
+    const assistedDesktop = gameA.resolveTouchAimAssist(raw);
+    assert(Math.abs(assistedDesktop - raw) < 0.0001, "Aim assist should be disabled outside touch_mobile mode");
+    gameA.model.deviceMode = "touch_mobile";
+    gameA.model.mobileUi.aimAssistEnabled = false;
+    const assistedOff = gameA.resolveTouchAimAssist(raw);
+    assert(Math.abs(assistedOff - raw) < 0.0001, "Aim assist OFF should return raw touch aim");
+  });
+
+  tests.push(() => {
     gameA.model.inputMode = "touch";
     gameA.model.gameState = AsteroidsA.GAME_STATE.START;
     gameA.model.touchControls.ui.overlayActionCtaZone = { x: 100, y: 120, w: 180, h: 56 };

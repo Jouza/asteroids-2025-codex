@@ -237,7 +237,7 @@
       const c = g.config;
       const profile = g.getCurrentFlightProfile();
       const touchMove = typeof g.getTouchMoveIntent === "function" ? g.getTouchMoveIntent() : null;
-      const touchAim = typeof g.getTouchAimIntent === "function" ? g.getTouchAimIntent() : null;
+      const touchAim = typeof g.getTouchAimIntent === "function" ? g.getTouchAimIntent(dt) : null;
       const touchActions = typeof g.getTouchCombatActions === "function" ? g.getTouchCombatActions() : null;
       let turnInput = 0;
       if (g.input.isDown("ArrowLeft")) turnInput -= 1;

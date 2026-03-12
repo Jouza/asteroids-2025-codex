@@ -17,6 +17,11 @@
   const volumeValue = document.getElementById("volumeValue");
   const ambientSlider = document.getElementById("ambientSlider");
   const ambientValue = document.getElementById("ambientValue");
+  const touchAimAssistToggle = document.getElementById("touchAimAssistToggle");
+  const touchAimAssistStrength = document.getElementById("touchAimAssistStrength");
+  const touchAimAssistStrengthValue = document.getElementById("touchAimAssistStrengthValue");
+  const touchAimSmoothing = document.getElementById("touchAimSmoothing");
+  const touchAimSmoothingValue = document.getElementById("touchAimSmoothingValue");
   const audioStatus = document.getElementById("audioStatus");
   const audioQuickOpen = document.getElementById("audioQuickOpen");
   const pilotQuickOpen = document.getElementById("pilotQuickOpen");
@@ -80,17 +85,26 @@
   }
 
   function loadMobileUiSettings() {
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
     const defaults = {
       compactHints: true,
-      fullscreenPromptDismissed: false
+      fullscreenPromptDismissed: false,
+      aimAssistEnabled: true,
+      aimAssistStrength: 0.64,
+      aimSmoothing: "default"
     };
     try {
       const raw = window.localStorage.getItem(MOBILE_UI_SETTINGS_KEY);
       if (!raw) return defaults;
       const parsed = JSON.parse(raw);
+      const smoothingRaw = String(parsed?.aimSmoothing || "default").toLowerCase();
+      const smoothing = smoothingRaw === "low" || smoothingRaw === "high" ? smoothingRaw : "default";
       return {
         compactHints: parsed?.compactHints !== false,
-        fullscreenPromptDismissed: Boolean(parsed?.fullscreenPromptDismissed)
+        fullscreenPromptDismissed: Boolean(parsed?.fullscreenPromptDismissed),
+        aimAssistEnabled: parsed?.aimAssistEnabled !== false,
+        aimAssistStrength: clamp(Number(parsed?.aimAssistStrength) || 0.64, 0.4, 1),
+        aimSmoothing: smoothing
       };
     } catch (error) {
       return defaults;
@@ -104,7 +118,13 @@
         MOBILE_UI_SETTINGS_KEY,
         JSON.stringify({
           compactHints: mobileUi.compactHints !== false,
-          fullscreenPromptDismissed: Boolean(mobileUi.fullscreenPromptDismissed)
+          fullscreenPromptDismissed: Boolean(mobileUi.fullscreenPromptDismissed),
+          aimAssistEnabled: mobileUi.aimAssistEnabled !== false,
+          aimAssistStrength: Math.max(0.4, Math.min(1, Number(mobileUi.aimAssistStrength) || 0.64)),
+          aimSmoothing:
+            mobileUi.aimSmoothing === "low" || mobileUi.aimSmoothing === "high"
+              ? mobileUi.aimSmoothing
+              : "default"
         })
       );
     } catch (error) {
@@ -361,6 +381,27 @@
     }
   }
 
+  function syncTouchSettingsUi() {
+    const mobileUi = game.model.mobileUi || {};
+    const strength = Math.max(0.4, Math.min(1, Number(mobileUi.aimAssistStrength) || 0.64));
+    const smoothing = mobileUi.aimSmoothing === "low" || mobileUi.aimSmoothing === "high" ? mobileUi.aimSmoothing : "default";
+    if (touchAimAssistToggle) {
+      touchAimAssistToggle.checked = mobileUi.aimAssistEnabled !== false;
+    }
+    if (touchAimAssistStrength) {
+      touchAimAssistStrength.value = String(Math.round(strength * 100));
+    }
+    if (touchAimAssistStrengthValue) {
+      touchAimAssistStrengthValue.textContent = `${Math.round(strength * 100)}%`;
+    }
+    if (touchAimSmoothing) {
+      touchAimSmoothing.value = smoothing;
+    }
+    if (touchAimSmoothingValue) {
+      touchAimSmoothingValue.textContent = tr(`index.audio_modal.touch_smoothing_value.${smoothing}`);
+    }
+  }
+
   const unlockAudio = () => {
     audio.unlock();
     window.removeEventListener("keydown", unlockAudio);
@@ -371,8 +412,9 @@
   loadAudioSettings();
   if (i18n) i18n.applyTranslations(document);
   syncVolumeUi();
+  syncTouchSettingsUi();
   let lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
-  let lastMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}`;
+  let lastMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}|${game.model.mobileUi?.aimAssistEnabled}|${game.model.mobileUi?.aimAssistStrength}|${game.model.mobileUi?.aimSmoothing}`;
   if (volumeSlider) {
     volumeSlider.addEventListener("input", () => {
       audio.setVolume(Number(volumeSlider.value) / 100);
@@ -387,6 +429,28 @@
       syncVolumeUi();
       saveAudioSettings();
       lastAudioState = `${audio.getVolume()}|${audio.getAmbientVolume()}|${audio.isMuted()}`;
+    });
+  }
+  if (touchAimAssistToggle) {
+    touchAimAssistToggle.addEventListener("change", () => {
+      game.model.mobileUi.aimAssistEnabled = touchAimAssistToggle.checked;
+      syncTouchSettingsUi();
+      saveMobileUiSettings();
+    });
+  }
+  if (touchAimAssistStrength) {
+    touchAimAssistStrength.addEventListener("input", () => {
+      game.model.mobileUi.aimAssistStrength = Math.max(0.4, Math.min(1, Number(touchAimAssistStrength.value) / 100));
+      syncTouchSettingsUi();
+      saveMobileUiSettings();
+    });
+  }
+  if (touchAimSmoothing) {
+    touchAimSmoothing.addEventListener("change", () => {
+      const mode = String(touchAimSmoothing.value || "default").toLowerCase();
+      game.model.mobileUi.aimSmoothing = mode === "low" || mode === "high" ? mode : "default";
+      syncTouchSettingsUi();
+      saveMobileUiSettings();
     });
   }
   if (audioQuickOpen) {
@@ -434,6 +498,13 @@
   const mobileUiSettings = loadMobileUiSettings();
   game.model.mobileUi.compactHints = mobileUiSettings.compactHints !== false;
   game.model.mobileUi.fullscreenPromptDismissed = Boolean(mobileUiSettings.fullscreenPromptDismissed);
+  game.model.mobileUi.aimAssistEnabled = mobileUiSettings.aimAssistEnabled !== false;
+  game.model.mobileUi.aimAssistStrength = Math.max(0.4, Math.min(1, Number(mobileUiSettings.aimAssistStrength) || 0.64));
+  game.model.mobileUi.aimSmoothing =
+    mobileUiSettings.aimSmoothing === "low" || mobileUiSettings.aimSmoothing === "high"
+      ? mobileUiSettings.aimSmoothing
+      : "default";
+  syncTouchSettingsUi();
 
   let lastTimestamp = 0;
   let accumulator = 0;
@@ -465,9 +536,10 @@
       syncVolumeUi();
       lastAudioState = currentAudioState;
     }
-    const currentMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}`;
+    const currentMobileUiState = `${game.model.mobileUi?.compactHints}|${game.model.mobileUi?.fullscreenPromptDismissed}|${game.model.mobileUi?.aimAssistEnabled}|${game.model.mobileUi?.aimAssistStrength}|${game.model.mobileUi?.aimSmoothing}`;
     if (currentMobileUiState !== lastMobileUiState) {
       saveMobileUiSettings();
+      syncTouchSettingsUi();
       lastMobileUiState = currentMobileUiState;
     }
     accumulator += frameDelta;

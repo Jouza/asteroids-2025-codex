@@ -357,6 +357,21 @@ strong {
   cursor: pointer;
 }
 
+.modal-select {
+  width: 100%;
+  border: 1px solid rgba(83, 247, 255, 0.45);
+  background: rgba(10, 18, 32, 0.9);
+  color: #d8f5ff;
+  font: inherit;
+  padding: 6px 8px;
+}
+
+.modal-row-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #7cefff;
+}
+
 .modal-value {
   min-width: 44px;
   text-align: right;
@@ -666,6 +681,16 @@ strong {
 
 .touch-mobile-ui #audioModal .modal-slider {
   height: 34px;
+}
+
+.touch-mobile-ui #audioModal .modal-select {
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+.touch-mobile-ui #audioModal .modal-row-toggle input[type="checkbox"] {
+  width: 28px;
+  height: 28px;
 }
 
 .touch-mobile-ui #audioModal .modal-slider::-webkit-slider-thumb {

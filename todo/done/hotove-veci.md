@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] Mobile optimization phase 2 (input latency + light aim assist)
+  - [x] Data-driven touch aim tuning (`deadzone`, response curve, smoothing) napojene na right-stick aim intent
+  - [x] Light cone aim assist pro `touch_mobile`/`PLAYING` s jemnou limitovanou korekci (UFO + boss priorita)
+  - [x] Audio/touch settings rozsirene o `Aim Assist` toggle, `Aim Assist Strength` a `Aim Smoothing`
+  - [x] Touch preference persistence doplnena o aim assist hodnoty bez zmeny save/profile formatu
+  - [x] Harness coverage pro deadzone/smoothing, assist cone clamp, boss priority a OFF/desktop fallback
+
 - [x] Touch overlay hotfix + audio settings XL
   - [x] Combat touch prvky se uz nekresli na `START/GAME OVER/VICTORY`, aby neprekryvaly setup/start obsah
   - [x] Pridano samostatne overlay CTA tlacitko (`START` / `NEW RUN`) s vlastni tap zonou mimo combat action bublinu
