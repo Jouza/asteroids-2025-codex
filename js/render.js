@@ -2229,9 +2229,10 @@
     }
 
     drawStartTitleWithShipAs(title, centerX, baselineY) {
-      const { ctx } = this;
+      const { ctx, config } = this;
       ctx.save();
-      ctx.font = "700 54px Trebuchet MS";
+      const titlePx = config.canvas.height < 560 ? 36 : 54;
+      ctx.font = `700 ${titlePx}px Trebuchet MS`;
       ctx.fillStyle = "#d8f5ff";
       ctx.textAlign = "left";
       const chars = Array.from(title);
@@ -2610,33 +2611,38 @@
       const cx = config.canvas.width / 2;
       const cy = config.canvas.height / 2;
       const touchUi = model.touchControls?.ui;
-      this.drawOverlayBlock(cx, cy + 42, 730, 430);
+      const compact = config.canvas.height < 560;
+      const panelW = Math.max(340, Math.min(730, config.canvas.width - 20));
+      const panelH = Math.max(300, Math.min(430, config.canvas.height - 56));
+      const panelCenterY = cy + (compact ? 14 : 42);
+      this.drawOverlayBlock(cx, panelCenterY, panelW, panelH);
       ctx.textAlign = "center";
       ctx.fillStyle = "#d8f5ff";
-      ctx.font = "700 38px Trebuchet MS";
-      ctx.fillText(tr(titleKey), cx, cy - 142);
+      ctx.font = compact ? "700 24px Trebuchet MS" : "700 38px Trebuchet MS";
+      ctx.fillText(tr(titleKey), cx, compact ? 34 : cy - 142);
 
       const pageId = model.overlayEndSummaryPage || "overview";
-      this.drawEndSummaryHeader(cx, cy - 110, pageId);
-      const contentTop = cy - 72;
+      this.drawEndSummaryHeader(cx, compact ? 58 : cy - 110, pageId);
+      const contentTop = compact ? 86 : cy - 72;
       if (pageId === "drops_damage") this.drawEndSummaryDropsDamagePage(summary, cx, contentTop);
       else if (pageId === "timeline_faction") this.drawEndSummaryTimelineFactionPage(summary, cx, contentTop);
       else this.drawEndSummaryOverviewPage(summary, cx, contentTop, isVictory);
 
-      ctx.font = "500 12px Trebuchet MS";
+      const footerY = Math.max(24, config.canvas.height - 38);
+      ctx.font = compact ? "500 11px Trebuchet MS" : "500 12px Trebuchet MS";
       ctx.fillStyle = "rgba(180,223,244,0.9)";
-      ctx.fillText(tr("overlay.end_summary.switch_hint"), cx, cy + 224);
+      ctx.fillText(tr("overlay.end_summary.switch_hint"), cx, footerY);
       if (touchUi) {
         const zoneW = 220;
-        const zoneH = 44;
+        const zoneH = compact ? 34 : 44;
         touchUi.endSummaryTapZones = {
-          left: { x: cx - 300, y: cy + 200, w: zoneW, h: zoneH },
-          right: { x: cx + 80, y: cy + 200, w: zoneW, h: zoneH }
+          left: { x: cx - zoneW - 20, y: footerY - zoneH - 8, w: zoneW, h: zoneH },
+          right: { x: cx + 20, y: footerY - zoneH - 8, w: zoneW, h: zoneH }
         };
       }
-      ctx.font = "600 17px Trebuchet MS";
+      ctx.font = compact ? "600 14px Trebuchet MS" : "600 17px Trebuchet MS";
       ctx.fillStyle = "rgba(255,231,168,0.95)";
-      ctx.fillText(tr("overlay.enter_new_run"), cx, cy + 248);
+      ctx.fillText(tr("overlay.enter_new_run"), cx, Math.min(config.canvas.height - 10, footerY + 18));
     }
 
     getRunSettingsRows(model) {
@@ -2683,16 +2689,17 @@
       const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
       const rows = this.getRunSettingsRows(model);
       const selected = Math.max(0, Math.min(rows.length - 1, model.overlaySettingsRow ?? 0));
-      const rowW = 382;
-      const rowH = 30;
-      const gap = 8;
+      const ultraCompact = config.canvas.height < 560;
+      const rowW = Math.max(320, Math.min(420, config.canvas.width - (ultraCompact ? 24 : 38)));
+      const rowH = ultraCompact ? 24 : 30;
+      const gap = ultraCompact ? 5 : 8;
       const topY = centerY;
       const pointer = model.pointer || { inside: false, x: 0, y: 0 };
       const touchUi = model.touchControls?.ui;
       if (touchUi) touchUi.overlayRows = [];
       let showPilotReference = false;
       ctx.textAlign = "center";
-      ctx.font = "600 16px Trebuchet MS";
+      ctx.font = ultraCompact ? "600 14px Trebuchet MS" : "600 16px Trebuchet MS";
       ctx.fillStyle = "#bfeeff";
       ctx.fillText(tr("overlay.settings_title"), centerX, topY - 16);
 
@@ -2719,12 +2726,12 @@
         ctx.lineWidth = active ? 1.7 : 1.1;
         ctx.strokeRect(centerX - rowW / 2, y, rowW, rowH);
         ctx.textAlign = "left";
-        ctx.font = "600 14px Trebuchet MS";
+        ctx.font = ultraCompact ? "600 12px Trebuchet MS" : "600 14px Trebuchet MS";
         ctx.fillStyle = "rgba(186,226,248,0.92)";
-        ctx.fillText(row.label, centerX - rowW / 2 + 10, y + 20);
+        ctx.fillText(row.label, centerX - rowW / 2 + 10, y + (ultraCompact ? 16 : 20));
         ctx.textAlign = "right";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText(row.value, centerX + rowW / 2 - 10, y + 20);
+        ctx.fillText(row.value, centerX + rowW / 2 - 10, y + (ultraCompact ? 16 : 20));
 
         if (row.id === "pilot") {
           const valueLeftX = centerX + 34;
@@ -2740,13 +2747,13 @@
       }
 
       ctx.textAlign = "center";
-      ctx.font = "500 13px Trebuchet MS";
+      ctx.font = ultraCompact ? "500 12px Trebuchet MS" : "500 13px Trebuchet MS";
       ctx.fillStyle = "rgba(186,226,248,0.86)";
       const hintY = topY + rows.length * (rowH + gap) + 10;
       ctx.fillText(tr("overlay.settings_hint"), centerX, hintY);
 
       if (showPilotReference) {
-        ctx.font = "500 12px Trebuchet MS";
+        ctx.font = "500 11px Trebuchet MS";
         ctx.fillStyle = "rgba(210,238,252,0.84)";
         ctx.fillText(tr("overlay.pilot_reference", { reference: pilotReference }), centerX, hintY + 18);
         return hintY + 18;
@@ -2770,20 +2777,22 @@
         const centerY = config.canvas.height / 2;
         // Responsive vertical stack to keep clear spacing on small/large displays.
         const canvasHeight = config.canvas.height;
+        const ultraCompact = canvasHeight < 560;
         const compact = canvasHeight < 780;
         const large = canvasHeight > 980;
-        const logoRadius = 34;
-        const logoToTitle = compact ? 80 : large ? 90 : 86;
-        const titleToPress = compact ? 46 : large ? 56 : 52;
-        const pressToSeed = compact ? 30 : large ? 36 : 34;
-        const seedToOnboarding = compact ? 24 : large ? 32 : 28;
-        const onboardingRowGap = compact ? 16 : large ? 20 : 18;
-        const onboardingToSetup = compact ? 30 : large ? 38 : 34;
+        const logoRadius = ultraCompact ? 20 : 34;
+        const logoToTitle = ultraCompact ? 58 : compact ? 80 : large ? 90 : 86;
+        const titleToPress = ultraCompact ? 34 : compact ? 46 : large ? 56 : 52;
+        const pressToSeed = ultraCompact ? 20 : compact ? 30 : large ? 36 : 34;
+        const seedToOnboarding = ultraCompact ? 16 : compact ? 24 : large ? 32 : 28;
+        const onboardingRowGap = ultraCompact ? 13 : compact ? 16 : large ? 20 : 18;
+        const onboardingToSetup = ultraCompact ? 16 : compact ? 30 : large ? 38 : 34;
         const setupRows = this.getRunSettingsRows(model).length;
-        const setupPanelHeightBase = compact ? 206 : large ? 224 : 214;
-        const setupPanelHeight = setupPanelHeightBase + Math.max(0, setupRows - 4) * 38;
+        const setupPanelHeightBase = ultraCompact ? 172 : compact ? 206 : large ? 224 : 214;
+        const setupPanelHeight = setupPanelHeightBase + Math.max(0, setupRows - 4) * (ultraCompact ? 30 : 38);
         const edgeMargin = 26;
-        const extraBottomReserve = model.endlessUnlocked ? 8 : 36;
+        const extraBottomReserve = model.endlessUnlocked ? 8 : ultraCompact ? 20 : 36;
+        const onboardingLineCount = ultraCompact ? 1 : 3;
 
         const relativeStackHeight =
           logoRadius +
@@ -2791,7 +2800,7 @@
           titleToPress +
           pressToSeed +
           seedToOnboarding +
-          onboardingRowGap * 3 +
+          onboardingRowGap * onboardingLineCount +
           onboardingToSetup +
           setupPanelHeight +
           extraBottomReserve;
@@ -2815,24 +2824,26 @@
 
         this.drawStartLogo(centerX, logoY);
         this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, titleY);
-        ctx.font = "600 22px Trebuchet MS";
+        ctx.font = ultraCompact ? "600 16px Trebuchet MS" : "600 22px Trebuchet MS";
         ctx.fillStyle = "#d8f5ff";
         ctx.fillText(tr("overlay.press_enter_start"), centerX, infoPressY);
         ctx.fillStyle = "rgba(210,239,255,0.94)";
         ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, infoSeedY);
-        ctx.font = "600 14px Trebuchet MS";
+        ctx.font = ultraCompact ? "600 12px Trebuchet MS" : "600 14px Trebuchet MS";
         ctx.fillStyle = "rgba(174,238,209,0.94)";
         ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
-        ctx.font = "500 13px Trebuchet MS";
+        ctx.font = ultraCompact ? "500 11px Trebuchet MS" : "500 13px Trebuchet MS";
         ctx.fillStyle = "rgba(196,233,248,0.92)";
         ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + onboardingRowGap);
-        ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + onboardingRowGap * 2);
-        ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + onboardingRowGap * 3);
+        if (!ultraCompact) {
+          ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + onboardingRowGap * 2);
+          ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + onboardingRowGap * 3);
+        }
 
-        this.drawOverlayBlock(centerX, setupCenterY, 430, setupPanelHeight);
-        const modeBottomY = this.drawRunSettingsList(model, setupTopY + 34);
+        this.drawOverlayBlock(centerX, setupCenterY, Math.max(350, Math.min(430, config.canvas.width - 20)), setupPanelHeight);
+        const modeBottomY = this.drawRunSettingsList(model, setupTopY + (ultraCompact ? 26 : 34));
         if (!model.endlessUnlocked) {
-          ctx.font = "500 15px Trebuchet MS";
+          ctx.font = ultraCompact ? "500 12px Trebuchet MS" : "500 15px Trebuchet MS";
           ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
         }
       }
@@ -2883,16 +2894,17 @@
       }
 
       if (model.gameState === GAME_STATE.HANGAR) {
+        const compactHangar = config.canvas.height < 640;
         const centerX = config.canvas.width / 2;
-        const topY = 84;
-        const panelGap = 12;
-        const layoutX = 68;
+        const topY = compactHangar ? 56 : 84;
+        const panelGap = compactHangar ? 8 : 12;
+        const layoutX = compactHangar ? 22 : 68;
         const layoutW = config.canvas.width - layoutX * 2;
-        const topRowY = 150;
-        const availableRowsH = Math.max(360, config.canvas.height - topRowY - 64);
+        const topRowY = compactHangar ? 108 : 150;
+        const availableRowsH = Math.max(compactHangar ? 230 : 360, config.canvas.height - topRowY - (compactHangar ? 30 : 64));
         const idealBottomRowH = Math.floor(availableRowsH * 0.45);
-        const bottomRowH = Math.max(170, Math.min(220, idealBottomRowH));
-        const topRowH = Math.max(200, availableRowsH - panelGap - bottomRowH);
+        const bottomRowH = Math.max(compactHangar ? 118 : 170, Math.min(compactHangar ? 168 : 220, idealBottomRowH));
+        const topRowH = Math.max(compactHangar ? 126 : 200, availableRowsH - panelGap - bottomRowH);
         const bottomRowY = topRowY + topRowH + panelGap;
         const bottomRowSplit = 0.44;
         const totalGap = panelGap * 2;

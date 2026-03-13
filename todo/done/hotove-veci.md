@@ -1,5 +1,11 @@
 # Hotove veci
 
+- [x] Mobile touch UX hotfix: text selection block + compact low-height overlays
+  - [x] V `touch-mobile-ui` vypnute nechtene oznacovani textu a iOS touch-callout/highlight
+  - [x] Start overlay dostal ultra-compact variantu pro nizkou vysku (mensi fonty, kratsi onboarding, mensi setup panel)
+  - [x] End-run overlay je responsivni podle vysky/sirky canvasu (panel + footer + tap zony bez prekryvu)
+  - [x] Hangar panel layout ma compact fallback pro nizke landscape vysky, aby se panely nepretikaly
+
 - [x] Mobile full-space adaptation (no-crop) MVP
   - [x] Pridany adaptivni viewport runtime (`renderViewport`, `worldBounds`, `balanceViewport`) s dynamickym canvas resize
   - [x] iOS/mobile bere viewport z `visualViewport` a pointer/touch mapovani je vazane na aktualni world bounds

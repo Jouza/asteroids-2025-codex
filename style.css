@@ -619,6 +619,26 @@ strong {
   overflow: hidden;
   place-items: stretch;
   background: #02050b;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-mobile-ui * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.touch-mobile-ui input,
+.touch-mobile-ui textarea,
+.touch-mobile-ui select,
+.touch-mobile-ui button,
+.touch-mobile-ui label {
+  -webkit-user-select: auto;
+  user-select: auto;
+  -webkit-touch-callout: default;
 }
 
 .touch-mobile-ui .game-shell {
