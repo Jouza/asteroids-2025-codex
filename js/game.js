@@ -684,8 +684,16 @@
       if (!forceDesktopBaseline && isTouchMobile && typeof this.canvas?.getBoundingClientRect === "function") {
         const rect = this.canvas.getBoundingClientRect();
         if (rect && Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 0 && rect.height > 0) {
-          cssWidth = Math.max(240, Math.floor(rect.width));
-          cssHeight = Math.max(180, Math.floor(rect.height));
+          const rectW = Math.max(1, Math.floor(rect.width));
+          const rectH = Math.max(1, Math.floor(rect.height));
+          const viewportW = Math.max(1, Math.floor(viewport.width));
+          const viewportH = Math.max(1, Math.floor(viewport.height));
+          const saneWidth = rectW >= Math.floor(viewportW * 0.55);
+          const saneHeight = rectH >= Math.floor(viewportH * 0.55);
+          if (saneWidth && saneHeight) {
+            cssWidth = Math.max(240, rectW);
+            cssHeight = Math.max(180, rectH);
+          }
         }
       }
       const perf = this.model.performance || {};
@@ -742,21 +750,27 @@
         };
       }
       const win = this.canvas?.ownerDocument?.defaultView || (typeof window !== "undefined" ? window : null);
+      const candidates = [];
+      const pushCandidate = (w, h) => {
+        if (!Number.isFinite(Number(w)) || !Number.isFinite(Number(h))) return;
+        const width = Math.max(1, Math.floor(Number(w)));
+        const height = Math.max(1, Math.floor(Number(h)));
+        if (width < 120 || height < 120) return;
+        candidates.push({ width, height, area: width * height });
+      };
       const visualViewport = win?.visualViewport;
-      if (
-        visualViewport &&
-        Number.isFinite(Number(visualViewport.width)) &&
-        Number.isFinite(Number(visualViewport.height))
-      ) {
-        return {
-          width: Math.max(1, Math.floor(Number(visualViewport.width))),
-          height: Math.max(1, Math.floor(Number(visualViewport.height)))
-        };
+      if (visualViewport) {
+        pushCandidate(visualViewport.width, visualViewport.height);
       }
-      if (win && Number.isFinite(Number(win.innerWidth)) && Number.isFinite(Number(win.innerHeight))) {
+      if (win) {
+        pushCandidate(win.innerWidth, win.innerHeight);
+        pushCandidate(win.outerWidth, win.outerHeight);
+      }
+      if (candidates.length) {
+        candidates.sort((a, b) => b.area - a.area);
         return {
-          width: Math.max(1, Math.floor(Number(win.innerWidth))),
-          height: Math.max(1, Math.floor(Number(win.innerHeight)))
+          width: candidates[0].width,
+          height: candidates[0].height
         };
       }
       return {

@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] iOS rotation black-screen guard (landscape)
+  - [x] `getViewportInfo` ted vybira nejstabilnejsi viewport candidate (`visualViewport/inner/outer`) podle plochy
+  - [x] `updateAdaptiveViewport` ignoruje nesmyslne male `getBoundingClientRect` hodnoty pri rotaci
+  - [x] Pri podezrelych rect hodnotach se fallbackne na viewport dims, aby canvas nespadl na mini plochu/black screen
+
 - [x] iPhone 16 Pro overlay fit fix (START + VICTORY/GAME OVER)
   - [x] Pridan jednotny `overlayFitProfile` engine (`tiny/compact/normal`) pro texty, spacing a velikost panelu
   - [x] START overlay prepnut na fit-first stack s clampem onboarding linek (`3/2/1`) a responsivnim setup panelem
