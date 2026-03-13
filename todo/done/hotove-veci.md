@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] iOS touch stabilization + PRIMARY fire button rework
+  - [x] Touch watchdog resetuje stuck button stavy pri ztrate pointeru (`pointerId` uz neexistuje v `touchControls.pointers`)
+  - [x] Pridany hard reset touch vstupu pri `visibilitychange(hidden)`, `blur`, orientation gate switchi a game-state/device-mode prechodech
+  - [x] Touch primary fire presunuty z `THRUST` na nove `PRIMARY` tlacitko (hold-to-fire)
+  - [x] Touch HUD + i18n/help texty aktualizovany na layout `PRIMARY/SECONDARY/UTILITY`
+  - [x] Wrap v combatu/UFO updatech sjednocen na runtime `worldBounds` s guardem proti transient invalid viewport frame
+  - [x] Harness doplnen o PRIMARY fire flow, stuck-pointer recovery a world-bounds wrap regresni check
+
 - [x] iOS mobile viewport consistency hotfix (touch + bars)
   - [x] `getViewportInfo` uz nepouziva `outerWidth/outerHeight`, ktere na iOS davaly nekonzistentni pomer a letterbox efekt
   - [x] Viewport kandidati jsou ted jen stabilni zdroje (`visualViewport`, `innerWidth/innerHeight`, `documentElement.clientWidth/clientHeight`)

@@ -2578,13 +2578,31 @@ function runTests() {
     const thrust = layout.buttons.thrust;
     gameA.onTouchPointerDown(15, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
     gameA.updateTouchInputState(1 / 60);
-    assert(gameA.getTouchCombatActions().fireActive, "THRUST hold should activate touch primary auto-fire");
+    assert(!gameA.getTouchCombatActions().fireActive, "THRUST hold should not activate touch primary fire");
     gameA.onTouchPointerUp(15, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
+    const primary = layout.buttons.primary;
+    gameA.onTouchPointerDown(16, primary.x + primary.w * 0.5, primary.y + primary.h * 0.5);
+    gameA.updateTouchInputState(1 / 60);
+    assert(gameA.getTouchCombatActions().fireActive, "PRIMARY hold should activate touch primary fire");
+    gameA.onTouchPointerUp(16, primary.x + primary.w * 0.5, primary.y + primary.h * 0.5);
     gameA.updateTouchInputState(1 / 60);
     const released = gameA.getTouchCombatActions();
-    assert(!released.fireActive, "THRUST release should stop touch primary auto-fire");
+    assert(!released.fireActive, "PRIMARY release should stop touch primary fire");
     assert(!released.dashPressed, "Touch flow should not produce dashPressed in digital button schema");
     assert(!released.boostActive, "Touch flow should not produce boostActive in digital button schema");
+  });
+
+  tests.push(() => {
+    gameA.startGame(14905);
+    gameA.model.inputMode = "touch";
+    gameA.model.touchControls.inputMode = "touch";
+    const layout = gameA.getTouchLayout();
+    const thrust = layout.buttons.thrust;
+    gameA.onTouchPointerDown(19, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
+    assert(gameA.model.touchControls.buttons.thrust.down, "THRUST should be down after touch pointer press");
+    delete gameA.model.touchControls.pointers[19];
+    gameA.updateTouchInputState(1 / 60);
+    assert(!gameA.model.touchControls.buttons.thrust.down, "Missing pointer should reset stuck THRUST state");
   });
 
   tests.push(() => {
@@ -2616,8 +2634,24 @@ function runTests() {
   });
 
   tests.push(() => {
+    gameA.startGame(15163);
+    gameA.model.viewport.worldBounds = { width: 400, height: 280 };
+    gameA.config.canvas.width = 1200;
+    gameA.config.canvas.height = 900;
+    const ship = gameA.model.ship;
+    ship.x = 430;
+    ship.y = 140;
+    ship.vx = 0;
+    ship.vy = 0;
+    gameA.combatSystem.updateShip(0);
+    assert(ship.x < 0, "Ship wrap should use runtime worldBounds width instead of stale config canvas");
+  });
+
+  tests.push(() => {
     gameA.startGame(17172);
     gameA.model.inputMode = "touch";
+    gameA.lastTouchGameState = gameA.model.gameState;
+    gameA.lastTouchOrientationBlocked = Boolean(gameA.model.mobileUi?.orientationBlocked);
     gameA.model.touchControls.actions.secondaryPressed = true;
     gameA.model.touchControls.actions.utilityPressed = true;
     let secondaryCalls = 0;
@@ -2930,7 +2964,11 @@ function runTests() {
     const thrust = gameA.model.touchControls.layout.buttons.thrust;
     gameA.onTouchPointerDown(77, thrust.x + thrust.w * 0.5, thrust.y + thrust.h * 0.5);
     gameA.updateTouchInputState(1 / 60);
-    assert(gameA.getTouchCombatActions().fireActive, "After START CTA, THRUST hold should enable primary fire in PLAYING");
+    assert(!gameA.getTouchCombatActions().fireActive, "After START CTA, THRUST should not auto-fire in PLAYING");
+    const primary = gameA.model.touchControls.layout.buttons.primary;
+    gameA.onTouchPointerDown(78, primary.x + primary.w * 0.5, primary.y + primary.h * 0.5);
+    gameA.updateTouchInputState(1 / 60);
+    assert(gameA.getTouchCombatActions().fireActive, "After START CTA, PRIMARY hold should enable primary fire in PLAYING");
   });
 
   let passed = 0;

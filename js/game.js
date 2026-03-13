@@ -284,6 +284,7 @@
         thrust: { down: false, pointerId: null },
         turnLeft: { down: false, pointerId: null },
         turnRight: { down: false, pointerId: null },
+        primary: { down: false, pointerId: null },
         secondary: { down: false, pointerId: null },
         utility: { down: false, pointerId: null }
       },
@@ -521,6 +522,8 @@
       this.enemySystem = new EnemySystem(this);
       this.identityMigrationNoticePending = false;
       this.fullscreenRequestHandler = null;
+      this.lastTouchOrientationBlocked = false;
+      this.lastTouchGameState = this.model.gameState;
 
       this.attachPointerTracking();
       this.attachTouchControls();
@@ -654,6 +657,16 @@
 
       this.canvas.addEventListener("pointerup", release);
       this.canvas.addEventListener("pointercancel", release);
+      const doc = this.canvas.ownerDocument;
+      const view = doc?.defaultView;
+      if (doc?.addEventListener) {
+        doc.addEventListener("visibilitychange", () => {
+          if (doc.visibilityState === "hidden") this.resetTouchButtonsState(true);
+        });
+      }
+      if (view?.addEventListener) {
+        view.addEventListener("blur", () => this.resetTouchButtonsState(true));
+      }
     }
 
     clamp(value, min, max) {
@@ -672,6 +685,33 @@
       const touch = createDefaultTouchControlsState();
       touch.inputMode = this.model.inputMode || "keyboard_mouse";
       this.model.touchControls = touch;
+    }
+
+    resetTouchButtonsState(clearPointers = false) {
+      const touch = this.model.touchControls;
+      if (!touch) return;
+      for (const key of Object.keys(touch.buttons || {})) {
+        const button = touch.buttons[key];
+        if (!button) continue;
+        button.down = false;
+        button.pointerId = null;
+      }
+      touch.actions.secondaryPressed = false;
+      touch.actions.utilityPressed = false;
+      touch.actions.dashPressed = false;
+      touch.actions.boostActive = false;
+      touch.actions.fireActive = false;
+      touch.leftStick.active = false;
+      touch.leftStick.pointerId = null;
+      touch.rightStick.active = false;
+      touch.rightStick.pointerId = null;
+      touch.rightStick.aimNx = 0;
+      touch.rightStick.aimNy = 0;
+      touch.rightStick.aimMag = 0;
+      if (clearPointers) {
+        touch.pointers = {};
+        touch.pointerRoles = {};
+      }
     }
 
     updateAdaptiveViewport(forceDesktopBaseline = false) {
@@ -739,6 +779,23 @@
       const balanceArea = Math.max(1, Number(balance.width || 1) * Number(balance.height || 1));
       const normalization = Math.sqrt(balanceArea / worldArea);
       return Number(distance) * normalization;
+    }
+
+    getRuntimeWorldBounds() {
+      const world = this.model.viewport?.worldBounds;
+      const width = Math.floor(Number(world?.width));
+      const height = Math.floor(Number(world?.height));
+      if (Number.isFinite(width) && Number.isFinite(height) && width >= 120 && height >= 120) {
+        return { width, height, valid: true };
+      }
+      const fallbackWidth = Math.floor(Number(this.config?.canvas?.width) || 960);
+      const fallbackHeight = Math.floor(Number(this.config?.canvas?.height) || 720);
+      const fallbackValid = Number.isFinite(fallbackWidth) && Number.isFinite(fallbackHeight) && fallbackWidth >= 120 && fallbackHeight >= 120;
+      return {
+        width: fallbackWidth,
+        height: fallbackHeight,
+        valid: fallbackValid
+      };
     }
 
     getViewportInfo() {
@@ -880,10 +937,13 @@
       const buttonGap = this.clamp(Math.round(Math.min(width, height) * 0.014), 8, 16);
       const thrustW = this.clamp(Math.round(width * 0.24), 150, 250);
       const thrustH = this.clamp(Math.round(height * 0.16), 84, 140);
-      const rightW = this.clamp(Math.round(width * 0.16), 106, 180);
+      const rightClusterMaxW = Math.max(216, width - margin * 2);
+      const rightWCap = Math.max(72, Math.floor((rightClusterMaxW - buttonGap * 2) / 3));
+      const rightW = this.clamp(Math.round(width * 0.16), 72, Math.min(180, rightWCap));
       const rightH = this.clamp(Math.round(height * 0.12), 62, 94);
       const rightRightX = width - margin - rightW;
-      const rightLeftX = rightRightX - rightW - buttonGap;
+      const rightCenterX = rightRightX - rightW - buttonGap;
+      const rightLeftX = rightCenterX - rightW - buttonGap;
       const bottomY = height - margin - rightH;
       const upperY = bottomY - rightH - buttonGap;
       const thrustY = height - margin - thrustH;
@@ -899,12 +959,13 @@
         },
         buttons: {
           thrust: { x: margin, y: thrustY, w: thrustW, h: thrustH },
-          turnLeft: { x: rightLeftX, y: bottomY, w: rightW, h: rightH },
+          turnLeft: { x: rightCenterX, y: bottomY, w: rightW, h: rightH },
           turnRight: { x: rightRightX, y: bottomY, w: rightW, h: rightH },
-          secondary: { x: rightLeftX, y: upperY, w: rightW, h: rightH },
+          primary: { x: rightLeftX, y: upperY, w: rightW, h: rightH },
+          secondary: { x: rightCenterX, y: upperY, w: rightW, h: rightH },
           utility: { x: rightRightX, y: upperY, w: rightW, h: rightH },
           action: {
-            x: rightLeftX + (rightW * 2 + buttonGap) * 0.5,
+            x: rightCenterX + (rightW + buttonGap) * 0.5,
             y: bottomY - rightH * 0.4,
             radius: actionRadius
           }
@@ -1054,9 +1115,27 @@
       const touch = this.model.touchControls;
       if (!touch || this.model.inputMode !== "touch") return;
       touch.layout = this.getTouchLayout();
+      const orientationBlocked = Boolean(this.model.mobileUi?.orientationBlocked);
+      if (
+        this.lastTouchOrientationBlocked !== orientationBlocked ||
+        this.lastTouchGameState !== this.model.gameState
+      ) {
+        this.resetTouchButtonsState(true);
+      }
+      this.lastTouchOrientationBlocked = orientationBlocked;
+      this.lastTouchGameState = this.model.gameState;
+      const pointerMap = touch.pointers || {};
+      for (const key of Object.keys(touch.buttons || {})) {
+        const button = touch.buttons[key];
+        if (!button || button.pointerId == null) continue;
+        if (!Object.prototype.hasOwnProperty.call(pointerMap, button.pointerId)) {
+          button.down = false;
+          button.pointerId = null;
+        }
+      }
       touch.actions.boostActive = false;
       touch.actions.dashPressed = false;
-      touch.actions.fireActive = Boolean(touch.buttons?.thrust?.down);
+      touch.actions.fireActive = Boolean(touch.buttons?.primary?.down);
       if (this.model.gameState !== GAME_STATE.PLAYING) {
         touch.actions.fireActive = false;
         touch.actions.boostActive = false;
@@ -1139,6 +1218,7 @@
     onTouchPointerDown(pointerId, x, y) {
       const touch = this.model.touchControls;
       if (!touch) return;
+      touch.pointers[pointerId] = { id: pointerId, x, y };
       if (this.model.inputMode !== "touch") {
         this.model.inputMode = "touch";
         touch.inputMode = "touch";
@@ -1164,6 +1244,12 @@
         roleMap[pointerId] = "button_utility";
         return;
       }
+      if (!touch.buttons.primary.down && hitRect(buttons.primary)) {
+        touch.buttons.primary.down = true;
+        touch.buttons.primary.pointerId = pointerId;
+        roleMap[pointerId] = "button_primary";
+        return;
+      }
       if (!touch.buttons.turnLeft.down && hitRect(buttons.turnLeft)) {
         touch.buttons.turnLeft.down = true;
         touch.buttons.turnLeft.pointerId = pointerId;
@@ -1186,6 +1272,7 @@
     onTouchPointerMove(pointerId, x, y) {
       const touch = this.model.touchControls;
       if (!touch || !touch.layout) return;
+      touch.pointers[pointerId] = { id: pointerId, x, y };
       const role = touch.pointerRoles?.[pointerId];
       if (!role) return;
       const buttons = touch.layout.buttons || {};
@@ -1201,12 +1288,17 @@
         touch.buttons.secondary.down = hitRect(buttons.secondary);
       } else if (role === "button_utility" && touch.buttons.utility.pointerId === pointerId) {
         touch.buttons.utility.down = hitRect(buttons.utility);
+      } else if (role === "button_primary" && touch.buttons.primary.pointerId === pointerId) {
+        touch.buttons.primary.down = hitRect(buttons.primary);
       }
     }
 
     onTouchPointerUp(pointerId, x, y) {
       const touch = this.model.touchControls;
       if (!touch) return;
+      if (touch.pointers && Object.prototype.hasOwnProperty.call(touch.pointers, pointerId)) {
+        delete touch.pointers[pointerId];
+      }
       if (touch.pointerRoles && Object.prototype.hasOwnProperty.call(touch.pointerRoles, pointerId)) {
         delete touch.pointerRoles[pointerId];
       }
@@ -1229,6 +1321,10 @@
       if (touch.buttons.utility.pointerId === pointerId) {
         touch.buttons.utility.down = false;
         touch.buttons.utility.pointerId = null;
+      }
+      if (touch.buttons.primary.pointerId === pointerId) {
+        touch.buttons.primary.down = false;
+        touch.buttons.primary.pointerId = null;
       }
       this.handleTouchTapNavigation(x, y);
     }

@@ -233,6 +233,10 @@
       const g = this.game;
       const ship = g.model.ship;
       if (!ship) return;
+      const world = typeof g.getRuntimeWorldBounds === "function" ? g.getRuntimeWorldBounds() : null;
+      const worldWidth = Number(world?.width) || g.config.canvas.width;
+      const worldHeight = Number(world?.height) || g.config.canvas.height;
+      const canWrap = world?.valid !== false;
 
       const c = g.config;
       const profile = g.getCurrentFlightProfile();
@@ -281,7 +285,7 @@
 
       ship.x += ship.vx * dt;
       ship.y += ship.vy * dt;
-      wrapPosition(ship, c.canvas.width, c.canvas.height);
+      if (canWrap) wrapPosition(ship, worldWidth, worldHeight);
 
       if (ship.invulnMs > 0) {
         ship.invulnMs = Math.max(0, ship.invulnMs - dt * 1000);
@@ -290,24 +294,32 @@
 
     updateBullets(dt) {
       const g = this.game;
+      const world = typeof g.getRuntimeWorldBounds === "function" ? g.getRuntimeWorldBounds() : null;
+      const worldWidth = Number(world?.width) || g.config.canvas.width;
+      const worldHeight = Number(world?.height) || g.config.canvas.height;
+      const canWrap = world?.valid !== false;
       for (let i = g.model.bullets.length - 1; i >= 0; i -= 1) {
         const bullet = g.model.bullets[i];
         bullet.x += bullet.vx * dt;
         bullet.y += bullet.vy * dt;
         bullet.ttl -= dt;
-        wrapPosition(bullet, g.config.canvas.width, g.config.canvas.height);
+        if (canWrap) wrapPosition(bullet, worldWidth, worldHeight);
         if (bullet.ttl <= 0) g.model.bullets.splice(i, 1);
       }
     }
 
     updateEnemyBullets(dt) {
       const g = this.game;
+      const world = typeof g.getRuntimeWorldBounds === "function" ? g.getRuntimeWorldBounds() : null;
+      const worldWidth = Number(world?.width) || g.config.canvas.width;
+      const worldHeight = Number(world?.height) || g.config.canvas.height;
+      const canWrap = world?.valid !== false;
       for (let i = g.model.enemyBullets.length - 1; i >= 0; i -= 1) {
         const bullet = g.model.enemyBullets[i];
         bullet.x += bullet.vx * dt;
         bullet.y += bullet.vy * dt;
         bullet.ttl -= dt;
-        wrapPosition(bullet, g.config.canvas.width, g.config.canvas.height);
+        if (canWrap) wrapPosition(bullet, worldWidth, worldHeight);
         if (bullet.ttl <= 0) g.model.enemyBullets.splice(i, 1);
       }
     }
@@ -315,12 +327,16 @@
     updateAsteroids(dt) {
       const g = this.game;
       const ship = g.model.ship;
+      const world = typeof g.getRuntimeWorldBounds === "function" ? g.getRuntimeWorldBounds() : null;
+      const worldWidth = Number(world?.width) || g.config.canvas.width;
+      const worldHeight = Number(world?.height) || g.config.canvas.height;
+      const canWrap = world?.valid !== false;
 
       for (const asteroid of g.model.asteroids) {
         asteroid.x += asteroid.vx * dt;
         asteroid.y += asteroid.vy * dt;
         asteroid.rotation += asteroid.spin * dt;
-        wrapPosition(asteroid, g.config.canvas.width, g.config.canvas.height);
+        if (canWrap) wrapPosition(asteroid, worldWidth, worldHeight);
 
         asteroid.nearMissCooldown = Math.max(0, asteroid.nearMissCooldown - dt);
 
@@ -380,6 +396,10 @@
       const g = this.game;
       const ship = g.model.ship;
       if (!ship || g.model.gameState !== window.Asteroids.GAME_STATE.PLAYING) return;
+      const world = typeof g.getRuntimeWorldBounds === "function" ? g.getRuntimeWorldBounds() : null;
+      const worldWidth = Number(world?.width) || g.config.canvas.width;
+      const worldHeight = Number(world?.height) || g.config.canvas.height;
+      const canWrap = world?.valid !== false;
       const relays = Array.isArray(g.model.sentryRelays) ? g.model.sentryRelays : [];
       const drifters = Array.isArray(g.model.salvageDrifters) ? g.model.salvageDrifters : [];
       const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -425,7 +445,7 @@
         }
         drifter.x += drifter.vx * dt;
         drifter.y += drifter.vy * dt;
-        wrapPosition(drifter, g.config.canvas.width, g.config.canvas.height);
+        if (canWrap) wrapPosition(drifter, worldWidth, worldHeight);
         const dist = Math.hypot(ship.x - drifter.x, ship.y - drifter.y);
         if (dist <= drifter.captureRadius + ship.radius) {
           drifter.captureTimer += dt;

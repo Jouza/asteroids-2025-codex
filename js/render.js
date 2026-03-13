@@ -715,6 +715,14 @@
           scale: 1
         },
         {
+          key: "primary",
+          label: tr("touch.button.primary"),
+          down: touch.buttons?.primary?.down,
+          cooldown: model.shootTimer,
+          alpha: 0.9,
+          scale: 1
+        },
+        {
           key: "secondary",
           label: tr("touch.button.secondary"),
           down: touch.buttons?.secondary?.down,

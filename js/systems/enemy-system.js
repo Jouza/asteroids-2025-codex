@@ -103,6 +103,10 @@
       const ship = g.model.ship;
       const c = g.config;
       if (!ship) return;
+      const world = typeof g.getRuntimeWorldBounds === "function" ? g.getRuntimeWorldBounds() : null;
+      const worldWidth = Number(world?.width) || c.canvas.width;
+      const worldHeight = Number(world?.height) || c.canvas.height;
+      const canWrap = world?.valid !== false;
       const speedScale = this.getSectorScale(c.ufo.speedScalePerSector, c.ufo.speedScaleMaxBonus);
       const fireRateScale = this.getSectorScale(c.ufo.fireRateScalePerSector, c.ufo.fireRateScaleMaxBonus);
 
@@ -182,7 +186,7 @@
         ufo.phase = (ufo.phase ?? 0) + dt;
         ufo.x += ufo.vx * dt;
         ufo.y += ufo.vy * dt;
-        wrapPosition(ufo, c.canvas.width, c.canvas.height);
+        if (canWrap) wrapPosition(ufo, worldWidth, worldHeight);
 
         ufo.disabledTimer = Math.max(0, ufo.disabledTimer - dt);
         ufo.shootTimer = Math.max(0, ufo.shootTimer - dt);

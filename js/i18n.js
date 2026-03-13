@@ -22,10 +22,11 @@
       "overlay.settings_ship": "Ship",
       "overlay.settings_flight": "Flight model",
       "overlay.settings_hint": "Up/Down row, Left/Right change value, Enter start/restart",
-      "touch.hud.hint": "Touch: hold THRUST for drive + primary autofire, TURN L/R for rotation.",
+      "touch.hud.hint": "Touch: hold THRUST to drive, TURN L/R to rotate, hold PRIMARY to fire.",
       "touch.button.thrust": "THRUST",
       "touch.button.turn_left": "TURN L",
       "touch.button.turn_right": "TURN R",
+      "touch.button.primary": "PRIMARY",
       "touch.button.secondary": "SECONDARY",
       "touch.button.utility": "UTILITY",
       "touch.button.action.start": "START",
@@ -495,7 +496,7 @@
       "help.card.touch_controls_mvp.name": "Touch Controls (MVP)",
       "help.card.touch_controls_mvp.tag": "Mobile input",
       "help.card.touch_controls_mvp.line":
-        "Touch uses digital buttons: THRUST on the left, TURN L and TURN R on the right, and SECONDARY/UTILITY above. Primary auto-fire runs while THRUST is held.",
+        "Touch uses digital buttons: THRUST on the left, TURN L and TURN R on the right, with PRIMARY/SECONDARY/UTILITY in the upper-right row. Hold PRIMARY to fire.",
       "help.card.touch_controls_mvp.impact":
         "<strong>Impact:</strong> full combat flow is playable on phone/tablet without changing damage, cooldown, or economy rules.",
       "help.card.mobile_landscape_mode.name": "Mobile Landscape Mode",
