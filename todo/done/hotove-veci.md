@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] iOS mobile viewport consistency hotfix (touch + bars)
+  - [x] `getViewportInfo` uz nepouziva `outerWidth/outerHeight`, ktere na iOS davaly nekonzistentni pomer a letterbox efekt
+  - [x] Viewport kandidati jsou ted jen stabilni zdroje (`visualViewport`, `innerWidth/innerHeight`, `documentElement.clientWidth/clientHeight`)
+  - [x] V `touch-mobile-ui` odstraneno `object-fit: contain` z `#gameCanvas`, aby touch plocha a render plocha zustaly 1:1 bez vnitrnich pruhu
+
 - [x] iOS rotation black-screen guard (landscape)
   - [x] `getViewportInfo` ted vybira nejstabilnejsi viewport candidate (`visualViewport/inner/outer`) podle plochy
   - [x] `updateAdaptiveViewport` ignoruje nesmyslne male `getBoundingClientRect` hodnoty pri rotaci

@@ -764,7 +764,10 @@
       }
       if (win) {
         pushCandidate(win.innerWidth, win.innerHeight);
-        pushCandidate(win.outerWidth, win.outerHeight);
+      }
+      const docEl = this.canvas?.ownerDocument?.documentElement;
+      if (docEl) {
+        pushCandidate(docEl.clientWidth, docEl.clientHeight);
       }
       if (candidates.length) {
         candidates.sort((a, b) => b.area - a.area);

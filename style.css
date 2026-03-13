@@ -719,7 +719,6 @@ strong {
   border: 0;
   box-shadow: none;
   background: #02050b;
-  object-fit: contain;
 }
 
 .touch-mobile-ui .install-hint {
