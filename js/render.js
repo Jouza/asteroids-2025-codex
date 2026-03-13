@@ -2314,6 +2314,61 @@
       return startY + (lines.length - 1) * lineHeight;
     }
 
+    fitTextToWidth(text, font, maxWidth) {
+      const { ctx } = this;
+      if (!Number.isFinite(maxWidth) || maxWidth <= 0) return String(text ?? "");
+      const source = String(text ?? "");
+      ctx.save();
+      ctx.font = font;
+      if (ctx.measureText(source).width <= maxWidth) {
+        ctx.restore();
+        return source;
+      }
+      const ellipsis = "...";
+      let low = 0;
+      let high = source.length;
+      while (low < high) {
+        const mid = Math.ceil((low + high) / 2);
+        const candidate = `${source.slice(0, mid)}${ellipsis}`;
+        if (ctx.measureText(candidate).width <= maxWidth) low = mid;
+        else high = mid - 1;
+      }
+      const clipped = `${source.slice(0, Math.max(0, low)).trimEnd()}${ellipsis}`;
+      ctx.restore();
+      return clipped;
+    }
+
+    getOverlayFitProfile(canvasW, canvasH, gameState = "") {
+      const width = Math.max(320, Math.floor(Number(canvasW) || 960));
+      const height = Math.max(220, Math.floor(Number(canvasH) || 720));
+      const tiny = height <= 440 || width <= 760;
+      const compact = !tiny && (height <= 560 || width <= 920);
+      const mode = tiny ? "tiny" : compact ? "compact" : "normal";
+      const profile = {
+        mode,
+        titleFontPx: mode === "tiny" ? 22 : mode === "compact" ? 28 : 38,
+        bodyFontPx: mode === "tiny" ? 11 : mode === "compact" ? 12 : 13,
+        rowHeight: mode === "tiny" ? 24 : mode === "compact" ? 27 : 30,
+        gap: mode === "tiny" ? 5 : mode === "compact" ? 7 : 8,
+        panelW: Math.max(320, Math.min(mode === "normal" ? 730 : 640, width - 18)),
+        panelH: Math.max(mode === "tiny" ? 286 : 320, Math.min(mode === "normal" ? 430 : 390, height - 44)),
+        maxOnboardingLines: mode === "tiny" ? 1 : mode === "compact" ? 2 : 3,
+        footerOffset: mode === "tiny" ? 30 : mode === "compact" ? 34 : 38
+      };
+      if (gameState === GAME_STATE.START) {
+        profile.panelW = Math.max(320, Math.min(430, width - 18));
+        profile.panelH = Math.max(mode === "tiny" ? 156 : 182, Math.min(mode === "normal" ? 224 : 204, height * 0.42));
+      }
+      return profile;
+    }
+
+    getOverlayCanvasSize(model) {
+      const fromModel = model?.viewport?.worldBounds;
+      const width = Math.max(1, Math.floor(Number(fromModel?.width) || Number(this.config.canvas.width) || 960));
+      const height = Math.max(1, Math.floor(Number(fromModel?.height) || Number(this.config.canvas.height) || 720));
+      return { width, height };
+    }
+
     formatSignedInteger(value) {
       const number = Math.floor(Number(value) || 0);
       return number > 0 ? `+${number}` : String(number);
@@ -2398,21 +2453,22 @@
       return index >= 0 ? index : 0;
     }
 
-    drawEndSummaryHeader(centerX, y, pageId) {
+    drawEndSummaryHeader(centerX, y, pageId, profile = null) {
       const { ctx } = this;
+      const fit = profile || this.getOverlayFitProfile(this.config.canvas.width, this.config.canvas.height, "");
       const pages = this.getEndSummaryPages();
       const index = this.getEndSummaryPageIndex(pageId);
       const active = pages[index];
       ctx.textAlign = "center";
-      ctx.font = "600 15px Trebuchet MS";
+      ctx.font = `600 ${Math.max(12, fit.bodyFontPx + 2)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(190,236,255,0.92)";
       ctx.fillText(tr(active.labelKey), centerX, y);
-      ctx.font = "500 12px Trebuchet MS";
+      ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(170,218,242,0.85)";
       ctx.fillText(
         tr("overlay.end_summary.page_indicator", { current: index + 1, total: pages.length }),
         centerX,
-        y + 16
+        y + Math.max(14, fit.bodyFontPx + 2)
       );
     }
 
@@ -2423,17 +2479,19 @@
       return resolved;
     }
 
-    drawEndSummaryOverviewPage(summary, centerX, startY, isVictory = false) {
+    drawEndSummaryOverviewPage(summary, centerX, startY, isVictory = false, profile = null) {
       const { ctx } = this;
+      const fit = profile || this.getOverlayFitProfile(this.config.canvas.width, this.config.canvas.height, "");
+      const textMaxW = Math.max(320, fit.panelW - 56);
       let y = startY;
-      ctx.font = "600 20px Trebuchet MS";
+      ctx.font = `600 ${Math.max(14, fit.bodyFontPx + 5)}px Trebuchet MS`;
       ctx.fillStyle = "#d8f5ff";
       ctx.fillText(tr("overlay.score", { score: summary.score ?? 0 }), centerX, y);
-      y += 28;
-      ctx.font = "500 15px Trebuchet MS";
+      y += Math.max(18, fit.bodyFontPx + 10);
+      ctx.font = `500 ${Math.max(12, fit.bodyFontPx + 2)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(206,238,255,0.95)";
       ctx.fillText(tr("overlay.sector_cleared", { sector: summary.sector ?? 1 }), centerX, y);
-      y += 24;
+      y += Math.max(16, fit.bodyFontPx + 8);
       y = this.drawWrappedText(
         tr("overlay.identity_status", {
           pilot: summary.identity?.pilot || "-",
@@ -2441,11 +2499,11 @@
         }),
         centerX,
         y,
-        660,
-        22,
+        textMaxW,
+        Math.max(14, fit.bodyFontPx + 3),
         2
       );
-      y += 24;
+      y += Math.max(12, fit.bodyFontPx + 2);
       y = this.drawWrappedText(
         tr("overlay.build", {
           primary: summary.loadout?.primary || "-",
@@ -2454,55 +2512,67 @@
         }),
         centerX,
         y,
-        660,
-        22,
+        textMaxW,
+        Math.max(14, fit.bodyFontPx + 3),
         2
       );
-      y += 26;
+      y += Math.max(14, fit.bodyFontPx + 3);
       ctx.fillText(
-        tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? 0).toFixed(1) }),
+        this.fitTextToWidth(tr("overlay.runtime", { seconds: (summary.runtimeSeconds ?? 0).toFixed(1) }), ctx.font, textMaxW),
         centerX,
         y
       );
-      y += 24;
+      y += Math.max(14, fit.bodyFontPx + 3);
       ctx.fillText(
-        tr("overlay.end_summary.overview_progress", {
-          missions: Math.max(0, Number(summary.missionsCompleted) || 0),
-          bosses: Math.max(0, Number(summary.miniBossKills) || 0),
-          salvage: Math.max(0, Number(summary.salvageParts) || 0)
-        }),
+        this.fitTextToWidth(
+          tr("overlay.end_summary.overview_progress", {
+            missions: Math.max(0, Number(summary.missionsCompleted) || 0),
+            bosses: Math.max(0, Number(summary.miniBossKills) || 0),
+            salvage: Math.max(0, Number(summary.salvageParts) || 0)
+          }),
+          ctx.font,
+          textMaxW
+        ),
         centerX,
         y
       );
       if (isVictory) {
-        y += 28;
+        y += Math.max(16, fit.bodyFontPx + 5);
         const statusKey = summary.statusKey || "overlay.campaign_complete";
         ctx.fillStyle = "rgba(255,231,168,0.95)";
-        ctx.fillText(tr(statusKey), centerX, y);
+        ctx.fillText(this.fitTextToWidth(tr(statusKey), ctx.font, textMaxW), centerX, y);
         const finalRewards = summary.finalClearRewards;
         if (finalRewards) {
-          y += 28;
+          y += Math.max(16, fit.bodyFontPx + 5);
           ctx.fillStyle = "rgba(194,237,255,0.95)";
-          ctx.font = "600 16px Trebuchet MS";
+          ctx.font = `600 ${Math.max(12, fit.bodyFontPx + 1)}px Trebuchet MS`;
           ctx.fillText(tr("overlay.end_summary.final_rewards_title"), centerX, y);
-          y += 19;
-          ctx.font = "500 13px Trebuchet MS";
+          y += Math.max(14, fit.bodyFontPx + 2);
+          ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 1)}px Trebuchet MS`;
           ctx.fillStyle = "rgba(216,245,255,0.95)";
           ctx.fillText(
-            tr("overlay.end_summary.final_rewards_mode", {
-              mode: finalRewards.mode === "boss_rush" ? tr("game.run_mode.boss_rush") : tr("game.run_mode.campaign")
-            }),
+            this.fitTextToWidth(
+              tr("overlay.end_summary.final_rewards_mode", {
+                mode: finalRewards.mode === "boss_rush" ? tr("game.run_mode.boss_rush") : tr("game.run_mode.campaign")
+              }),
+              ctx.font,
+              textMaxW
+            ),
             centerX,
             y
           );
-          y += 17;
+          y += Math.max(13, fit.bodyFontPx + 1);
           ctx.fillText(
-            tr("overlay.end_summary.final_rewards_values", {
-              credits: Math.max(0, Math.floor(Number(finalRewards.credits) || 0)),
-              salvage: Math.max(0, Math.floor(Number(finalRewards.salvage) || 0)),
-              score: Math.max(0, Math.floor(Number(finalRewards.score) || 0)),
-              drops: Math.max(0, Math.floor(Number(finalRewards.dropsCount) || 0))
-            }),
+            this.fitTextToWidth(
+              tr("overlay.end_summary.final_rewards_values", {
+                credits: Math.max(0, Math.floor(Number(finalRewards.credits) || 0)),
+                salvage: Math.max(0, Math.floor(Number(finalRewards.salvage) || 0)),
+                score: Math.max(0, Math.floor(Number(finalRewards.score) || 0)),
+                drops: Math.max(0, Math.floor(Number(finalRewards.dropsCount) || 0))
+              }),
+              ctx.font,
+              textMaxW
+            ),
             centerX,
             y
           );
@@ -2511,35 +2581,38 @@
       return y;
     }
 
-    drawEndSummaryDropsDamagePage(summary, centerX, startY) {
+    drawEndSummaryDropsDamagePage(summary, centerX, startY, profile = null) {
       const { ctx } = this;
+      const fit = profile || this.getOverlayFitProfile(this.config.canvas.width, this.config.canvas.height, "");
+      const textMaxW = Math.max(320, fit.panelW - 56);
       let y = startY;
       const totals = summary.runSummary?.damageTakenTotal || {};
       const shieldAbsorb = Math.max(0, Number(totals.shieldAbsorb) || 0);
       const hullDamage = Math.max(0, Number(totals.hullDamage) || 0);
       ctx.textAlign = "center";
-      ctx.font = "600 16px Trebuchet MS";
+      ctx.font = `600 ${Math.max(12, fit.bodyFontPx + 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(194,237,255,0.95)";
       ctx.fillText(tr("overlay.end_summary.damage_title"), centerX, y);
-      y += 22;
-      ctx.font = "500 14px Trebuchet MS";
+      y += Math.max(14, fit.bodyFontPx + 3);
+      ctx.font = `500 ${Math.max(10, fit.bodyFontPx + 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(216,245,255,0.95)";
-      ctx.fillText(tr("overlay.end_summary.damage_shield", { value: shieldAbsorb.toFixed(1) }), centerX, y);
-      y += 18;
-      ctx.fillText(tr("overlay.end_summary.damage_hull", { value: hullDamage.toFixed(1) }), centerX, y);
-      y += 30;
-      ctx.font = "600 16px Trebuchet MS";
+      ctx.fillText(this.fitTextToWidth(tr("overlay.end_summary.damage_shield", { value: shieldAbsorb.toFixed(1) }), ctx.font, textMaxW), centerX, y);
+      y += Math.max(12, fit.bodyFontPx + 1);
+      ctx.fillText(this.fitTextToWidth(tr("overlay.end_summary.damage_hull", { value: hullDamage.toFixed(1) }), ctx.font, textMaxW), centerX, y);
+      y += Math.max(16, fit.bodyFontPx + 5);
+      ctx.font = `600 ${Math.max(12, fit.bodyFontPx + 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(194,237,255,0.95)";
       ctx.fillText(tr("overlay.end_summary.drop_title"), centerX, y);
-      y += 22;
+      y += Math.max(14, fit.bodyFontPx + 3);
       const topDrops = Array.isArray(summary.runSummary?.topDrops) ? summary.runSummary.topDrops : [];
-      ctx.font = "500 13px Trebuchet MS";
+      ctx.font = `500 ${Math.max(10, fit.bodyFontPx)}px Trebuchet MS`;
       if (!topDrops.length) {
         ctx.fillStyle = "rgba(170,214,236,0.86)";
         ctx.fillText(tr("overlay.end_summary.no_drops"), centerX, y);
         return y;
       }
-      for (const drop of topDrops.slice(0, 6)) {
+      const maxDrops = fit.mode === "tiny" ? 4 : fit.mode === "compact" ? 5 : 6;
+      for (const drop of topDrops.slice(0, maxDrops)) {
         ctx.fillStyle = "rgba(216,245,255,0.95)";
         const line = tr("overlay.end_summary.drop_row", {
           rarity: drop.rarityLabel || "Common",
@@ -2548,28 +2621,31 @@
           source: this.getEndSummarySourceLabel(drop.source || "unknown"),
           sector: Math.max(1, Math.floor(Number(drop.sector) || 1))
         });
-        y = this.drawWrappedText(line, centerX, y, 660, 16, 2) + 14;
+        y = this.drawWrappedText(this.fitTextToWidth(line, ctx.font, textMaxW), centerX, y, textMaxW, Math.max(12, fit.bodyFontPx + 1), 2) + Math.max(8, fit.bodyFontPx);
       }
       return y;
     }
 
-    drawEndSummaryTimelineFactionPage(summary, centerX, startY) {
+    drawEndSummaryTimelineFactionPage(summary, centerX, startY, profile = null) {
       const { ctx } = this;
+      const fit = profile || this.getOverlayFitProfile(this.config.canvas.width, this.config.canvas.height, "");
+      const textMaxW = Math.max(320, fit.panelW - 56);
       let y = startY;
       const missionTimeline = Array.isArray(summary.runSummary?.missionTimeline) ? summary.runSummary.missionTimeline : [];
       ctx.textAlign = "center";
-      ctx.font = "600 16px Trebuchet MS";
+      ctx.font = `600 ${Math.max(12, fit.bodyFontPx + 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(194,237,255,0.95)";
       ctx.fillText(tr("overlay.end_summary.timeline_title"), centerX, y);
-      y += 20;
-      ctx.font = "500 12px Trebuchet MS";
+      y += Math.max(13, fit.bodyFontPx + 2);
+      ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 1)}px Trebuchet MS`;
       if (!missionTimeline.length) {
         ctx.fillStyle = "rgba(170,214,236,0.86)";
         ctx.fillText(tr("overlay.end_summary.no_timeline"), centerX, y);
-        y += 20;
+        y += Math.max(12, fit.bodyFontPx + 2);
       } else {
         ctx.fillStyle = "rgba(216,245,255,0.95)";
-        for (const entry of missionTimeline.slice(-6)) {
+        const maxTimelineRows = fit.mode === "tiny" ? 4 : fit.mode === "compact" ? 5 : 6;
+        for (const entry of missionTimeline.slice(-maxTimelineRows)) {
           const line = tr("overlay.end_summary.timeline_row", {
             sector: Math.max(1, Math.floor(Number(entry.sector) || 1)),
             label: entry.label || String(entry.type || "MISSION").toUpperCase(),
@@ -2579,18 +2655,18 @@
             sh: Math.max(0, Number(entry.shieldDamageTaken) || 0).toFixed(1),
             hu: Math.max(0, Number(entry.hullDamageTaken) || 0).toFixed(1)
           });
-          y = this.drawWrappedText(line, centerX, y, 660, 15, 2) + 10;
+          y = this.drawWrappedText(this.fitTextToWidth(line, ctx.font, textMaxW), centerX, y, textMaxW, Math.max(11, fit.bodyFontPx), 2) + Math.max(7, fit.bodyFontPx - 1);
         }
       }
 
       const factionSummary = summary.factionSummary;
       if (factionSummary && Array.isArray(factionSummary.byFaction) && factionSummary.byFaction.length > 0) {
         y += 8;
-        ctx.font = "600 15px Trebuchet MS";
+        ctx.font = `600 ${Math.max(11, fit.bodyFontPx + 1)}px Trebuchet MS`;
         ctx.fillStyle = "rgba(196,238,255,0.9)";
         ctx.fillText(tr("overlay.faction_summary.title"), centerX, y);
-        y += 18;
-        ctx.font = "500 12px Trebuchet MS";
+        y += Math.max(12, fit.bodyFontPx + 1);
+        ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 1)}px Trebuchet MS`;
         ctx.fillStyle = "rgba(216,245,255,0.9)";
         for (const faction of factionSummary.byFaction) {
           const line = tr("overlay.faction_summary.row", {
@@ -2599,8 +2675,8 @@
             end: faction.endRep,
             delta: this.formatSignedInteger(faction.deltaRep)
           });
-          ctx.fillText(line, centerX, y);
-          y += 15;
+          ctx.fillText(this.fitTextToWidth(line, ctx.font, textMaxW), centerX, y);
+          y += Math.max(11, fit.bodyFontPx);
         }
       }
       return y;
@@ -2608,41 +2684,46 @@
 
     drawEndRunOverlay(model, summary, titleKey, isVictory = false) {
       const { ctx, config } = this;
-      const cx = config.canvas.width / 2;
-      const cy = config.canvas.height / 2;
+      const overlayCanvas = this.getOverlayCanvasSize(model);
+      const profile = this.getOverlayFitProfile(overlayCanvas.width, overlayCanvas.height, model?.gameState || "");
+      const cx = overlayCanvas.width / 2;
+      const cy = overlayCanvas.height / 2;
       const touchUi = model.touchControls?.ui;
-      const compact = config.canvas.height < 560;
-      const panelW = Math.max(340, Math.min(730, config.canvas.width - 20));
-      const panelH = Math.max(300, Math.min(430, config.canvas.height - 56));
-      const panelCenterY = cy + (compact ? 14 : 42);
+      const compact = profile.mode !== "normal";
+      const panelW = profile.panelW;
+      const panelH = profile.panelH;
+      const panelCenterY = cy + (profile.mode === "tiny" ? 10 : compact ? 22 : 42);
       this.drawOverlayBlock(cx, panelCenterY, panelW, panelH);
       ctx.textAlign = "center";
       ctx.fillStyle = "#d8f5ff";
-      ctx.font = compact ? "700 24px Trebuchet MS" : "700 38px Trebuchet MS";
-      ctx.fillText(tr(titleKey), cx, compact ? 34 : cy - 142);
+      ctx.font = `700 ${profile.titleFontPx}px Trebuchet MS`;
+      ctx.fillText(this.fitTextToWidth(tr(titleKey), ctx.font, panelW - 36), cx, profile.mode === "tiny" ? 30 : compact ? 38 : cy - 142);
 
       const pageId = model.overlayEndSummaryPage || "overview";
-      this.drawEndSummaryHeader(cx, compact ? 58 : cy - 110, pageId);
-      const contentTop = compact ? 86 : cy - 72;
-      if (pageId === "drops_damage") this.drawEndSummaryDropsDamagePage(summary, cx, contentTop);
-      else if (pageId === "timeline_faction") this.drawEndSummaryTimelineFactionPage(summary, cx, contentTop);
-      else this.drawEndSummaryOverviewPage(summary, cx, contentTop, isVictory);
+      this.drawEndSummaryHeader(cx, profile.mode === "tiny" ? 52 : compact ? 60 : cy - 110, pageId, profile);
+      const contentTop = profile.mode === "tiny" ? 76 : compact ? 90 : cy - 72;
+      if (pageId === "drops_damage") this.drawEndSummaryDropsDamagePage(summary, cx, contentTop, profile);
+      else if (pageId === "timeline_faction") this.drawEndSummaryTimelineFactionPage(summary, cx, contentTop, profile);
+      else this.drawEndSummaryOverviewPage(summary, cx, contentTop, isVictory, profile);
 
-      const footerY = Math.max(24, config.canvas.height - 38);
-      ctx.font = compact ? "500 11px Trebuchet MS" : "500 12px Trebuchet MS";
+      const footerY = Math.max(24, overlayCanvas.height - profile.footerOffset);
+      ctx.font = `500 ${Math.max(10, profile.bodyFontPx - 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(180,223,244,0.9)";
       ctx.fillText(tr("overlay.end_summary.switch_hint"), cx, footerY);
       if (touchUi) {
-        const zoneW = 220;
-        const zoneH = compact ? 34 : 44;
+        const zoneW = Math.max(138, Math.min(220, Math.floor((panelW - 48) / 2)));
+        const zoneH = profile.mode === "tiny" ? 30 : compact ? 34 : 44;
+        const leftX = Math.max(10, cx - zoneW - 20);
+        const rightX = Math.min(overlayCanvas.width - zoneW - 10, cx + 20);
+        const zoneY = Math.max(8, footerY - zoneH - 8);
         touchUi.endSummaryTapZones = {
-          left: { x: cx - zoneW - 20, y: footerY - zoneH - 8, w: zoneW, h: zoneH },
-          right: { x: cx + 20, y: footerY - zoneH - 8, w: zoneW, h: zoneH }
+          left: { x: leftX, y: zoneY, w: zoneW, h: zoneH },
+          right: { x: rightX, y: zoneY, w: zoneW, h: zoneH }
         };
       }
-      ctx.font = compact ? "600 14px Trebuchet MS" : "600 17px Trebuchet MS";
+      ctx.font = `600 ${Math.max(12, profile.bodyFontPx + 2)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(255,231,168,0.95)";
-      ctx.fillText(tr("overlay.enter_new_run"), cx, Math.min(config.canvas.height - 10, footerY + 18));
+      ctx.fillText(tr("overlay.enter_new_run"), cx, Math.min(overlayCanvas.height - 10, footerY + Math.max(14, profile.bodyFontPx + 3)));
     }
 
     getRunSettingsRows(model) {
@@ -2682,24 +2763,25 @@
       ];
     }
 
-    drawRunSettingsList(model, centerY) {
+    drawRunSettingsList(model, centerY, profile = null) {
       const { ctx, config } = this;
       const centerX = config.canvas.width / 2;
       const pilotId = model.identity?.pilotId;
       const pilotReference = tr(`identity.pilot.${pilotId}.reference`);
       const rows = this.getRunSettingsRows(model);
       const selected = Math.max(0, Math.min(rows.length - 1, model.overlaySettingsRow ?? 0));
-      const ultraCompact = config.canvas.height < 560;
-      const rowW = Math.max(320, Math.min(420, config.canvas.width - (ultraCompact ? 24 : 38)));
-      const rowH = ultraCompact ? 24 : 30;
-      const gap = ultraCompact ? 5 : 8;
+      const fit = profile || this.getOverlayFitProfile(config.canvas.width, config.canvas.height, GAME_STATE.START);
+      const ultraCompact = fit.mode === "tiny";
+      const rowW = Math.max(320, Math.min(Math.max(350, fit.panelW - 10), config.canvas.width - (ultraCompact ? 24 : 38)));
+      const rowH = fit.rowHeight;
+      const gap = fit.gap;
       const topY = centerY;
       const pointer = model.pointer || { inside: false, x: 0, y: 0 };
       const touchUi = model.touchControls?.ui;
       if (touchUi) touchUi.overlayRows = [];
       let showPilotReference = false;
       ctx.textAlign = "center";
-      ctx.font = ultraCompact ? "600 14px Trebuchet MS" : "600 16px Trebuchet MS";
+      ctx.font = `600 ${Math.max(12, fit.bodyFontPx + 2)}px Trebuchet MS`;
       ctx.fillStyle = "#bfeeff";
       ctx.fillText(tr("overlay.settings_title"), centerX, topY - 16);
 
@@ -2726,12 +2808,15 @@
         ctx.lineWidth = active ? 1.7 : 1.1;
         ctx.strokeRect(centerX - rowW / 2, y, rowW, rowH);
         ctx.textAlign = "left";
-        ctx.font = ultraCompact ? "600 12px Trebuchet MS" : "600 14px Trebuchet MS";
+        ctx.font = `600 ${Math.max(11, fit.bodyFontPx)}px Trebuchet MS`;
         ctx.fillStyle = "rgba(186,226,248,0.92)";
-        ctx.fillText(row.label, centerX - rowW / 2 + 10, y + (ultraCompact ? 16 : 20));
+        const rowTextBaseline = y + Math.max(16, rowH - 8);
+        const labelMaxW = Math.max(90, Math.floor(rowW * 0.42));
+        ctx.fillText(this.fitTextToWidth(row.label, ctx.font, labelMaxW), centerX - rowW / 2 + 10, rowTextBaseline);
         ctx.textAlign = "right";
         ctx.fillStyle = "#d8f5ff";
-        ctx.fillText(row.value, centerX + rowW / 2 - 10, y + (ultraCompact ? 16 : 20));
+        const valueMaxW = Math.max(120, Math.floor(rowW * 0.5));
+        ctx.fillText(this.fitTextToWidth(row.value, ctx.font, valueMaxW), centerX + rowW / 2 - 10, rowTextBaseline);
 
         if (row.id === "pilot") {
           const valueLeftX = centerX + 34;
@@ -2747,15 +2832,15 @@
       }
 
       ctx.textAlign = "center";
-      ctx.font = ultraCompact ? "500 12px Trebuchet MS" : "500 13px Trebuchet MS";
+      ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 1)}px Trebuchet MS`;
       ctx.fillStyle = "rgba(186,226,248,0.86)";
       const hintY = topY + rows.length * (rowH + gap) + 10;
-      ctx.fillText(tr("overlay.settings_hint"), centerX, hintY);
+      ctx.fillText(this.fitTextToWidth(tr("overlay.settings_hint"), ctx.font, rowW - 12), centerX, hintY);
 
       if (showPilotReference) {
-        ctx.font = "500 11px Trebuchet MS";
+        ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 2)}px Trebuchet MS`;
         ctx.fillStyle = "rgba(210,238,252,0.84)";
-        ctx.fillText(tr("overlay.pilot_reference", { reference: pilotReference }), centerX, hintY + 18);
+        ctx.fillText(this.fitTextToWidth(tr("overlay.pilot_reference", { reference: pilotReference }), ctx.font, rowW - 12), centerX, hintY + 18);
         return hintY + 18;
       }
 
@@ -2764,35 +2849,36 @@
 
     drawOverlay(model) {
       const { ctx, config } = this;
+      const overlayCanvas = this.getOverlayCanvasSize(model);
       ctx.save();
       ctx.fillStyle = "rgba(0, 0, 0, 0.36)";
-      ctx.fillRect(0, 0, config.canvas.width, config.canvas.height);
+      ctx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
       ctx.fillStyle = "#d8f5ff";
       ctx.textAlign = "center";
       ctx.font = "700 38px Trebuchet MS";
 
       if (model.gameState === GAME_STATE.START) {
-        const centerX = config.canvas.width / 2;
-        const centerY = config.canvas.height / 2;
+        const fit = this.getOverlayFitProfile(overlayCanvas.width, overlayCanvas.height, GAME_STATE.START);
+        const centerX = overlayCanvas.width / 2;
+        const centerY = overlayCanvas.height / 2;
         // Responsive vertical stack to keep clear spacing on small/large displays.
-        const canvasHeight = config.canvas.height;
-        const ultraCompact = canvasHeight < 560;
-        const compact = canvasHeight < 780;
-        const large = canvasHeight > 980;
-        const logoRadius = ultraCompact ? 20 : 34;
-        const logoToTitle = ultraCompact ? 58 : compact ? 80 : large ? 90 : 86;
-        const titleToPress = ultraCompact ? 34 : compact ? 46 : large ? 56 : 52;
-        const pressToSeed = ultraCompact ? 20 : compact ? 30 : large ? 36 : 34;
-        const seedToOnboarding = ultraCompact ? 16 : compact ? 24 : large ? 32 : 28;
-        const onboardingRowGap = ultraCompact ? 13 : compact ? 16 : large ? 20 : 18;
-        const onboardingToSetup = ultraCompact ? 16 : compact ? 30 : large ? 38 : 34;
+        const canvasHeight = overlayCanvas.height;
+        const ultraCompact = fit.mode === "tiny";
+        const compact = fit.mode !== "normal";
+        const logoRadius = ultraCompact ? 18 : compact ? 24 : 34;
+        const logoToTitle = ultraCompact ? 52 : compact ? 66 : 86;
+        const titleToPress = ultraCompact ? 28 : compact ? 38 : 52;
+        const pressToSeed = ultraCompact ? 18 : compact ? 24 : 34;
+        const seedToOnboarding = ultraCompact ? 14 : compact ? 18 : 28;
+        const onboardingRowGap = ultraCompact ? 12 : compact ? 14 : 18;
+        const onboardingToSetup = ultraCompact ? 12 : compact ? 18 : 34;
         const setupRows = this.getRunSettingsRows(model).length;
-        const setupPanelHeightBase = ultraCompact ? 172 : compact ? 206 : large ? 224 : 214;
-        const setupPanelHeight = setupPanelHeightBase + Math.max(0, setupRows - 4) * (ultraCompact ? 30 : 38);
+        const setupPanelHeightBase = Math.max(140, fit.panelH - Math.max(0, setupRows - 4) * (ultraCompact ? 24 : compact ? 28 : 34));
+        const setupPanelHeight = setupPanelHeightBase + Math.max(0, setupRows - 4) * (ultraCompact ? 24 : compact ? 28 : 34);
         const edgeMargin = 26;
         const extraBottomReserve = model.endlessUnlocked ? 8 : ultraCompact ? 20 : 36;
-        const onboardingLineCount = ultraCompact ? 1 : 3;
+        const onboardingLineCount = fit.maxOnboardingLines;
 
         const relativeStackHeight =
           logoRadius +
@@ -2818,33 +2904,35 @@
         const infoPressY = titleY + titleToPress;
         const infoSeedY = infoPressY + pressToSeed;
         const onboardingY = infoSeedY + seedToOnboarding;
-        const onboardingBottomY = onboardingY + onboardingRowGap * 3;
+        const onboardingBottomY = onboardingY + onboardingRowGap * onboardingLineCount;
         const setupTopY = onboardingBottomY + onboardingToSetup;
         const setupCenterY = setupTopY + setupPanelHeight / 2;
 
         this.drawStartLogo(centerX, logoY);
         this.drawStartTitleWithShipAs(tr("render.start.title"), centerX, titleY);
-        ctx.font = ultraCompact ? "600 16px Trebuchet MS" : "600 22px Trebuchet MS";
+        ctx.font = `600 ${Math.max(14, fit.bodyFontPx + 4)}px Trebuchet MS`;
         ctx.fillStyle = "#d8f5ff";
         ctx.fillText(tr("overlay.press_enter_start"), centerX, infoPressY);
         ctx.fillStyle = "rgba(210,239,255,0.94)";
-        ctx.fillText(tr("overlay.seed", { seed: model.runSeed ?? "-" }), centerX, infoSeedY);
-        ctx.font = ultraCompact ? "600 12px Trebuchet MS" : "600 14px Trebuchet MS";
+        ctx.fillText(this.fitTextToWidth(tr("overlay.seed", { seed: model.runSeed ?? "-" }), ctx.font, fit.panelW - 20), centerX, infoSeedY);
+        ctx.font = `600 ${Math.max(11, fit.bodyFontPx)}px Trebuchet MS`;
         ctx.fillStyle = "rgba(174,238,209,0.94)";
         ctx.fillText(tr("overlay.onboarding_title"), centerX, onboardingY);
-        ctx.font = ultraCompact ? "500 11px Trebuchet MS" : "500 13px Trebuchet MS";
+        ctx.font = `500 ${Math.max(10, fit.bodyFontPx - 1)}px Trebuchet MS`;
         ctx.fillStyle = "rgba(196,233,248,0.92)";
         ctx.fillText(tr("overlay.onboarding_line1"), centerX, onboardingY + onboardingRowGap);
-        if (!ultraCompact) {
+        if (fit.maxOnboardingLines >= 2) {
           ctx.fillText(tr("overlay.onboarding_line2"), centerX, onboardingY + onboardingRowGap * 2);
+        }
+        if (fit.maxOnboardingLines >= 3) {
           ctx.fillText(tr("overlay.onboarding_line3"), centerX, onboardingY + onboardingRowGap * 3);
         }
 
-        this.drawOverlayBlock(centerX, setupCenterY, Math.max(350, Math.min(430, config.canvas.width - 20)), setupPanelHeight);
-        const modeBottomY = this.drawRunSettingsList(model, setupTopY + (ultraCompact ? 26 : 34));
+        this.drawOverlayBlock(centerX, setupCenterY, fit.panelW, setupPanelHeight);
+        const modeBottomY = this.drawRunSettingsList(model, setupTopY + (ultraCompact ? 22 : compact ? 28 : 34), fit);
         if (!model.endlessUnlocked) {
-          ctx.font = ultraCompact ? "500 12px Trebuchet MS" : "500 15px Trebuchet MS";
-          ctx.fillText(tr("overlay.endless_unlock_hint"), centerX, modeBottomY + 24);
+          ctx.font = `500 ${Math.max(10, fit.bodyFontPx)}px Trebuchet MS`;
+          ctx.fillText(this.fitTextToWidth(tr("overlay.endless_unlock_hint"), ctx.font, fit.panelW - 8), centerX, modeBottomY + (ultraCompact ? 16 : 24));
         }
       }
 
@@ -2859,15 +2947,15 @@
       }
 
       if (model.gameState === GAME_STATE.PAUSED) {
-        ctx.fillText(tr("overlay.pause"), config.canvas.width / 2, config.canvas.height / 2 - 16);
+        ctx.fillText(tr("overlay.pause"), overlayCanvas.width / 2, overlayCanvas.height / 2 - 16);
         ctx.font = "600 22px Trebuchet MS";
-        ctx.fillText(tr("overlay.press_p_resume"), config.canvas.width / 2, config.canvas.height / 2 + 22);
+        ctx.fillText(tr("overlay.press_p_resume"), overlayCanvas.width / 2, overlayCanvas.height / 2 + 22);
       }
 
       if (model.gameState === GAME_STATE.MISSION_COMPLETE) {
         const summary = model.missionCompleteSummary || {};
-        const cx = config.canvas.width / 2;
-        const cy = config.canvas.height / 2;
+        const cx = overlayCanvas.width / 2;
+        const cy = overlayCanvas.height / 2;
         this.drawOverlayBlock(cx, cy + 24, 560, 228);
         ctx.fillStyle = "#d8f5ff";
         ctx.font = "700 38px Trebuchet MS";

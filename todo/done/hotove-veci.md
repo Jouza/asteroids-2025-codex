@@ -1,5 +1,13 @@
 # Hotove veci
 
+- [x] iPhone 16 Pro overlay fit fix (START + VICTORY/GAME OVER)
+  - [x] Pridan jednotny `overlayFitProfile` engine (`tiny/compact/normal`) pro texty, spacing a velikost panelu
+  - [x] START overlay prepnut na fit-first stack s clampem onboarding linek (`3/2/1`) a responsivnim setup panelem
+  - [x] End-run overlay prepocitan na fit profil (panel/content/footer) se stabilnimi touch paging zonami v bounds
+  - [x] Defenzivni text clipping (`fitTextToWidth`) pro dlouhe radky v overlay debriefu a run setupu
+  - [x] Overlay vykresleni bere final `worldBounds` z viewport runtime po syncu (odolnejsi po rotaci)
+  - [x] Harness coverage doplnena pro overlay fit profile a end-summary tap-zony v low-height viewportu
+
 - [x] iPhone viewport fit hotfix (safe-area + real canvas bounds)
   - [x] Adaptivni viewport bere realne vykreslenou velikost canvasu (`getBoundingClientRect`) misto jen `innerWidth/innerHeight`
   - [x] Odstraneno inline prepisovani canvas CSS rozmeru z JS, aby se nerozjizdel CSS safe-area layout

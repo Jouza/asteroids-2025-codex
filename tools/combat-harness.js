@@ -61,6 +61,7 @@ function createRuntime(sharedStorage) {
     "js/rng.js",
     "js/entities.js",
     "js/input.js",
+    "js/render.js",
     "js/systems/enemy-system.js",
     "js/systems/mission-system.js",
     "js/systems/hangar-system.js",
@@ -2676,6 +2677,74 @@ function runTests() {
     const smallWorldMul = gameA.missionSystem.getViewportPressureMultiplier();
     assert(largeWorldMul > 1, "Viewport pressure multiplier should increase for larger-than-balance world area");
     assert(smallWorldMul < 1, "Viewport pressure multiplier should decrease for smaller-than-balance world area");
+  });
+
+  tests.push(() => {
+    const fakeCanvas = { width: 760, height: 420 };
+    const fakeCtx = {
+      font: "",
+      textAlign: "left",
+      fillStyle: "#fff",
+      strokeStyle: "#fff",
+      lineWidth: 1,
+      save() {},
+      restore() {},
+      fillRect() {},
+      strokeRect() {},
+      fillText() {},
+      measureText(text) {
+        return { width: String(text || "").length * 6 };
+      }
+    };
+    const renderer = new AsteroidsA.Renderer(fakeCanvas, fakeCtx, gameA.config);
+    const tiny = renderer.getOverlayFitProfile(760, 420, AsteroidsA.GAME_STATE.START);
+    const compact = renderer.getOverlayFitProfile(900, 540, AsteroidsA.GAME_STATE.GAME_OVER);
+    assert(tiny.mode === "tiny", "Overlay fit profile should switch to tiny for low-height canvas");
+    assert(compact.mode === "compact", "Overlay fit profile should switch to compact for mid-height canvas");
+    assert(tiny.panelW <= 760 && tiny.panelH <= 420, "Tiny overlay profile panel should stay within canvas bounds");
+  });
+
+  tests.push(() => {
+    const fakeCanvas = { width: 760, height: 420 };
+    const fakeCtx = {
+      font: "",
+      textAlign: "left",
+      fillStyle: "#fff",
+      strokeStyle: "#fff",
+      lineWidth: 1,
+      save() {},
+      restore() {},
+      fillRect() {},
+      strokeRect() {},
+      fillText() {},
+      measureText(text) {
+        return { width: String(text || "").length * 6 };
+      }
+    };
+    const renderer = new AsteroidsA.Renderer(fakeCanvas, fakeCtx, gameA.config);
+    const model = {
+      gameState: AsteroidsA.GAME_STATE.GAME_OVER,
+      overlayEndSummaryPage: "overview",
+      touchControls: { ui: {} },
+      viewport: { worldBounds: { width: 760, height: 420 } }
+    };
+    const summary = {
+      score: 0,
+      sector: 1,
+      identity: { pilot: "-", ship: "-" },
+      loadout: { primary: "-", secondary: "-", utility: "-" },
+      runtimeSeconds: 0,
+      missionsCompleted: 0,
+      miniBossKills: 0,
+      salvageParts: 0,
+      runSummary: {}
+    };
+    renderer.drawEndRunOverlay(model, summary, "overlay.game_over", false);
+    const zones = model.touchControls.ui.endSummaryTapZones;
+    assert(zones && zones.left && zones.right, "End summary overlay should expose touch paging zones");
+    const within = (zone) =>
+      zone.x >= 0 && zone.y >= 0 && zone.x + zone.w <= 760 && zone.y + zone.h <= 420;
+    assert(within(zones.left) && within(zones.right), "End summary paging zones should stay inside canvas bounds");
   });
 
   tests.push(() => {
