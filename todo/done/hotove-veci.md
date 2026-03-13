@@ -1,5 +1,12 @@
 # Hotove veci
 
+- [x] iOS regression recovery hotfix (touch visibility + centered CTA)
+  - [x] Touch render gating uz nevisi na `inputMode === touch`; v `touch_mobile` se controls/CTA kresli i pred prvnim dotykem
+  - [x] START/NEW RUN CTA presunuta do center-panel layoutu s bounds clampem (zadne ujizdeni mimo obraz)
+  - [x] Stuck-pointer reset logika zjemnena jen na kriticke prechody (hidden/blur/orientation a vstup/vystup z PLAYING)
+  - [x] Primary/secondary/utility cluster ma final viewport clamp, aby zadne tlacitko nevyjelo mimo uzky landscape
+  - [x] Harness doplnen o render-gating a CTA-in-bounds regresni scenare
+
 - [x] iOS touch stabilization + PRIMARY fire button rework
   - [x] Touch watchdog resetuje stuck button stavy pri ztrate pointeru (`pointerId` uz neexistuje v `touchControls.pointers`)
   - [x] Pridany hard reset touch vstupu pri `visibilitychange(hidden)`, `blur`, orientation gate switchi a game-state/device-mode prechodech

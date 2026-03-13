@@ -680,7 +680,7 @@
     }
 
     drawTouchControls(model, input) {
-      if (model.inputMode !== "touch") return;
+      if (model.deviceMode !== "touch_mobile") return;
       const touch = model.touchControls;
       const layout = touch?.layout;
       if (!touch || !layout || !layout.buttons) return;
@@ -828,7 +828,7 @@
     }
 
     drawOverlayTouchActionCta(model) {
-      if (model.inputMode !== "touch") return;
+      if (model.deviceMode !== "touch_mobile") return;
       const isOverlayState =
         model.gameState === GAME_STATE.START ||
         model.gameState === GAME_STATE.GAME_OVER ||
@@ -839,8 +839,55 @@
       const { ctx, config } = this;
       const w = Math.max(220, Math.round(config.canvas.width * 0.28));
       const h = 52;
-      const x = Math.round((config.canvas.width - w) / 2);
-      const y = Math.max(16, config.canvas.height - 78);
+      const fit = this.getOverlayFitProfile(config.canvas.width, config.canvas.height, model.gameState);
+      const cx = config.canvas.width / 2;
+      const cy = config.canvas.height / 2;
+      let panelCenterY = cy + (fit.mode === "tiny" ? 10 : fit.mode === "compact" ? 22 : 42);
+      let panelH = fit.panelH;
+      if (model.gameState === GAME_STATE.START) {
+        const ultraCompact = fit.mode === "tiny";
+        const compact = fit.mode !== "normal";
+        const setupRows = this.getRunSettingsRows(model).length;
+        const setupPanelHeightBase = Math.max(140, fit.panelH - Math.max(0, setupRows - 4) * (ultraCompact ? 24 : compact ? 28 : 34));
+        panelH = setupPanelHeightBase + Math.max(0, setupRows - 4) * (ultraCompact ? 24 : compact ? 28 : 34);
+        const logoRadius = ultraCompact ? 18 : compact ? 24 : 34;
+        const logoToTitle = ultraCompact ? 52 : compact ? 66 : 86;
+        const titleToPress = ultraCompact ? 28 : compact ? 38 : 52;
+        const pressToSeed = ultraCompact ? 18 : compact ? 24 : 34;
+        const seedToOnboarding = ultraCompact ? 14 : compact ? 18 : 28;
+        const onboardingRowGap = ultraCompact ? 12 : compact ? 14 : 18;
+        const onboardingToSetup = ultraCompact ? 12 : compact ? 18 : 34;
+        const edgeMargin = 26;
+        const extraBottomReserve = model.endlessUnlocked ? 8 : ultraCompact ? 20 : 36;
+        const onboardingLineCount = fit.maxOnboardingLines;
+        const relativeStackHeight =
+          logoRadius +
+          logoToTitle +
+          titleToPress +
+          pressToSeed +
+          seedToOnboarding +
+          onboardingRowGap * onboardingLineCount +
+          onboardingToSetup +
+          panelH +
+          extraBottomReserve;
+        let stackTop = cy - relativeStackHeight / 2;
+        const maxTop = config.canvas.height - edgeMargin - relativeStackHeight;
+        if (maxTop <= edgeMargin) stackTop = Math.max(8, maxTop);
+        else stackTop = Math.min(Math.max(stackTop, edgeMargin), maxTop);
+        const setupTopY =
+          stackTop +
+          logoRadius +
+          logoToTitle +
+          titleToPress +
+          pressToSeed +
+          seedToOnboarding +
+          onboardingRowGap * onboardingLineCount +
+          onboardingToSetup;
+        panelCenterY = setupTopY + panelH / 2;
+      }
+      const panelBottomY = panelCenterY + panelH * 0.5;
+      const x = Math.max(10, Math.min(config.canvas.width - w - 10, Math.round(cx - w / 2)));
+      const y = Math.max(10, Math.min(config.canvas.height - h - 10, Math.round(panelBottomY - h - 14)));
       ui.overlayActionCtaZone = { x, y, w, h };
       const labelKey = model.gameState === GAME_STATE.START ? "touch.button.action.start" : "touch.button.action.new_run";
 

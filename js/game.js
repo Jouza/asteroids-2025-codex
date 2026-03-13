@@ -941,9 +941,14 @@
       const rightWCap = Math.max(72, Math.floor((rightClusterMaxW - buttonGap * 2) / 3));
       const rightW = this.clamp(Math.round(width * 0.16), 72, Math.min(180, rightWCap));
       const rightH = this.clamp(Math.round(height * 0.12), 62, 94);
-      const rightRightX = width - margin - rightW;
-      const rightCenterX = rightRightX - rightW - buttonGap;
-      const rightLeftX = rightCenterX - rightW - buttonGap;
+      const rightRightXRaw = width - margin - rightW;
+      const rightCenterXRaw = rightRightXRaw - rightW - buttonGap;
+      const rightLeftXRaw = rightCenterXRaw - rightW - buttonGap;
+      const minRightX = Math.max(0, margin);
+      const maxRightX = Math.max(minRightX, width - margin - rightW);
+      const rightLeftX = this.clamp(rightLeftXRaw, minRightX, maxRightX);
+      const rightCenterX = this.clamp(rightCenterXRaw, minRightX, maxRightX);
+      const rightRightX = this.clamp(rightRightXRaw, minRightX, maxRightX);
       const bottomY = height - margin - rightH;
       const upperY = bottomY - rightH - buttonGap;
       const thrustY = height - margin - thrustH;
@@ -1113,12 +1118,14 @@
 
     updateTouchInputState(dt) {
       const touch = this.model.touchControls;
-      if (!touch || this.model.inputMode !== "touch") return;
+      if (!touch) return;
+      if (this.model.deviceMode !== "touch_mobile" && this.model.inputMode !== "touch") return;
       touch.layout = this.getTouchLayout();
       const orientationBlocked = Boolean(this.model.mobileUi?.orientationBlocked);
       if (
         this.lastTouchOrientationBlocked !== orientationBlocked ||
-        this.lastTouchGameState !== this.model.gameState
+        this.lastTouchGameState !== this.model.gameState &&
+          (this.lastTouchGameState === GAME_STATE.PLAYING || this.model.gameState === GAME_STATE.PLAYING)
       ) {
         this.resetTouchButtonsState(true);
       }
@@ -1136,7 +1143,7 @@
       touch.actions.boostActive = false;
       touch.actions.dashPressed = false;
       touch.actions.fireActive = Boolean(touch.buttons?.primary?.down);
-      if (this.model.gameState !== GAME_STATE.PLAYING) {
+      if (this.model.inputMode !== "touch" || this.model.gameState !== GAME_STATE.PLAYING) {
         touch.actions.fireActive = false;
         touch.actions.boostActive = false;
       }

@@ -2782,6 +2782,100 @@ function runTests() {
   });
 
   tests.push(() => {
+    const fakeCanvas = { width: 760, height: 420 };
+    const fakeCtx = {
+      font: "",
+      textAlign: "left",
+      textBaseline: "alphabetic",
+      fillStyle: "#fff",
+      strokeStyle: "#fff",
+      lineWidth: 1,
+      save() {},
+      restore() {},
+      fillRect() {},
+      strokeRect() {},
+      fillText() {},
+      measureText(text) {
+        return { width: String(text || "").length * 6 };
+      }
+    };
+    const renderer = new AsteroidsA.Renderer(fakeCanvas, fakeCtx, gameA.config);
+    const model = {
+      deviceMode: "touch_mobile",
+      inputMode: "keyboard_mouse",
+      gameState: AsteroidsA.GAME_STATE.START,
+      runMode: "campaign",
+      runDifficultyId: "normal",
+      runMutatorId: "standard",
+      flightModel: "arcade",
+      endlessUnlocked: false,
+      identity: { pilotId: "buzz_calder", shipId: "viper_mk2" },
+      touchControls: { ui: {}, layout: null, buttons: {} }
+    };
+    renderer.drawOverlayTouchActionCta(model);
+    const zone = model.touchControls.ui.overlayActionCtaZone;
+    assert(zone, "START overlay CTA should render in touch_mobile even before first touch input");
+    assert(zone.x >= 0 && zone.y >= 0 && zone.x + zone.w <= 760 && zone.y + zone.h <= 420, "START overlay CTA zone should stay inside canvas bounds");
+  });
+
+  tests.push(() => {
+    const fakeCanvas = { width: 760, height: 420 };
+    let drawCalls = 0;
+    const fakeCtx = {
+      font: "",
+      textAlign: "left",
+      textBaseline: "alphabetic",
+      fillStyle: "#fff",
+      strokeStyle: "#fff",
+      lineWidth: 1,
+      globalAlpha: 1,
+      save() {},
+      restore() {},
+      translate() {},
+      scale() {},
+      beginPath() {},
+      moveTo() {},
+      lineTo() {},
+      quadraticCurveTo() {},
+      closePath() {},
+      arc() {},
+      fill() { drawCalls += 1; },
+      stroke() { drawCalls += 1; },
+      fillRect() { drawCalls += 1; },
+      strokeRect() { drawCalls += 1; },
+      fillText() { drawCalls += 1; },
+      measureText(text) {
+        return { width: String(text || "").length * 6 };
+      }
+    };
+    const renderer = new AsteroidsA.Renderer(fakeCanvas, fakeCtx, gameA.config);
+    const layout = gameA.getTouchLayout();
+    const model = {
+      deviceMode: "touch_mobile",
+      inputMode: "keyboard_mouse",
+      gameState: AsteroidsA.GAME_STATE.PLAYING,
+      shootTimer: 0,
+      secondaryCooldown: 0,
+      utilityCooldown: 0,
+      mobileUi: { actionVisibility: {} },
+      touchControls: {
+        ui: {},
+        layout,
+        buttons: {
+          thrust: { down: false },
+          turnLeft: { down: false },
+          turnRight: { down: false },
+          primary: { down: false },
+          secondary: { down: false },
+          utility: { down: false }
+        }
+      }
+    };
+    renderer.drawTouchControls(model, { isDown() { return false; } });
+    assert(drawCalls > 0, "Combat touch controls should render in touch_mobile without requiring inputMode=touch");
+  });
+
+  tests.push(() => {
     gameA.model.mobileUi.fullscreenState = "inactive";
     gameA.setFullscreenRequestHandler(() => true);
     const accepted = gameA.tryEnterFullscreenFromGesture();
