@@ -1,5 +1,9 @@
 # Hotove veci
 
+- [x] iOS edge-barrier hotfix (full playable width)
+  - [x] Touch-mobile shell uz nema lateral safe-area padding, takze canvas bezi skutecne edge-to-edge
+  - [x] Gameplay world uz neni umyslne zuzeny o leve/prave insety, wrap hrany odpovidaji krajum displeje
+
 - [x] iOS regression recovery hotfix (touch visibility + centered CTA)
   - [x] Touch render gating uz nevisi na `inputMode === touch`; v `touch_mobile` se controls/CTA kresli i pred prvnim dotykem
   - [x] START/NEW RUN CTA presunuta do center-panel layoutu s bounds clampem (zadne ujizdeni mimo obraz)
