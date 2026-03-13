@@ -1,5 +1,10 @@
 # Hotove veci
 
+- [x] iPhone viewport fit hotfix (safe-area + real canvas bounds)
+  - [x] Adaptivni viewport bere realne vykreslenou velikost canvasu (`getBoundingClientRect`) misto jen `innerWidth/innerHeight`
+  - [x] Odstraneno inline prepisovani canvas CSS rozmeru z JS, aby se nerozjizdel CSS safe-area layout
+  - [x] `touch-mobile-ui` shell/layout/canvas prepnute na 100% v safe-area kontejneru (bez pretahovani mimo viditelnou plochu)
+
 - [x] Mobile touch UX hotfix: text selection block + compact low-height overlays
   - [x] V `touch-mobile-ui` vypnute nechtene oznacovani textu a iOS touch-callout/highlight
   - [x] Start overlay dostal ultra-compact variantu pro nizkou vysku (mensi fonty, kratsi onboarding, mensi setup panel)

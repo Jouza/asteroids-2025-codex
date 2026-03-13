@@ -679,8 +679,15 @@
       const baseWidth = Math.max(320, Math.floor(Number(this.model.viewport?.balanceViewport?.width) || this.config.canvas.width || 960));
       const baseHeight = Math.max(240, Math.floor(Number(this.model.viewport?.balanceViewport?.height) || this.config.canvas.height || 720));
       const isTouchMobile = this.model.deviceMode === "touch_mobile";
-      const cssWidth = forceDesktopBaseline || !isTouchMobile ? baseWidth : Math.max(320, Math.floor(viewport.width));
-      const cssHeight = forceDesktopBaseline || !isTouchMobile ? baseHeight : Math.max(240, Math.floor(viewport.height));
+      let cssWidth = forceDesktopBaseline || !isTouchMobile ? baseWidth : Math.max(320, Math.floor(viewport.width));
+      let cssHeight = forceDesktopBaseline || !isTouchMobile ? baseHeight : Math.max(240, Math.floor(viewport.height));
+      if (!forceDesktopBaseline && isTouchMobile && typeof this.canvas?.getBoundingClientRect === "function") {
+        const rect = this.canvas.getBoundingClientRect();
+        if (rect && Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 0 && rect.height > 0) {
+          cssWidth = Math.max(240, Math.floor(rect.width));
+          cssHeight = Math.max(180, Math.floor(rect.height));
+        }
+      }
       const perf = this.model.performance || {};
       const perfQuality = String(perf.qualityLevel || "high");
       const perfDprCap = perfQuality === "low" ? 1.0 : perfQuality === "medium" ? 1.25 : 1.5;
@@ -691,10 +698,6 @@
       if (this.canvas) {
         this.canvas.width = pixelWidth;
         this.canvas.height = pixelHeight;
-      }
-      if (this.canvas?.style) {
-        this.canvas.style.width = `${cssWidth}px`;
-        this.canvas.style.height = `${cssHeight}px`;
       }
       if (this.renderer?.ctx && typeof this.renderer.ctx.setTransform === "function") {
         this.renderer.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
